@@ -1,3 +1,3 @@
 <template>
-    Officer Dashboard
+    Transaction Modal
 </template>

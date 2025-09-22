@@ -1,3 +1,3 @@
 <template>
-    Officer Dashboard
+    Deposit Modal
 </template>

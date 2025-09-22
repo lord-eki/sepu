@@ -282,14 +282,14 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Link, useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
-import InputLabel from '@/Components/InputLabel.vue'
-import TextInput from '@/Components/TextInput.vue'
-import TextArea from '@/Components/TextArea.vue'
-import InputError from '@/Components/InputError.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import SecondaryButton from '@/Components/SecondaryButton.vue'
-import ConfirmationModal from '@/Components/ConfirmationModal.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+import InputLabel from '@/components/InputLabel.vue'
+import TextInput from '@/components/TextInput.vue'
+import TextArea from '@/components/TextArea.vue'
+import InputError from '@/components/InputError.vue'
+import PrimaryButton from '@/components/PrimaryButton.vue'
+import SecondaryButton from '@/components/SecondaryButton.vue'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
 
 const props = defineProps({
   dividend: Object,

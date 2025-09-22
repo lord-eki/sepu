@@ -323,7 +323,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { Link, useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const props = defineProps({
   budget: Object,

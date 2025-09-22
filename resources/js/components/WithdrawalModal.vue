@@ -1,3 +1,3 @@
 <template>
-    Officer Dashboard
+    Withdrawal Modal
 </template>

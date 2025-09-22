@@ -450,15 +450,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Link, router, useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
-import Pagination from '@/Components/Pagination.vue'
-import ConfirmationModal from '@/Components/ConfirmationModal.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import SecondaryButton from '@/Components/SecondaryButton.vue'
-import DangerButton from '@/Components/DangerButton.vue'
-import InputLabel from '@/Components/InputLabel.vue'
-import TextArea from '@/Components/TextArea.vue'
-import InputError from '@/Components/InputError.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+import Pagination from '@/components/Pagination.vue'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import PrimaryButton from '@/components/PrimaryButton.vue'
+import SecondaryButton from '@/components/SecondaryButton.vue'
+import DangerButton from '@/components/DangerButton.vue'
+import InputLabel from '@/components/InputLabel.vue'
+import TextArea from '@/components/TextArea.vue'
+import InputError from '@/components/InputError.vue'
 
 const props = defineProps({
   dividend: Object,

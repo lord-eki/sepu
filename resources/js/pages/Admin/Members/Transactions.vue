@@ -353,9 +353,9 @@
 import { ref, computed, watch } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { debounce } from 'lodash'
-import AppLayout from '@/Layouts/AppLayout.vue'
-import Pagination from '@/Components/Pagination.vue'
-import TransactionModal from '@/Components/TransactionModal.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+import Pagination from '@/components/Pagination.vue'
+import TransactionModal from '@/components/TransactionModal.vue'
 import {
   ArrowLeftIcon,
   UserIcon,

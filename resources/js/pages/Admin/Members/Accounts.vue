@@ -364,8 +364,8 @@
 import { ref, computed } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
-import DepositModal from '@/Components/DepositModal.vue'
-import WithdrawalModal from '@/Components/WithdrawalModal.vue'
+import DepositModal from '@/components/DepositModal.vue'
+import WithdrawalModal from '@/components/WithdrawalModal.vue'
 import SharesModal from '@/components/SharesModal.vue'
 import {
   ArrowLeftIcon,
