@@ -64,6 +64,12 @@ const showBalances = ref(false)
 const toggleBalances = () => {
   showBalances.value = !showBalances.value
 }
+
+const showNotifications = ref(false)
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value
+}
+
 </script>
 
 <template>
@@ -82,18 +88,65 @@ const toggleBalances = () => {
           </div>
           <div class="flex items-center gap-3">
             <!-- Toggle balances -->
-            <Button size="sm" variant="outline" @click="toggleBalances">
+            <Button size="sm" variant="outline" class="hover:cursor-pointer" @click="toggleBalances">
               {{ showBalances ? 'Hide Balances' : 'Show Balances' }}
             </Button>
-            <!-- Notifications bell -->
-            <button class="relative p-2 rounded-full bg-gray-200 hover:bg-gray-200 transition">
-              <Bell class="h-5 w-5 text-blue-600" />
-              <span
-                class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full min-h-[16px] min-w-[16px] px-1 flex items-center justify-center"
+            <!-- Notifications bell with dropdown -->
+            <div class="relative">
+              <button
+                class="relative p-2 rounded-full bg-gray-200 hover:bg-gray-300 hover:cursor-pointer transition"
+                @click="toggleNotifications"
               >
-                {{ notifications?.length ?? 0 }}
-              </span>
-            </button>
+                <Bell class="h-5 w-5 text-blue-600" />
+                <span
+                  class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full min-h-[16px] min-w-[16px] px-1 flex items-center justify-center"
+                >
+                  {{ notifications?.length ?? 0 }}
+                </span>
+              </button>
+
+            <!-- Notifications Panel -->
+            <div
+              v-if="showNotifications"
+              class="absolute mt-2 w-[95vw] max-w-sm sm:w-80 sm:right-0 sm:left-auto left-1/2 -translate-x-1/2 sm:translate-x-0 bg-white border border-gray-400 rounded-xl shadow-lg z-50"
+            >
+              <!-- Header with Close Button -->
+              <div class="flex items-center justify-between p-3 border-b">
+                <span class="font-semibold max-sm:text-sm text-gray-700">Notifications</span>
+                <button
+                  @click="showNotifications = false"
+                  class="text-red-400 hover:text-red-600"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <!-- Notifications List -->
+              <ul class="max-h-60 overflow-y-auto divide-y divide-gray-200">
+                <li
+                  v-for="n in notifications"
+                  :key="n.id"
+                  class="p-3 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <div class="font-medium">{{ n.message }}</div>
+                  <div class="text-xs text-gray-400">{{ fmtDate(n.created_at) }}</div>
+                </li>
+                <li v-if="!notifications?.length" class="p-6 text-sm text-gray-500 text-center">
+                  No notifications
+                </li>
+              </ul>
+
+              <!-- Footer -->
+              <div class="p-2 text-right" v-if="notifications?.length">
+                <Button as-child size="sm" variant="ghost" class="text-blue-600">
+                  <Link href="#">View all</Link>
+                </Button>
+              </div>
+            </div>
+
+
+              </div>
 
           </div>
         </header>
@@ -140,7 +193,7 @@ const toggleBalances = () => {
               <component :is="stat.icon" class="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div class="text-sm md:text-lg font-bold">
+              <div class="text-base md:text-xl font-bold">
                 <span v-if="showBalances" class="text-green-900">{{ stat.value }}</span>
                 <span v-else class="text-gray-300">*******</span>
               </div>

@@ -25,6 +25,16 @@ const formattedTotalBalance = computed(() =>
 
 // Track visibility per account
 const balanceVisibility = reactive<{ [key: number]: boolean }>({})
+
+const memberName = computed(() => {
+  if (!props.member) return 'N/A'
+  const { first_name, middle_name, last_name } = props.member
+  return [first_name, middle_name, last_name]
+    .filter(name => name && name.trim() !== '') // skip null/empty
+    .join(' ')
+})
+
+
 </script>
 
 <template>
@@ -33,13 +43,29 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
 
       <Head title="Accounts" />
 
-      <!-- Header -->
+    <!-- Header -->
       <div class="rounded-xl bg-gradient-to-r from-indigo-500 via-blue-500 to-green-500 p-6 shadow-md text-white">
-        <h1 class="text-lg md:text-xl font-semibold">
-          Accounts
-        </h1>
-        <p class="text-sm opacity-80 mt-1">Overview of your balances and transactions</p>
+        <div class="flex items-center justify-between">
+          <!-- Accounts -->
+          <div>
+            <h1 class="text-lg md:text-xl font-semibold">
+              Accounts
+            </h1>
+            <p class="text-sm max-sm:w-[90%] opacity-80 mt-1">
+              Overview of your balances and transactions
+            </p>
+          </div>
+
+          <!-- Account Holder -->
+          <div class="text-right self-start">
+            <p class="text-sm opacity-80">Account Name</p>
+            <h2 class="text-base sm:text-lg font-medium">
+              {{ memberName }}
+            </h2>
+          </div>
+        </div>
       </div>
+
 
       <!-- Summary Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -92,13 +118,13 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
 
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
           <div>
-            <h2 class="text-sm sm:text-base font-medium text-gray-800">
+            <h2 class="text-base sm:text-lg font-medium text-gray-800">
               <span class="font-normal">Acc. No:</span> {{ account.account_number }} - {{ account.account_type }}
             </h2>
-            <p class="text-sm sm:text-base text-gray-500 flex items-center gap-2">
+            <p class="text-sm sm:text-base text-gray-500 flex items-center gap-3">
               Balance:
               <span class="font-medium text-green-800">
-                <span :class="balanceVisibility[account.id] ? '' : 'blur-sm select-none'">
+                <span :class="balanceVisibility[account.id] ? '' : 'blur-sm select-none'" class="text-base sm:text-lg">
                   KES {{ Number(account.balance).toLocaleString() }}
                 </span>
               </span>

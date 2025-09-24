@@ -58,22 +58,46 @@ const submit = () => {
                         placeholder="email@example.com" />
                     <InputError :message="form.errors.email" />
                 </div>
+<!-- Phone -->
+<div class="grid gap-2">
+  <Label for="phone">Phone number</Label>
 
-                <!-- Phone -->
-                <div class="grid gap-2">
-                    <Label for="phone">Phone number</Label>
-                    <div class="flex items-center gap-0.5">
-                        <select v-model="selectedCode"
-                            class="border border-gray-300 rounded-md px-2 py-2 text-sm focus:ring focus:ring-blue-500">
-                            <option v-for="c in countryCodes" :key="c.code" :value="c.code">
-                                {{ c.flag }} {{ c.code }}
-                            </option>
-                        </select>
-                        <Input id="phone" type="tel" required :tabindex="3" autocomplete="tel" v-model="form.phone"
-                            placeholder="712345678" pattern="^[0-9]{9,10}$" maxlength="10" class="flex-1 placeholder:text-sm" />
-                    </div>
-                    <InputError :message="form.errors.phone" />
-                </div>
+  <!-- Shared wrapper -->
+  <div
+    class="flex overflow-hidden rounded-md border border-input bg-background transition-[color,box-shadow]
+           focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]"
+  >
+    <!-- Country code -->
+    <select
+      v-model="selectedCode"
+      class="px-3 py-2 text-sm bg-background text-foreground focus:outline-none"
+    >
+      <option v-for="c in countryCodes" :key="c.code" :value="c.code">
+        {{ c.flag }} {{ c.code }}
+      </option>
+    </select>
+
+    <!-- Phone input -->
+    <input
+      id="phone"
+      type="tel"
+      required
+      :tabindex="3"
+      autocomplete="tel"
+      v-model="form.phone"
+      placeholder="712345678"
+      pattern="^[0-9]{9,10}$"
+      maxlength="10"
+      class="flex-1 px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground border-0 rounded-none focus:outline-none"
+    />
+  </div>
+
+  <InputError :message="form.errors.phone" />
+</div>
+
+
+
+
 
                 <!-- Password -->
                 <div class="grid gap-2">
