@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, useForm, usePage } from '@inertiajs/vue3'
 import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, XCircle, Save } from 'lucide-vue-next'
+import { CheckCircle, XCircle, Save, User } from 'lucide-vue-next'
 import { route } from 'ziggy-js'
 
 
@@ -77,10 +77,10 @@ const toastMessage = ref("")
 const toastType = ref<"success" | "error">("success")
 
 function handlePhotoUpload(event: Event) {
-  const target = event.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    form.profile_photo = target.files[0]
-  }
+    const target = event.target as HTMLInputElement
+    if (target.files && target.files[0]) {
+        form.profile_photo = target.files[0]
+    }
 }
 
 
@@ -125,45 +125,34 @@ watch(showToast, (val) => {
             <!-- Layout split -->
             <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 sm:gap-6">
                 <!-- Left: Profile Summary -->
-                <div class="col-span-1 flex bg-white dark:bg-gray-900 shadow-xl max-sm:mb-4 rounded-xl overflow-hidden">
+                <div class="col-span-1  bg-white dark:bg-gray-900 shadow-xl max-sm:mb-4 rounded-xl overflow-hidden">
                     <!-- Profile header -->
-                    <div class="bg-blue-100 p-2 sm:p-4 flex flex-col items-center justify-center gap-3">
-                        <img 
-                            v-if="member.profile_photo" 
-                            :src="`/storage/${member.profile_photo}`" 
-                            alt="Profile"
-                            class="w-24 h-24 rounded-full object-cover" 
-                        />
-                        <img 
-                            v-else 
-                            src="/default-profile.png" 
-                            alt="Profile"
-                            class="w-24 h-24 rounded-full object-cover" 
-                        />
+                    <div class="bg-blue-50 p-2 sm:p-4 flex items-center justify-center gap-3">
+                        <div class="flex flex-col items-center gap-1">
+                            <img v-if="member.profile_photo" :src="`/storage/${member.profile_photo}`" alt="Profile"
+                                class="w-24 h-24 rounded-full object-cover" />
+                            <div v-else>
+                                <User class="h-16 w-16 bg-gray-200 p-2 text-gray-400 rounded-full" />
+                            </div>
 
-                        <!-- Upload input -->
-                        <div class="flex flex-col items-center gap-2">
-                        <label 
-                            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg shadow hover:bg-blue-700 cursor-pointer"
-                        >
-                            Change Photo
-                            <input 
-                            type="file" 
-                            accept="image/*" 
-                            @change="handlePhotoUpload" 
-                            class="hidden"
-                            />
-                        </label>
+                            <!-- Upload input -->
+                            <div class="">
+                                <label
+                                    class="px-2 py-1 bg-gray-50 text-gray-600 text-xs sm:text-sm rounded-lg shadow hover:bg-gray-400 cursor-pointer">
+                                    Change Photo
+                                    <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
+                                </label>
+                            </div>
+
                         </div>
 
-
-                        <div class="text-center">
+                        <div class="">
                             <h2 class="mt-2 text-xl font-semibold text-gray-700">
-                            {{ member.first_name }} {{ member.last_name }}
+                                {{ member.first_name }} {{ member.last_name }}
                             </h2>
-                            <p class="text-sm text-gray-800">Membership ID: {{ member.membership_id }}</p>
+                            <p class="text-sm text-gray-800">M/ship ID: {{ member.membership_id }}</p>
                         </div>
-                        </div>
+                    </div>
 
 
                     <!-- Static info -->
@@ -197,30 +186,20 @@ watch(showToast, (val) => {
                         <h3 class="text-lg font-semibold">Personal Info</h3>
                         <!-- Buttons -->
                         <div class="flex gap-4">
-                        <Button 
-                            v-if="!isEditing" 
-                            @click="isEditing = true" 
-                            class="bg-blue-600 hover:bg-blue-700 hover:cursor-pointer text-white rounded-sm shadow-md"
-                        >
-                            ✏️ Edit
-                        </Button>
+                            <Button v-if="!isEditing" @click="isEditing = true"
+                                class="bg-blue-600 hover:bg-blue-700 hover:cursor-pointer text-white rounded-sm shadow-md">
+                                ✏️ Edit
+                            </Button>
 
-                        <Button 
-                            v-if="isEditing" 
-                            @click="isEditing = false" 
-                            class="bg-gray-500 hover:bg-gray-600 hover:cursor-pointer text-white rounded-sm shadow-md"
-                        >
-                            Cancel
-                        </Button>
+                            <Button v-if="isEditing" @click="isEditing = false"
+                                class="bg-gray-500 hover:bg-gray-600 hover:cursor-pointer text-white rounded-sm shadow-md">
+                                Cancel
+                            </Button>
 
-                        <Button 
-                            v-if="isEditing" 
-                            type="button" 
-                            @click="submit" 
-                            class="bg-green-600 hover:bg-green-700 hover:cursor-pointer text-white rounded-sm shadow-md flex items-center gap-2"
-                        >
-                            <Save class="w-4 h-4" /> <span>Save</span>
-                        </Button>
+                            <Button v-if="isEditing" type="button" @click="submit"
+                                class="bg-green-600 hover:bg-green-700 hover:cursor-pointer text-white rounded-sm shadow-md flex items-center gap-2">
+                                <Save class="w-4 h-4" /> <span>Save</span>
+                            </Button>
                         </div>
                     </div>
 
@@ -228,24 +207,28 @@ watch(showToast, (val) => {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 inputsborder">
                         <div>
                             <label class="block text-sm font-medium mb-1">First Name</label>
-                            <input v-model="form.first_name" type="text" class="w-full bg-gray-100  rounded-xl p-2.5" disabled />
+                            <input v-model="form.first_name" type="text" class="w-full bg-gray-100  rounded-xl p-2.5"
+                                disabled />
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Last Name</label>
-                            <input v-model="form.last_name" type="text" class="w-full bg-gray-100 rounded-xl p-2.5" disabled />
+                            <input v-model="form.last_name" type="text" class="w-full bg-gray-100 rounded-xl p-2.5"
+                                disabled />
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Middle Name</label>
                             <input v-model="form.middle_name" type="text" class="w-full rounded-xl p-2.5"
                                 :disabled="!isEditing" />
                         </div>
-                       <div>
+                        <div>
                             <label class="block text-sm font-medium mb-1">Email</label>
-                            <input v-model="form.email" type="text" class="w-full bg-gray-100 rounded-xl p-2.5" disabled />
+                            <input v-model="form.email" type="text" class="w-full bg-gray-100 rounded-xl p-2.5"
+                                disabled />
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Phone</label>
-                            <input v-model="form.phone" type="text" class="w-full bg-gray-100 rounded-xl p-2.5" disabled />
+                            <input v-model="form.phone" type="text" class="w-full bg-gray-100 rounded-xl p-2.5"
+                                disabled />
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Marital Status</label>
@@ -278,63 +261,62 @@ watch(showToast, (val) => {
                     <!-- Address -->
                     <h3 class="text-lg font-semibold mb-2 pb-2">Address</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 inputsborder">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Physical Address</label>
-                        <input v-model="form.physical_address" type="text"
-                        class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Postal Address</label>
-                        <input v-model="form.postal_address" type="text"
-                        class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">City</label>
-                        <input v-model="form.city" type="text"
-                        class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
-                    </div>
-                    <div>
-                    <label class="block text-sm font-medium mb-1">Country</label>
-                    <select v-model="form.country" class="w-full rounded-xl p-2.5" :disabled="!isEditing">
-                        <option value="" disabled>Select country</option>
-                        <option value="Kenya">Kenya</option>
-                        <option value="Uganda">Uganda</option>
-                        <option value="Tanzania">Tanzania</option>
-                        <option value="Rwanda">Rwanda</option>
-                        <option value="Burundi">Burundi</option>
-                        <option value="South Sudan">South Sudan</option>
-                        <!-- add more countries as needed -->
-                    </select>
-                    </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Physical Address</label>
+                            <input v-model="form.physical_address" type="text" class="w-full rounded-xl p-2.5"
+                                :disabled="!isEditing" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Postal Address</label>
+                            <input v-model="form.postal_address" type="text" class="w-full rounded-xl p-2.5"
+                                :disabled="!isEditing" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">City</label>
+                            <input v-model="form.city" type="text" class="w-full rounded-xl p-2.5"
+                                :disabled="!isEditing" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Country</label>
+                            <select v-model="form.country" class="w-full rounded-xl p-2.5" :disabled="!isEditing">
+                                <option value="" disabled>Select country</option>
+                                <option value="Kenya">Kenya</option>
+                                <option value="Uganda">Uganda</option>
+                                <option value="Tanzania">Tanzania</option>
+                                <option value="Rwanda">Rwanda</option>
+                                <option value="Burundi">Burundi</option>
+                                <option value="South Sudan">South Sudan</option>
+                            </select>
+                        </div>
 
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Country</label>
-                        <input v-model="form.country" type="text"
-                        class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
-                    </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">County</label>
+                            <input v-model="form.county" type="text" class="w-full rounded-xl p-2.5"
+                                :disabled="!isEditing" />
+                        </div>
                     </div>
 
                     <!-- Emergency -->
                     <h3 class="text-lg font-semibold mb-2 pb-2">Emergency Contact</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 inputsborder">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Contact Name</label>
-                        <input v-model="form.emergency_contact_name" type="text"
-                        class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Contact Phone</label>
-                        <input v-model="form.emergency_contact_phone" type="number"
-                        class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Relationship</label>
-                        <input v-model="form.emergency_contact_relationship" type="text"
-                        class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
-                    </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Contact Name</label>
+                            <input v-model="form.emergency_contact_name" type="text" class="w-full rounded-xl p-2.5"
+                                :disabled="!isEditing" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Contact Phone</label>
+                            <input v-model="form.emergency_contact_phone" type="number" class="w-full rounded-xl p-2.5"
+                                :disabled="!isEditing" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Relationship</label>
+                            <input v-model="form.emergency_contact_relationship" type="text"
+                                class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
+                        </div>
                     </div>
                     <!-- Save Button -->
-                    
+
                 </div>
             </div>
         </div>

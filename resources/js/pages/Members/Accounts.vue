@@ -6,6 +6,7 @@ import { Link } from "@inertiajs/vue3"
 import { computed, reactive } from "vue"
 import AppLayout from '@/layouts/AppLayout.vue'
 
+
 const props = defineProps<{
   member: any
   accounts: any[]
@@ -29,6 +30,7 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Accounts', href: '/my-accounts' }]">
     <div class="space-y-8 p-5 sm:p-6">
+
       <Head title="Accounts" />
 
       <!-- Header -->
@@ -49,13 +51,13 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
           <CardContent class="flex flex-col sm:flex-row justify-between gap-4">
             <div>
               <p class="text-sm text-gray-500">Total Accounts</p>
-              <p class="text-base font-medium sm:text-lg text-blue-900">
+              <p class="text-lg font-medium sm:text-xl text-blue-900">
                 {{ props.accounts.length }}
               </p>
             </div>
             <div>
               <p class="text-sm text-gray-500">Status</p>
-              <p class="text-base font-medium sm:text-lg text-indigo-900">
+              <p class="text-lg font-medium sm:text-xl text-indigo-900">
                 {{ props.accounts.length > 0 ? `${props.accounts.length} active` : "No accounts" }}
               </p>
             </div>
@@ -70,15 +72,13 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
             </CardTitle>
           </CardHeader>
           <CardContent class="flex justify-between mr-5 items-center">
-            <p class="text-base font-medium sm:text-lg text-green-800">
+            <p class="text-lg font-medium sm:text-xl text-green-800">
               <span :class="totalBalanceVisible.value ? '' : 'blur-sm select-none'">
                 KES {{ formattedTotalBalance }}
               </span>
             </p>
-            <button
-              @click="totalBalanceVisible.value = !totalBalanceVisible.value"
-              class="text-gray-500 hover:text-gray-700 transition"
-            >
+            <button @click="totalBalanceVisible.value = !totalBalanceVisible.value"
+              class="text-gray-500 hover:text-gray-700 transition">
               <component :is="totalBalanceVisible.value ? EyeOff : Eye" class="w-5 h-5" />
             </button>
           </CardContent>
@@ -102,8 +102,7 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
                   KES {{ Number(account.balance).toLocaleString() }}
                 </span>
               </span>
-              <button
-                @click="balanceVisibility[account.id] = !balanceVisibility[account.id]"
+              <button @click="balanceVisibility[account.id] = !balanceVisibility[account.id]"
                 class="text-gray-500 hover:text-gray-700 transition">
                 <component :is="balanceVisibility[account.id] ? EyeOff : Eye" class="w-4 h-4" />
               </button>
@@ -114,21 +113,21 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
             <!-- Deposit -->
             <Link v-if="account.account_type === 'savings'"
               :href="route('members.accounts.deposit.show', { member: account.member_id, account: account.id })">
-              <Button
-                class="bg-green-600 hover:bg-green-700 hover:cursor-pointer font-normal text-white max-sm:text-xs shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition">
-                <ArrowDownCircle class="w-3 sm:w-4 h-3 sm:h-4" />
-                Deposit
-              </Button>
+            <Button
+              class="bg-green-600 hover:bg-green-700 hover:cursor-pointer font-normal text-white max-sm:text-xs shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition">
+              <ArrowDownCircle class="w-3 sm:w-4 h-3 sm:h-4" />
+              Deposit
+            </Button>
             </Link>
 
             <!-- Statement -->
             <Link v-if="account.account_type === 'savings' && account.transactions.length"
               :href="route('my-accounts.statement', { member: account.member_id, account: account.id })">
-              <Button
-                class="bg-blue-600 hover:bg-blue-700 font-normal hover:cursor-pointer text-white max-sm:text-xs text-sm shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition">
-                <Download class="w-3 sm:w-4 h-3 sm:h-4" />
-                Download Statement
-              </Button>
+            <Button
+              class="bg-blue-600 hover:bg-blue-700 font-normal hover:cursor-pointer text-white max-sm:text-xs text-sm shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition">
+              <Download class="w-3 sm:w-4 h-3 sm:h-4" />
+              Download Statement
+            </Button>
             </Link>
           </div>
         </div>
@@ -153,10 +152,10 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
                   <td class="px-4 py-3 font-medium">KES {{ Number(tx.amount).toLocaleString() }}</td>
                   <td class="px-4 py-3">
                     <span :class="{
-                      'text-green-600 font-semibold': tx.status === 'completed',
-                      'text-yellow-600 font-semibold': tx.status === 'pending',
-                      'text-red-600 font-semibold': tx.status === 'failed'
-                    }">
+    'text-green-600 font-semibold': tx.status === 'completed',
+    'text-yellow-600 font-semibold': tx.status === 'pending',
+    'text-red-600 font-semibold': tx.status === 'failed'
+  }">
                       {{ tx.status }}
                     </span>
                   </td>
@@ -172,9 +171,9 @@ const balanceVisibility = reactive<{ [key: number]: boolean }>({})
       <div v-if="!props.accounts.length" class="text-center text-gray-500 py-12">
         <p class="text-lg">No accounts found for this member.</p>
         <Link :href="route('accounts.create', { member: props.member.id })">
-          <Button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md transition">
-            Open Your First Account
-          </Button>
+        <Button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md transition">
+          Open Your First Account
+        </Button>
         </Link>
       </div>
     </div>

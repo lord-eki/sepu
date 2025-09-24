@@ -1,5 +1,9 @@
 <template>
-  <AppLayout>
+  <AppLayout :breadcrumbs="[
+    { title: 'Loans', href: isMemberRole ? route('my-loans') : route('loans.index') },
+    { title: 'Apply' }
+  ]">
+
 
     <Head title="New Loan Application" />
     <div class="py-12">
@@ -16,32 +20,41 @@
 
         </div>
 
-        <!-- Success message -->
-        <div v-if="successMessage" class="relative mb-4 p-3 rounded bg-green-100 text-green-800">
-          {{ successMessage }}
-          <button @click="successMessage = null"
-            class="absolute top-2 right-2 text-green-700 hover:text-green-900 font-bold">
-            ×
-          </button>
+        <!-- Flash messages -->
+        <div class="max-w-2xl mx-auto mt-2 sm:mt-6 px-4">
+          <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+            leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+            <div v-if="successMessage || errorMessages" :class="[
+    successMessage
+      ? 'bg-green-100 text-green-800 border border-green-300'
+      : 'bg-red-100 text-red-800 border border-red-300',
+    'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
+  ]">
+              <!-- Success -->
+              <span v-if="successMessage" class="flex-1">{{ successMessage }}</span>
+
+              <!-- Errors -->
+              <ul v-else class="flex-1 list-disc pl-4 space-y-1">
+                <li v-for="(errs, field) in errorMessages" :key="field">
+                  <template v-if="field === 'general'">
+                    {{ errs.join(', ') }}
+                  </template>
+                  <template v-else>
+                    <strong>{{ field }}:</strong> {{ errs.join(', ') }}
+                  </template>
+                </li>
+              </ul>
+
+              <!-- Close button -->
+              <button type="button" class="ml-3 text-gray-500 hover:text-gray-700"
+                @click="() => { successMessage = null; errorMessages = null }">
+                ✕
+              </button>
+            </div>
+          </transition>
         </div>
 
-        <!-- Error messages -->
-        <div v-if="errorMessages" class="relative mb-4 p-3 rounded bg-red-100 text-red-800">
-          <ul>
-            <li v-for="(errs, field) in errorMessages" :key="field">
-              <template v-if="field === 'general'">
-                {{ errs.join(', ') }}
-              </template>
-              <template v-else>
-                <strong>{{ field }}:</strong> {{ errs.join(', ') }}
-              </template>
-            </li>
-          </ul>
-          <button @click="errorMessages = null"
-            class="absolute top-2 right-2 text-red-700 hover:text-red-900 font-bold">
-            ×
-          </button>
-        </div>
 
 
         <form @submit.prevent="submitApplication" class="space-y-6">
@@ -106,7 +119,7 @@
                     <div>
                       <span class="text-blue-600">Amount Range:</span>
                       <p class="font-medium">KES {{ formatCurrency(selectedProduct.min_amount) }} - {{
-            formatCurrency(selectedProduct.max_amount) }}</p>
+    formatCurrency(selectedProduct.max_amount) }}</p>
                     </div>
                     <div>
                       <span class="text-blue-600">Term Range:</span>
@@ -142,7 +155,7 @@
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2">
                   <p v-if="selectedProduct" class="text-xs text-gray-500 mt-1">
                     Range: KES {{ formatCurrency(selectedProduct.min_amount) }} - {{
-            formatCurrency(selectedProduct.max_amount) }}
+    formatCurrency(selectedProduct.max_amount) }}
                   </p>
                 </div>
 
@@ -194,11 +207,44 @@
             </div>
           </div>
 
+          <!-- Loan Disbursement -->
+          <div class="bg-white shadow-sm sm:rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Disbursement Method</h3>
+            </div>
+            <div class="p-6">
+              <select v-model="form.disbursement_method"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+                required>
+                <option value="">Select how you want to receive your loan...</option>
+                <option value="mpesa">M-Pesa</option>
+                <option value="bank">Bank Transfer</option>
+                <option value="cash">Cash (Office Pickup)</option>
+              </select>
+
+              <div v-if="form.disbursement_method === 'bank'" class="mt-4 space-y-2">
+                <input v-model="form.bank_account" type="text" placeholder="Bank Account Number"
+                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+                <input v-model="form.bank_name" type="text" placeholder="Bank Name"
+                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+              </div>
+
+              <div v-if="form.disbursement_method === 'mpesa'" class="mt-4">
+                <input v-model="form.mpesa_number" type="text" placeholder="M-Pesa Number"
+                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+              </div>
+            </div>
+          </div>
+
+
           <!-- Guarantors (Optional) -->
           <div class="bg-white shadow-sm sm:rounded-lg">
             <div class="px-6 py-4 border-b border-gray-200">
               <h3 class="text-lg font-medium text-gray-900">Guarantors</h3>
               <p class="text-sm text-gray-500 mt-1">Add guarantors if required by the loan product</p>
+              <p class="text-xs sm:text-sm text-red-500 mt-2">
+                Note: Selected guarantors will receive a notification to confirm before this loan can be approved.
+              </p>
             </div>
             <div class="p-6">
               <div v-for="(guarantor, index) in form.guarantors" :key="index"
@@ -300,6 +346,39 @@
 
           </div>
         </form>
+
+        <!-- Confirmation Modal -->
+        <div v-if="showConfirm" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+            <h3 class="text-lg font-semibold mb-4">Confirm Loan Application</h3>
+            <p class="mb-2">Please review your details before submitting:</p>
+            <ul class="text-sm text-gray-700 space-y-1">
+              <li><strong>Amount:</strong> KES {{ formatCurrency(form.applied_amount) }}</li>
+              <li><strong>Term:</strong> {{ form.term_months }} months</li>
+              <li><strong>Purpose:</strong> {{ form.purpose }}</li>
+              <li>
+                <strong>Disbursement:</strong> {{ form.disbursement_method }}
+                <div v-if="form.disbursement_method === 'bank'" class="ml-4 text-gray-600 text-sm">
+                  <p><strong>-Bank Name:</strong> {{ form.bank_name }}</p>
+                  <p><strong>-Account No:</strong> {{ form.bank_account }}</p>
+                </div>
+                <div v-else-if="form.disbursement_method === 'mpesa'" class="ml-4 text-gray-600 text-sm">
+                  <p><strong> -M-Pesa Number:</strong> {{ form.mpesa_number }}</p>
+                </div>
+              </li>
+            </ul>
+
+            <div class="mt-6 flex justify-end space-x-3">
+              <button @click="showConfirm = false"
+                class="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400">Cancel</button>
+              <button @click="confirmSubmit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                Confirm & Submit
+              </button>
+            </div>
+          </div>
+        </div>
+
+
       </div>
     </div>
   </AppLayout>
@@ -329,7 +408,11 @@ const form = reactive({
   term_months: '',
   purpose: '',
   guarantors: [],
-  documents: []
+  documents: [],
+  disbursement_method: '',
+  bank_account: '',
+  bank_name: '',
+  mpesa_number: '',
 })
 
 const uploadedFiles = ref([])
@@ -381,6 +464,11 @@ const resetForm = () => {
   selectedMember.value = isMemberRole.value ? props.auth.user.member : null
   selectedProduct.value = null
   loanCalculation.value = null
+  form.disbursement_method = ''
+  form.bank_account = ''
+  form.bank_name = ''
+  form.mpesa_number = ''
+
 }
 
 // Helpers
@@ -442,7 +530,7 @@ const isGuarantorSelected = (memberId) => {
 const handleFileUpload = (event) => {
   const files = Array.from(event.target.files)
   files.forEach(file => {
-    if (file.size <= 10 * 1024 * 1024) { // 10MB limit
+    if (file.size <= 10 * 1024 * 1024) {
       uploadedFiles.value.push(file)
     }
   })
@@ -478,7 +566,14 @@ const showMessage = (type, message, errors = null, callback = null) => {
   }, 3000)
 }
 
-const submitApplication = async () => {
+const showConfirm = ref(false)
+
+const submitApplication = () => {
+  showConfirm.value = true
+}
+
+const confirmSubmit = async () => {
+  showConfirm.value = false
   processing.value = true
   const formData = new FormData()
 

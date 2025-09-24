@@ -1,9 +1,39 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: 'Accounts', href: '/my-accounts' }, { title: 'Deposit' }]">
+  <AppLayout :breadcrumbs="[
+    { title: isMemberRole ? 'My Accounts' : 'Accounts', href: isMemberRole ? route('my-accounts') : route('accounts.index') },
+    { title: 'Deposit' }
+  ]">
 
-    <div v-if="flashMessage" class="w-fit px-6  p-3 rounded mb-4 mx-auto text-white"
-      :class="flashType === 'success' ? 'bg-green-700' : 'bg-red-600'">
-      {{ flashMessage }}
+
+     <!-- Flash messages -->
+   <div class="max-w-2xl mx-auto mt-2 sm:mt-6 px-4">
+      <transition
+        enter-active-class="transition ease-out duration-300"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2"
+      >
+        <div
+          v-if="flashMessage"
+          :class="[
+            flashType === 'success'
+              ? 'bg-green-100 text-green-800 border border-green-300'
+              : 'bg-red-100 text-red-800 border border-red-300',
+            'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
+          ]"
+        >
+          <span class="flex-1">{{ flashMessage }}</span>
+          <button
+            type="button"
+            class="ml-3 text-gray-500 hover:text-gray-700"
+            @click="flashMessage = null"
+          >
+            ✕
+          </button>
+        </div>
+      </transition>
     </div>
 
 
@@ -16,11 +46,15 @@
           {{ account.account_number }} - {{ account.member.first_name }} {{ account.member.last_name }}
         </p>
       </div>
-      <Link :href="route('accounts.show', account.id)"
+
+      <!-- Back to Accounts -->
+      <Link :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
         class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-      Back to Account
+      Back to Accounts
       </Link>
+
     </div>
+
 
 
     <div class="py-12">
@@ -195,10 +229,14 @@
 
               <!-- Form Actions -->
               <div class="flex items-center justify-between pt-6 border-t">
-                <Link :href="route('accounts.show', account.id)"
+                <Link :href="isMemberRole
+    ? route('my-accounts')
+    : route('accounts.index')"
                   class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 Cancel
                 </Link>
+
+
                 <button type="submit" :disabled="form.processing || !form.amount || form.amount <= 0"
                   class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
                   <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
@@ -222,7 +260,7 @@
 <script setup>
 import { Head, Link, usePage, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { ref, watch } from "vue"
+import { ref, watch, computed } from "vue"
 
 const props = defineProps({
   account: Object,
@@ -231,6 +269,8 @@ const props = defineProps({
 })
 
 const page = usePage()
+const isMemberRole = computed(() => props.authUser?.role?.includes('member'))
+
 
 const flashMessage = ref(null)
 const flashType = ref('success')

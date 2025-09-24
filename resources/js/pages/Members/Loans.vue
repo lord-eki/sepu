@@ -48,7 +48,7 @@ const formattedTotalAmount = computed(() =>
 const canApplyLoan = computed(() => {
   if (!props.loans.length) return true
   return props.loans.every(
-    (loan) => loan.status === "completed" || loan.status === "closed"
+    (loan) => loan.status === "completed" || loan.status === "rejected"
   )
 })
 

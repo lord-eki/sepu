@@ -2,20 +2,35 @@
   <AppLayout>
     <Head title="Complete Profile" />
 
-    <!-- messages -->
-    <div class="mx-[5%] sm:mx-[20%]">
-      <div
-        v-if="flash.success"
-        class="bg-green-100 w-fit px-6 text-green-800 p-3 rounded mb-4 transition-opacity duration-500"
+   <!-- Flash messages -->
+   <div class="max-w-2xl mx-auto mt-2 sm:mt-6 px-4">
+      <transition
+        enter-active-class="transition ease-out duration-300"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2"
       >
-        {{ flash.success }}
-      </div>
-      <div
-        v-if="flash.error"
-        class="bg-red-100 text-red-800 p-3 rounded mb-4 transition-opacity duration-500"
-      >
-        {{ flash.error }}
-      </div>
+        <div
+          v-if="flashMessage"
+          :class="[
+            flashType === 'success'
+              ? 'bg-green-100 text-green-800 border border-green-300'
+              : 'bg-red-100 text-red-800 border border-red-300',
+            'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
+          ]"
+        >
+          <span class="flex-1">{{ flashMessage }}</span>
+          <button
+            type="button"
+            class="ml-3 text-gray-500 hover:text-gray-700"
+            @click="flashMessage = null"
+          >
+            ✕
+          </button>
+        </div>
+      </transition>
     </div>
 
     <div class="py-16 mx-2 flex flex-col items-center text-center space-y-6">
