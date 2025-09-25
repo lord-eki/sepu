@@ -1,5 +1,24 @@
 <template>
   <AppLayout :title="`Account ${account.account_number}`">
+
+     <!-- Flash messages -->
+      <div class="max-w-2xl mx-auto mt-2 sm:mt-6 px-4">
+        <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+          leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+          <div v-if="flashMessage" :class="[
+      flashType === 'success'
+        ? 'bg-green-100 text-green-800 border border-green-300'
+        : 'bg-red-100 text-red-800 border border-red-300',
+      'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
+    ]">
+            <span class="flex-1">{{ flashMessage }}</span>
+            <button type="button" class="ml-3 text-gray-500 hover:text-gray-700" @click="flashMessage = null">
+              ✕
+            </button>
+          </div>
+        </transition>
+      </div>
       
     <div class="py-12">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -262,8 +281,34 @@
 </template>
 
 <script setup>
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { ref, watch } from "vue"
+
+const flashMessage = ref(null)
+const flashType = ref('success')
+const page = usePage()
+
+watch(
+  () => page.props.flash,
+  (flash) => {
+    if (flash?.success) {
+      flashMessage.value = flash.success
+      flashType.value = 'success'
+    } else if (flash?.error) {
+      flashMessage.value = flash.error
+      flashType.value = 'error'
+    }
+
+    // Auto hide after 3 seconds
+    if (flashMessage.value) {
+      setTimeout(() => {
+        flashMessage.value = null
+      }, 3000)
+    }
+  },
+  { immediate: true, deep: true }
+)
 
 const props = defineProps({
   account: Object,

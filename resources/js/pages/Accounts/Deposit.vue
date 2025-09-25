@@ -5,31 +5,19 @@
   ]">
 
 
-     <!-- Flash messages -->
-   <div class="max-w-2xl mx-auto mt-2 sm:mt-6 px-4">
-      <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-2"
-      >
-        <div
-          v-if="flashMessage"
-          :class="[
-            flashType === 'success'
-              ? 'bg-green-100 text-green-800 border border-green-300'
-              : 'bg-red-100 text-red-800 border border-red-300',
-            'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
-          ]"
-        >
+    <!-- Flash messages -->
+    <div class="max-w-2xl mx-auto mt-2 sm:mt-6 px-4">
+      <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+        <div v-if="flashMessage" :class="[
+    flashType === 'success'
+      ? 'bg-green-100 text-green-800 border border-green-300'
+      : 'bg-red-100 text-red-800 border border-red-300',
+    'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
+  ]">
           <span class="flex-1">{{ flashMessage }}</span>
-          <button
-            type="button"
-            class="ml-3 text-gray-500 hover:text-gray-700"
-            @click="flashMessage = null"
-          >
+          <button type="button" class="ml-3 text-gray-500 hover:text-gray-700" @click="flashMessage = null">
             ✕
           </button>
         </div>
@@ -235,8 +223,6 @@
                   class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 Cancel
                 </Link>
-
-
                 <button type="submit" :disabled="form.processing || !form.amount || form.amount <= 0"
                   class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
                   <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
