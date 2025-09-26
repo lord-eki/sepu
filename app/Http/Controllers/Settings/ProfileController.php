@@ -88,74 +88,111 @@ class ProfileController extends Controller
     }
 
      public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name'  => 'required|string|max:255',
-            'date_of_birth' => 'required|date',
-            'gender' => 'required|string',
-            'marital_status' => 'required|string',
-            'id_type' => 'required|string',
-            'id_number' => 'required|string|unique:members,id_number',
-            'physical_address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'county' => 'required|string|max:255',
-            'postal_code' => 'nullable|string|max:20',
-            'occupation' => 'nullable|string|max:255',
-            'employer' => 'nullable|string|max:255',
-            'monthly_income' => 'nullable|numeric',
-            'employee_number' => 'nullable|string|max:50',
-            'emergency_contact_name' => 'required|string|max:255',
-            'emergency_contact_phone' => 'required|string|max:20',
-            'emergency_contact_relationship' => 'required|string|max:100',
+{
+    $validated = $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name'  => 'required|string|max:255',
+        'middle_name'  => 'nullable|string|max:255',
+        'date_of_birth' => 'required|date',
+        'gender' => 'required|string',
+        'marital_status' => 'required|string',
+        'id_type' => 'required|string',
+        'id_number' => 'required|string|unique:members,id_number',
+        'physical_address' => 'required|string|max:255',
+        'city' => 'required|string|max:255',
+        'county' => 'required|string|max:255',
+        'postal_address' => 'nullable|string|max:20',
+        'occupation' => 'nullable|string|max:255',
+        'employer' => 'nullable|string|max:255',
+        'monthly_income' => 'nullable|numeric',
+        'employee_number' => 'nullable|string|max:50',
+        'emergency_contact_name' => 'required|string|max:255',
+        'emergency_contact_phone' => 'required|string|max:20',
+        'emergency_contact_relationship' => 'required|string|max:100',
+        'photo' => 'nullable|image|max:2048',
+        'documents.*' => 'nullable|file|max:5120',
+    ]);
+
+    if (Member::where('user_id', Auth::id())->exists()) {
+        return back()->withInput()->with('error', 'You have already completed your profile.');
+    }
+
+    if ($request->hasFile('photo')) {
+        $path = $request->file('photo')->store('members/photos', 'public');
+        $validated['photo'] = $path; 
+    }
+
+    if ($request->hasFile('documents')) {
+        $documentPaths = [];
+        foreach ($request->file('documents') as $doc) {
+            $documentPaths[] = $doc->store('member_documents', 'public');
+        }
+        $validated['documents'] = $documentPaths; // auto-cast if model has ->casts
+    }
+
+    DB::beginTransaction();
+
+    try {
+        $member = Member::create(array_merge($validated, [
+            'user_id'           => Auth::id(),
+            'membership_id'     => $this->generateMembershipId(),
+            'membership_status' => 'inactive',
+            'membership_date'   => now(),
+        ]));
+
+        $member->accounts()->create([
+            'account_number' => $this->generateAccountNumber('SAV'),
+            'account_type'   => 'savings',
+            'balance'        => 0,
+            'available_balance' => 0,
+            'is_active'      => true,
         ]);
 
-        //Check if this user already has a member profile
-        if (Member::where('user_id', Auth::id())->exists()) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'You have already completed your profile.');
-        }
+        $member->accounts()->create([
+            'account_number' => $this->generateAccountNumber('SHR'),
+            'account_type'   => 'shares',
+            'balance'        => 0,
+            'available_balance' => 0,
+            'is_active'      => true,
+        ]);
 
-        DB::beginTransaction();
+        DB::commit();
 
-        try {
-            $member = Member::create(array_merge($validated, [
-                'user_id'           => Auth::id(),
-                'membership_id'     => $this->generateMembershipId(),
-                'membership_status' => 'inactive',
-                'membership_date'   => now(),
-            ]));
-
-            // Create default accounts
-            $member->accounts()->create([
-                'account_number' => $this->generateAccountNumber('SAV'),
-                'account_type'   => 'savings',
-                'balance'        => 0,
-                'available_balance' => 0,
-                'is_active'      => true,
-            ]);
-
-            $member->accounts()->create([
-                'account_number' => $this->generateAccountNumber('SHR'),
-                'account_type'   => 'shares',
-                'balance'        => 0,
-                'available_balance' => 0,
-                'is_active'      => true,
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('awaiting-activation') 
-                ->with('success', 'Profile completed successfully! Please wait for approval.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Something went wrong while completing your profile: ' . $e->getMessage());
-        }
+        return redirect()->route('awaiting-activation')
+            ->with('success', 'Profile completed successfully! Please wait for approval.');
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        Log::error('Profile completion failed', ['error' => $e->getMessage()]);
+        return back()->withInput()->with('error', 'Something went wrong while completing your profile. Please try again later.');
     }
+}
+
+
+
+    public function updatePhoto(Request $request)
+    {
+        $user = Auth::user();
+        $member = Member::where('user_id', $user->id)->firstOrFail();
+
+        $validated = $request->validate([
+            'profile_photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // Delete old photo if it exists
+        if ($member->profile_photo && \Storage::disk('public')->exists($member->profile_photo)) {
+            \Storage::disk('public')->delete($member->profile_photo);
+        }
+
+        // Store new photo
+        $path = $request->file('profile_photo')->store('members/photos', 'public');
+
+        $member->update([
+            'profile_photo' => $path,
+        ]);
+
+        return back()->with('success', 'Profile photo updated successfully.');
+    }
+
 
     private function generateMembershipId(): string
     {

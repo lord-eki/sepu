@@ -3,344 +3,328 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, useForm, usePage } from '@inertiajs/vue3'
 import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, XCircle, Save, User } from 'lucide-vue-next'
+import { Save, User, Pencil } from 'lucide-vue-next'
 import { route } from 'ziggy-js'
 
+const page = usePage<{ member: Member }>()
+
+const flashMessage = ref(null)
+const flashType = ref('success')
+
+watch(
+  () => page.props.flash,
+  (flash) => {
+    if (flash?.success) {
+      flashMessage.value = flash.success
+      flashType.value = 'success'
+    } else if (flash?.error) {
+      flashMessage.value = flash.error
+      flashType.value = 'error'
+    }
+    if (flashMessage.value) {
+      setTimeout(() => (flashMessage.value = null), 3000)
+    }
+  },
+  { immediate: true, deep: true }
+)
 
 interface Member {
-    id: number
-    user_id: number
-    membership_id: string
-    first_name: string
-    last_name: string
-    email: string
-    phone: string
-    middle_name?: string | null
-    id_number?: string | null
-    id_type?: string | null
-    date_of_birth?: string | null
-    gender?: string | null
-    marital_status?: string | null
-    occupation?: string | null
-    employer?: string | null
-    monthly_income?: number | null
-    physical_address?: string | null
-    postal_address?: string | null
-    city?: string | null
-    county?: string | null
-    country?: string | null
-    emergency_contact_name?: string | null
-    emergency_contact_phone?: string | null
-    emergency_contact_relationship?: string | null
-    membership_status?: string | null
-    membership_date?: string | null
-    profile_photo?: string | null
+  id: number
+  membership_id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  middle_name?: string | null
+  id_number?: string | null
+  date_of_birth?: string | null
+  gender?: string | null
+  marital_status?: string | null
+  occupation?: string | null
+  employer?: string | null
+  monthly_income?: number | null
+  physical_address?: string | null
+  postal_address?: string | null
+  city?: string | null
+  county?: string | null
+  country?: string | null
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  membership_status?: string | null
+  membership_date?: string | null
+  profile_photo?: string | null
 }
 
-const page = usePage<{ member: Member }>()
 const member = computed(() => page.props.member)
 const user = computed(() => page.props.user)
 
-// edit toggle
 const isEditing = ref(false)
 
-const formatDate = (date: string | null | undefined) => {
-    if (!date) return '-'
-    return new Date(date).toLocaleDateString('en-GB')
-}
+const formatDate = (date: string | null | undefined) =>
+  date ? new Date(date).toLocaleDateString('en-GB') : '-'
 
 const form = useForm({
-    first_name: member.value.first_name,
-    last_name: member.value.last_name,
-    middle_name: member.value.middle_name,
-    email: user.value.email,
-    phone: user.value.phone,
-    occupation: member.value.occupation,
-    employer: member.value.employer,
-    monthly_income: member.value.monthly_income,
-    physical_address: member.value.physical_address,
-    postal_address: member.value.postal_address,
-    city: member.value.city,
-    county: member.value.county,
-    country: member.value.country,
-    emergency_contact_name: member.value.emergency_contact_name,
-    emergency_contact_phone: member.value.emergency_contact_phone,
-    emergency_contact_relationship: member.value.emergency_contact_relationship,
-    marital_status: member.value.marital_status
-        ? member.value.marital_status.toLowerCase().trim()
-        : "",
-    profile_photo: null as File | null,
+  first_name: member.value.first_name,
+  last_name: member.value.last_name,
+  middle_name: member.value.middle_name,
+  email: user.value.email,
+  phone: user.value.phone,
+  occupation: member.value.occupation,
+  employer: member.value.employer,
+  monthly_income: member.value.monthly_income,
+  physical_address: member.value.physical_address,
+  postal_address: member.value.postal_address,
+  city: member.value.city,
+  county: member.value.county,
+  country: member.value.country,
+  emergency_contact_name: member.value.emergency_contact_name,
+  emergency_contact_phone: member.value.emergency_contact_phone,
+  emergency_contact_relationship: member.value.emergency_contact_relationship,
+  marital_status: member.value.marital_status
+    ? member.value.marital_status.toLowerCase().trim()
+    : '',
+  profile_photo: null as File | null,
 })
 
-const showToast = ref(false)
-const toastMessage = ref("")
-const toastType = ref<"success" | "error">("success")
+const previewUrl = ref<string | null>(null)
 
 function handlePhotoUpload(event: Event) {
-    const target = event.target as HTMLInputElement
-    if (target.files && target.files[0]) {
-        form.profile_photo = target.files[0]
-    }
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    form.profile_photo = file
+    previewUrl.value = URL.createObjectURL(file)
+    form.post(route('member.updatePhoto'), {
+      forceFormData: true,
+      preserveScroll: true,
+    })
+  }
 }
-
 
 function submit() {
-    form.put(route('member.updateProfile'), {
-        forceFormData: true,
-        onSuccess: () => {
-            toastMessage.value = "Profile updated successfully!"
-            toastType.value = "success"
-            showToast.value = true
-            isEditing.value = false
-        },
-        onError: () => {
-            toastMessage.value = "An error occurred. Please try again."
-            toastType.value = "error"
-            showToast.value = true
-        }
-    })
+  form.put(route('member.updateProfile'), {
+    forceFormData: true,
+    onSuccess: () => (isEditing.value = false),
+  })
 }
-
-watch(showToast, (val) => {
-    if (val) setTimeout(() => (showToast.value = false), 3000)
-})
 </script>
 
 <template>
-
-    <Head title="Member Profile" />
-    <AppLayout :breadcrumbs="[{ title: 'Member Profile', href: '/member/profile' }]">
-        <div class="p-4">
-            <!-- Toast -->
-            <transition name="slide">
-                <div v-if="showToast"
-                    class="fixed top-5 right-5 flex items-center px-5 py-3 rounded-xl shadow-lg text-white z-50"
-                    :class="toastType === 'success' ? 'bg-green-600' : 'bg-red-600'">
-                    <CheckCircle v-if="toastType === 'success'" class="w-5 h-5 mr-2" />
-                    <XCircle v-else class="w-5 h-5 mr-2" />
-                    <span class="font-medium">{{ toastMessage }}</span>
-                </div>
-            </transition>
-
-            <!-- Layout split -->
-            <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 sm:gap-6">
-                <!-- Left: Profile Summary -->
-                <div class="col-span-1  bg-white dark:bg-gray-900 shadow-xl max-sm:mb-4 rounded-xl overflow-hidden">
-                    <!-- Profile header -->
-                    <div class="bg-blue-50 p-2 sm:p-4 flex items-center justify-center gap-3">
-                        <div class="flex flex-col items-center gap-1">
-                            <img v-if="member.profile_photo" :src="`/storage/${member.profile_photo}`" alt="Profile"
-                                class="w-24 h-24 rounded-full object-cover" />
-                            <div v-else>
-                                <User class="h-16 w-16 bg-gray-200 p-2 text-gray-400 rounded-full" />
-                            </div>
-
-                            <!-- Upload input -->
-                            <div class="">
-                                <label
-                                    class="px-2 py-1 bg-gray-50 text-gray-600 text-xs sm:text-sm rounded-lg shadow hover:bg-gray-400 cursor-pointer">
-                                    Change Photo
-                                    <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
-                                </label>
-                            </div>
-
-                        </div>
-
-                        <div class="">
-                            <h2 class="mt-2 text-xl font-semibold text-gray-700">
-                                {{ member.first_name }} {{ member.last_name }}
-                            </h2>
-                            <p class="text-sm text-gray-800">M/ship ID: {{ member.membership_id }}</p>
-                        </div>
-                    </div>
-
-
-                    <!-- Static info -->
-                    <div class="p-6 grid grid-cols-1 gap-4">
-                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-                            <label class="text-xs font-medium text-gray-500">ID Number</label>
-                            <p class="mt-1 font-medium">{{ member.id_number || '-' }}</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-                            <label class="text-xs font-medium text-gray-500">Date of Birth</label>
-                            <p class="mt-1 font-medium">{{ formatDate(member.date_of_birth) }}</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-                            <label class="text-xs font-medium text-gray-500">Gender</label>
-                            <p class="mt-1 font-semibold">{{ member.gender || '-' }}</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-                            <label class="text-xs font-medium text-gray-500">Membership Status</label>
-                            <p class="mt-1 font-medium capitalize">{{ member.membership_status }}</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-                            <label class="text-xs font-medium text-gray-500">Joined On</label>
-                            <p class="mt-1 font-medium">{{ formatDate(member.membership_date) }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right: Editable Form -->
-                <div class="col-span-2 bg-white dark:bg-gray-900 shadow-xl rounded-2xl p-8 space-y-8">
-                    <div class="flex flex-wrap justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold">Personal Info</h3>
-                        <!-- Buttons -->
-                        <div class="flex gap-4">
-                            <Button v-if="!isEditing" @click="isEditing = true"
-                                class="bg-blue-600 hover:bg-blue-700 hover:cursor-pointer text-white rounded-sm shadow-md">
-                                ✏️ Edit
-                            </Button>
-
-                            <Button v-if="isEditing" @click="isEditing = false"
-                                class="bg-gray-500 hover:bg-gray-600 hover:cursor-pointer text-white rounded-sm shadow-md">
-                                Cancel
-                            </Button>
-
-                            <Button v-if="isEditing" type="button" @click="submit"
-                                class="bg-green-600 hover:bg-green-700 hover:cursor-pointer text-white rounded-sm shadow-md flex items-center gap-2">
-                                <Save class="w-4 h-4" /> <span>Save</span>
-                            </Button>
-                        </div>
-                    </div>
-
-                    <!-- Personal Info -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 inputsborder">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">First Name</label>
-                            <input v-model="form.first_name" type="text" class="w-full bg-gray-100  rounded-xl p-2.5"
-                                disabled />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Last Name</label>
-                            <input v-model="form.last_name" type="text" class="w-full bg-gray-100 rounded-xl p-2.5"
-                                disabled />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Middle Name</label>
-                            <input v-model="form.middle_name" type="text" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Email</label>
-                            <input v-model="form.email" type="text" class="w-full bg-gray-100 rounded-xl p-2.5"
-                                disabled />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Phone</label>
-                            <input v-model="form.phone" type="text" class="w-full bg-gray-100 rounded-xl p-2.5"
-                                disabled />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Marital Status</label>
-                            <select v-model="form.marital_status" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing">
-                                <option value="" disabled>Select status</option>
-                                <option value="single">Single</option>
-                                <option value="married">Married</option>
-                                <option value="divorced">Divorced</option>
-                                <option value="widowed">Widowed</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Occupation</label>
-                            <input v-model="form.occupation" type="text" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Employer</label>
-                            <input v-model="form.employer" type="text" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Monthly Income</label>
-                            <input v-model="form.monthly_income" type="number" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                    </div>
-
-                    <!-- Address -->
-                    <h3 class="text-lg font-semibold mb-2 pb-2">Address</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 inputsborder">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Physical Address</label>
-                            <input v-model="form.physical_address" type="text" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Postal Address</label>
-                            <input v-model="form.postal_address" type="text" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">City</label>
-                            <input v-model="form.city" type="text" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Country</label>
-                            <select v-model="form.country" class="w-full rounded-xl p-2.5" :disabled="!isEditing">
-                                <option value="" disabled>Select country</option>
-                                <option value="Kenya">Kenya</option>
-                                <option value="Uganda">Uganda</option>
-                                <option value="Tanzania">Tanzania</option>
-                                <option value="Rwanda">Rwanda</option>
-                                <option value="Burundi">Burundi</option>
-                                <option value="South Sudan">South Sudan</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium mb-1">County</label>
-                            <input v-model="form.county" type="text" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                    </div>
-
-                    <!-- Emergency -->
-                    <h3 class="text-lg font-semibold mb-2 pb-2">Emergency Contact</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 inputsborder">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Contact Name</label>
-                            <input v-model="form.emergency_contact_name" type="text" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Contact Phone</label>
-                            <input v-model="form.emergency_contact_phone" type="number" class="w-full rounded-xl p-2.5"
-                                :disabled="!isEditing" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Relationship</label>
-                            <input v-model="form.emergency_contact_relationship" type="text"
-                                class="w-full rounded-xl p-2.5" :disabled="!isEditing" />
-                        </div>
-                    </div>
-                    <!-- Save Button -->
-
-                </div>
-            </div>
+  <Head title="Member Profile" />
+  <AppLayout :breadcrumbs="[{ title: 'Member Profile', href: '/member/profile' }]">
+    <div class="p-4">
+      <!-- Flash -->
+      <transition
+        enter-active-class="transition ease-out duration-300"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2"
+      >
+        <div
+          v-if="flashMessage"
+          :class="[
+            flashType === 'success'
+              ? 'bg-green-100 text-green-800 border border-green-300'
+              : 'bg-red-100 text-red-800 border border-red-300',
+            'max-w-2xl mx-auto px-6 py-3 rounded-xl flex items-center shadow-sm mb-6',
+          ]"
+        >
+          <span class="flex-1">{{ flashMessage }}</span>
+          <button
+            type="button"
+            class="ml-3 text-gray-500 hover:text-gray-700"
+            @click="flashMessage = null"
+          >
+            ✕
+          </button>
         </div>
-    </AppLayout>
+      </transition>
+
+      <!-- Layout -->
+      <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Profile Card -->
+        <div class="col-span-1 bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">
+          <!-- Profile header -->
+          <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 flex flex-col items-center">
+            <img
+              v-if="previewUrl"
+              :src="previewUrl"
+              alt="Preview"
+              class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md"
+            />
+            <img
+              v-else-if="member.profile_photo"
+              :src="`/storage/${member.profile_photo}`"
+              alt="Profile"
+              class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md"
+            />
+            <div v-else>
+              <User class="h-20 w-20 bg-gray-200 p-2 text-gray-400 rounded-full border-4 border-white shadow-md" />
+            </div>
+
+            <!-- Upload -->
+            <label
+              class="mt-4 px-3 py-1.5 bg-white border border-gray-200 text-sm text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 cursor-pointer"
+            >
+              Change Photo
+              <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
+            </label>
+
+            <h2 class="mt-4 text-xl font-semibold text-gray-800">
+              {{ member.first_name }} {{ member.last_name }}
+            </h2>
+            <p class="text-sm text-gray-600">M/ship ID: {{ member.membership_id }}</p>
+          </div>
+
+          <!-- Static Info -->
+          <div class="p-6 space-y-4">
+            <div
+              v-for="info in [
+                { label: 'ID Number', value: member.id_number || '-' },
+                { label: 'Date of Birth', value: formatDate(member.date_of_birth) },
+                { label: 'Gender', value: member.gender || '-' },
+                { label: 'Membership Status', value: member.membership_status },
+                { label: 'Joined On', value: formatDate(member.membership_date) },
+              ]"
+              :key="info.label"
+              class="p-3 rounded-lg bg-gray-50 border border-gray-100"
+            >
+              <label class="text-xs text-gray-500">{{ info.label }}</label>
+              <p class="mt-1 font-medium text-gray-800">{{ info.value }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Form -->
+        <div class="col-span-2 bg-white rounded-2xl shadow border border-gray-100 p-6 space-y-8">
+          <div class="flex flex-wrap justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-800">Personal Info</h3>
+            <div class="flex gap-3">
+              <Button
+                v-if="!isEditing"
+                @click="isEditing = true"
+                class="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-3 py-2 shadow-sm"
+              >
+                <Pencil class="w-4 h-4"/> Edit
+              </Button>
+              <Button
+                v-if="isEditing"
+                @click="isEditing = false"
+                class="bg-gray-500 hover:bg-gray-600 text-white rounded-md px-3 py-2 shadow-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                v-if="isEditing"
+                type="button"
+                @click="submit"
+                class="bg-green-600 hover:bg-green-700 text-white rounded-md px-3 py-2 shadow-sm flex items-center gap-2"
+              >
+                <Save class="w-4 h-4" /> <span>Save</span>
+              </Button>
+            </div>
+          </div>
+
+          <!-- Inputs -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div v-for="field in [
+              { key: 'first_name', label: 'First Name', disabled: true },
+              { key: 'last_name', label: 'Last Name', disabled: true },
+              { key: 'middle_name', label: 'Middle Name' },
+              { key: 'email', label: 'Email', disabled: true },
+              { key: 'phone', label: 'Phone', disabled: true },
+              { key: 'marital_status', label: 'Marital Status', type: 'select' },
+              { key: 'occupation', label: 'Occupation' },
+              { key: 'employer', label: 'Employer' },
+              { key: 'monthly_income', label: 'Monthly Income', type: 'number' },
+            ]" :key="field.key">
+              <label class="block text-sm font-medium mb-1 text-gray-600">{{ field.label }}</label>
+              <input
+                v-if="field.type !== 'select'"
+                v-model="form[field.key]"
+                :type="field.type || 'text'"
+                class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-blue-200"
+                :disabled="!isEditing || field.disabled"
+              />
+              <select
+                v-else
+                v-model="form.marital_status"
+                class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-blue-200"
+                :disabled="!isEditing"
+              >
+                <option value="" disabled>Select status</option>
+                <option value="single">Single</option>
+                <option value="married">Married</option>
+                <option value="divorced">Divorced</option>
+                <option value="widowed">Widowed</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <h3 class="text-lg font-semibold text-gray-800 border-b pb-1">Address</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div v-for="field in [
+              { key: 'physical_address', label: 'Physical Address' },
+              { key: 'postal_address', label: 'Postal Address' },
+              { key: 'city', label: 'City' },
+              { key: 'county', label: 'County' },
+            ]" :key="field.key">
+              <label class="block text-sm font-medium mb-1 text-gray-600">{{ field.label }}</label>
+              <input
+                v-model="form[field.key]"
+                type="text"
+                class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-blue-200"
+                :disabled="!isEditing"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1 text-gray-600">Country</label>
+              <select
+                v-model="form.country"
+                class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-blue-200"
+                :disabled="!isEditing"
+              >
+                <option value="" disabled>Select country</option>
+                <option value="Kenya">Kenya</option>
+                <option value="Uganda">Uganda</option>
+                <option value="Tanzania">Tanzania</option>
+                <option value="Rwanda">Rwanda</option>
+                <option value="Burundi">Burundi</option>
+                <option value="South Sudan">South Sudan</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Emergency -->
+          <h3 class="text-lg font-semibold text-gray-800 border-b pb-1">Emergency Contact</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div v-for="field in [
+              { key: 'emergency_contact_name', label: 'Contact Name' },
+              { key: 'emergency_contact_phone', label: 'Contact Phone' },
+              { key: 'emergency_contact_relationship', label: 'Relationship' },
+            ]" :key="field.key">
+              <label class="block text-sm font-medium mb-1 text-gray-600">{{ field.label }}</label>
+              <input
+                v-model="form[field.key]"
+                type="text"
+                class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-blue-200"
+                :disabled="!isEditing"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </AppLayout>
 </template>
 
 <style>
-.slide-enter-active,
-.slide-leave-active {
-    transition: all 0.3s ease;
-}
-
-.slide-enter-from {
-    opacity: 0;
-    transform: translateX(50px);
-}
-
-.slide-leave-to {
-    opacity: 0;
-    transform: translateX(50px);
-}
-
 .inputsborder input,
 select {
-    border: 1px solid #b5c4daff;
+  border: 1px solid #cbd5e1;
 }
 </style>

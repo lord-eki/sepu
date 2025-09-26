@@ -1,342 +1,272 @@
 <template>
   <Head title="Payment Vouchers" />
-  
-  <AppLayout>
-    <template #header>
-      <div class="flex justify-between items-center">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+
+   <AppLayout :breadcrumbs="[{ title: 'Vouchers', href: '/vouchers' }]">
+    <!-- Header -->
+      <div class="flex justify-between px-4 sm:px-6 pt-4 items-center">
+        <h2 class="text-lg sm:text-xl font-bold text-gray-800 tracking-tight">
           Payment Vouchers
         </h2>
         <Link
           :href="route('vouchers.create')"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center"
+          class="inline-flex items-center px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white text-sm shadow-sm hover:bg-blue-700 transition"
         >
           <PlusCircleIcon class="h-5 w-5 mr-2" />
           Create Voucher
         </Link>
       </div>
-    </template>
 
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        <!-- Statistics Cards -->
+    <div class="py-10 px-3 sm:px-1">
+      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+        <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <FileText class="h-8 w-8 text-blue-500" />
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-600">Total Vouchers</p>
-                  <p class="text-2xl font-bold text-gray-900">{{ stats.total_vouchers }}</p>
-                </div>
+          <div
+            v-for="card in [
+              { label: 'Total Vouchers', value: stats.total_vouchers, icon: FileText, color: 'bg-blue-100 text-blue-600' },
+              { label: 'Pending', value: stats.pending_vouchers, extra: formatCurrency(stats.total_pending_amount), icon: Clock, color: 'bg-yellow-100 text-yellow-600' },
+              { label: 'Approved', value: stats.approved_vouchers, extra: formatCurrency(stats.total_approved_amount), icon: CheckCircle2Icon, color: 'bg-green-100 text-green-600' },
+              { label: 'Paid', value: stats.paid_vouchers, extra: formatCurrency(stats.total_paid_amount), icon: CurrencyIcon, color: 'bg-indigo-100 text-indigo-600' }
+            ]"
+            :key="card.label"
+            class="bg-white rounded-2xl shadow-sm hover:shadow-md transition p-4 sm:p-5"
+          >
+            <div class="flex items-center">
+              <div class="flex-shrink-0 p-3 rounded-xl" :class="card.color">
+                <component :is="card.icon" class="h-4 sm:h-5 w-4 sm:w-5" />
               </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <Clock class="h-8 w-8 text-yellow-500" />
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-600">Pending</p>
-                  <p class="text-2xl font-bold text-gray-900">{{ stats.pending_vouchers }}</p>
-                  <p class="text-sm text-gray-500">{{ formatCurrency(stats.total_pending_amount) }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <CheckCircle2Icon class="h-8 w-8 text-green-500" />
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-600">Approved</p>
-                  <p class="text-2xl font-bold text-gray-900">{{ stats.approved_vouchers }}</p>
-                  <p class="text-sm text-gray-500">{{ formatCurrency(stats.total_approved_amount) }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <CurrencyIcon class="h-8 w-8 text-blue-500" />
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-600">Paid</p>
-                  <p class="text-2xl font-bold text-gray-900">{{ stats.paid_vouchers }}</p>
-                  <p class="text-sm text-gray-500">{{ formatCurrency(stats.total_paid_amount) }}</p>
-                </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">{{ card.label }}</p>
+                <p class="text-lg sm:text-xl font-bold text-gray-900">{{ card.value }}</p>
+                <p v-if="card.extra" class="text-sm text-gray-500">{{ card.extra }}</p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Filters -->
-        <div class="bg-white shadow-sm rounded-lg">
-          <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  v-model="form.status"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                  @change="applyFilters"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="paid">Paid</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                <select
-                  v-model="form.voucher_type"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                  @change="applyFilters"
-                >
-                  <option value="">All Types</option>
-                  <option value="loan_disbursement">Loan Disbursement</option>
-                  <option value="operational_expense">Operational Expense</option>
-                  <option value="dividend_payment">Dividend Payment</option>
-                  <option value="refund">Refund</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
-                <input
-                  v-model="form.date_from"
-                  type="date"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                  @change="applyFilters"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
-                <input
-                  v-model="form.date_to"
-                  type="date"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                  @change="applyFilters"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                <div class="relative">
-                  <input
-                    v-model="form.search"
-                    type="text"
-                    placeholder="Search vouchers..."
-                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-10 p-2"
-                    @input="debouncedSearch"
-                  />
-                  <Search class="h-5 w-5 text-gray-400 absolute left-3 top-3" />
-                </div>
-              </div>
-            </div>
-
-            <div class="flex justify-end mt-4 space-x-2">
-              <button
-                @click="clearFilters"
-                class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md"
+        <div class="bg-white rounded-2xl shadow-sm p-5">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Status -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                v-model="form.status"
+                class="w-full rounded-lg border border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                @change="applyFilters"
               >
-                Clear Filters
-              </button>
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="paid">Paid</option>
+                <option value="rejected">Rejected</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </div>
+
+            <!-- Type -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <select
+                v-model="form.voucher_type"
+                class="w-full rounded-lg border border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                @change="applyFilters"
+              >
+                <option value="">All Types</option>
+                <option value="loan_disbursement">Loan Disbursement</option>
+                <option value="operational_expense">Operational Expense</option>
+                <option value="dividend_payment">Dividend Payment</option>
+                <option value="refund">Refund</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Date From -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+              <input
+                v-model="form.date_from"
+                type="date"
+                class="w-full rounded-lg border border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                @change="applyFilters"
+              />
+            </div>
+
+            <!-- Date To -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+              <input
+                v-model="form.date_to"
+                type="date"
+                class="w-full rounded-lg text-sm border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                @change="applyFilters"
+              />
+            </div>
+
+            <!-- Search -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <div class="relative">
+                <input
+                  v-model="form.search"
+                  type="text"
+                  placeholder="Search vouchers..."
+                  class="w-full pl-10 rounded-lg border border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                  @input="debouncedSearch"
+                />
+                <Search class="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end mt-2 lg:mt-0">
+            <button
+              @click="clearFilters"
+              class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-200 rounded-lg"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
 
         <!-- Vouchers Table -->
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-sm">
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+            <table class="w-lg text-sm">
+              <thead class="bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Voucher Number
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payee
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Purpose
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th class="px-4 py-3 text-left">Voucher Number</th>
+                  <th class="px-4 py-3 text-left">Type</th>
+                  <th class="px-4 py-3 text-left">Payee</th>
+                  <th class="px-4 py-3 text-left">Amount</th>
+                  <th class="px-4 py-3 text-left">Purpose</th>
+                  <th class="px-4 py-3 text-left">Status</th>
+                  <th class="px-4 py-3 text-left">Created</th>
+                  <th class="px-4 py-3 text-left">Actions</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="voucher in vouchers.data" :key="voucher.id" class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                    <Link :href="route('vouchers.show', voucher.id)" class="hover:text-blue-800">
+              <tbody class="divide-y divide-gray-200">
+                <tr
+                  v-for="voucher in vouchers.data"
+                  :key="voucher.id"
+                  class="hover:bg-gray-50"
+                >
+                  <td class="px-4 py-4 font-medium text-blue-600">
+                    <Link :href="route('vouchers.show', voucher.id)" class="hover:underline">
                       {{ voucher.voucher_number }}
                     </Link>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  <td class="px-4 py-4">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
                       {{ formatVoucherType(voucher.voucher_type) }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{ voucher.payee_name }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{ formatCurrency(voucher.amount) }}
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                    {{ voucher.purpose }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span :class="getStatusBadgeClass(voucher.status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                  <td class="px-4 py-4">{{ voucher.payee_name }}</td>
+                  <td class="px-4 py-4">{{ formatCurrency(voucher.amount) }}</td>
+                  <td class="px-4 py-4 truncate max-w-xs">{{ voucher.purpose }}</td>
+                  <td class="px-4 py-4">
+                    <span
+                      :class="getStatusBadgeClass(voucher.status)"
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    >
                       {{ formatStatus(voucher.status) }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td class="px-4 py-4 text-gray-500">
                     {{ formatDate(voucher.created_at) }}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div class="flex space-x-2">
-                      <Link
-                        :href="route('vouchers.show', voucher.id)"
-                        class="text-blue-600 hover:text-blue-800"
-                        title="View"
-                      >
-                        <Eye class="h-4 w-4" />
-                      </Link>
-                      <Link
-                        v-if="voucher.status === 'pending'"
-                        :href="route('vouchers.edit', voucher.id)"
-                        class="text-green-600 hover:text-green-800"
-                        title="Edit"
-                      >
-                        <Pencil class="h-4 w-4" />
-                      </Link>
-                    </div>
+                  <td class="px-4 py-4 flex space-x-2">
+                    <Link
+                      :href="route('vouchers.show', voucher.id)"
+                      class="text-blue-600 hover:text-blue-800"
+                      title="View"
+                    >
+                      <Eye class="h-4 w-4" />
+                    </Link>
+                    <Link
+                      v-if="voucher.status === 'pending'"
+                      :href="route('vouchers.edit', voucher.id)"
+                      class="text-green-600 hover:text-green-800"
+                      title="Edit"
+                    >
+                      <Pencil class="h-4 w-4" />
+                    </Link>
                   </td>
                 </tr>
               </tbody>
             </table>
+          </div>
           </div>
 
           <!-- Empty State -->
           <div v-if="vouchers.data.length === 0" class="text-center py-12">
             <FileText class="mx-auto h-12 w-12 text-gray-400" />
             <h3 class="mt-2 text-sm font-medium text-gray-900">No vouchers found</h3>
-            <p class="mt-1 text-sm text-gray-500">Get started by creating a new payment voucher.</p>
+            <p class="mt-1 text-sm text-gray-500">
+              Get started by creating a new payment voucher.
+            </p>
             <div class="mt-6">
               <Link
                 :href="route('vouchers.create')"
-                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white shadow-sm hover:bg-blue-700"
               >
                 <PlusCircleIcon class="h-5 w-5 mr-2" />
                 Create Voucher
               </Link>
             </div>
-          </div>
+        
         </div>
 
         <!-- Pagination -->
-        <div v-if="vouchers.data.length > 0" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm">
-          <div class="flex-1 flex justify-between sm:hidden">
-            <Link
-              v-if="vouchers.prev_page_url"
-              :href="vouchers.prev_page_url"
-              class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Previous
-            </Link>
-            <Link
-              v-if="vouchers.next_page_url"
-              :href="vouchers.next_page_url"
-              class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Next
-            </Link>
+        <div
+          v-if="vouchers.data.length > 0"
+          class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 rounded-2xl shadow-sm"
+        >
+          <div class="hidden sm:block">
+            <p class="text-sm text-gray-600">
+              Showing
+              <span class="font-medium">{{ vouchers.from }}</span>
+              to
+              <span class="font-medium">{{ vouchers.to }}</span>
+              of
+              <span class="font-medium">{{ vouchers.total }}</span>
+              results
+            </p>
           </div>
-          <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p class="text-sm text-gray-700">
-                Showing
-                <span class="font-medium">{{ vouchers.from }}</span>
-                to
-                <span class="font-medium">{{ vouchers.to }}</span>
-                of
-                <span class="font-medium">{{ vouchers.total }}</span>
-                results
-              </p>
-            </div>
-            <div>
-              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+          <div>
+            <nav class="inline-flex -space-x-px rounded-lg shadow-sm">
+              <Link
+                v-if="vouchers.prev_page_url"
+                :href="vouchers.prev_page_url"
+                class="px-3 py-2 rounded-l-lg border bg-white text-sm text-gray-500 hover:bg-gray-50"
+              >
+                <ChevronLeft class="h-4 w-4" />
+              </Link>
+              <template v-for="link in vouchers.links" :key="link.label">
                 <Link
-                  v-if="vouchers.prev_page_url"
-                  :href="vouchers.prev_page_url"
-                  class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                >
-                  <ChevronLeft class="h-5 w-5" />
-                </Link>
-                
-                <template v-for="link in vouchers.links" :key="link.label">
-                  <Link
-                    v-if="link.url && link.label !== '&laquo; Previous' && link.label !== 'Next &raquo;'"
-                    :href="link.url"
-                    :class="link.active 
-                      ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
-                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
-                    class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                    v-html="link.label"
-                  />
-                  <span
-                    v-else-if="!link.url && link.label !== '&laquo; Previous' && link.label !== 'Next &raquo;'"
-                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500"
-                    v-html="link.label"
-                  />
-                </template>
-
-                <Link
-                  v-if="vouchers.next_page_url"
-                  :href="vouchers.next_page_url"
-                  class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                >
-                  <ChevronRight class="h-5 w-5" />
-                </Link>
-              </nav>
-            </div>
+                  v-if="link.url && link.label !== '&laquo; Previous' && link.label !== 'Next &raquo;'"
+                  :href="link.url"
+                  :class="link.active
+                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
+                  class="px-3 py-2 border text-sm"
+                  v-html="link.label"
+                />
+              </template>
+              <Link
+                v-if="vouchers.next_page_url"
+                :href="vouchers.next_page_url"
+                class="px-3 py-2 rounded-r-lg border bg-white text-sm text-gray-500 hover:bg-gray-50"
+              >
+                <ChevronRight class="h-4 w-4" />
+              </Link>
+            </nav>
           </div>
         </div>
       </div>
     </div>
   </AppLayout>
 </template>
+
 
 <script setup>
 import { ref, reactive, watch } from 'vue'

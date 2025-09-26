@@ -1,11 +1,15 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Dividends', href: '/dividends' }]">
     <!-- Header -->
-
-    <Head title="Dividends Management" />
-    <h2 class="font-bold text-lg ml-5 sm:ml-10 mt-3 sm:text-xl text-gray-900 tracking-tight">
-      Dividends Management
-    </h2>
+    <div class="px-4 sm:px-6 lg:px-8 mt-6">
+      <h2 class="text-lg sm:text-xl sm:text-3xl font-bold tracking-tight text-gray-900">
+        Dividends Management
+      </h2>
+      <p class="mt-1 text-gray-600 text-sm">
+        Track, approve, and distribute member dividends with ease.
+      </p>
+    </div>
+    
 
 
     <div class="py-8">

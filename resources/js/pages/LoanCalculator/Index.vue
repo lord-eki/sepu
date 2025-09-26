@@ -1,5 +1,5 @@
 <template>
-  <AppLayout>
+  <AppLayout :breadcrumbs="[{ title: 'Loan Calculator' }]">
   <div class="loan-calculator">
     <!-- Page Header -->
     <div class="bg-white shadow-sm border-b border-gray-200 px-4 py-5 sm:px-6">

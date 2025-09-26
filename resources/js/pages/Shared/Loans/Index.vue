@@ -2,16 +2,22 @@
  <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/loans' }]">
  
     <Head title="Loan Management" />
-    <div class="py-6 sm:py-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div class="pt-4">
+      <div class="max-w-7xl mx-auto py-4 sm:px-6 lg:px-8 space-y-6">
 
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h2 class="font-bold text-lg sm:text-xl text-gray-800">Loan Management</h2>
-          <Link :href="route('loans.create')"
-            class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 transition">
-          New Loan Application
-          </Link>
+          <div class="flex gap-2">
+              <Link :href="route('loans.create')"
+                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 transition">
+              New Loan Application
+              </Link>
+              <Link :href="route('loan-calculator.index')"
+                class="inline-flex items-center justify-center rounded-lg bg-indigo-200 px-4 py-2 text-sm font-medium text-blue-800 shadow hover:bg-indigo-300 hover:text-gray-800 transition">
+              Loan Calculator
+              </Link>
+          </div>
         </div>
 
         <!-- Summary Cards -->
@@ -64,7 +70,7 @@
             <div>
               <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
               <select v-model="filters.status" id="status"
-                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2">
+                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2">
                 <option value="">All Statuses</option>
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
@@ -77,19 +83,19 @@
             <div>
               <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
               <input v-model="filters.search" type="text" id="search" placeholder="Loan number, member name..."
-                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
             </div>
 
             <div>
               <label for="date_from" class="block text-sm font-medium text-gray-700">Date From</label>
               <input v-model="filters.date_from" type="date" id="date_from"
-                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
             </div>
 
             <div>
               <label for="date_to" class="block text-sm font-medium text-gray-700">Date To</label>
               <input v-model="filters.date_to" type="date" id="date_to"
-                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
             </div>
 
             <div class="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2">

@@ -55,7 +55,7 @@ const memberNavItems: NavItem[] = [
         icon: BriefcaseConveyorBelt,
         children: [
             {
-                title: 'Loan Overview',
+                title: 'My Loans',
                 href: '/my-loans',
                 icon: FileText,
             },
@@ -77,7 +77,7 @@ const memberNavItems: NavItem[] = [
         icon: HandCoins,
     },
     {
-        title: 'Member Profile',
+        title: 'My Profile',
         href: '/profile/show',
         icon: User,
     }

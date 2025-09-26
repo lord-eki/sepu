@@ -124,7 +124,7 @@
               <div>
                 <label class="block text-sm font-medium text-gray-700">Other Names</label>
                 <input
-                  v-model="form.other_names"
+                  v-model="form.middle_name"
                   type="text"
                   class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
                 />
@@ -227,11 +227,11 @@
                   class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
-              <!-- Postal Code -->
+              <!-- Postal Address -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Postal Code</label>
+                <label class="block text-sm font-medium text-gray-700">Postal Address</label>
                 <input
-                  v-model="form.postal_code"
+                  v-model="form.postal_address"
                   type="text"
                   class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
                 />
@@ -366,7 +366,7 @@
                 <label class="block text-sm font-medium text-gray-700">Phone</label>
                 <input
                   v-model="form.emergency_contact_phone"
-                  type="text"
+                  type="number"
                   class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
@@ -462,7 +462,7 @@ const isFormValid = computed(() => {
 const form = useForm({
   first_name: firstName,
   last_name: lastName,
-  other_names: '',
+  middle_name: '',
   date_of_birth: '',
   gender: '',
   marital_status: '',
@@ -471,7 +471,7 @@ const form = useForm({
   physical_address: '',
   city: '',
   county: '',
-  postal_code: '',
+  postal_address: '',
   id_type: '',
   id_number: '',
   occupation: '',
@@ -505,8 +505,11 @@ const removeDocument = (index) => {
 }
 
 const submit = () => {
-  form.post(route('profile.complete.store'))
+  form.post(route('profile.complete.store'), {
+    forceFormData: true,
+  })
 }
+
 </script>
 
 <style>

@@ -50,7 +50,7 @@
               </div>
               <div>
                 <p class="text-sm text-gray-500">{{ card.label }}</p>
-                <p class="text-base sm:text-lg font-semibold text-gray-900">{{ card.value }}</p>
+                <p class="text-base font-semibold text-gray-900">{{ card.value }}</p>
               </div>
             </div>
           </div>
