@@ -1,197 +1,124 @@
-
-
 <template>
-  <AppLayout title="Dividends Management">
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Dividends Management
-      </h2>
-    </template>
+  <AppLayout :breadcrumbs="[{ title: 'Dividends', href: '/dividends' }]">
+    <!-- Header -->
 
-    <div class="py-6">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <Head title="Dividends Management" />
+    <h2 class="font-bold text-lg ml-5 sm:ml-10 mt-3 sm:text-xl text-gray-900 tracking-tight">
+      Dividends Management
+    </h2>
+
+
+    <div class="py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-500">Total Dividends</p>
-                  <p class="text-lg font-semibold text-gray-900">{{ stats.total_dividends }}</p>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div v-for="card in [
+    { label: 'Total Dividends', value: stats.total_dividends, color: 'bg-blue-500', icon: 'M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z' },
+    { label: 'Total Distributed', value: 'KSh ' + formatCurrency(stats.total_distributed), color: 'bg-green-500', icon: 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 111.414-1.414L9 9.586l3.293-3.293a1 1 0 111.414 1.414z' },
+    { label: 'Pending Approval', value: stats.pending_approval, color: 'bg-yellow-500', icon: 'M10 2a8 8 0 100 16 8 8 0 000-16zm1 9H9V5a1 1 0 112 0v6z' },
+    { label: 'Ready to Distribute', value: stats.approved_pending_distribution, color: 'bg-purple-500', icon: 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 111.414-1.414L9 9.586l3.293-3.293a1 1 0 111.414 1.414z' },
+  ]" :key="card.label"
+            class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow p-6">
+            <div class="flex items-center space-x-4">
+              <div
+                :class="[card.color, 'w-6 sm:w-8 h-6 sm:h-8 rounded-full flex items-center justify-center shadow-sm']">
+                <svg class="w-4 sm:w-5 h-4 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path :d="card.icon" />
+                </svg>
               </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-500">Total Distributed</p>
-                  <p class="text-lg font-semibold text-gray-900">KSh {{ formatCurrency(stats.total_distributed) }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-500">Pending Approval</p>
-                  <p class="text-lg font-semibold text-gray-900">{{ stats.pending_approval }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-500">Ready to Distribute</p>
-                  <p class="text-lg font-semibold text-gray-900">{{ stats.approved_pending_distribution }}</p>
-                </div>
+              <div>
+                <p class="text-sm text-gray-500">{{ card.label }}</p>
+                <p class="text-base sm:text-lg font-semibold text-gray-900">{{ card.value }}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Filters and Actions -->
-        <div class="bg-white shadow-sm rounded-lg mb-6">
-          <div class="p-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-              <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                <div>
-                  <select v-model="filters.status" @change="applyFilters" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                    <option value="all">All Status</option>
-                    <option value="calculated">Calculated</option>
-                    <option value="approved">Approved</option>
-                    <option value="distributed">Distributed</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <select v-model="filters.year" @change="applyFilters" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                    <option value="">All Years</option>
-                    <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
-                  </select>
-                </div>
-              </div>
+        <!-- Filters + Actions -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 
-              <div class="flex space-x-3">
-                <Link :href="route('dividends.analytics.history')" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                  <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  Analytics
-                </Link>
-                
-                <Link :href="route('dividends.create')" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                  <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
-                  </svg>
-                  Calculate New Dividend
-                </Link>
-              </div>
+            <!-- Filters -->
+            <div class="flex gap-3">
+              <select v-model="filters.status" @change="applyFilters"
+                class="rounded-lg border-gray-300 text-sm px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                <option value="all">All Status</option>
+                <option value="calculated">Calculated</option>
+                <option value="approved">Approved</option>
+                <option value="distributed">Distributed</option>
+              </select>
+
+              <select v-model="filters.year" @change="applyFilters"
+                class="rounded-lg border-gray-300 text-sm px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                <option value="">All Years</option>
+                <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+              </select>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3">
+              <Link :href="route('dividends.analytics.history')"
+                class="inline-flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium hover:bg-gray-200 transition">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 13l4-4 3 3 5-6a1 1 0 111.6 1.2l-6 7a1 1 0 01-1.4.1L8 11l-3.3 3.3a1 1 0 11-1.4-1.4z" />
+              </svg>
+              Analytics
+              </Link>
+
+              <Link :href="route('dividends.create')"
+                class="inline-flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg bg-blue-600 text-white text-xs sm:text-sm font-medium hover:bg-blue-700 transition">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
+              </svg>
+              Calculate New Dividend
+              </Link>
             </div>
           </div>
         </div>
 
-        <!-- Dividends Table -->
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <!-- Table -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Profit</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dividend Rate</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Dividends</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th
+                    v-for="head in ['Year', 'Total Profit', 'Dividend Rate', 'Total Dividends', 'Status', 'Dates', 'Actions']"
+                    :key="head" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    {{ head }}
+                  </th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="dividend in dividends.data" :key="dividend.id" class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ dividend.dividend_year }}</div>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">KSh {{ formatCurrency(dividend.total_profit) }}</div>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ dividend.dividend_rate }}%</div>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">KSh {{ formatCurrency(dividend.total_dividends) }}</div>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span :class="getStatusClass(dividend.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="dividend in dividends.data" :key="dividend.id" class="hover:bg-gray-50 transition">
+                  <td class="px-6 py-4 font-medium text-gray-900">{{ dividend.dividend_year }}</td>
+                  <td class="px-6 py-4 text-gray-700">KSh {{ formatCurrency(dividend.total_profit) }}</td>
+                  <td class="px-6 py-4 text-gray-700">{{ dividend.dividend_rate }}%</td>
+                  <td class="px-6 py-4 text-gray-700">KSh {{ formatCurrency(dividend.total_dividends) }}</td>
+                  <td class="px-6 py-4">
+                    <span :class="getStatusClass(dividend.status)" class="px-2 py-1 text-xs font-semibold rounded-full">
                       {{ formatStatus(dividend.status) }}
                     </span>
                   </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td class="px-6 py-4 text-gray-500">
                     <div>Calculated: {{ formatDate(dividend.calculation_date) }}</div>
                     <div v-if="dividend.approval_date">Approved: {{ formatDate(dividend.approval_date) }}</div>
-                    <div v-if="dividend.distribution_date">Distributed: {{ formatDate(dividend.distribution_date) }}</div>
+                    <div v-if="dividend.distribution_date">Distributed: {{ formatDate(dividend.distribution_date) }}
+                    </div>
                   </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div class="flex justify-end space-x-2">
-                      <Link :href="route('dividends.show', dividend.id)" class="text-indigo-600 hover:text-indigo-900">
-                        View
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end gap-3">
+                      <Link :href="route('dividends.show', dividend.id)" class="text-blue-600 hover:underline">View
                       </Link>
-                      
-                      <Link v-if="dividend.status === 'calculated'" :href="route('dividends.edit', dividend.id)" class="text-blue-600 hover:text-blue-900">
-                        Edit
-                      </Link>
-                      
-                      <button v-if="dividend.status === 'calculated'" @click="approveDividend(dividend)" class="text-green-600 hover:text-green-900">
-                        Approve
-                      </button>
-                      
-                      <button v-if="dividend.status === 'approved'" @click="distributeDividend(dividend)" class="text-purple-600 hover:text-purple-900">
-                        Distribute
-                      </button>
-                      
-                      <button v-if="dividend.status === 'calculated'" @click="confirmDelete(dividend)" class="text-red-600 hover:text-red-900">
-                        Delete
-                      </button>
+                      <Link v-if="dividend.status === 'calculated'" :href="route('dividends.edit', dividend.id)"
+                        class="text-indigo-600 hover:underline">Edit</Link>
+                      <button v-if="dividend.status === 'calculated'" @click="approveDividend(dividend)"
+                        class="text-green-600 hover:underline">Approve</button>
+                      <button v-if="dividend.status === 'approved'" @click="distributeDividend(dividend)"
+                        class="text-purple-600 hover:underline">Distribute</button>
+                      <button v-if="dividend.status === 'calculated'" @click="confirmDelete(dividend)"
+                        class="text-red-600 hover:underline">Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -200,7 +127,7 @@
           </div>
 
           <!-- Pagination -->
-          <div v-if="dividends.links" class="px-6 py-3 border-t border-gray-200">
+          <div v-if="dividends.links" class="px-6 py-4 border-t border-gray-100">
             <Pagination :links="dividends.links" />
           </div>
         </div>
@@ -211,7 +138,8 @@
     <ConfirmationModal :show="showDeleteModal" @close="showDeleteModal = false">
       <template #title>Delete Dividend</template>
       <template #content>
-        Are you sure you want to delete the dividend for {{ selectedDividend?.dividend_year }}? This action cannot be undone.
+        Are you sure you want to delete the dividend for {{ selectedDividend?.dividend_year }}? This action cannot be
+        undone.
       </template>
       <template #footer>
         <SecondaryButton @click="showDeleteModal = false">Cancel</SecondaryButton>
@@ -229,18 +157,14 @@
         </div>
         <div class="mb-4">
           <InputLabel for="approval_notes" value="Approval Notes (Optional)" />
-          <TextArea
-            id="approval_notes"
-            v-model="approvalForm.approval_notes"
-            class="mt-1 block w-full"
-            rows="3"
-            placeholder="Enter any approval notes..."
-          />
+          <TextArea id="approval_notes" v-model="approvalForm.approval_notes" class="mt-1 block w-full" rows="3"
+            placeholder="Enter any approval notes..." />
         </div>
       </template>
       <template #footer>
         <SecondaryButton @click="showApproveModal = false">Cancel</SecondaryButton>
-        <PrimaryButton class="ml-3" @click="submitApproval" :class="{ 'opacity-25': processing }" :disabled="processing">
+        <PrimaryButton class="ml-3" @click="submitApproval" :class="{ 'opacity-25': processing }"
+          :disabled="processing">
           Approve
         </PrimaryButton>
       </template>
@@ -249,11 +173,13 @@
     <ConfirmationModal :show="showDistributeModal" @close="showDistributeModal = false">
       <template #title>Distribute Dividend</template>
       <template #content>
-        Are you sure you want to distribute the dividend for {{ selectedDividend?.dividend_year }}? This will transfer dividend amounts to all eligible members' accounts.
+        Are you sure you want to distribute the dividend for {{ selectedDividend?.dividend_year }}? This will transfer
+        dividend amounts to all eligible members' accounts.
       </template>
       <template #footer>
         <SecondaryButton @click="showDistributeModal = false">Cancel</SecondaryButton>
-        <PrimaryButton class="ml-3" @click="submitDistribution" :class="{ 'opacity-25': processing }" :disabled="processing">
+        <PrimaryButton class="ml-3" @click="submitDistribution" :class="{ 'opacity-25': processing }"
+          :disabled="processing">
           Distribute
         </PrimaryButton>
       </template>

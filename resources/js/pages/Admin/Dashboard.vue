@@ -24,107 +24,101 @@ defineProps<{
 
     <Head title="Admin Dashboard" />
 
-    <div class="p-6 min-h-screen space-y-10">
+    <div class="p-6 min-h-screen space-y-8 bg-gray-100">
       <!-- Header -->
-      <header>
-        <h1 class="text-lg md:text-xl font-bold tracking-tight text-gray-700">
-          Admin Dashboard
-        </h1>
-        <p class="text-gray-600/80 text-sm md:text-base">Full system overview & monitoring</p>
+      <header class="border-b pb-3 mb-6">
+        <h1 class="text-lg sm:text-xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p class="text-gray-600 text-sm">System overview and monitoring</p>
       </header>
 
       <!-- Stats Grid -->
-      <section class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <Card
-          class="shadow-md hover:shadow-lg transition rounded-xl bg-gradient-to-br from-white to-blue-50 border border-blue-50">
-          <CardHeader class="flex flex-row items-center justify-between pb-2">
-            <CardTitle class="text-sm font-medium text-blue-700">Total Members</CardTitle>
-            <Users class="h-5 w-5 text-blue-500" />
+      <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card class="border border-gray-300 bg-white rounded-xl">
+          <CardHeader class="flex justify-between pb-1">
+            <CardTitle class="text-sm font-semibold text-gray-800">Total Members</CardTitle>
+            <Users class="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div class="text-lg md:text-xl font-bold text-blue-900">{{ stats.members.total }}</div>
-            <p class="text-xs text-blue-600/70">Active: {{ stats.members.active }}</p>
+            <div class="text-xl font-bold text-green-900">{{ stats.members.total }}</div>
+            <p class="text-xs text-gray-600">Active: {{ stats.members.active }}</p>
           </CardContent>
         </Card>
 
-        <Card
-          class="shadow-md hover:shadow-lg transition rounded-xl bg-gradient-to-br from-white to-blue-50 border border-blue-100">
-          <CardHeader class="flex flex-row items-center justify-between pb-2">
-            <CardTitle class="text-sm font-medium text-blue-700">Total Savings</CardTitle>
-            <Banknote class="h-5 w-5 text-green-500" />
+        <Card class="border border-gray-300 bg-white rounded-xl">
+          <CardHeader class="flex justify-between pb-1">
+            <CardTitle class="text-sm font-semibold text-gray-800">Total Savings</CardTitle>
+            <Banknote class="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div class="text-lg md:text-xl font-bold text-blue-900">{{ stats.financial.total_savings.toLocaleString() }}
+            <div class="text-xl font-bold text-green-900">
+              {{ stats.financial.total_savings.toLocaleString() }}
             </div>
-            <p class="text-xs text-blue-600/70">Shares: {{ stats.financial.total_shares }}</p>
+            <p class="text-xs text-gray-600">Shares: {{ stats.financial.total_shares }}</p>
           </CardContent>
         </Card>
 
-        <Card
-          class="shadow-md hover:shadow-lg transition rounded-xl bg-gradient-to-br from-white to-blue-50 border border-blue-100">
-          <CardHeader class="flex flex-row items-center justify-between pb-2">
-            <CardTitle class="text-sm font-medium text-blue-700">Active Loans</CardTitle>
-            <Activity class="h-5 w-5 text-purple-500" />
+        <Card class="border border-gray-300 bg-white rounded-xl">
+          <CardHeader class="flex justify-between pb-1">
+            <CardTitle class="text-sm font-semibold text-gray-800">Active Loans</CardTitle>
+            <Activity class="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div class="text-lg md:text-xl font-bold text-blue-900">{{ stats.loans.active_loans }}</div>
-            <p class="text-xs text-blue-600/70">Pending: {{ stats.loans.pending_applications }}</p>
+            <div class="text-xl font-bold text-green-900">{{ stats.loans.active_loans }}</div>
+            <p class="text-xs text-gray-600">Pending: {{ stats.loans.pending_applications }}</p>
           </CardContent>
         </Card>
 
-        <Card
-          class="shadow-md hover:shadow-lg transition rounded-xl bg-gradient-to-br from-white to-blue-50 border border-blue-100">
-          <CardHeader class="flex flex-row items-center justify-between pb-2">
-            <CardTitle class="text-sm font-medium text-blue-700">Transactions Today</CardTitle>
-            <FileWarning class="h-5 w-5 text-orange-500" />
+        <Card class="border border-gray-300 bg-white rounded-xl">
+          <CardHeader class="flex justify-between pb-1">
+            <CardTitle class="text-sm font-semibold text-gray-800">Transactions Today</CardTitle>
+            <FileWarning class="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div class="text-lg md:text-xl font-bold text-blue-900">{{ stats.transactions.today }}</div>
-            <p class="text-xs text-blue-600/70">This Month: {{ stats.transactions.this_month }}</p>
+            <div class="text-xl font-bold text-green-900">{{ stats.transactions.today }}</div>
+            <p class="text-xs text-gray-600">This Month: {{ stats.transactions.this_month }}</p>
           </CardContent>
         </Card>
       </section>
 
       <!-- Recent Activities -->
       <section>
-        <h2 class="text-lg font-semibold mb-3 text-gray-700">Recent Activities</h2>
-        <div class="bg-white rounded-xl shadow border border-blue-100 divide-y divide-blue-100">
-          <div v-for="(item, i) in recentActivities" :key="i"
-            class="flex justify-between p-3 hover:bg-blue-50 transition">
+        <h2 class="text-lg font-bold mb-2 text-gray-900 border-b pb-2">Recent Activities</h2>
+        <div class="bg-white p-4 rounded-lg border border-gray-300 divide-y divide-gray-200">
+          <div v-for="(item, i) in recentActivities" :key="i" class="flex justify-between p-2">
             <div>
-              <p class="font-medium text-gray-600">{{ item.description }}</p>
-              <p class="text-xs text-blue-600/70">{{ new Date(item.time).toLocaleString() }}</p>
+              <p class="font-medium text-sm sm:text-base text-gray-800">{{ item.description }}</p>
+              <p class="text-xs text-gray-600">{{ new Date(item.time).toLocaleString() }}</p>
             </div>
-            <div class="font-semibold text-blue-900">Ksh. {{ item.amount }}</div>
+            <div class="text-sm sm:text-base text-green-900">Ksh. {{ item.amount }}</div>
           </div>
         </div>
       </section>
 
       <!-- Pending Approvals & System Health -->
-      <section class="grid gap-6 md:grid-cols-2">
-        <Card class="shadow-md rounded-xl border border-blue-100">
+      <section class="grid gap-4 md:grid-cols-2">
+        <Card class="border border-gray-300 bg-white rounded-lg">
           <CardHeader>
-            <CardTitle class="text-gray-700">Pending Approvals</CardTitle>
+            <CardTitle class="text-base font-semibold text-gray-900">Pending Approvals</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul class="space-y-2 text-sm text-blue-900">
-              <li>Loans: <span class="font-semibold">{{ pendingApprovals.loans }}</span></li>
-              <li>Vouchers: <span class="font-semibold">{{ pendingApprovals.vouchers }}</span></li>
-              <li>Members: <span class="font-semibold">{{ pendingApprovals.member_applications }}</span></li>
+            <ul class="space-y-1 text-sm text-gray-800">
+              <li>Loans: <span class="font-bold">{{ pendingApprovals.loans }}</span></li>
+              <li>Vouchers: <span class="font-bold">{{ pendingApprovals.vouchers }}</span></li>
+              <li>Members: <span class="font-bold">{{ pendingApprovals.member_applications }}</span></li>
             </ul>
           </CardContent>
         </Card>
 
-        <Card class="shadow-md rounded-xl border border-blue-100">
+        <Card class="border border-gray-300 bg-white rounded-lg">
           <CardHeader>
-            <CardTitle class="text-gray-700">System Health</CardTitle>
+            <CardTitle class="text-base font-semibold text-gray-900">System Health</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul class="space-y-2 text-sm text-blue-900">
-              <li>Status: <span class="font-semibold text-green-600">{{ systemHealth.database_status }}</span></li>
+            <ul class="space-y-1 text-sm text-gray-800">
+              <li>Status: <span class="font-semibold text-green-700">{{ systemHealth.database_status }}</span></li>
               <li>Last Backup: <span>{{ new Date(systemHealth.last_backup).toLocaleString() }}</span></li>
               <li>Active Users: <span class="font-semibold">{{ systemHealth.active_users }}</span></li>
-              <li>Errors: <span class="font-semibold text-red-500">{{ systemHealth.system_errors }}</span></li>
+              <li>Errors: <span class="font-semibold text-red-600">{{ systemHealth.system_errors }}</span></li>
             </ul>
           </CardContent>
         </Card>
