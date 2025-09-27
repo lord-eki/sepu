@@ -68,10 +68,10 @@ const canApplyLoan = computed(() => {
         </div>
         <div v-if="canApplyLoan">
           <Link :href="route('loans.create', { member: props.member.id })">
-            <Button
-              class="bg-blue-800 hover:bg-blue-900 hover:cursor-pointer text-white px-5 py-2 rounded-lg shadow-md transition">
-              <span>+ New Loan<span class="max-sm:hidden">&nbsp;Application</span></span>
-            </Button>
+          <Button
+            class="bg-blue-800 hover:bg-blue-900 hover:cursor-pointer text-white px-5 py-2 rounded-lg shadow-md transition">
+            <span>+ New Loan<span class="max-sm:hidden">&nbsp;Application</span></span>
+          </Button>
           </Link>
         </div>
       </div>
@@ -84,7 +84,7 @@ const canApplyLoan = computed(() => {
               <CardTitle class="text-blue-900">Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <p class="text-sm font-medium text-orange-500">
+              <p class="font-medium text-orange-500">
                 No active loans
               </p>
             </CardContent>
@@ -117,7 +117,7 @@ const canApplyLoan = computed(() => {
               <CardTitle class="text-blue-900">Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <p class="text-sm font-medium text-orange-600">
+              <p class="font-medium text-orange-500">
                 {{ canApplyLoan ? "No Loan" : "Loan available" }}
               </p>
             </CardContent>
@@ -141,8 +141,7 @@ const canApplyLoan = computed(() => {
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="loan in props.loans" :key="loan.id"
-                  class="hover:bg-orange-50 transition">
+              <tr v-for="loan in props.loans" :key="loan.id" class="hover:bg-orange-50 transition">
                 <td class="px-6 py-4">{{ loan.loan_number }}</td>
                 <td class="px-6 py-4">{{ loan.loan_product?.name }}</td>
                 <td class="px-6 py-4 font-medium">
@@ -155,22 +154,22 @@ const canApplyLoan = computed(() => {
                   {{ formatDate(getNextRepaymentDate(loan)) }}
                 </td>
                 <td class="px-6 py-4">
-                  <span :class="{
-                    'text-green-600 font-semibold': loan.status === 'completed',
-                    'text-green-700 font-semibold': loan.status === 'approved',
-                    'text-blue-700 font-semibold': loan.status === 'active',
-                    'text-yellow-600 font-semibold': loan.status === 'pending',
-                    'text-red-600 font-semibold': loan.status === 'rejected',
-                    'text-gray-600 font-semibold': loan.status === 'defauted',
-                    'text-orange-600 font-semibold': loan.status === 'disbursed'
-                  }">
+                  <span class="px-2 py-1 text-xs rounded-full" :class="{
+    'text-green-600 bg-green-100': loan.status === 'completed',
+    'text-green-700 bg-green-100': loan.status === 'approved',
+    'text-blue-700 bg-blue-100': loan.status === 'active',
+    'text-yellow-600 bg-yellow-100': loan.status === 'pending',
+    'text-red-600 bg-red-100': loan.status === 'rejected',
+    'text-gray-600 bg-gray-100': loan.status === 'defauted',
+    'text-orange-600 bg-orange-100': loan.status === 'disbursed'
+  }">
                     {{ loan.status }}
                   </span>
                 </td>
                 <td class="px-6 py-4">
                   <Link :href="route('loans.show', loan.id)"
-                        class="text-orange-600 hover:text-orange-700 hover:underline transition">
-                    View
+                    class="text-orange-600 hover:text-orange-700 hover:underline transition">
+                  View
                   </Link>
                 </td>
               </tr>
@@ -180,10 +179,10 @@ const canApplyLoan = computed(() => {
                   <div class="flex flex-col items-center space-y-3">
                     <p class="text-lg text-blue-800">No loans found.</p>
                     <Link v-if="canApplyLoan" :href="route('loans.create', { member: props.member.id })">
-                      <Button
-                        class="bg-gradient-to-r from-blue-800 to-orange-600 text-white hover:cursor-pointer shadow-md px-6 py-2 rounded-lg hover:shadow-lg">
-                        Apply for Loan
-                      </Button>
+                    <Button
+                      class="bg-gradient-to-r from-blue-800 to-orange-600 text-white hover:cursor-pointer shadow-md px-6 py-2 rounded-lg hover:shadow-lg">
+                      Apply for Loan
+                    </Button>
                     </Link>
                   </div>
                 </td>

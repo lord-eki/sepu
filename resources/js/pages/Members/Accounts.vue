@@ -43,78 +43,80 @@ const memberName = computed(() => {
 
       <Head title="Accounts" />
 
-   <!-- Header -->
-    <div class="rounded-xl bg-gradient-to-r from-blue-900 to-orange-500 p-6 shadow-md text-white">
-      <div class="flex items-center justify-between">
-        <!-- Accounts -->
-        <div>
-          <h1 class="text-lg md:text-xl font-semibold">
-            Accounts
-          </h1>
-          <p class="text-sm max-sm:w-[90%] opacity-90 mt-1">
-            Overview of your balances and transactions
-          </p>
-        </div>
+      <!-- Header -->
+      <div class="rounded-xl bg-gradient-to-r from-blue-900 to-orange-500 p-6 shadow-md text-white">
+        <div class="flex items-center justify-between">
+          <!-- Accounts -->
+          <div>
+            <h1 class="text-lg md:text-xl font-semibold">
+              Accounts
+            </h1>
+            <p class="text-sm max-sm:w-[90%] opacity-90 mt-1">
+              Overview of your balances and transactions
+            </p>
+          </div>
 
-        <!-- Account Holder -->
-        <div class="text-right self-start">
-          <p class="text-sm opacity-75">Account Name</p>
-          <h2 class="text-base sm:text-lg font-medium text-white">
-            {{ memberName }}
-          </h2>
+          <!-- Account Holder -->
+          <div class="text-right self-start">
+            <p class="text-sm opacity-75">Account Name</p>
+            <h2 class="text-base sm:text-lg font-medium text-white">
+              {{ memberName }}
+            </h2>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- My Accounts -->
-      <Card class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-blue-900 transition-all duration-300">
-        <CardHeader>
-          <CardTitle class="text-blue-900">My Accounts</CardTitle>
-        </CardHeader>
-        <CardContent class="flex flex-col sm:flex-row justify-between gap-4">
-          <div>
-            <p class="text-sm text-gray-500">Total Accounts</p>
-            <p class="text-lg font-medium sm:text-xl text-blue-900">
-              {{ props.accounts.length }}
-            </p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">Status</p>
-            <p class="text-lg font-medium sm:text-xl text-orange-600">
-              {{ props.accounts.length > 0 ? `${props.accounts.length} active` : "No accounts" }}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- Total Balance -->
-      <Card class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-orange-500 transition-all duration-300">
-        <CardHeader>
-          <CardTitle class="text-blue-900 flex items-center justify-between">
-            Total Balance
-          </CardTitle>
-        </CardHeader>
-        <CardContent class="flex justify-between mr-5 items-center">
-          <p class="text-lg font-medium sm:text-xl text-blue-900">
-            <span :class="totalBalanceVisible.value ? '' : 'blur-sm select-none'">
-              KES {{ formattedTotalBalance }}
-              <p class="text-sm font-normal text-gray-800">
-                savings: 
-                {{
-                  props.accounts.find(acc => acc.account_type === 'savings')?.balance?.toLocaleString() || 0
-                }}
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- My Accounts -->
+        <Card
+          class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-blue-900 transition-all duration-300">
+          <CardHeader>
+            <CardTitle class="text-blue-900">My Accounts</CardTitle>
+          </CardHeader>
+          <CardContent class="flex flex-col sm:flex-row justify-between gap-4">
+            <div>
+              <p class="text-sm text-gray-500">Total Accounts</p>
+              <p class="text-lg font-medium sm:text-xl text-blue-900">
+                {{ props.accounts.length }}
               </p>
-            </span>
-          </p>
-          <button @click="totalBalanceVisible.value = !totalBalanceVisible.value"
-            class="text-gray-500 hover:text-blue-700 transition">
-            <component :is="totalBalanceVisible.value ? EyeOff : Eye" class="w-5 h-5" />
-          </button>
-        </CardContent>
-      </Card>
-    </div>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Status</p>
+              <p class="text-lg font-medium sm:text-xl text-orange-600">
+                {{ props.accounts.length > 0 ? `${props.accounts.length} active` : "No accounts" }}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- Total Balance -->
+        <Card
+          class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-orange-500 transition-all duration-300">
+          <CardHeader>
+            <CardTitle class="text-blue-900 flex items-center justify-between">
+              Total Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent class="flex justify-between mr-5 items-center">
+            <p class="text-lg font-medium sm:text-xl text-blue-900">
+              <span :class="totalBalanceVisible.value ? '' : 'blur-sm select-none'">
+                KES {{ formattedTotalBalance }}
+                <p class="text-sm font-normal text-gray-800">
+                  savings:
+                  {{
+    props.accounts.find(acc => acc.account_type === 'savings')?.balance?.toLocaleString() || 0
+  }}
+                </p>
+              </span>
+            </p>
+            <button @click="totalBalanceVisible.value = !totalBalanceVisible.value"
+              class="text-gray-500 hover:text-blue-700 transition">
+              <component :is="totalBalanceVisible.value ? EyeOff : Eye" class="w-5 h-5" />
+            </button>
+          </CardContent>
+        </Card>
+      </div>
 
 
       <!-- Accounts List -->
@@ -123,7 +125,7 @@ const memberName = computed(() => {
 
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
           <div>
-            <h2 class="text-base sm:text-lg font-medium text-blue-900">
+            <h2 class="text-base sm:text-lg font-medium text-gray-800">
               <span class="font-normal">Acc. No:</span> {{ account.account_number }} - {{ account.account_type }}
             </h2>
             <p class="text-sm sm:text-base text-gray-500 flex items-center gap-3">
