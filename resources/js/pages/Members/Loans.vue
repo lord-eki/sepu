@@ -129,7 +129,7 @@ const canApplyLoan = computed(() => {
       <div class="bg-white border border-gray-200 shadow-md rounded-xl overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm text-left">
-            <thead class="bg-blue-100 text-blue-800 text-xs uppercase font-semibold sticky top-0">
+            <thead class="bg-blue-100 text-blue-900 text-xs uppercase font-semibold sticky top-0">
               <tr>
                 <th class="px-6 py-3">Loan #</th>
                 <th class="px-6 py-3">Product</th>
@@ -141,7 +141,7 @@ const canApplyLoan = computed(() => {
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="loan in props.loans" :key="loan.id" class="hover:bg-orange-50 transition">
+              <tr v-for="loan in props.loans" :key="loan.id" class="hover:bg-gray-50 transition">
                 <td class="px-6 py-4">{{ loan.loan_number }}</td>
                 <td class="px-6 py-4">{{ loan.loan_product?.name }}</td>
                 <td class="px-6 py-4 font-medium">

@@ -100,14 +100,14 @@ const toggleNotifications = () => {
           </div>
           <div class="flex items-center gap-3">
             <!-- Toggle balances -->
-            <Button size="sm" variant="outline" class="rounded-full border-blue-600 text-blue-600 hover:bg-blue-50"
+            <Button size="sm" variant="outline" class="rounded-full hover:cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50"
               @click="toggleBalances">
               {{ showBalances ? 'Hide Balances' : 'Show Balances' }}
             </Button>
 
             <!-- Notifications -->
             <div class="relative">
-              <button class="relative p-1.5 rounded-full bg-blue-600 hover:bg-blue-700 transition"
+              <button class="relative p-1.5 rounded-full bg-blue-600 hover:cursor-pointer hover:bg-blue-700 transition"
                 @click="toggleNotifications">
                 <Bell class="h-4.5 w-4.5 text-white" />
                 <span
@@ -163,7 +163,7 @@ const toggleNotifications = () => {
               <component :is="stat.icon" class="h-5 w-5 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div class="text-base md:text-xl font-bold">
+              <div class="text-base md:text-xl font-medium">
                 <span v-if="showBalances" class="text-blue-900">{{ stat.value }}</span>
                 <span v-else class="text-gray-300">*******</span>
               </div>

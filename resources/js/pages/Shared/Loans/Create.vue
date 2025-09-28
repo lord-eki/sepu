@@ -140,12 +140,12 @@
               <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label for="amount" class="block text-sm font-medium text-gray-700">Loan Amount *</label>
-                  <input v-model="form.amount" type="number" id="amount" required
+                  <input v-model="form.applied_amount" type="number" id="amount" required
                     class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2" />
                 </div>
                 <div>
                   <label for="term" class="block text-sm font-medium text-gray-700">Repayment Term (months) *</label>
-                  <input v-model="form.term" type="number" id="term" required
+                  <input v-model="form.term_months" type="number" id="term" required
                     class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2" />
                 </div>
                 <div class="md:col-span-2">
@@ -227,33 +227,62 @@
             <!-- Guarantors -->
             <div class="bg-white shadow-md sm:rounded-lg border border-gray-100">
               <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                <h3 class="text-lg font-semibold text-blue-900">Guarantors <span
-                    class="font-normal text-base text-gray-700">(Optional)</span>
+                <h3 class="text-lg font-semibold text-blue-900">
+                  Guarantors
+                  <span class="font-normal text-base text-gray-700">(Optional)</span>
                 </h3>
               </div>
               <div class="p-6 space-y-4">
-                <p class="text-sm text-gray-600 mb-2">
-                  Select guarantors from members. <span class="text-blue-900 font-medium">The selected guarantors will
-                    receive a
-                    notification about this loan application.</span>
+                <p class="text-sm text-gray-600 mb-4">
+                  Select guarantors from members.
+                  <span class="text-blue-900 font-medium">
+                    The selected guarantors will receive a notification about this loan application.
+                  </span>
                 </p>
-                <div v-for="(guarantor, index) in form.guarantors" :key="index" class="flex items-center space-x-3">
-                  <select v-model="guarantor.member_id"
-                    class="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2">
-                    <option value="">Choose a member...</option>
-                    <option v-for="member in members" :key="member.id" :value="member.id">
-                      {{ member.first_name }} {{ member.last_name }} - {{ member.membership_id }}
-                    </option>
-                  </select>
-                  <button type="button" @click="removeGuarantor(index)"
-                    class="text-red-600 hover:text-red-800">Remove</button>
+
+                <div v-for="(guarantor, index) in form.guarantors" :key="index" class="p-4 border rounded-lg space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Guarantor Select -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700">Select Member *</label>
+                      <select v-model="guarantor.member_id" class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm 
+                              focus:border-orange-500 focus:ring-orange-500 p-2">
+                        <option value="">Choose a member...</option>
+                        <option v-for="member in members" :key="member.id" :value="member.id">
+                          {{ member.first_name }} {{ member.last_name }} - {{ member.membership_id }}
+                        </option>
+                      </select>
+                    </div>
+
+                    <!-- Guaranteed Amount -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700">
+                        Guaranteed Amount (KES) *
+                      </label>
+                      <input v-model="guarantor.guaranteed_amount" type="number" step="0.01" min="0"
+                        :max="form.applied_amount" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm 
+                                    focus:border-orange-500 focus:ring-orange-500 p-2" />
+                    </div>
+                  </div>
+
+                  <!-- Remove Button -->
+                  <div class="flex justify-end">
+                    <button type="button" @click="removeGuarantor(index)"
+                      class="text-red-600 hover:text-red-800 text-sm font-medium">
+                      ✕ Remove Guarantor
+                    </button>
+                  </div>
                 </div>
-                <button type="button" @click="addGuarantor"
-                  class="bg-orange-500 hover:bg-orange-600 hover:cursor-pointer text-white px-4 py-2 rounded-lg text-sm font-medium shadow">
+
+                <!-- Add Guarantor -->
+                <button type="button" @click="addGuarantor" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg 
+                        text-sm font-medium shadow">
                   + Add Guarantor
                 </button>
               </div>
             </div>
+
 
             <!-- Support Documents -->
             <div class="bg-white shadow-md sm:rounded-lg border border-gray-100">
@@ -354,8 +383,8 @@ const props = defineProps({
 const form = reactive({
   member_id: '',
   loan_product_id: '',
-  amount: '',
-  term: '',
+  applied_amount: '',
+  term_months: '',
   purpose: '',
   guarantors: [],
   documents: [],
@@ -399,8 +428,8 @@ const availableGuarantors = computed(() => {
 const canSubmit = computed(() => {
   const hasBasics = form.member_id &&
     form.loan_product_id &&
-    form.amount &&
-    form.term &&
+    form.applied_amount &&
+    form.term_months &&
     form.purpose.trim()
 
   // ensure disbursement details are filled
@@ -563,7 +592,7 @@ const showMessage = (type, message, errors = null, callback = null) => {
     errorMessages.value = null
 
     if (callback) callback()
-  }, 3000)
+  }, 5000)
 }
 
 const showConfirm = ref(false)
@@ -590,10 +619,10 @@ const confirmSubmit = async () => {
   })
 
   Object.entries(uploadedFiles).forEach(([key, file]) => {
-  if (file) {
-    formData.append(`documents[${key}]`, file)
-  }
-})
+    if (file) {
+      formData.append(`documents[${key}]`, file)
+    }
+  })
 
   try {
     const response = await axios.post(route('loans.store'), formData, {
