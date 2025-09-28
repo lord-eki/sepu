@@ -6,7 +6,7 @@
 
     <Head title="New Loan Application" />
 
-    <div class="py-12 bg-white">
+    <div class="py-8 sm:py-12 bg-white max-sm:px-4">
       <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
 
         <!-- Header -->
@@ -16,7 +16,7 @@
           </h2>
           <Link :href="isMemberRole ? route('my-loans') : route('loans.index')"
             class="bg-blue-800 hover:bg-blue-900 text-white px-5 py-2 rounded-lg text-sm font-medium shadow transition">
-          Back to Loans
+          Back <span class="max-sm:hidden">to Loans</span>
           </Link>
         </div>
 
@@ -289,7 +289,7 @@
               <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
                 <h3 class="text-lg font-semibold text-blue-900">Support Documents</h3>
               </div>
-              <div class="p-6 space-y-4">
+              <div class="p-6 space-y-5">
                 <div v-for="doc in requiredDocuments" :key="doc.key"
                   class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
                   <label :for="doc.key" class="block text-sm font-medium text-gray-700 w-40">
@@ -299,14 +299,14 @@
                   <div class="flex items-center space-x-3">
 
                     <label :for="doc.key"
-                      class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow cursor-pointer transition">
+                      class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 max-sm:text-sm rounded-lg shadow cursor-pointer transition">
                       Choose File
                     </label>
                     <input type="file" :id="doc.key" :name="doc.key" class="hidden"
                       @change="handleFileChange($event, doc.key)" required />
 
                     <!-- Filename -->
-                    <span v-if="uploadedFiles[doc.key]" class="text-sm text-gray-700">
+                    <span v-if="uploadedFiles[doc.key]" class="max-sm:text-xs sm:text-sm text-gray-700">
                       {{ uploadedFiles[doc.key].name }}
                     </span>
 
@@ -336,11 +336,86 @@
         </form>
 
         <!-- Confirmation Modal -->
-        <div v-if="showConfirm" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Submission</h3>
-            <p class="text-sm text-gray-600 mb-6">Are you sure you want to submit this loan application?</p>
-            <div class="flex justify-end space-x-3">
+        <div v-if="showConfirm"
+          class="fixed inset-0 bg-[rgba(0,0,0,0.7)] max-sm:px-5 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]">
+            <h3 class="text-lg font-semibold text-blue-900 mb-4">Review Your Loan Application</h3>
+
+            <!-- Summary Section -->
+            <div class="space-y-4 text-sm text-gray-700">
+              <div>
+                <span class="font-medium text-gray-900">Member:</span>
+                {{ memberInfo.first_name }} {{ memberInfo.last_name }}
+                <span class="text-xs text-gray-500">({{ memberInfo.membership_id }})</span>
+              </div>
+
+
+              <div>
+                <span class="font-medium text-gray-900">Loan Product:</span>
+                {{ loanProducts.find(p => p.id === form.loan_product_id)?.name }}
+              </div>
+
+              <div>
+                <span class="font-medium text-gray-900">Applied Amount:</span>
+                KES {{ form.applied_amount }}
+              </div>
+
+              <div>
+                <span class="font-medium text-gray-900">Term:</span>
+                {{ form.term_months }} months
+              </div>
+
+              <div>
+                <span class="font-medium text-gray-900">Purpose:</span>
+                {{ form.purpose }}
+              </div>
+
+              <!-- Guarantors -->
+              <div v-if="form.guarantors.length">
+                <span class="font-medium text-gray-900">Guarantors:</span>
+                <ul class="list-disc ml-6 mt-1">
+                  <li v-for="(g, index) in form.guarantors" :key="index">
+                    {{ members.find(m => m.id === g.member_id)?.first_name }}
+                    {{ members.find(m => m.id === g.member_id)?.last_name }}
+                    — Guaranteed: KES {{ g.guaranteed_amount }}
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Disbursement -->
+              <div>
+                <span class="font-medium text-gray-900">Disbursement Method:</span>
+                {{ disbursementMethod }}
+                <div class="ml-4 mt-1">
+                  <div v-if="disbursementMethod === 'mpesa'">
+                    M-Pesa Number: {{ disbursementDetails.mpesaNumber }}
+                  </div>
+                  <div v-if="disbursementMethod === 'bank'">
+                    Bank: {{ disbursementDetails.bankName }},
+                    Branch: {{ disbursementDetails.branch }},
+                    Account: {{ disbursementDetails.accountNumber }}
+                  </div>
+                  <div v-if="disbursementMethod === 'cheque'">
+                    Payee: {{ disbursementDetails.payee }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Documents -->
+              <div>
+                <span class="font-medium text-gray-900">Attached Documents:</span>
+                <ul class="list-disc ml-6 mt-1 max-sm:text-xs">
+                  <li v-for="doc in requiredDocuments" :key="doc.key">
+                    {{ doc.label }} —
+                    <span v-if="uploadedFiles[doc.key]">{{ uploadedFiles[doc.key].name }}</span>
+                    <span v-else class="italic text-gray-400">Not uploaded</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end space-x-3 mt-6">
               <button type="button" @click="showConfirm = false"
                 class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
                 Cancel
@@ -350,6 +425,18 @@
                 Yes, Submit
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- Fullscreen Loader -->
+        <div v-if="processing" class="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex items-center justify-center z-50">
+          <div class="bg-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3">
+            <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <span class="text-gray-800 font-medium">Submitting your loan application...</span>
           </div>
         </div>
 
