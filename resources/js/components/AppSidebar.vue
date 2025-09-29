@@ -18,7 +18,7 @@ import {
     User,
     ArrowRightLeft,
     Calculator,
-    Wallet,
+    FileSignature,
 } from 'lucide-vue-next';
 import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
@@ -68,7 +68,7 @@ const memberNavItems: NavItem[] = [
             {
                 title: 'Loan Application',
                 href: '/loans/create',
-                icon: Wallet,
+                icon: FileSignature,
             },
             
         ]

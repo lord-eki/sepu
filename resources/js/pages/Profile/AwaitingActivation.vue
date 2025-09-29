@@ -90,12 +90,14 @@
 
 <script setup>
 import { Head, usePage, Link } from '@inertiajs/vue3'
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 const page = usePage()
 
 // local flash state
 const flash = ref({ ...page.props.flash })
+const flashMessage = computed(() => flash.value.success || flash.value.error)
+const flashType = computed(() => (flash.value.success ? 'success' : 'error'))
 
 // watch for changes to page.props.flash
 watch(
@@ -106,7 +108,7 @@ watch(
     if (flash.value.success || flash.value.error) {
       setTimeout(() => {
         flash.value = {}
-      }, 5000) // auto-hide after 5 seconds
+      }, 5000) 
     }
   },
   { immediate: true }

@@ -22,50 +22,58 @@ const formattedTotalAmount = computed(() =>
 
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Dividends', href: '/my-dividends' }]">
-    <div class="space-y-10 p-6 bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen">
+    <div class="space-y-10 p-6 bg-gradient-to-br from-white via-gray-50 to-gray-100 min-h-screen">
 
       <Head title="Dividends" />
 
       <!-- Header -->
-      <div class="bg-blue-50 shadow-sm rounded-xl px-6 py-5 flex items-center justify-between">
-        <h1 class="text-xl sm:text-2xl font-semibold tracking-tight text-gray-700">
-          Dividends
-        </h1>
+      <div class="bg-blue-900 shadow-lg rounded-2xl px-6 py-5 flex items-center justify-between">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            Dividends
+          </h1>
+          <p class="text-sm text-gray-200 mt-1">
+            Track declared dividends, view your earnings history, and manage 
+            distributions with ease.
+          </p>
+        </div>
       </div>
 
       <!-- Summary Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card
-          class="rounded-2xl shadow-md hover:shadow-xl transition bg-gradient-to-tr from-indigo-50 to-white border border-indigo-100">
+        <!-- Total Dividends -->
+        <Card class="rounded-2xl shadow-md hover:shadow-xl transition bg-gradient-to-tr from-[#081642]/10 to-white border border-[#081642]/20">
           <CardHeader class="flex items-center gap-2">
-            <DollarSign class="h-5 w-5 max-sm:text-sm text-indigo-600" />
-            <CardTitle class="text-gray-700">Total Dividends</CardTitle>
+            <DollarSign class="h-5 w-5 max-sm:text-sm text-[#081642]" />
+            <CardTitle class="text-[#081642]">Total Dividends</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-lg sm:text-xl font-medium text-indigo-700">{{ totalDividends }}</p>
+            <p class="text-lg sm:text-xl font-semibold text-[#081642]">{{ totalDividends }}</p>
           </CardContent>
         </Card>
 
-        <Card
-          class="rounded-2xl shadow-md hover:shadow-xl transition bg-gradient-to-tr from-green-50 to-white border border-green-100">
+        <!-- Total Amount -->
+        <Card class="rounded-2xl shadow-md hover:shadow-xl transition bg-gradient-to-tr from-orange-50 to-white border border-orange-200">
           <CardHeader class="flex items-center gap-2">
-            <Calendar class="h-5 w-5 max-sm:text-sm text-green-600" />
+            <Calendar class="h-5 w-5 max-sm:text-sm text-orange-600" />
             <CardTitle class="text-gray-800">Total Amount</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-lg sm:text-xl font-medium text-green-700">KES {{ formattedTotalAmount }}</p>
+            <p class="text-lg sm:text-xl font-semibold text-orange-600">
+              KES {{ formattedTotalAmount }}
+            </p>
           </CardContent>
         </Card>
 
-        <Card
-          class="rounded-2xl shadow-md hover:shadow-xl transition bg-gradient-to-tr from-blue-50 to-white border border-blue-100">
+        <!-- Status -->
+        <Card class="rounded-2xl shadow-md hover:shadow-xl transition bg-gradient-to-tr from-blue-50 to-white border border-blue-200">
           <CardHeader class="flex items-center gap-2">
-            <CheckCircle class="h-5 w-5 max-sm:text-sm text-blue-600" />
+            <CheckCircle class="h-5 w-5 max-sm:text-sm text-blue-700" />
             <CardTitle class="text-gray-800">Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-lg sm:text-xl font-medium"
-              :class="props.dividends.length ? 'text-blue-700' : 'text-gray-500'">
+            <p class="text-lg sm:text-xl font-semibold"
+              :class="props.dividends.length ? 'text-[#081642]' : 'text-gray-500'">
               {{ props.dividends.length ? "Paid Dividends" : "No Records" }}
             </p>
           </CardContent>
@@ -73,14 +81,14 @@ const formattedTotalAmount = computed(() =>
       </div>
 
       <!-- Dividends Table -->
-      <div class="bg-white shadow-lg rounded-2xl overflow-x-auto border border-gray-100">
+      <div class="bg-white shadow-lg rounded-2xl overflow-x-auto border border-gray-200">
         <table class="min-w-full">
-          <thead class="bg-indigo-50 border-b border-gray-200">
+          <thead class="bg-[#081642]/10 border-b border-gray-200">
             <tr>
-              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Year</th>
-              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Declared</th>
-              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Amount</th>
-              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-[#081642]">Year</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-[#081642]">Declared</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-[#081642]">Amount</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-[#081642]">Status</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-100">
@@ -96,11 +104,11 @@ const formattedTotalAmount = computed(() =>
               </td>
               <td class="px-6 py-4 text-sm">
                 <span :class="{
-    'px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800': d.status === 'paid',
-    'px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': d.status === 'pending',
-    'px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800': d.status === 'rejected',
-    'px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600': !d.status
-  }">
+                  'px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800': d.status === 'paid',
+                  'px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': d.status === 'pending',
+                  'px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800': d.status === 'rejected',
+                  'px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600': !d.status
+                }">
                   {{ d.status || 'Unknown' }}
                 </span>
               </td>

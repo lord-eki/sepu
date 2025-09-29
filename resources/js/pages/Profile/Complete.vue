@@ -1,13 +1,15 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
-    <header class="bg-white shadow-sm">
+    <header class="bg-blue-900 shadow-md">
       <div class="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Complete Your Profile</h2>
+        <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">
+          Complete Your Profile
+        </h2>
         <Link
           :href="route('logout')"
           method="post"
-          class="bg-gray-700 hover:cursor-pointer hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition"
+          class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition"
         >
           Logout
         </Link>
@@ -15,7 +17,7 @@
     </header>
 
     <!-- Flash messages -->
-    <div class="max-w-2xl mx-auto mt-2 sm:mt-6 px-4">
+    <div class="max-w-2xl mx-auto mt-4 px-4">
       <transition
         enter-active-class="transition ease-out duration-300"
         enter-from-class="opacity-0 -translate-y-2"
@@ -46,30 +48,28 @@
     </div>
 
     <!-- Content -->
-    <main class="py-5">
+    <main class="py-8 max-lg:px-4">
       <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
         <form @submit.prevent="submit" class="space-y-8 formprofile">
           <!-- Intro -->
-          <div class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-1">Welcome</h3>
+          <div class="bg-white shadow-md border-l-4 border-orange-500 rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-[#081642] mb-1">Welcome</h3>
             <p class="text-sm text-gray-500">
               Please fill in the required fields to complete your membership profile.
             </p>
           </div>
 
           <!-- Profile Photo -->
-          <section class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900">Profile Photo</h3>
-            <p class="text-sm text-gray-500 mb-4">
-              Upload a clear passport-style photo.
-            </p>
+          <section class="bg-white shadow-md rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-[#081642]">Profile Photo</h3>
+            <p class="text-sm text-gray-500 mb-4">Upload a clear passport-style photo.</p>
             <div class="flex items-center gap-6">
               <div class="flex-shrink-0">
                 <img
                   v-if="photoPreview"
                   :src="photoPreview"
                   alt="Profile preview"
-                  class="h-20 w-20 rounded-full object-cover ring-2 ring-indigo-500"
+                  class="h-20 w-20 rounded-full object-cover ring-2 ring-orange-500"
                 />
                 <div
                   v-else
@@ -88,7 +88,7 @@
               <button
                 type="button"
                 @click="$refs.photoInput.click()"
-                class="bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-md text-sm font-medium text-indigo-700 border border-indigo-200 shadow-sm"
+                class="bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-md text-sm font-medium text-orange-700 border border-orange-200 shadow-sm"
               >
                 Change Photo
               </button>
@@ -96,54 +96,54 @@
           </section>
 
           <!-- Personal Information -->
-          <section class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900">Personal Information</h3>
+          <section class="bg-white shadow-md rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-[#081642]">Personal Information</h3>
             <p class="text-sm text-gray-500 mb-6">Your basic details.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <!-- First Name -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">First Name</label>
+                <label class="block text-sm font-medium">First Name</label>
                 <input
                   v-model="form.first_name"
                   type="text"
                   readonly
-                  class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- Last Name -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Last Name</label>
+                <label class="block text-sm font-medium">Last Name</label>
                 <input
                   v-model="form.last_name"
                   type="text"
                   readonly
-                  class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- Other Names -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Other Names</label>
+                <label class="block text-sm font-medium">Other Names</label>
                 <input
                   v-model="form.middle_name"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- DOB -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                <label class="block text-sm font-medium">Date of Birth</label>
                 <input
                   v-model="form.date_of_birth"
                   type="date"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- Gender -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Gender</label>
+                <label class="block text-sm font-medium">Gender</label>
                 <select
                   v-model="form.gender"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 >
                   <option value="">Select Gender</option>
                   <option
@@ -157,10 +157,10 @@
               </div>
               <!-- Marital -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Marital Status</label>
+                <label class="block text-sm font-medium">Marital Status</label>
                 <select
                   v-model="form.marital_status"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 >
                   <option value="">Select Status</option>
                   <option
@@ -176,79 +176,79 @@
           </section>
 
           <!-- Contact Information -->
-          <section class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900">Contact Information</h3>
+          <section class="bg-white shadow-md rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-[#081642]">Contact Information</h3>
             <p class="text-sm text-gray-500 mb-6">How we can reach you.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <!-- Email -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <label class="block text-sm font-medium">Email</label>
                 <input
                   v-model="form.email"
                   type="email"
                   readonly
-                  class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- Phone -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Phone</label>
+                <label class="block text-sm font-medium">Phone</label>
                 <input
                   v-model="form.phone"
                   type="text"
                   readonly
-                  class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- Physical Address -->
               <div class="sm:col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Physical Address</label>
+                <label class="block text-sm font-medium">Physical Address</label>
                 <input
                   v-model="form.physical_address"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- City -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">City</label>
+                <label class="block text-sm font-medium">City</label>
                 <input
                   v-model="form.city"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- County -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">County</label>
+                <label class="block text-sm font-medium">County</label>
                 <input
                   v-model="form.county"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <!-- Postal Address -->
               <div>
-                <label class="block text-sm font-medium text-gray-700">Postal Address</label>
+                <label class="block text-sm font-medium">Postal Address</label>
                 <input
                   v-model="form.postal_address"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
             </div>
           </section>
 
           <!-- Identification -->
-          <section class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900">Identification</h3>
+          <section class="bg-white shadow-md rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-[#081642]">Identification</h3>
             <p class="text-sm text-gray-500 mb-6">Provide a valid ID document.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700">ID Type</label>
+                <label class="block text-sm font-medium">ID Type</label>
                 <select
                   v-model="form.id_type"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 >
                   <option value="">Select ID Type</option>
                   <option
@@ -261,19 +261,19 @@
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">ID Number</label>
+                <label class="block text-sm font-medium">ID Number</label>
                 <input
                   v-model="form.id_number"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
             </div>
           </section>
 
           <!-- Documents -->
-          <section class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900">Documents</h3>
+          <section class="bg-white shadow-md rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-[#081642]">Documents</h3>
             <p class="text-sm text-gray-500 mb-4">Upload any supporting documents.</p>
             <input
               type="file"
@@ -285,7 +285,7 @@
             <button
               type="button"
               @click="$refs.documentsInput.click()"
-              class="bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-md text-sm font-medium text-indigo-700 border border-indigo-200 shadow-sm"
+              class="bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-md text-sm font-medium text-orange-700 border border-orange-200 shadow-sm"
             >
               Upload Documents
             </button>
@@ -310,85 +310,84 @@
           </section>
 
           <!-- Employment -->
-          <section class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900">Employment Information</h3>
+          <section class="bg-white shadow-md rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-[#081642]">Employment Information</h3>
             <p class="text-sm text-gray-500 mb-6">Your work details.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700">Occupation</label>
+                <label class="block text-sm font-medium">Occupation</label>
                 <input
                   v-model="form.occupation"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Employer</label>
+                <label class="block text-sm font-medium">Employer</label>
                 <input
                   v-model="form.employer"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Employee Number</label>
+                <label class="block text-sm font-medium">Employee Number</label>
                 <input
                   v-model="form.employee_number"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Monthly Income</label>
+                <label class="block text-sm font-medium">Monthly Income</label>
                 <input
                   v-model="form.monthly_income"
                   type="number"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
             </div>
           </section>
 
           <!-- Emergency Contact -->
-          <section class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900">Emergency Contact</h3>
+          <section class="bg-white shadow-md rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-[#081642]">Emergency Contact</h3>
             <p class="text-sm text-gray-500 mb-6">Who we should reach in case of emergency.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700">Name</label>
+                <label class="block text-sm font-medium">Name</label>
                 <input
                   v-model="form.emergency_contact_name"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Phone</label>
+                <label class="block text-sm font-medium">Phone</label>
                 <input
                   v-model="form.emergency_contact_phone"
-                  type="number"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  type="tel"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
               <div class="sm:col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Relationship</label>
+                <label class="block text-sm font-medium">Relationship</label>
                 <input
                   v-model="form.emergency_contact_relationship"
                   type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm p-2"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
                 />
               </div>
             </div>
           </section>
-
 
           <!-- Submit -->
           <div class="flex justify-end max-sm:mr-5">
             <button
               type="submit"
               :disabled="form.processing || !isFormValid"
-              class="inline-flex items-center px-6 py-3 rounded-lg hover:cursor-pointer text-white font-medium shadow-sm
-                     bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 transition"
+              class="inline-flex items-center px-6 py-3 rounded-lg text-white font-medium shadow-md
+                     bg-blue-900 hover:bg-orange-600 disabled:bg-gray-300 transition"
             >
               <span v-if="form.processing">Saving...</span>
               <span v-else>Complete Profile</span>
@@ -478,7 +477,7 @@ const form = useForm({
   employer: '',
   monthly_income: '',
   employee_number: '',
-  photo: null,
+  profile_photo: null,
   documents: [],
   emergency_contact_name: '',
   emergency_contact_phone: '',
@@ -490,7 +489,7 @@ const handlePhotoUpload = (e) => {
   const file = e.target.files[0]
   if (file) {
     photoPreview.value = URL.createObjectURL(file)
-    form.photo = file
+    form.profile_photo = file
   }
 }
 
