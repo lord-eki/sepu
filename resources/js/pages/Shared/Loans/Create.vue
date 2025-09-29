@@ -67,7 +67,7 @@
                   <div v-if="!isMemberRole">
                     <label for="member_id" class="block text-sm font-medium text-gray-700">Select Member *</label>
                     <select v-model="form.member_id" @change="onMemberChange" id="member_id" required
-                      class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2">
+                      class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2">
                       <option value="">Choose a member...</option>
                       <option v-for="member in members" :key="member.id" :value="member.id">
                         {{ member.first_name }} {{ member.last_name }} - {{ member.membership_id }}
