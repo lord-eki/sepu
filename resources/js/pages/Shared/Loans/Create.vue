@@ -229,7 +229,6 @@
               <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
                 <h3 class="text-lg font-semibold text-blue-900">
                   Guarantors
-                  <span class="font-normal text-base text-gray-700">(Optional)</span>
                 </h3>
               </div>
               <div class="p-6 space-y-4">

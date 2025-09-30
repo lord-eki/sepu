@@ -41,7 +41,7 @@ const submit = () => {
 
         <Head title="Register" />
 
-        <form @submit.prevent="submit" class="flex flex-col gap-6">
+        <form @submit.prevent="submit" class="flex flex-col gap-6 regform">
             <div class="grid gap-6">
                 <!-- Name -->
                 <div class="grid gap-2">
@@ -116,7 +116,7 @@ const submit = () => {
                 </div>
 
                 <!-- Submit Button -->
-                <Button type="submit" class="mt-2 bg-blue-700 hover:bg-blue-800 hover:cursor-pointer w-full"
+                <Button type="submit" class="mt-2 hover:bg-blue-800 hover:cursor-pointer w-full"
                     tabindex="6" :disabled="form.processing">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
                     Create account
@@ -130,3 +130,9 @@ const submit = () => {
         </form>
     </AuthBase>
 </template>
+
+<style>
+.regform label {
+    color: #081642;
+}
+</style>

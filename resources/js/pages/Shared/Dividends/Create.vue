@@ -39,20 +39,20 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="bg-blue-50 p-4 rounded-lg">
                 <div class="text-sm font-medium text-blue-800">Total Active Shares</div>
-                <div class="text-lg sm:text-xl font-bold text-blue-900">KSh {{ formatCurrency(totalShares) }}</div>
+                <div class="text-base sm:text-lg font-bold text-blue-900">KSh {{ formatCurrency(totalShares) }}</div>
                 <div class="text-sm text-blue-600">{{ activeMembers }} active members</div>
               </div>
 
               <div class="bg-green-50 p-4 rounded-lg">
                 <div class="text-sm font-medium text-green-800">Available for Dividend</div>
-                <div class="text-lg sm:text-xl font-bold text-green-900">KSh {{ formatCurrency(form.total_profit || 0)
+                <div class="text-base sm:text-lg font-bold text-green-900">KSh {{ formatCurrency(form.total_profit || 0)
                   }}</div>
                 <div class="text-sm text-green-600">Based on entered profit</div>
               </div>
 
               <div class="bg-purple-50 p-4 rounded-lg">
                 <div class="text-sm font-medium text-purple-800">Calculated Dividends</div>
-                <div class="text-lg sm:text-xl font-bold text-purple-900">KSh {{ formatCurrency(calculatedDividends) }}
+                <div class="text-base sm:text-lg font-bold text-purple-900">KSh {{ formatCurrency(calculatedDividends) }}
                 </div>
                 <div class="text-sm text-purple-600">At {{ form.dividend_rate || 0 }}% rate</div>
               </div>

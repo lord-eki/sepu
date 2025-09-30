@@ -77,7 +77,7 @@ const toggleNotifications = () => {
 
     <Head title="Dashboard" />
     <div class="p-6 bg-gray-50 min-h-screen">
-      <div class="w-full rounded-lg bg-gradient-to-r from-blue-600 to-orange-500 mb-4 overflow-hidden">
+      <div class="w-full rounded-lg bg-gradient-to-r from-blue-900 to-orange-500 mb-4 overflow-hidden">
         <div class="flex items-center justify-between py-3 px-3 gap-2 text-white text-sm sm:text-base">
           <div class="flex gap-1 items-center">
             <span class="text-white tracking-wide">SEPU SACCO</span>
@@ -100,14 +100,14 @@ const toggleNotifications = () => {
           </div>
           <div class="flex items-center gap-3">
             <!-- Toggle balances -->
-            <Button size="sm" variant="outline" class="rounded-full hover:cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50"
+            <Button size="sm" variant="outline" class="rounded-full hover:cursor-pointer border-blue-900 text-blue-900 hover:bg-blue-50"
               @click="toggleBalances">
               {{ showBalances ? 'Hide Balances' : 'Show Balances' }}
             </Button>
 
             <!-- Notifications -->
             <div class="relative">
-              <button class="relative p-1.5 rounded-full bg-blue-600 hover:cursor-pointer hover:bg-blue-700 transition"
+              <button class="relative p-1.5 rounded-full bg-blue-900 hover:cursor-pointer hover:bg-blue-700 transition"
                 @click="toggleNotifications">
                 <Bell class="h-4.5 w-4.5 text-white" />
                 <span
@@ -183,11 +183,11 @@ const toggleNotifications = () => {
           <Tabs default-value="loans" class="w-full">
             <TabsList class="flex flex-wrap gap-2 bg-blue-50 rounded-lg">
               <TabsTrigger value="loans"
-                class="px-4 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                class="px-4 rounded-lg data-[state=active]:bg-blue-900 data-[state=active]:text-white">
                 <Landmark class="h-4 w-4" /> Loans
               </TabsTrigger>
               <TabsTrigger value="transactions"
-                class="px-4 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                class="px-4 rounded-lg data-[state=active]:bg-blue-900 data-[state=active]:text-white">
                 <Receipt class="h-4 w-4" /> Transactions
               </TabsTrigger>
             </TabsList>

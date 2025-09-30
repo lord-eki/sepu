@@ -36,7 +36,7 @@ const submit = () => {
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit" class="flex flex-col gap-6">
+        <form @submit.prevent="submit" class="flex flex-col gap-6 logform">
             <div class="grid gap-6">
                 <div class="grid gap-2">
                     <Label for="email">Email address</Label>
@@ -79,3 +79,9 @@ const submit = () => {
         </form>
     </AuthBase>
 </template>
+
+<style>
+.logform label {
+    color: #081642;
+}
+</style>

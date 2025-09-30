@@ -32,19 +32,48 @@
       icon: 'M3 7h18M3 12h18M3 17h18'
     },
     {
-      label: 'Total Budget',
-      value: formatCurrency(stats.total_budget_amount),
-      color: 'bg-blue-900',
-      icon: 'M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-3-3z M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z'
-    },
+  label: 'Total Amount',
+  value: formatCurrency(stats.total_budget_amount),
+  color: 'bg-blue-900',
+  icon: [
+    'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2', 
+    'M12 8V7', 
+    'M12 8v8', 
+    'M12 16v1', 
+    'M12 16c-1.11 0-2.08-.402-2.599-1'
+  ]
+},
   ]" :key="card.label"
             class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition p-6">
             <div class="flex items-center space-x-4">
               <div
                 :class="[card.color, 'w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow']">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="card.icon" />
+                <svg
+                  class="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <template v-if="Array.isArray(card.icon)">
+                    <path
+                      v-for="(d, i) in card.icon"
+                      :key="i"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      :d="d"
+                    />
+                  </template>
+                  <template v-else>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      :d="card.icon"
+                    />
+                  </template>
                 </svg>
+
               </div>
               <div>
                 <p class="text-sm text-gray-500">{{ card.label }}</p>

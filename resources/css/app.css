@@ -101,11 +101,11 @@
     --popover-foreground: hsl(222.2 47.4% 11.2%);
 
     /* Primary deep blue */
-    --primary: hsl(221 83% 43%);          /* blue-700 */
+    --primary: hsl(221 83% 23%);          /* blue-900 */
     --primary-foreground: hsl(0 0% 100%);
 
     /* Secondary lighter shade */
-    --secondary: hsl(221 83% 96%);        /* near blue-100 */
+    --secondary: hsl(221 83% 30%);        /* near blue-100 */
     --secondary-foreground: hsl(221 83% 43%);
 
     /* Muted */

@@ -27,18 +27,18 @@ import { Head, Link } from '@inertiajs/vue3'
 
         <div class="flex items-center justify-center lg:justify-start gap-4">
           <Link :href="route('login')"
-            class="bg-blue-600 text-white px-6 py-3 rounded-full shadow hover:scale-105 hover:bg-blue-700 transition-transform">
+            class="bg-blue-900 text-white px-6 py-3 rounded-full shadow hover:scale-105 hover:bg-blue-700 transition-transform">
             Log In
           </Link>
           <Link :href="route('register')"
-            class="border border-blue-600 text-blue-600 dark:text-white px-6 py-3 rounded-full hover:bg-blue-50 dark:hover:bg-blue-800 transition">
+            class="border border-blue-900 text-blue-900 dark:text-white px-6 py-3 rounded-full hover:bg-blue-50 dark:hover:bg-blue-800 transition">
             Sign Up
           </Link>
         </div>
 
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Click <span class="font-semibold text-blue-600">Sign Up</span> to create an account, 
-          or choose <span class="font-semibold text-blue-600">Log In</span> to continue.
+          Click <span class="font-semibold text-blue-900">Sign Up</span> to create an account, 
+          or choose <span class="font-semibold text-blue-900">Log In</span> to continue.
         </p>
       </div>
 
