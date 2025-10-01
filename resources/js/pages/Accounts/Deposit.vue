@@ -5,24 +5,37 @@
   ]">
 
 
-    <!-- Flash messages -->
-    <div class="max-w-2xl mx-auto mt-2 sm:mt-6 px-4">
-      <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
-        <div v-if="flashMessage" :class="[
-    flashType === 'success'
-      ? 'bg-green-100 text-green-800 border border-green-300'
-      : 'bg-red-100 text-red-800 border border-red-300',
-    'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
+    <!-- Flash Messages -->
+        <div class="max-w-2xl mx-auto mt-4 sm:mt-6 px-4">
+          <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+            leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+            <div v-if="successMessage || errorMessages" :class="[
+    successMessage
+      ? 'bg-green-100 text-green-900 border border-green-300'
+      : 'bg-red-100 text-red-900 border border-red-300',
+    'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-md'
   ]">
-          <span class="flex-1">{{ flashMessage }}</span>
-          <button type="button" class="ml-3 text-gray-500 hover:text-gray-700" @click="flashMessage = null">
-            ✕
-          </button>
+              <!-- Success -->
+              <span v-if="successMessage" class="flex-1">{{ successMessage }}</span>
+              <!-- Errors -->
+              <ul v-else class="flex-1 list-disc pl-4 space-y-1">
+                <li v-for="(errs, field) in errorMessages" :key="field">
+                  <template v-if="field === 'general'">{{ errs.join(', ') }}</template>
+                  <template v-else>
+                    <strong>{{ field }}:</strong> {{ errs.join(', ') }}
+                  </template>
+                </li>
+              </ul>
+              <!-- Close -->
+              <button type="button" class="ml-3 text-gray-500 hover:text-gray-700"
+                @click="() => { successMessage = null; errorMessages = null }">
+                ✕
+              </button>
+            </div>
+          </transition>
         </div>
-      </transition>
-    </div>
+
 
 
     <div class="mt-2 flex mx-[5%] justify-between items-center">
@@ -159,7 +172,7 @@
                       <button type="button"
                         class="w-fit px-4 py-2 rounded-md bg-blue-500 text-white text-sm font-medium
                               hover:cursor-pointer hover:bg-blue-600"
-                        :disabled="!form.amount || form.amount < 5000 || !form.stk_phone"
+                        
                         @click="initiateStkPush">
                         Initiate Payment
                       </button>
@@ -345,7 +358,7 @@
 
     <!-- STK Push Modal -->
     <div v-if="stkModal"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      class="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.8)] z-50">
       <div class="bg-white w-full max-w-md rounded-lg shadow-lg p-6 relative">
         <h3 class="text-lg font-semibold text-blue-900 mb-3">M-Pesa Prompt Sent</h3>
         <p class="text-sm text-gray-700 mb-4">
@@ -387,31 +400,31 @@ const page = usePage()
 const isMemberRole = computed(() => props.authUser?.role?.includes('member'))
 
 
-const flashMessage = ref(null)
-const flashType = ref('success')
+const successMessage = ref(null)
+const errorMessages = ref(null)
 
-watch(
-  () => page.props.flash,
-  (flash) => {
-    if (flash?.success) {
-      flashMessage.value = flash.success
-      flashType.value = 'success'
-      form.reset()
-    } else if (flash?.error) {
-      flashMessage.value = flash.error
-      flashType.value = 'error'
-      form.reset()
-    }
 
-    // Auto hide after 3 seconds
-    if (flashMessage.value) {
-      setTimeout(() => {
-        flashMessage.value = null
-      }, 3000)
-    }
-  },
-  { immediate: true, deep: true }
-)
+const showMessage = (type, message, errors = null, callback = null) => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+
+  if (type === 'success') {
+    successMessage.value = message
+    errorMessages.value = null
+  } else {
+    errorMessages.value = errors || { general: [message] }
+    successMessage.value = null
+  }
+
+  setTimeout(() => {
+    successMessage.value = null
+    errorMessages.value = null
+
+    if (callback) callback()
+  }, 5000)
+}
+
+
+
 
 const form = useForm({
   amount: '',
@@ -471,16 +484,19 @@ const submit = () => {
 const stkModal = ref(false)
 
 const initiateStkPush = () => {
+
   if (!form.amount || form.amount < 5000) {
-    flashMessage.value = "Minimum deposit is KES 5,000"
-    flashType.value = "error"
+    showMessage("error", "Minimum deposit is KES 5,000")
     return
   }
   if (!form.stk_phone) {
-    flashMessage.value = "Please enter your phone number"
-    flashType.value = "error"
+    showMessage("error", "Please enter your phone number")
     return
   }
+
+
+  //for testing
+  stkModal.value = true;
 
   // Call backend for STK push
   form.post(route('payments.stkpush'), {
