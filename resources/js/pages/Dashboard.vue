@@ -107,7 +107,7 @@ const toggleNotifications = () => {
 
             <!-- Notifications -->
             <div class="relative">
-              <button class="relative p-1.5 rounded-full bg-blue-900 hover:cursor-pointer hover:bg-blue-700 transition"
+              <button class="relative p-1.5 rounded-full bg-blue-900 hover:cursor-pointer hover:bg-blue-800 transition"
                 @click="toggleNotifications">
                 <Bell class="h-4.5 w-4.5 text-white" />
                 <span
@@ -120,9 +120,9 @@ const toggleNotifications = () => {
               <div v-if="showNotifications"
                 class="absolute mt-2 w-[95vw] max-w-sm sm:w-80 sm:right-0 sm:left-auto left-1/2 -translate-x-1/2 sm:translate-x-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                 <!-- Header -->
-                <div class="flex items-center justify-between p-2 border-b bg-blue-600 text-white rounded-t-xl">
-                  <span class="font-semibold">Notifications</span>
-                  <button @click="showNotifications = false" class="text-orange-300 hover:text-orange-500">
+                <div class="flex items-center justify-between p-2 border-b bg-blue-100 text-white rounded-t-xl">
+                  <span class="font-medium text-blue-900">Notifications</span>
+                  <button @click="showNotifications = false" class="text-orange-600 hover:text-orange-700">
                     ✕
                   </button>
                 </div>
@@ -193,8 +193,37 @@ const toggleNotifications = () => {
             </TabsList>
 
             <!-- Loans Tab -->
-            <TabsContent value="loans" class="mt-6">
-              <!-- same loan cards, just styled -->
+            <TabsContent value="loans" class="">
+              <div v-if="activeLoans?.length" class="grid gap-4 md:grid-cols-2">
+                <Card v-for="loan in activeLoans" :key="loan.id" class="shadow-sm hover:shadow-md transition rounded-xl">
+                  <CardHeader class="flex flex-row items-start justify-between">
+                    <div>
+                      <CardTitle class="text-base text-gray-800">{{ loan.loanProduct?.name || 'Loan' }}</CardTitle>
+                      <p class="text-xs text-gray-500">Status: <span class="font-medium capitalize">{{ loan.status }}</span></p>
+                    </div>
+                    <Badge variant="secondary" class="bg-blue-100 text-blue-700">Outstanding {{ fmtMoney(loan.outstanding_balance) }}</Badge>
+                  </CardHeader>
+                  <CardContent class="space-y-3">
+                    <div class="flex items-center justify-between text-sm text-gray-600">
+                      <span class="flex items-center gap-2"><Clock class="h-4 w-4" /> Next payment</span>
+                      <span>{{ fmtDate(loan.first_repayment_date) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm text-gray-600">
+                      <span class="flex items-center gap-2"><TrendingUp class="h-4 w-4" /> Disbursed</span>
+                      <span>{{ fmtMoney(loan.disbursed_amount || 0) }}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 pt-2">
+                      <Button as-child size="sm"><Link :href="route('loans.show', loan.id)">View</Link></Button>
+                      <Button as-child size="sm" variant="secondary"><Link :href="route('loans.repayments', loan.id)">Repay</Link></Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <Alert v-else class="mt-4">
+                <Info class="h-4 w-4" />
+                <AlertTitle>No active loans</AlertTitle>
+                <AlertDescription>You don't have any active loans. Apply for a new loan from the loans page.</AlertDescription>
+              </Alert>
             </TabsContent>
 
             <!-- Transactions Tab -->

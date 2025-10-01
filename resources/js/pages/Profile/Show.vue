@@ -113,7 +113,7 @@ function submit() {
 <template>
 
   <Head title="My Profile" />
-  <AppLayout :breadcrumbs="[{ title: 'Member Profile', href: '/member/profile' }]">
+  <AppLayout :breadcrumbs="[{ title: 'Profile', href: '/member/profile' }]">
     <div class="p-4">
       <!-- Flash -->
       <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
@@ -148,8 +148,8 @@ function submit() {
 
             <!-- Upload -->
             <label
-              class="mt-4 px-3 py-1.5 bg-white text-orange-500 text-sm rounded-lg shadow-md hover:bg-orange-100 cursor-pointer">
-              Change Photo
+              class="mt-4 px-3 py-1.5 bg-white text-orange-600 text-sm rounded-lg shadow-md hover:bg-orange-100 cursor-pointer">
+              Edit Photo
               <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
             </label>
 
@@ -180,7 +180,7 @@ function submit() {
             <h3 class="text-lg font-semibold text-blue-900 ">Personal Info</h3>
             <div class="flex gap-3">
               <Button v-if="!isEditing" @click="isEditing = true"
-                class="bg-blue-900 hover:bg-orange-600 text-white rounded-md px-3 py-2 shadow-sm flex items-center gap-2">
+                class="bg-blue-900 hover:bg-blue-800 text-white rounded-md px-3 py-2 shadow-sm flex items-center gap-2">
                 <Pencil class="w-4 h-4" /> Edit
               </Button>
               <Button v-if="isEditing" @click="isEditing = false"

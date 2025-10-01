@@ -234,6 +234,41 @@
                 </button>
               </div>
             </form>
+            <!-- Transaction Status Reflection -->
+            <div v-if="transaction" class="mt-8 bg-gray-50 border rounded-lg p-6 shadow-sm">
+              <h3 class="text-md font-semibold text-gray-800 mb-4">Deposit Status</h3>
+
+              <div class="flex items-center space-x-3">
+                <div
+                  :class="[
+                    'h-3 w-3 rounded-full',
+                    transaction.status === 'success' ? 'bg-green-500' :
+                    transaction.status === 'pending' ? 'bg-yellow-500 animate-pulse' :
+                    'bg-red-500'
+                  ]">
+                </div>
+                <span class="text-sm">
+                  <template v-if="transaction.status === 'pending'">
+                    Deposit of <span class="font-medium text-blue-600">{{ formatCurrency(transaction.amount) }}</span> is 
+                    <span class="font-semibold">pending</span>. Waiting for M-Pesa confirmation…
+                  </template>
+                  <template v-else-if="transaction.status === 'success'">
+                    ✅ Deposit of <span class="font-medium text-green-600">{{ formatCurrency(transaction.amount) }}</span> was 
+                    <span class="font-semibold">successful</span>.  
+                    New Balance: <span class="font-semibold text-green-700">{{ formatCurrency(account.balance) }}</span>
+                  </template>
+                  <template v-else>
+                    ❌ Deposit failed. Please try again or check your M-Pesa messages.
+                  </template>
+                </span>
+              </div>
+
+              <!-- Reference -->
+              <div v-if="transaction.status === 'success'" class="mt-4 text-sm text-gray-700">
+                <p><span class="font-medium">Receipt:</span> {{ transaction.payment_reference }}</p>
+                <p><span class="font-medium">Transaction ID:</span> {{ transaction.id }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

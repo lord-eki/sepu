@@ -58,47 +58,42 @@ const submit = () => {
                         placeholder="email@example.com" />
                     <InputError :message="form.errors.email" />
                 </div>
-<!-- Phone -->
-<div class="grid gap-2">
-  <Label for="phone">Phone number</Label>
+                <!-- Phone -->
+                <div class="grid gap-2">
+                <Label for="phone">Phone number</Label>
 
-  <!-- Shared wrapper -->
-  <div
-    class="flex overflow-hidden rounded-md border border-input bg-background transition-[color,box-shadow]
-           focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]"
-  >
-    <!-- Country code -->
-    <select
-      v-model="selectedCode"
-      class="px-3 py-2 text-sm bg-background text-foreground focus:outline-none"
-    >
-      <option v-for="c in countryCodes" :key="c.code" :value="c.code">
-        {{ c.flag }} {{ c.code }}
-      </option>
-    </select>
+                <!-- Shared wrapper -->
+                <div
+                    class="flex overflow-hidden rounded-md border border-input bg-background transition-[color,box-shadow]
+                        focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]"
+                >
+                    <!-- Country code -->
+                    <select
+                    v-model="selectedCode"
+                    class="px-3 py-2 text-sm bg-background text-foreground focus:outline-none"
+                    >
+                    <option v-for="c in countryCodes" :key="c.code" :value="c.code">
+                        {{ c.flag }} {{ c.code }}
+                    </option>
+                    </select>
 
-    <!-- Phone input -->
-    <input
-      id="phone"
-      type="tel"
-      required
-      :tabindex="3"
-      autocomplete="tel"
-      v-model="form.phone"
-      placeholder="712345678"
-      pattern="^[0-9]{9,10}$"
-      maxlength="10"
-      class="flex-1 px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground border-0 rounded-none focus:outline-none"
-    />
-  </div>
+                    <!-- Phone input -->
+                    <input
+                    id="phone"
+                    type="tel"
+                    required
+                    :tabindex="3"
+                    autocomplete="tel"
+                    v-model="form.phone"
+                    placeholder="712345678"
+                    pattern="^[0-9]{9,10}$"
+                    maxlength="10"
+                    class="flex-1 px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground border-0 rounded-none focus:outline-none"
+                    />
+                </div>
 
-  <InputError :message="form.errors.phone" />
-</div>
-
-
-
-
-
+                <InputError :message="form.errors.phone" />
+                </div>
                 <!-- Password -->
                 <div class="grid gap-2">
                     <Label for="password">Password</Label>
@@ -116,7 +111,7 @@ const submit = () => {
                 </div>
 
                 <!-- Submit Button -->
-                <Button type="submit" class="mt-2 hover:bg-blue-800 hover:cursor-pointer w-full"
+                <Button type="submit" class="mt-2 hover:cursor-pointer w-full"
                     tabindex="6" :disabled="form.processing">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
                     Create account

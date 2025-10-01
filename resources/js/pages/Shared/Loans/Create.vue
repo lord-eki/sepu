@@ -298,7 +298,7 @@
                   <div class="flex items-center space-x-3">
 
                     <label :for="doc.key"
-                      class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 max-sm:text-sm rounded-lg shadow cursor-pointer transition">
+                      class="bg-blue-800 hover:bg-blue-900 text-white px-3 py-1 max-sm:text-sm rounded-lg shadow cursor-pointer transition">
                       Choose File
                     </label>
                     <input type="file" :id="doc.key" :name="doc.key" class="hidden"

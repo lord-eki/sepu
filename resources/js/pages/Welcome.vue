@@ -27,7 +27,7 @@ import { Head, Link } from '@inertiajs/vue3'
 
         <div class="flex items-center justify-center lg:justify-start gap-4">
           <Link :href="route('login')"
-            class="bg-blue-900 text-white px-6 py-3 rounded-full shadow hover:scale-105 hover:bg-blue-700 transition-transform">
+            class="bg-blue-900 text-white px-6 py-3 rounded-full shadow hover:scale-105 hover:bg-blue-800 transition-transform">
             Log In
           </Link>
           <Link :href="route('register')"
