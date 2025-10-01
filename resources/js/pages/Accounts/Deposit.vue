@@ -25,9 +25,9 @@
     </div>
 
 
-    <div class="flex mx-[5%] justify-between items-center">
+    <div class="mt-2 flex mx-[5%] justify-between items-center">
       <div>
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight">
           Make Deposit
         </h2>
         <p class="text-sm text-gray-600 mt-1">
@@ -43,7 +43,7 @@
 
     </div>
 
-    <div class="py-12">
+    <div class="py-5">
       <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div class="p-6">
@@ -62,13 +62,13 @@
                 </div>
                 <div>
                   <span class="font-medium">Current Balance:</span>
-                  <div class="mt-1 text-lg font-semibold text-blue-900">
+                  <div class="mt-1 text-lg font-medium text-blue-900">
                     {{ formatCurrency(account.balance) }}
                   </div>
                 </div>
                 <div>
                   <span class="font-medium">Available Balance:</span>
-                  <div class="mt-1 text-lg font-semibold text-gray-00">
+                  <div class="mt-1 text-lg font-medium text-gray-700">
                     {{ formatCurrency(account.available_balance) }}
                   </div>
                 </div>
@@ -95,7 +95,7 @@
                     <span class="text-gray-500 sm:text-sm">KES</span>
                   </div>
                   <input id="amount" v-model.number="form.amount" type="number" step="0.01" min="5000"
-                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 pr-12 sm:text-sm border-gray-300 rounded-md p-2"
+                    class="focus:ring-indigo-500 border focus:border-indigo-500 block w-full pl-12 pr-12 sm:text-sm border-gray-300 rounded-md p-2"
                     placeholder="0.00" required>
                 </div>
                 <div v-if="form.errors.amount" class="mt-2 text-sm text-red-600">
@@ -108,51 +108,7 @@
                 </div>
               </div>
 
-              <!-- Payment Options Info -->
-              <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-                <h3 class="text-sm font-medium text-blue-900 mb-2">Deposit Options</h3>
-                <p class="text-xs text-gray-600 mb-3">
-                  Minimum deposit: <span class="font-semibold text-green-700">KES 5,000</span>
-                </p>
-
-                <!-- STK Push Option -->
-                <div class="p-4 border rounded-lg bg-white mb-4">
-                  <p class="text-sm font-medium text-gray-800 mb-2">Deposit via <span class="text-green-800">M-Pesa
-                      Express</span></p>
-                  <p class="text-xs text-gray-500 mb-2">Fast and secure – you’ll receive an M-Pesa prompt</p>
-
-                  <div class="space-y-3 flex items-center gap-3 justify-between">
-                    <!-- Phone Input -->
-                    <div class="w-[50%]">
-                      <label for="stk_phone" class="block text-sm text-blue-900">Phone Number *</label>
-                      <input id="stk_phone" v-model="form.stk_phone" type="tel" placeholder="e.g., 254712345678"
-                        class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-                      <p class="text-xs text-gray-500 mt-1">Format: 2547XXXXXXXX</p>
-                    </div>
-
-                    <!-- STK Push Button -->
-                    <button type="button" 
-                      class="w-fit px-4 py-2 rounded-md bg-blue-500 text-white text-sm font-medium hover:cursor-pointer hover:bg-blue-600"
-                      :disabled="!form.amount || form.amount < 5000 || !form.stk_phone" @click="initiateStkPush">
-                      Initiate Payment
-                    </button>
-                  </div>
-                </div>
-
-
-                <!-- Bank Details Option -->
-                <div class="p-3 border rounded-lg bg-white">
-                  <p class="text-sm font-medium text-gray-800">Bank / Paybill Details</p>
-                  <ul class="mt-2 text-sm text-gray-700 space-y-1">
-                    <li><span class="font-semibold">Paybill:</span> 400200</li>
-                    <li><span class="font-semibold">Account No:</span> 01120040146200</li>
-                    <li><span class="font-semibold">Account Name:</span> SEPU SACCO SOCIETY LIMITED</li>
-                    <li><span class="font-semibold">Minimum Deposit:</span> Kshs. 5,000</li>
-                  </ul>
-                </div>
-              </div>
-
-
+          
               <!-- Payment Method -->
               <div>
                 <label for="payment_method" class="block text-sm font-medium text-gray-700">
@@ -171,8 +127,75 @@
                 </div>
               </div>
 
-              <!-- Payment Reference -->
-              <div v-if="form.payment_method && form.payment_method !== 'cash'">
+               <!-- Deposit Options -->
+                <div v-if="form.payment_method === 'mobile_money'"
+                    class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                  <h3 class="text-base font-medium text-blue-900 mb-2">Deposit Options (Mobile Money)</h3>
+                  <p class="text-xs text-gray-600 mb-5">
+                    Minimum deposit: <span class="font-semibold text-green-900">KES 5,000</span>
+                  </p>
+
+                  <!-- STK Push Option -->
+                  <div class="p-4 border rounded-lg bg-white mb-4">
+                    <p class="text-base font-medium text-green-700 mb-2">
+                      Deposit via M-Pesa Express
+                    </p>
+                    <p class="text-xs text-gray-500 mb-3">
+                      Fast and secure – you’ll receive an M-Pesa prompt
+                    </p>
+
+                    <div class="space-y-3 flex flex-col sm:flex-row items-center gap-3 justify-between">
+                      <!-- Phone Input -->
+                      <div class="w-full sm:w-[50%]">
+                        <label for="stk_phone" class="block text-sm font-medium text-green-700">Phone Number *</label>
+                        <input id="stk_phone" v-model="form.stk_phone" type="tel"
+                          placeholder="e.g., 254712345678"
+                          class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm
+                                focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <p class="text-xs text-gray-500 mt-1">Format: 2547XXXXXXXX</p>
+                      </div>
+
+                      <!-- STK Push Button -->
+                      <button type="button"
+                        class="w-fit px-4 py-2 rounded-md bg-blue-500 text-white text-sm font-medium
+                              hover:cursor-pointer hover:bg-blue-600"
+                        :disabled="!form.amount || form.amount < 5000 || !form.stk_phone"
+                        @click="initiateStkPush">
+                        Initiate Payment
+                      </button>
+                    </div>
+                  </div>
+
+                <!-- OR Divider -->
+                <div class="flex items-center justify-center my-3">
+                  <span class="text-xs text-gray-500">OR</span>
+                </div>
+
+                <!-- Paybill Option -->
+                <div class="p-3 border rounded-lg bg-white">
+                  <p class="text-base font-medium text-blue-800">Deposit via Paybill</p>
+                  <ul class="mt-2 text-base text-gray-700 space-y-1">
+                    <li><span class="font-semibold">Paybill:</span> 400200</li>
+                    <li><span class="font-semibold">Account No:</span> 01120040146200</li>
+                    <li><span class="font-semibold">Account Name:</span> SEPU SACCO SOCIETY LIMITED</li>
+                    <li><span class="font-semibold">Minimum Deposit:</span> Kshs. 5,000</li>
+                  </ul>
+
+                  <!-- Reference ID Input -->
+                  <div class="mt-10">
+                    <label for="payment_reference" class="block text-sm font-medium text-blue-800">
+                      Enter M-Pesa Transaction ID
+                    </label>
+                    <input id="payment_reference" v-model="form.payment_reference" type="text"
+                      class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                      placeholder="e.g., MP240315ABC123" />
+                  </div>
+                </div>
+              </div>
+
+            <!-- Payment Reference -->
+              <div v-if="form.payment_method && form.payment_method !== 'cash' && form.payment_method !== 'mobile_money'">
                 <label for="payment_reference" class="block text-sm font-medium text-gray-700">
                   Payment Reference
                   <span v-if="form.payment_method === 'mobile_money'" class="text-xs text-gray-500">(Transaction
@@ -182,7 +205,7 @@
                   <span v-if="form.payment_method === 'cheque'" class="text-xs text-gray-500">(Cheque Number)</span>
                 </label>
                 <input id="payment_reference" v-model="form.payment_reference" type="text"
-                  class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"
+                  class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 border block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"
                   :placeholder="getPaymentReferencePlaceholder(form.payment_method)">
                 <div v-if="form.errors.payment_reference" class="mt-2 text-sm text-red-600">
                   {{ form.errors.payment_reference }}
@@ -195,7 +218,7 @@
                   Description
                 </label>
                 <textarea id="description" v-model="form.description" rows="3"
-                  class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2"
+                  class="mt-1 shadow-sm border focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2"
                   placeholder="Optional description for this deposit"></textarea>
                 <div v-if="form.errors.description" class="mt-2 text-sm text-red-600">
                   {{ form.errors.description }}
@@ -266,7 +289,7 @@
                   class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 Cancel
                 </Link>
-                <button type="submit" :disabled="form.processing || !form.amount || form.amount <= 0"
+                <button type="submit" :disabled="form.processing || !form.amount || form.amount < 5000 || (form.payment_method === 'mobile_money' && !form.payment_reference)"
                   class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
                   <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -285,29 +308,29 @@
 
               <div class="flex items-center space-x-3">
                 <div :class="[
-    'h-3 w-3 rounded-full',
-    transaction.status === 'success' ? 'bg-green-500' :
-      transaction.status === 'pending' ? 'bg-yellow-500 animate-pulse' :
-        'bg-red-500'
-  ]">
-                </div>
-                <span class="text-sm">
-                  <template v-if="transaction.status === 'pending'">
-                    Deposit of <span class="font-medium text-blue-600">{{ formatCurrency(transaction.amount) }}</span>
-                    is
-                    <span class="font-semibold">pending</span>. Waiting for M-Pesa confirmation…
-                  </template>
-                  <template v-else-if="transaction.status === 'success'">
-                    ✅ Deposit of <span class="font-medium text-green-600">{{ formatCurrency(transaction.amount)
-                      }}</span> was
-                    <span class="font-semibold">successful</span>.
-                    New Balance: <span class="font-semibold text-green-700">{{ formatCurrency(account.balance) }}</span>
-                  </template>
-                  <template v-else>
-                    ❌ Deposit failed. Please try again or check your M-Pesa messages.
-                  </template>
-                </span>
-              </div>
+                'h-3 w-3 rounded-full',
+                transaction.status === 'success' ? 'bg-green-500' :
+                  transaction.status === 'pending' ? 'bg-yellow-500 animate-pulse' :
+                    'bg-red-500'
+              ]">
+                            </div>
+                            <span class="text-sm">
+                              <template v-if="transaction.status === 'pending'">
+                                Deposit of <span class="font-medium text-blue-600">{{ formatCurrency(transaction.amount) }}</span>
+                                is
+                                <span class="font-semibold">pending</span>. Waiting for M-Pesa confirmation…
+                              </template>
+                              <template v-else-if="transaction.status === 'success'">
+                                ✅ Deposit of <span class="font-medium text-green-600">{{ formatCurrency(transaction.amount)
+                                  }}</span> was
+                                <span class="font-semibold">successful</span>.
+                                New Balance: <span class="font-semibold text-green-700">{{ formatCurrency(account.balance) }}</span>
+                              </template>
+                              <template v-else>
+                                ❌ Deposit failed. Please try again or check your M-Pesa messages.
+                              </template>
+                            </span>
+                          </div>
 
               <!-- Reference -->
               <div v-if="transaction.status === 'success'" class="mt-4 text-sm text-gray-700">
