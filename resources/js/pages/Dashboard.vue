@@ -100,7 +100,8 @@ const toggleNotifications = () => {
           </div>
           <div class="flex items-center gap-3">
             <!-- Toggle balances -->
-            <Button size="sm" variant="outline" class="rounded-full hover:cursor-pointer border-blue-900 text-blue-900 hover:bg-blue-50"
+            <Button size="sm" variant="outline"
+              class="rounded-full hover:cursor-pointer border-blue-900 text-blue-900 hover:bg-blue-50"
               @click="toggleBalances">
               {{ showBalances ? 'Hide Balances' : 'Show Balances' }}
             </Button>
@@ -195,26 +196,38 @@ const toggleNotifications = () => {
             <!-- Loans Tab -->
             <TabsContent value="loans" class="">
               <div v-if="activeLoans?.length" class="grid gap-4 md:grid-cols-2">
-                <Card v-for="loan in activeLoans" :key="loan.id" class="shadow-sm hover:shadow-md transition rounded-xl">
+                <Card v-for="loan in activeLoans" :key="loan.id"
+                  class="shadow-sm hover:shadow-md transition rounded-xl">
                   <CardHeader class="flex flex-row items-start justify-between">
                     <div>
                       <CardTitle class="text-base text-gray-800">{{ loan.loanProduct?.name || 'Loan' }}</CardTitle>
-                      <p class="text-xs text-gray-500">Status: <span class="font-medium capitalize">{{ loan.status }}</span></p>
+                      <p class="text-xs text-gray-500">Status: <span class="font-medium capitalize">{{ loan.status
+                          }}</span></p>
                     </div>
-                    <Badge variant="secondary" class="bg-blue-100 text-blue-700">Outstanding {{ fmtMoney(loan.outstanding_balance) }}</Badge>
+                    <Badge variant="secondary" class="bg-blue-100 text-blue-700">Outstanding {{
+    fmtMoney(loan.outstanding_balance) }}</Badge>
                   </CardHeader>
                   <CardContent class="space-y-3">
                     <div class="flex items-center justify-between text-sm text-gray-600">
-                      <span class="flex items-center gap-2"><Clock class="h-4 w-4" /> Next payment</span>
+                      <span class="flex items-center gap-2">
+                        <Clock class="h-4 w-4" /> Next payment
+                      </span>
                       <span>{{ fmtDate(loan.first_repayment_date) }}</span>
                     </div>
                     <div class="flex items-center justify-between text-sm text-gray-600">
-                      <span class="flex items-center gap-2"><TrendingUp class="h-4 w-4" /> Disbursed</span>
+                      <span class="flex items-center gap-2">
+                        <TrendingUp class="h-4 w-4" /> Disbursed
+                      </span>
                       <span>{{ fmtMoney(loan.disbursed_amount || 0) }}</span>
                     </div>
                     <div class="flex flex-wrap gap-2 pt-2">
-                      <Button as-child size="sm"><Link :href="route('loans.show', loan.id)">View</Link></Button>
-                      <Button as-child size="sm" variant="secondary"><Link :href="route('loans.repayments', loan.id)">Repay</Link></Button>
+                      <Button as-child size="sm">
+                        <Link :href="route('loans.show', loan.id)">View</Link>
+                      </Button>
+                      <Button as-child size="sm"
+                        class="text-blue-900 bg-blue-200 border border-blue-300 hover:bg-blue-500 hover:text-white">
+                        <Link :href="route('loans.repayments', loan.id)">Repay</Link>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -222,7 +235,8 @@ const toggleNotifications = () => {
               <Alert v-else class="mt-4">
                 <Info class="h-4 w-4" />
                 <AlertTitle>No active loans</AlertTitle>
-                <AlertDescription>You don't have any active loans. Apply for a new loan from the loans page.</AlertDescription>
+                <AlertDescription>You don't have any active loans. Apply for a new loan from the loans page.
+                </AlertDescription>
               </Alert>
             </TabsContent>
 

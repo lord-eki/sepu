@@ -25,7 +25,7 @@
     </div>
 
 
-    <div class="flex mx-[5%] mt-5 justify-between items-center">
+    <div class="flex mx-[5%] justify-between items-center">
       <div>
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
           Make Deposit
@@ -62,13 +62,13 @@
                 </div>
                 <div>
                   <span class="font-medium">Current Balance:</span>
-                  <div class="mt-1 text-lg font-semibold text-green-600">
+                  <div class="mt-1 text-lg font-semibold text-blue-900">
                     {{ formatCurrency(account.balance) }}
                   </div>
                 </div>
                 <div>
                   <span class="font-medium">Available Balance:</span>
-                  <div class="mt-1 text-lg font-semibold text-blue-600">
+                  <div class="mt-1 text-lg font-semibold text-gray-00">
                     {{ formatCurrency(account.available_balance) }}
                   </div>
                 </div>
@@ -94,7 +94,7 @@
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span class="text-gray-500 sm:text-sm">KES</span>
                   </div>
-                  <input id="amount" v-model.number="form.amount" type="number" step="0.01" min="1"
+                  <input id="amount" v-model.number="form.amount" type="number" step="0.01" min="5000"
                     class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 pr-12 sm:text-sm border-gray-300 rounded-md p-2"
                     placeholder="0.00" required>
                 </div>
@@ -107,6 +107,51 @@
       + Number(form.amount)) }}</span>
                 </div>
               </div>
+
+              <!-- Payment Options Info -->
+              <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                <h3 class="text-sm font-medium text-blue-900 mb-2">Deposit Options</h3>
+                <p class="text-xs text-gray-600 mb-3">
+                  Minimum deposit: <span class="font-semibold text-green-700">KES 5,000</span>
+                </p>
+
+                <!-- STK Push Option -->
+                <div class="p-4 border rounded-lg bg-white mb-4">
+                  <p class="text-sm font-medium text-gray-800 mb-2">Deposit via <span class="text-green-800">M-Pesa
+                      Express</span></p>
+                  <p class="text-xs text-gray-500 mb-2">Fast and secure – you’ll receive an M-Pesa prompt</p>
+
+                  <div class="space-y-3 flex items-center gap-3 justify-between">
+                    <!-- Phone Input -->
+                    <div class="w-[50%]">
+                      <label for="stk_phone" class="block text-sm text-blue-900">Phone Number *</label>
+                      <input id="stk_phone" v-model="form.stk_phone" type="tel" placeholder="e.g., 254712345678"
+                        class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                      <p class="text-xs text-gray-500 mt-1">Format: 2547XXXXXXXX</p>
+                    </div>
+
+                    <!-- STK Push Button -->
+                    <button type="button" 
+                      class="w-fit px-4 py-2 rounded-md bg-blue-500 text-white text-sm font-medium hover:cursor-pointer hover:bg-blue-600"
+                      :disabled="!form.amount || form.amount < 5000 || !form.stk_phone" @click="initiateStkPush">
+                      Initiate Payment
+                    </button>
+                  </div>
+                </div>
+
+
+                <!-- Bank Details Option -->
+                <div class="p-3 border rounded-lg bg-white">
+                  <p class="text-sm font-medium text-gray-800">Bank / Paybill Details</p>
+                  <ul class="mt-2 text-sm text-gray-700 space-y-1">
+                    <li><span class="font-semibold">Paybill:</span> 400200</li>
+                    <li><span class="font-semibold">Account No:</span> 01120040146200</li>
+                    <li><span class="font-semibold">Account Name:</span> SEPU SACCO SOCIETY LIMITED</li>
+                    <li><span class="font-semibold">Minimum Deposit:</span> Kshs. 5,000</li>
+                  </ul>
+                </div>
+              </div>
+
 
               <!-- Payment Method -->
               <div>
@@ -239,22 +284,23 @@
               <h3 class="text-md font-semibold text-gray-800 mb-4">Deposit Status</h3>
 
               <div class="flex items-center space-x-3">
-                <div
-                  :class="[
-                    'h-3 w-3 rounded-full',
-                    transaction.status === 'success' ? 'bg-green-500' :
-                    transaction.status === 'pending' ? 'bg-yellow-500 animate-pulse' :
-                    'bg-red-500'
-                  ]">
+                <div :class="[
+    'h-3 w-3 rounded-full',
+    transaction.status === 'success' ? 'bg-green-500' :
+      transaction.status === 'pending' ? 'bg-yellow-500 animate-pulse' :
+        'bg-red-500'
+  ]">
                 </div>
                 <span class="text-sm">
                   <template v-if="transaction.status === 'pending'">
-                    Deposit of <span class="font-medium text-blue-600">{{ formatCurrency(transaction.amount) }}</span> is 
+                    Deposit of <span class="font-medium text-blue-600">{{ formatCurrency(transaction.amount) }}</span>
+                    is
                     <span class="font-semibold">pending</span>. Waiting for M-Pesa confirmation…
                   </template>
                   <template v-else-if="transaction.status === 'success'">
-                    ✅ Deposit of <span class="font-medium text-green-600">{{ formatCurrency(transaction.amount) }}</span> was 
-                    <span class="font-semibold">successful</span>.  
+                    ✅ Deposit of <span class="font-medium text-green-600">{{ formatCurrency(transaction.amount)
+                      }}</span> was
+                    <span class="font-semibold">successful</span>.
                     New Balance: <span class="font-semibold text-green-700">{{ formatCurrency(account.balance) }}</span>
                   </template>
                   <template v-else>
@@ -273,6 +319,33 @@
         </div>
       </div>
     </div>
+
+    <!-- STK Push Modal -->
+    <div v-if="stkModal"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white w-full max-w-md rounded-lg shadow-lg p-6 relative">
+        <h3 class="text-lg font-semibold text-blue-900 mb-3">M-Pesa Prompt Sent</h3>
+        <p class="text-sm text-gray-700 mb-4">
+          An M-Pesa prompt has been sent to your phone number
+          <span class="font-medium text-blue-600">{{ form.stk_phone }}</span>.
+          Please enter your M-Pesa PIN on your phone to approve the payment.
+          Once you’ve completed the prompt, click
+          <span class="font-semibold">Complete</span> below.
+        </p>
+
+        <div class="flex justify-end gap-3">
+          <button @click="closeStkModal"
+            class="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+            Cancel
+          </button>
+          <button @click="closeStkModal"
+            class="px-4 py-2 rounded-md bg-green-600 text-white font-medium hover:bg-green-700">
+            Complete
+          </button>
+        </div>
+      </div>
+    </div>
+
   </AppLayout>
 </template>
 
@@ -322,6 +395,7 @@ const form = useForm({
   payment_method: '',
   payment_reference: '',
   description: '',
+  stk_phone: ''
 })
 
 const formatCurrency = (amount) => {
@@ -370,5 +444,37 @@ const submit = () => {
     form.post(route('accounts.deposit', props.account.id))
   }
 }
+
+const stkModal = ref(false)
+
+const initiateStkPush = () => {
+  if (!form.amount || form.amount < 5000) {
+    flashMessage.value = "Minimum deposit is KES 5,000"
+    flashType.value = "error"
+    return
+  }
+  if (!form.stk_phone) {
+    flashMessage.value = "Please enter your phone number"
+    flashType.value = "error"
+    return
+  }
+
+  // Call backend for STK push
+  form.post(route('payments.stkpush'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      stkModal.value = true
+    },
+    onError: () => {
+      flashMessage.value = "Failed to initiate STK Push, try again"
+      flashType.value = "error"
+    }
+  })
+}
+
+const closeStkModal = () => {
+  stkModal.value = false
+}
+
 
 </script>
