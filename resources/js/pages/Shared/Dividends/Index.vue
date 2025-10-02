@@ -69,7 +69,7 @@
               </Link>
 
               <Link :href="route('dividends.create')"
-                class="inline-flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg bg-blue-700 text-white text-xs sm:text-sm font-medium hover:bg-blue-800 transition">
+                class="inline-flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg bg-blue-900 text-white text-xs sm:text-sm font-medium hover:bg-blue-800 transition">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
                 </svg>

@@ -1,10 +1,13 @@
 <template>
-  <AppLayout title="Create Account">
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+  <AppLayout :breadcrumbs="[
+    { title: isMemberRole ? 'My Accounts' : 'Accounts', href: isMemberRole ? route('my-accounts') : route('accounts.index') },
+    { title: 'Create' }
+  ]">
+      <h2 class="font-semibold text-lg sm:text-xl pt-5 pl-5 text-blue-900 leading-tight">
         Create New Account
       </h2>
 
-    <div class="py-12">
+    <div class="py-8">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div class="p-6">
@@ -93,8 +96,9 @@
 
               <!-- Form Actions -->
               <div class="flex items-center justify-between pt-6 border-t">
-                <Link 
-                  :href="route('accounts.index')" 
+                <Link :href="isMemberRole
+                ? route('my-accounts')
+                : route('accounts.index')"
                   class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   Cancel
@@ -102,7 +106,7 @@
                 <button
                   type="submit"
                   :disabled="form.processing"
-                  class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                  class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
                   <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
