@@ -1,25 +1,27 @@
 <template>
-    <AppLayout :title="`Share Transfer - ${account.account_number}`">
+    <AppLayout :breadcrumbs="[
+        { title: 'Accounts', href: route('accounts.index') },
+        { title: 'Share Transfer ' + `${account.account_number}` }
+    ]">
 
-
-        <div class="py-12">
+        <div class="py-2 sm:py-5">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
 
                         <div class="flex justify-between items-center pb-6">
                             <div>
-                                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                                <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight">
                                     Transfer Shares
                                 </h2>
                                 <p class="text-sm text-gray-600 mt-1">
                                     {{ account.account_number }} - {{ account.member.first_name }} {{
-                                    account.member.last_name }}
+        account.member.last_name }}
                                 </p>
                             </div>
                             <Link :href="route('accounts.show', account.id)"
                                 class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                            Back to Account
+                            Back<span class="max-sm:hidden">&nbsp;to Account</span>
                             </Link>
                         </div>
 
@@ -29,25 +31,25 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                 <div>
                                     <span class="font-medium">Account Number:</span>
-                                    <div class="mt-1 text-lg font-semibold text-purple-700">
+                                    <div class="mt-1 text-base font-semibold text-purple-700">
                                         {{ account.account_number }}
                                     </div>
                                 </div>
                                 <div>
                                     <span class="font-medium">Current Balance:</span>
-                                    <div class="mt-1 text-lg font-semibold text-green-600">
+                                    <div class="mt-1 text-base font-semibold text-green-600">
                                         {{ formatCurrency(account.balance) }}
                                     </div>
                                 </div>
                                 <div>
                                     <span class="font-medium">Available for Transfer:</span>
-                                    <div class="mt-1 text-lg font-semibold text-blue-600">
+                                    <div class="mt-1 text-base font-semibold text-blue-600">
                                         {{ formatCurrency(account.available_balance) }}
                                     </div>
                                 </div>
                                 <div>
                                     <span class="font-medium">Share Value:</span>
-                                    <div class="mt-1 text-lg font-semibold text-purple-600">
+                                    <div class="mt-1 text-base font-semibold text-purple-600">
                                         KES 100 per share
                                     </div>
                                 </div>
@@ -170,7 +172,7 @@
                                 </div>
                                 <div class="mt-2 text-xs text-gray-500">
                                     Maximum transfer: {{ formatCurrency(account.available_balance) }} ({{
-                                        Math.floor(account.available_balance / 100) }} shares)
+        Math.floor(account.available_balance / 100) }} shares)
                                 </div>
                             </div>
 
@@ -221,7 +223,7 @@
                                     <div class="flex justify-between">
                                         <span>To Member:</span>
                                         <span class="font-medium">{{ selectedMember?.name }} ({{
-                                            selectedMember?.membership_id }})</span>
+        selectedMember?.membership_id }})</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span>Current Balance:</span>

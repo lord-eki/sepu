@@ -27,7 +27,7 @@ defineProps<{
     <div class="p-6 min-h-screen space-y-10 bg-white">
       <!-- Header -->
       <header class="mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#081642]">Admin Dashboard</h1>
+        <h1 class="text-lg sm:text-xl font-semibold text-blue-900">Admin Dashboard</h1>
         <p class="text-sm text-gray-500">System overview and monitoring</p>
       </header>
 
@@ -46,7 +46,7 @@ defineProps<{
             </div>
           </CardHeader>
           <CardContent>
-            <div class="text-lg sm:text-xl font-bold text-[#081642]">{{ stat.value }}</div>
+            <div class="text-lg sm:text-xl font-medium text-blue-900">{{ stat.value }}</div>
             <p class="text-xs text-gray-500">{{ stat.sub }}</p>
           </CardContent>
         </Card>
