@@ -166,6 +166,7 @@ class LoanController extends Controller
                 $request->term_months
             );
             $totalRepayable = $monthlyRepayment * $request->term_months;
+            
 
             // Create loan
             $loan = Loan::create([

@@ -1,14 +1,16 @@
 <template>
-    <AppLayout :title="`Withdrawal - ${account.account_number}`">
+    <AppLayout :breadcrumbs="[
+        { title: isMemberRole ? 'My Accounts' : 'Accounts', href: isMemberRole ? route('my-accounts') : route('accounts.index') },
+        { title: 'Withdraw' }
+    ]">
 
-
-        <div class="py-12">
+        <div class="pb-5">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex justify-between items-center pb-6">
                             <div>
-                                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                                <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight">
                                     Make Withdrawal
                                 </h2>
                                 <p class="text-sm text-gray-600 mt-1">
@@ -16,9 +18,9 @@
                                     account.member.last_name }}
                                 </p>
                             </div>
-                            <Link :href="route('accounts.show', account.id)"
+                            <Link :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
                                 class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                            Back to Account
+                            Back<span class="max-sm:hidden">&nbsp;to account</span>
                             </Link>
                         </div>
 
@@ -38,13 +40,13 @@
                                 </div>
                                 <div>
                                     <span class="font-medium">Current Balance:</span>
-                                    <div class="mt-1 text-lg font-semibold text-green-600">
+                                    <div class="mt-1 text-base font-semibold text-green-900">
                                         {{ formatCurrency(account.balance) }}
                                     </div>
                                 </div>
                                 <div>
                                     <span class="font-medium">Available Balance:</span>
-                                    <div class="mt-1 text-lg font-semibold text-blue-600">
+                                    <div class="mt-1 text-base font-semibold text-blue-900">
                                         {{ formatCurrency(account.available_balance) }}
                                     </div>
                                 </div>
@@ -97,7 +99,7 @@
                                     </div>
                                     <input id="amount" v-model.number="form.amount" type="number" step="0.01" min="1"
                                         :max="account.available_balance"
-                                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 pr-12 sm:text-sm border-gray-300 rounded-md p-2"
+                                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 pr-12 sm:text-sm border border-gray-300 rounded-md p-2"
                                         :class="{ 'border-red-300': form.amount > account.available_balance }"
                                         placeholder="0.00" required :disabled="account.balance <= 0">
                                 </div>
@@ -161,7 +163,7 @@
                                     Description
                                 </label>
                                 <textarea id="description" v-model="form.description" rows="3"
-                                    class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2"
+                                    class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
                                     placeholder="Optional description for this withdrawal"
                                     :disabled="account.balance <= 0"></textarea>
                                 <div v-if="form.errors.description" class="mt-2 text-sm text-red-600">

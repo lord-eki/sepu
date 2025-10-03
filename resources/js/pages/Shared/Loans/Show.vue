@@ -2,28 +2,26 @@
   <AppLayout
   :breadcrumbs="[
     { title: 'Loans', href: isMemberRole ? '/my-loans' : route('loans.index') },
-    { title: 'Loan Info' }
+    { title: 'Loan Details' }
   ]" >
 
-    <template #header>
-      <div class="flex justify-between items-center">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+      <div class="flex justify-between mt-4 mx-4 items-center">
+        <h2 class="font-semibold text-base sm:text-lg text-blue-900 leading-tight">
           Loan Details - {{ loan.loan_number }}
         </h2>
         <div class="flex space-x-3">
           <Link v-if="canEdit" :href="route('loans.edit', loan.id)"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+            class="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-md text-sm font-medium">
           Edit
           </Link>
           <Link :href="isMemberRole ? route('my-loans') : route('loans.index')"
             class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-          Back to Loans
+          Back <span class="max-sm:hidden">to Loans</span>
           </Link>
         </div>
       </div>
-    </template>
 
-    <div class="py-12">
+    <div class="py-5 max-sm:px-4">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
         <!-- Status Banner -->
         <div :class="getStatusBannerClass(loan.status)" class="rounded-md p-4">
@@ -48,7 +46,7 @@
             <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
             <div class="flex flex-wrap gap-3">
               <button v-if="canApprove" @click="showApprovalModal = true"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                class="inline-flex items-center hover:cursor-pointer px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
@@ -56,7 +54,7 @@
               </button>
 
               <button v-if="canReject" @click="showRejectionModal = true"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                class="inline-flex items-center hover:cursor-pointer px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>

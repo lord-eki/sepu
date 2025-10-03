@@ -19,7 +19,7 @@
           :key="card.label"
           class="bg-white shadow-md hover:shadow-lg rounded-2xl p-5 flex items-center gap-4 transition"
         >
-          <div :class="['w-10 h-10 flex items-center justify-center rounded-full text-white', card.color]">
+          <div :class="['w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center rounded-full text-white', card.color]">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path :d="card.icon" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
