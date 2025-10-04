@@ -159,7 +159,7 @@ class MemberController extends Controller
 
             DB::commit();
 
-            return redirect()->route('members.show', $member)
+            return redirect()->route('members.index', $member)
                 ->with('success', 'Member created successfully');
 
         } catch (\Exception $e) {

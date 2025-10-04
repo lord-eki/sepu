@@ -22,8 +22,8 @@ class StoreMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "user_id" => "required|exists:users,id",
-            "membership_id" => "required|exists:memberships,id",
+            // "user_id" => "required|exists:users,id",
+            // "membership_id" => "required|exists:memberships,id",
             "first_name" => "required|string|max:255",
             "last_name" => "required|string|max:255",
             "middle_name" => "nullable|string|max:255",
@@ -43,8 +43,8 @@ class StoreMemberRequest extends FormRequest
             "emergency_contact_name" => "nullable|string|max:255",
             "emergency_contact_phone" => "nullable|string|max:20",
             "emergency_contact_relationship" => "nullable|string|max:100",
-            "membership_status" => "required|string|in:active,inactive,suspended",
-            "membership_date" => "required|date",
+            // "membership_status" => "required|string|in:active,inactive,suspended",
+            // "membership_date" => "required|date",
             "profile_photo" => "nullable|image|max:2048",
             "documents" => "nullable|array",
             "documents.*" => "file|mimes:pdf,jpg,jpeg,png|max:2048",

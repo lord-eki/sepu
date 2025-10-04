@@ -137,7 +137,7 @@ function submit() {
         <!-- Profile Card -->
         <div class="col-span-1 max-lg:mb-4 bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">
           <!-- Profile header -->
-          <div class="bg-blue-50 p-6 flex flex-col items-center text-white">
+          <div class="bg-gray-50 p-6 flex flex-col items-center text-white">
             <img v-if="previewUrl" :src="previewUrl" alt="Preview"
               class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md" />
             <img v-else-if="member.profile_photo" :src="`/storage/${member.profile_photo}`" alt="Profile"
@@ -148,7 +148,7 @@ function submit() {
 
             <!-- Upload -->
             <label
-              class="mt-4 px-3 py-1.5 bg-white text-orange-600 text-sm rounded-lg shadow-md hover:bg-orange-100 cursor-pointer">
+              class="mt-4 px-3 py-1.5 bg-blue-100 text-blue-900 text-sm rounded-lg shadow-md hover:bg-blue-50 cursor-pointer">
               Edit Photo
               <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
             </label>

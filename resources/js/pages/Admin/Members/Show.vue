@@ -1,6 +1,42 @@
 <template>
   <AppLayout :title="`${member.first_name} ${member.last_name}`">
 
+   <!--  Flash Messages -->
+    <div ref="flashBox" class="max-w-3xl mx-auto mt-4 px-4">
+      <transition
+        enter-active-class="transition ease-out duration-300"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2"
+      >
+        <div
+          v-if="flashMessage" class="flex gap-3"
+          :class="[
+            flashType === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-700'
+              : 'bg-red-50 border border-red-200 text-red-700',
+            'mb-4 rounded-md p-4 shadow flex items-center'
+          ]"
+        >
+          <component
+            :is="flashType === 'success' ? CheckCircle : AlertCircle"
+            class="h-5 w-5"
+            :class="flashType === 'success' ? 'text-green-600' : 'text-red-600'"
+          />
+          <p class="ml-3 text-sm">{{ flashMessage }}</p>
+          <button
+            type="button"
+            class="ml-auto text-gray-500 hover:text-gray-700"
+            @click="flashMessage = null"
+          >
+            ✕
+          </button>
+        </div>
+      </transition>
+    </div>
+
       <div class="flex items-center justify-between">
         <div class="flex items-center">
           <Link :href="route('members.index')" class="mr-4">
@@ -497,10 +533,42 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { ArrowLeft, ChevronDown, File, Pencil, User } from 'lucide-vue-next'
+
+// Flash handling
+const page = usePage();
+const flash = computed(() => page.props.flash || {});
+const flashMessage = ref(null);
+const flashType = ref("success");
+const flashBox = ref(null);
+
+watch(
+  flash,
+  (val) => {
+    if (val.success) {
+      flashMessage.value = val.success;
+      flashType.value = "success";
+    } else if (val.error) {
+      flashMessage.value = val.error;
+      flashType.value = "error";
+    }
+
+    if (flashMessage.value) {
+      // Scroll to top of page to ensure flash is visible
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // Optional: also ensure the flash container itself is in view
+      flashBox.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      // Auto-hide after 3s
+      setTimeout(() => (flashMessage.value = null), 3000);
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 const props = defineProps({
   member: Object,
@@ -511,7 +579,6 @@ const activeTab = ref('personal')
 const showDropdown = ref(false)
 const dropdown = ref(null)
 
-const page = usePage()
 
 
 const tabs = [
