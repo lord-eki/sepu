@@ -27,7 +27,7 @@ defineProps<{
     <div class="p-6 min-h-screen space-y-10 bg-white">
       <!-- Header -->
       <header class="mb-6">
-        <h1 class="text-lg sm:text-xl font-semibold text-blue-900">Admin Dashboard</h1>
+        <h1 class="text-lg sm:text-xl font-semibold text-[#0a2342]">Dashboard - Admin</h1>
         <p class="text-sm text-gray-500">System overview and monitoring</p>
       </header>
 

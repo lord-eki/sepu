@@ -1,53 +1,53 @@
 <template>
- <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/loans' }]">
- 
+  <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/loans' }]">
+
     <Head title="Loan Management" />
-    <div class="pt-4">
-      <div class="max-w-7xl mx-auto py-4 sm:px-6 lg:px-8 space-y-6">
+    <div class="sm:pt-2">
+      <div class="max-w-7xl mx-auto py-4 sm:px-6 lg:px-8 space-y-8">
 
         <!-- Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between max-sm:ml-4  gap-4">
           <h2 class="font-bold text-lg sm:text-xl text-gray-800">Loan Management</h2>
           <div class="flex gap-2">
-              <Link :href="route('loans.create')"
-                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 transition">
-              New Loan Application
-              </Link>
-              <Link :href="route('loan-calculator.index')"
-                class="inline-flex items-center justify-center rounded-lg bg-indigo-200 px-4 py-2 text-sm font-medium text-blue-800 shadow hover:bg-indigo-300 hover:text-gray-800 transition">
-              Loan Calculator
-              </Link>
+            <Link :href="route('loans.create')"
+              class="inline-flex items-center justify-center rounded-lg bg-[#0a2342] px-4 py-2 text-sm font-medium text-white shadow  hover:bg-blue-900 transition">
+            New Loan Application
+            </Link>
+            <Link :href="route('loan-calculator.index')"
+              class="inline-flex items-center justify-center rounded-lg bg-orange-200 px-4 py-2 text-sm font-medium text-[#0a2342] shadow hover:bg-orange-400 hover:text-white transition">
+            Loan Calculator
+            </Link>
           </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
           <div v-for="card in [
-            {
-              label: 'Total Applications',
-              value: summary.total_loans,
-              color: 'bg-blue-500',
-              icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-            },
-            {
-              label: 'Pending',
-              value: summary.pending_loans,
-              color: 'bg-yellow-500',
-              icon: 'M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-            },
-            {
-              label: 'Active Loans',
-              value: summary.disbursed_loans,
-              color: 'bg-green-500',
-              icon: 'M5 13l4 4L19 7M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z'
-            },
-            {
-              label: 'Overdue',
-              value: summary.overdue_loans,
-              color: 'bg-red-500',
-              icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-            }
-          ]" :key="card.label" class="bg-white rounded-2xl shadow-sm hover:shadow-md transition p-5">
+    {
+      label: 'Total Applications',
+      value: summary.total_loans,
+      color: 'bg-blue-900',
+      icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+    },
+    {
+      label: 'Pending',
+      value: summary.pending_loans,
+      color: 'bg-yellow-500',
+      icon: 'M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+    },
+    {
+      label: 'Active Loans',
+      value: summary.disbursed_loans,
+      color: 'bg-green-500',
+      icon: 'M5 13l4 4L19 7M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z'
+    },
+    {
+      label: 'Overdue',
+      value: summary.overdue_loans,
+      color: 'bg-red-500',
+      icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+    }
+  ]" :key="card.label" class="bg-white rounded-2xl shadow-sm hover:shadow-md transition p-5">
             <div class="flex items-center">
               <div
                 :class="[card.color, 'w-7 sm:w-9 h-7 sm:h-9 rounded-xl flex items-center justify-center text-white']">
@@ -100,7 +100,7 @@
 
             <div class="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2">
               <button type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow">
+                class="bg-[#0a2342] hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium shadow">
                 Apply Filters
               </button>
               <button type="button" @click="clearFilters"
@@ -154,7 +154,7 @@
                       <Link :href="route('loans.show', loan.id)" class="text-indigo-600 hover:text-indigo-900">View
                       </Link>
                       <Link v-if="canEdit(loan)" :href="route('loans.edit', loan.id)"
-                        class="text-blue-600 hover:text-blue-900">Edit</Link>
+                        class="text-[#0a2342] hover:text-[#0a2342]">Edit</Link>
                       <button v-if="canApprove(loan)" @click="showApprovalModal(loan)"
                         class="text-green-600 hover:text-green-900">Approve</button>
                       <button v-if="canReject(loan)" @click="showRejectionModal(loan)"
@@ -200,7 +200,7 @@
                 <div class="mt-2">
                   <p class="text-sm text-gray-500">
                     Approve loan {{ selectedLoan?.loan_number }} for {{ selectedLoan?.member?.first_name }} {{
-            selectedLoan?.member?.last_name }}
+    selectedLoan?.member?.last_name }}
                   </p>
                 </div>
               </div>
@@ -261,7 +261,7 @@
                 <div class="mt-2">
                   <p class="text-sm text-gray-500">
                     Reject loan {{ selectedLoan?.loan_number }} for {{ selectedLoan?.member?.first_name }} {{
-            selectedLoan?.member?.last_name }}
+    selectedLoan?.member?.last_name }}
                   </p>
                 </div>
               </div>

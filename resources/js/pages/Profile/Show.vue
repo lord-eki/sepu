@@ -6,28 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Save, User, Pencil } from 'lucide-vue-next'
 import { route } from 'ziggy-js'
 
-const page = usePage<{ member: Member }>()
+import { PageProps as InertiaPageProps } from '@inertiajs/core'
 
-const flashMessage = ref(null)
-const flashType = ref('success')
 
-watch(
-  () => page.props.flash,
-  (flash) => {
-    if (flash?.success) {
-      flashMessage.value = flash.success
-      flashType.value = 'success'
-    } else if (flash?.error) {
-      flashMessage.value = flash.error
-      flashType.value = 'error'
-    }
-    if (flashMessage.value) {
-      setTimeout(() => (flashMessage.value = null), 5000)
-    }
-  },
-  { immediate: true, deep: true }
-)
 
+// ✅ Define interfaces FIRST
 interface Member {
   id: number
   membership_id: string
@@ -56,6 +39,57 @@ interface Member {
   profile_photo?: string | null
 }
 
+interface User {
+  id: number
+  name: string
+  email: string
+  phone?: string
+}
+
+interface PageProps extends InertiaPageProps {
+  auth: InertiaPageProps['auth'] & {
+    user: {
+      id: number
+      name: string
+      email: string
+      role?: string
+    }
+  }
+  member: Member
+  user: User
+  flash?: {
+    success?: string
+    error?: string
+  }
+}
+
+// ✅ usePage with type
+const page = usePage<PageProps>()
+
+
+// ✅ Flash messages
+const flashMessage = ref<string | null>(null)
+const flashType = ref<'success' | 'error'>('success')
+
+watch(
+  () => page.props.flash,
+  (flash) => {
+    if (flash?.success) {
+      flashMessage.value = flash.success
+      flashType.value = 'success'
+    } else if (flash?.error) {
+      flashMessage.value = flash.error
+      flashType.value = 'error'
+    }
+
+    if (flashMessage.value) {
+      setTimeout(() => (flashMessage.value = null), 5000)
+    }
+  },
+  { immediate: true, deep: true }
+)
+
+// ✅ Computed props
 const member = computed(() => page.props.member)
 const user = computed(() => page.props.user)
 
@@ -64,6 +98,7 @@ const isEditing = ref(false)
 const formatDate = (date: string | null | undefined) =>
   date ? new Date(date).toLocaleDateString('en-GB') : '-'
 
+// ✅ Form setup
 const form = useForm({
   first_name: member.value.first_name,
   last_name: member.value.last_name,
@@ -108,7 +143,10 @@ function submit() {
     onSuccess: () => (isEditing.value = false),
   })
 }
+
+
 </script>
+
 
 <template>
 
@@ -210,7 +248,7 @@ function submit() {
               <label class="block text-sm font-medium mb-1 text-[#081642]">{{
     field.label
   }}</label>
-              <input v-if="field.type !== 'select'" v-model="form[field.key]" :type="field.type || 'text'"
+              <input v-if="field.type !== 'select'" v-model="form[field.key as keyof typeof form]" :type="field.type || 'text'"
                 class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
                 :disabled="!isEditing || field.disabled" />
               <select v-else v-model="form.marital_status"
@@ -237,7 +275,7 @@ function submit() {
               <label class="block text-sm font-medium mb-1 text-[#081642]">{{
     field.label
   }}</label>
-              <input v-model="form[field.key]" type="text"
+              <input v-model="form[field.key as keyof typeof form]"  type="text"
                 class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
                 :disabled="!isEditing" />
             </div>
@@ -270,7 +308,7 @@ function submit() {
               <label class="block text-sm font-medium mb-1 text-[#081642]">{{
     field.label
   }}</label>
-              <input v-model="form[field.key]" type="text"
+              <input v-model="form[field.key as keyof typeof form]"  type="text"
                 class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
                 :disabled="!isEditing" />
             </div>

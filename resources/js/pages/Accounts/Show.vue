@@ -2,7 +2,7 @@
 <AppLayout 
     :breadcrumbs="[
       { title: 'Accounts', href: route('accounts.index') },
-      { title: `${account.account_number}`, href: route('accounts.show', account.id) }
+      { title: `${account.account_number}` }
     ]"
   >
 

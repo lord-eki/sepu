@@ -1,4 +1,15 @@
 <template>
+  <!-- Loader Overlay -->
+  <div v-if="form.processing"
+    class="fixed inset-0 bg-gray-800/50 flex flex-col items-center justify-center z-50 cursor-wait">
+    <svg class="animate-spin h-10 w-10 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+    <p class="text-white mt-3 text-sm font-medium">Processing...</p>
+  </div>
+
   <AppLayout :breadcrumbs="[
     { title: 'Members', href: route('members.index') },
     { title: 'Create Member' }
@@ -62,13 +73,6 @@
                         class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50">
                         Change photo </button>
                     </div>
-                  </div>
-
-                  <!-- Membership ID -->
-                  <div class="col-span-6 sm:col-span-3">
-                    <label class="block text-sm font-medium text-gray-700">Membership ID</label>
-                    <input type="text" :value="membershipId" disabled
-                      class="mt-1 block w-full border-gray-300 rounded-md bg-gray-100 shadow-sm sm:text-sm p-2" />
                   </div>
 
                   <!-- First Name -->
@@ -165,7 +169,7 @@
                   </div>
 
                   <!-- Physical Address -->
-                  <div class="col-span-3">
+                  <div class="col-span-6 sm:col-span-3">
                     <label class="block text-sm font-medium text-darkBlue">Physical Address *</label>
                     <input v-model="form.physical_address" type="text" required
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500"
@@ -175,7 +179,7 @@
                   </div>
 
                   <!-- Postal Address -->
-                  <div class="col-span-3">
+                  <div class="col-span-6 sm:col-span-3">
                     <label class="block text-sm font-medium text-darkBlue">Postal Address *</label>
                     <input v-model="form.postal_address" type="text" required
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500"
@@ -185,7 +189,7 @@
                   </div>
 
                   <!-- City -->
-                  <div class="col-span-6 sm:col-span-2">
+                  <div class="col-span-6 sm:col-span-3">
                     <label class="block text-sm font-medium text-darkBlue">City *</label>
                     <input v-model="form.city" type="text"
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500"
@@ -194,21 +198,12 @@
                   </div>
 
                   <!-- County -->
-                  <div class="col-span-6 sm:col-span-2">
+                  <div class="col-span-6 sm:col-span-3">
                     <label class="block text-sm font-medium text-darkBlue">County *</label>
                     <input v-model="form.county" type="text" required
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500"
                       :class="{ 'border-red-300': errors.county }" />
                     <p v-if="errors.county" class="mt-1 text-sm text-red-600">{{ errors.county }}</p>
-                  </div>
-
-                  <!-- Postal Code -->
-                  <div class="col-span-6 sm:col-span-2">
-                    <label class="block text-sm font-medium text-darkBlue">Postal Code *</label>
-                    <input v-model="form.postal_code" type="text" required
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                      :class="{ 'border-red-300': errors.postal_code }" />
-                    <p v-if="errors.postal_code" class="mt-1 text-sm text-red-600">{{ errors.postal_code }}</p>
                   </div>
 
                 </div>
@@ -264,29 +259,22 @@
 
                   <!-- Occupation -->
                   <div class="col-span-6 sm:col-span-3">
-                    <label class="block text-sm font-medium text-darkBlue">Occupation</label>
+                    <label class="block text-sm font-medium text-darkBlue">Occupation *</label>
                     <input v-model="form.occupation" type="text"
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
                   </div>
 
                   <!-- Employer -->
                   <div class="col-span-6 sm:col-span-3">
-                    <label class="block text-sm font-medium text-darkBlue">Employer</label>
+                    <label class="block text-sm font-medium text-darkBlue">Employer *</label>
                     <input v-model="form.employer" type="text"
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
                   </div>
 
                   <!-- Monthly Income -->
                   <div class="col-span-6 sm:col-span-3">
-                    <label class="block text-sm font-medium text-darkBlue">Monthly Income</label>
+                    <label class="block text-sm font-medium text-darkBlue">Monthly Income *</label>
                     <input v-model="form.monthly_income" type="number" step="0.01"
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
-                  </div>
-
-                  <!-- Employee Number -->
-                  <div class="col-span-6 sm:col-span-3">
-                    <label class="block text-sm font-medium text-darkBlue">Employee Number</label>
-                    <input v-model="form.employee_number" type="text"
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
                   </div>
 
@@ -415,7 +403,8 @@
             </Link>
             <button type="submit" :disabled="!formValid"
               class="inline-flex justify-center py-2 px-6 rounded-md text-sm font-medium text-white 
-                    bg-[#0a2342] hover:bg-blue-900 hover:cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    bg-[#0a2342] hover:bg-blue-900 hover:cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
+              :class="{ 'processing-disabled': form.processing }">
               <span v-if="form.processing">Creating...</span>
               <span v-else>Create Member</span>
             </button>
@@ -482,13 +471,11 @@ const form = useForm({
   physical_address: "",
   postal_address: "",
   city: "", county: "",
-  postal_code: "",
   id_type: "",
   id_number: "",
   occupation: "",
   employer: "",
   monthly_income: "",
-  employee_number: "",
   password: "",
   password_confirmation: "",
   profile_photo: null,
@@ -520,7 +507,6 @@ const formValid = computed(() => {
     form.postal_address &&
     form.city &&
     form.county &&
-    form.postal_code &&
     form.id_type &&
     form.id_number &&
     form.password &&
@@ -528,6 +514,9 @@ const formValid = computed(() => {
     form.emergency_contact_name &&
     form.emergency_contact_phone &&
     form.emergency_contact_relationship &&
+    form.occupation &&
+    form.employer &&
+    form.monthly_income &&
     passwordsMatch.value
   );
 });
@@ -576,5 +565,11 @@ const submit = () => {
 
 .text-darkBlue {
   color: #0a2342;
+}
+
+/* Disable interaction and cursor when processing */
+.processing-disabled {
+  pointer-events: none;
+  cursor: wait !important;
 }
 </style>

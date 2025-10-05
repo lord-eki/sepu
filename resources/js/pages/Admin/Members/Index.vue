@@ -26,7 +26,7 @@
 
 
     <div class="pb-8">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div class="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 space-y-8">
         <!-- Header -->
         <div class="flex justify-between items-center">
           <h2 class="text-lg sm:text-xl font-bold text-[#0a2342]">Members Management</h2>
