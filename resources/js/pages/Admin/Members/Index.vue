@@ -268,7 +268,7 @@ watch(
       flashBox.value?.scrollIntoView({ behavior: "smooth", block: "start" });
 
       // Auto-hide after 3s
-      setTimeout(() => (flashMessage.value = null), 3000);
+      setTimeout(() => (flashMessage.value = null), 5000);
     }
   },
   { immediate: true, deep: true }

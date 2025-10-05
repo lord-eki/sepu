@@ -47,6 +47,30 @@
               <div class="mt-5 md:mt-0 md:col-span-2">
                 <div class="grid grid-cols-6 gap-6">
 
+                  <!-- Profile Photo -->
+                  <div class="col-span-6">
+                    <label class="block text-sm font-medium text-gray-700">Profile Photo</label>
+                    <div class="mt-1 flex items-center space-x-5">
+                      <div class="flex-shrink-0"> <img v-if="photoPreview" :src="photoPreview"
+                          class="h-20 w-20 rounded-full object-cover" />
+                        <div v-else class="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
+                          <User class="h-12 w-12 text-gray-400" />
+                        </div>
+                      </div>
+                      <input type="file" ref="photoInput" accept="image/*" class="hidden" @change="handlePhotoUpload" />
+                      <button type="button" @click="$refs.photoInput.click()"
+                        class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50">
+                        Change photo </button>
+                    </div>
+                  </div>
+
+                  <!-- Membership ID -->
+                  <div class="col-span-6 sm:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700">Membership ID</label>
+                    <input type="text" :value="membershipId" disabled
+                      class="mt-1 block w-full border-gray-300 rounded-md bg-gray-100 shadow-sm sm:text-sm p-2" />
+                  </div>
+
                   <!-- First Name -->
                   <div class="col-span-6 sm:col-span-3">
                     <label class="block text-sm font-medium text-darkBlue">First Name *</label>
@@ -141,7 +165,7 @@
                   </div>
 
                   <!-- Physical Address -->
-                  <div class="col-span-6">
+                  <div class="col-span-3">
                     <label class="block text-sm font-medium text-darkBlue">Physical Address *</label>
                     <input v-model="form.physical_address" type="text" required
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500"
@@ -151,7 +175,7 @@
                   </div>
 
                   <!-- Postal Address -->
-                  <div class="col-span-6">
+                  <div class="col-span-3">
                     <label class="block text-sm font-medium text-darkBlue">Postal Address *</label>
                     <input v-model="form.postal_address" type="text" required
                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500"
@@ -407,7 +431,7 @@
 import { ref, watch, computed } from "vue";
 import { Link, useForm, usePage } from "@inertiajs/vue3";
 import AppLayout from "@/layouts/AppLayout.vue";
-import { ArrowLeft, CheckCircle, AlertCircle, CloudUpload } from "lucide-vue-next";
+import { ArrowLeft, CheckCircle, AlertCircle, CloudUpload, User } from "lucide-vue-next";
 
 // Props
 const props = defineProps({
@@ -439,7 +463,7 @@ watch(
     if (flashMessage.value) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       flashBox.value?.scrollIntoView({ behavior: "smooth", block: "start" });
-      setTimeout(() => (flashMessage.value = null), 3000);
+      setTimeout(() => (flashMessage.value = null), 5000);
     }
   },
   { immediate: true, deep: true }
@@ -476,16 +500,8 @@ const form = useForm({
 
 // File upload state
 const selectedDocuments = ref([]);
+const photoPreview = ref(null);
 
-// Handle document selection
-const handleDocumentsUpload = (e) => {
-  selectedDocuments.value = Array.from(e.target.files);
-};
-
-// Remove a file
-const removeDocument = (index) => {
-  selectedDocuments.value.splice(index, 1);
-};
 
 // Confirm Password Check
 const passwordsMatch = computed(() => form.password === form.password_confirmation);
@@ -518,13 +534,35 @@ const formValid = computed(() => {
 
 
 
-// Submit
+// Handlers 
+const handlePhotoUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    form.profile_photo = file;
+    const reader = new FileReader();
+    reader.onload = (e) => { photoPreview.value = e.target.result; };
+    reader.readAsDataURL(file);
+  }
+};
+const handleDocumentsUpload = (event) => {
+  const files = Array.from(event.target.files);
+  selectedDocuments.value = [...selectedDocuments.value, ...files];
+  form.documents = selectedDocuments.value;
+};
+const removeDocument = (index) => {
+  selectedDocuments.value.splice(index, 1);
+  form.documents = selectedDocuments.value;
+};
 const submit = () => {
-  if (!passwordsMatch.value) return;
   form.post(route("members.store"), {
+    forceFormData: true,
     onSuccess: () => {
       form.reset();
+      photoPreview.value = null;
       selectedDocuments.value = [];
+    },
+    onError: (errors) => {
+      console.error("Validation errors:", errors);
     },
   });
 };
