@@ -65,6 +65,35 @@ class ProfileController extends Controller
         return redirect('/');
     }
 
+    public function checkEligibility()
+{
+    $user = Auth::user();
+    $member = Member::where('user_id', $user->id)->first();
+
+    if (!$member) {
+        return response()->json(['eligible' => false, 'reason' => 'Profile incomplete']);
+    }
+
+    $hasRegFee = $member->transactions()->where('type', 'registration_fee')->sum('amount') >= 2500;
+    $hasShareCapital = $member->accounts()->where('account_type', 'shares')->sum('balance') >= 5000;
+    $hasShareDeposits = $member->accounts()->where('account_type', 'savings')->sum('balance') >= 5000;
+
+    if ($hasRegFee && $hasShareCapital && $hasShareDeposits) {
+        return response()->json(['eligible' => true]);
+    }
+
+    return response()->json([
+        'eligible' => false,
+        'reason' => 'Incomplete minimum requirements',
+        'pending' => [
+            'registration_fee' => $hasRegFee ? 0 : 2500,
+            'share_capital' => $hasShareCapital ? 0 : 5000,
+            'share_deposit' => $hasShareDeposits ? 0 : 5000,
+        ],
+    ]);
+}
+
+
     public function complete()
     {
         return Inertia::render('Profile/Complete', [

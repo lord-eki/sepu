@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Settings\ProfileController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use Illuminate\Http\Request;
 use App\Http\Controllers\{
     DashboardController,
     MemberController,
@@ -24,6 +27,22 @@ Route::get('/', fn() => Inertia::render('Welcome'))->name('home');
 
 // Authentication routes
 require __DIR__ . '/auth.php';
+
+Route::get('/email/verify', function (Request $request) {
+    return Inertia::render('auth/VerifyEmail', [
+        'status' => session('status'), 
+    ]);
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/dashboard');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+    ->middleware(['auth', 'throttle:6,1'])
+    ->name('verification.send');
+
 
 // Loan Calculator
 Route::get('/loan-calculator', [LoanCalculatorController::class, 'index'])->name('loan-calculator.index');

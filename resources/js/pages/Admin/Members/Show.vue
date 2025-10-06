@@ -209,10 +209,10 @@
                     <dd class="text-sm text-gray-900">{{ member.postal_address }}</dd>
                   </div>
                   <div class="flex gap-4">
-                    <span>
+                    <div>
                       <dt class="text-sm font-medium text-gray-500">City</dt>
                       <dd class="text-sm text-gray-900">{{ member.city }}</dd>
-                    </span>
+                    </div>
                     <span>
                       <dt class="text-sm font-medium text-gray-500">County</dt>
                       <dd class="text-sm text-gray-900">{{ member.county }}</dd>

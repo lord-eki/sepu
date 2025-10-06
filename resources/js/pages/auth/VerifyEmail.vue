@@ -10,7 +10,7 @@ defineProps<{
 }>();
 
 const form = useForm({});
-
+console.log("status Message", status)
 const submit = () => {
     form.post(route('verification.send'));
 };
@@ -25,7 +25,7 @@ const submit = () => {
         </div>
 
         <form @submit.prevent="submit" class="space-y-6 text-center">
-            <Button :disabled="form.processing" variant="secondary">
+            <Button :disabled="form.processing" variant="secondary" class="text-white hover:cursor-pointer">
                 <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
                 Resend verification email
             </Button>

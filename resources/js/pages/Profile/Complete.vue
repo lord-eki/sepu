@@ -394,6 +394,65 @@
             </button>
           </div>
         </form>
+
+        <!-- Payment Modal -->
+        <transition name="fade" class="max-sm:px-2">
+          <div
+            v-if="showPaymentModal"
+            class="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+          >
+            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <h3 class="text-lg font-semibold text-[#081642] mb-2">Complete Membership Payment</h3>
+              <p class="text-sm text-gray-600 mb-4">
+                To proceed with SEPU Sacco membership, kindly make the following minimum payments:
+              </p>
+
+              <ul class="text-sm space-y-1 mb-4">
+                <li>• Registration Fee: <strong>Kshs. 2,500</strong></li>
+                <li>• Minimum Share Capital: <strong>Kshs. 5,000</strong></li>
+                <li>• Minimum Share Deposits: <strong>Kshs. 5,000</strong></li>
+              </ul>
+
+              <div class="space-y-3">
+                <label class="block text-sm font-medium text-gray-700">Payment Method</label>
+                <select
+                  v-model="selectedPaymentMethod"
+                  class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="">Select method</option>
+                  <option value="mpesa">Paybill (M-Pesa)</option>
+                  <option value="bank">Bank Deposit</option>
+                </select>
+              </div>
+
+              <div v-if="selectedPaymentMethod === 'mpesa'" class="mt-4 bg-orange-50 p-3 rounded-md text-sm">
+                <p><strong>Paybill Number:</strong> 400200</p>
+                <p><strong>Account Number:</strong> 01120040146200</p>
+              </div>
+
+              <div v-if="selectedPaymentMethod === 'bank'" class="mt-4 bg-blue-50 p-3 rounded-md text-sm">
+                <p><strong>Bank Name:</strong> Co-operative Bank</p>
+                <p><strong>Account No:</strong> 001234567890</p>
+              </div>
+
+              <div class="mt-6 flex justify-end gap-3">
+                <button
+                  @click="showPaymentModal = false"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  @click="confirmPayment"
+                  class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg"
+                >
+                  I’ve Paid
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
+
       </div>
     </main>
   </div>
@@ -408,6 +467,11 @@ const page = usePage()
 const flash = computed(() => page.props.flash || {})
 const flashMessage = ref(null)
 const flashType = ref('success')
+const selectedPaymentMethod = ref('')
+const confirmPayment = () => {
+  showPaymentModal.value = false
+  alert('Payment confirmation received. Admin will verify your payment.')
+}
 
 watch(flash, (val) => {
   if (val.success) {
@@ -502,17 +566,33 @@ const removeDocument = (index) => {
   selectedDocuments.value.splice(index, 1)
   form.documents = selectedDocuments.value
 }
+const showPaymentModal = ref(false)
 
 const submit = () => {
-  form.post(route('profile.complete.store'), {
-    forceFormData: true,
-  })
+  // Example eligibility check logic
+  const registrationFeePaid = false
+  const shareCapitalPaid = false
+  const shareDepositsPaid = false
+
+  // If all minimums met, complete profile
+  if (registrationFeePaid && shareCapitalPaid && shareDepositsPaid) {
+    form.post(route('profile.complete.store'), {
+      forceFormData: true,
+    })
+  } else {
+    // Otherwise show payment modal
+    showPaymentModal.value = true
+  }
 }
+
 
 </script>
 
 <style>
-.formprofile label {
+.formprofile label {  
   color: #081642ff;
+}
+button:hover {
+  cursor: pointer;
 }
 </style>
