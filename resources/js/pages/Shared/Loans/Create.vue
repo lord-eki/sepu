@@ -6,68 +6,220 @@
 
     <Head title="New Loan Application" />
 
-    <div class="py-8 sm:py-12 bg-white max-sm:px-4">
-      <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <!-- Dark modern background -->
+  <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-blue-50 via-white to-orange-50 text-gray-800">
+
+      <div class="max-w-4xl mx-auto">
 
         <!-- Header -->
-        <div class="flex justify-between items-center pb-6 border-b border-gray-200">
-          <h2 class="font-bold text-lg sm:text-xl text-gray-800 tracking-tight">
-            New Loan Application
-          </h2>
-          <Link :href="isMemberRole ? route('my-loans') : route('loans.index')"
-            class="bg-blue-800 hover:bg-blue-900 text-white px-5 py-2 rounded-lg text-sm font-medium shadow transition">
-          Back <span class="max-sm:hidden">to Loans</span>
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-[rgb(7,40,75)]">New Loan Application</h1>
+            <p class="mt-1 text-sm text-blue-900">Complete this form to apply for a loan.</p>
+          </div>
+
+          <Link
+            :href="isMemberRole ? route('my-loans') : route('loans.index')"
+            class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl shadow-lg text-sm font-medium transition"
+          >
+            ← Back to Loans
           </Link>
         </div>
 
-        <!-- Flash Messages -->
-        <div class="max-w-2xl mx-auto mt-4 sm:mt-6 px-4">
-          <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
-            enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
-            leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+        <!-- Flash messages -->
+        <div class="mb-6">
+          <transition
+            enter-active-class="transition ease-out duration-300"
+            enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition ease-in duration-200"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-2"
+          >
             <div v-if="successMessage || errorMessages" :class="[
-    successMessage
-      ? 'bg-green-100 text-green-900 border border-green-300'
-      : 'bg-red-100 text-red-900 border border-red-300',
-    'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-md'
-  ]">
-              <!-- Success -->
-              <span v-if="successMessage" class="flex-1">{{ successMessage }}</span>
-              <!-- Errors -->
-              <ul v-else class="flex-1 list-disc pl-4 space-y-1">
-                <li v-for="(errs, field) in errorMessages" :key="field">
-                  <template v-if="field === 'general'">{{ errs.join(', ') }}</template>
-                  <template v-else>
-                    <strong>{{ field }}:</strong> {{ errs.join(', ') }}
-                  </template>
-                </li>
-              </ul>
-              <!-- Close -->
-              <button type="button" class="ml-3 text-gray-500 hover:text-gray-700"
-                @click="() => { successMessage = null; errorMessages = null }">
-                ✕
-              </button>
+                successMessage ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-rose-100 text-rose-900 border-rose-300',
+                'relative w-full px-6 py-3 rounded-xl mb-4 flex items-start gap-4 shadow-md'
+              ]">
+              <div class="flex-1">
+                <p v-if="successMessage" class="font-medium">{{ successMessage }}</p>
+                <ul v-else class="list-disc pl-5 space-y-1">
+                  <li v-for="(errs, field) in errorMessages" :key="field">
+                    <span v-if="field !== 'general'"><strong class="capitalize">{{ field }}:</strong> </span>
+                    <span>{{ Array.isArray(errs) ? errs.join(', ') : errs }}</span>
+                  </li>
+                </ul>
+              </div>
+              <button type="button" class="ml-2 text-gray-400 hover:text-gray-200" @click="() => { successMessage = null; errorMessages = null }">✕</button>
             </div>
           </transition>
         </div>
 
-        <!-- Loan Application Form -->
-        <form @submit.prevent="submitApplication" class="space-y-8 mt-6">
+        <!-- Form -->
+        <form @submit.prevent="submitApplication" class="space-y-8">
 
-          <!-- Sections Wrapper -->
-          <div class="space-y-8">
+          <!-- Member Information (card) -->
+          <section class="bg-white text-gray-900 shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+              <h3 class="text-base sm:text-lg font-semibold text-white">Member Information</h3>
+            </div>
+            <div class="p-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div v-if="!isMemberRole">
+                  <label for="member_id" class="block text-sm font-medium text-gray-700">Select Member *</label>
+                  <select v-model="form.member_id" @change="onMemberChange" id="member_id" required
+                    class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                    <option value="">Choose a member...</option>
+                    <option v-for="member in members" :key="member.id" :value="member.id">
+                      {{ member.first_name }} {{ member.last_name }} - {{ member.membership_id }}
+                    </option>
+                  </select>
+                </div>
 
-            <!-- Member Information -->
-            <div class="bg-white shadow-md sm:rounded-lg border border-gray-100">
-              <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                <h3 class="text-lg font-semibold text-blue-900">Member Information</h3>
+                <div v-if="selectedMember || isMemberRole">
+                  <label class="block text-sm font-medium text-gray-700">Member Details</label>
+                  <div class="mt-2 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-900">{{ memberInfo.first_name }} {{ memberInfo.last_name }}</p>
+                    <p class="text-sm text-gray-500">{{ memberInfo.membership_id }}</p>
+                    <p class="text-sm text-gray-500">Phone: {{ auth.user.phone }}</p>
+                  </div>
+                </div>
               </div>
-              <div class="p-6">
+            </div>
+          </section>
+
+          <!-- Loan Product -->
+          <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+              <h3 class="text-base sm:text-lg font-semibold text-white">Loan Product</h3>
+            </div>
+            <div class="p-6">
+              <label for="loan_product_id" class="block text-sm font-medium text-gray-700">Select Loan Product *</label>
+              <select v-model="form.loan_product_id" @change="onProductChange" id="loan_product_id" required
+                class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                <option value="">Choose a loan product...</option>
+                <option v-for="product in loanProducts" :key="product.id" :value="product.id">
+                  {{ product.name }} - {{ product.interest_rate }}% p.a.
+                </option>
+              </select>
+
+              <div v-if="selectedProduct" class="mt-4 bg-[rgba(232,240,255,0.95)] border border-blue-100 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-900 mb-2">Product Details</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div><span class="text-blue-700">Interest Rate:</span><p class="font-medium">{{ selectedProduct.interest_rate }}% p.a.</p></div>
+                  <div><span class="text-blue-700">Amount Range:</span><p class="font-medium">KES {{ formatCurrency(selectedProduct.min_amount) }} - {{ formatCurrency(selectedProduct.max_amount) }}</p></div>
+                  <div><span class="text-blue-700">Term Range:</span><p class="font-medium">{{ selectedProduct.min_term_months }} - {{ selectedProduct.max_term_months }} months</p></div>
+                  <div><span class="text-blue-700">Processing Fee:</span><p class="font-medium">{{ selectedProduct.processing_fee_rate }}%</p></div>
+                </div>
+                <div class="mt-3">
+                  <span class="text-blue-700">Description:</span>
+                  <p class="text-sm text-gray-700">{{ selectedProduct.description }}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Loan Details -->
+          <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+              <h3 class="text-base sm:text-lg font-semibold text-white">Loan Details</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="amount" class="block text-sm font-medium text-gray-700">Loan Amount *</label>
+                <input v-model="form.applied_amount" type="number" id="amount" required
+                  class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+              <div>
+                <label for="term" class="block text-sm font-medium text-gray-700">Repayment Term (months) *</label>
+                <input v-model="form.term_months" type="number" id="term" required
+                  class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+
+              <div class="md:col-span-2">
+                <label for="purpose" class="block text-sm font-medium text-gray-700">Purpose *</label>
+                <textarea v-model="form.purpose" id="purpose" rows="3" required
+                  class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400"></textarea>
+              </div>
+
+              <!-- Repayment preview (if available) -->
+              <div v-if="loanCalculation" class="md:col-span-2 mt-2 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <h4 class="font-medium text-sm text-gray-800">Repayment estimate</h4>
+                <div class="mt-2 text-sm text-gray-700">
+                  <div>Monthly Repayment: KES {{ formatCurrency(loanCalculation.monthlyRepayment.toFixed(2)) }}</div>
+                  <div>Total Repayable: KES {{ formatCurrency(loanCalculation.totalRepayable.toFixed(2)) }}</div>
+                  <div>Processing Fee: KES {{ formatCurrency(loanCalculation.processingFee.toFixed(2)) }}</div>
+                  <div>Insurance Fee: KES {{ formatCurrency(loanCalculation.insuranceFee.toFixed(2)) }}</div>
+                  <div>Net Amount (after fees): KES {{ formatCurrency(loanCalculation.netAmount.toFixed(2)) }}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Disbursement -->
+          <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+              <h3 class="text-base sm:text-lg font-semibold text-white">Disbursement Method</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div>
+                <label for="disbursement" class="block text-sm font-medium text-gray-700">Choose Method *</label>
+                <select id="disbursement" v-model="disbursementMethod" required
+                  class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                  <option value="">-- Select Method --</option>
+                  <option value="mpesa">M-Pesa</option>
+                  <option value="bank">Bank</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+              </div>
+
+              <div v-if="disbursementMethod === 'mpesa'">
+                <label for="mpesaNumber" class="block text-sm font-medium text-gray-700">M-Pesa Number *</label>
+                <input id="mpesaNumber" type="text" v-model="disbursementDetails.mpesaNumber" placeholder="e.g. 0712345678" required
+                  class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+
+              <div v-if="disbursementMethod === 'bank'">
+                <label for="bankName" class="block text-sm font-medium text-gray-700">Bank Name *</label>
+                <input id="bankName" type="text" v-model="disbursementDetails.bankName" placeholder="e.g. Equity Bank" required
+                  class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <label for="branch" class="block text-sm font-medium text-gray-700">Branch *</label>
+                    <input id="branch" type="text" v-model="disbursementDetails.branch" placeholder="e.g. Nairobi CBD" required
+                      class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  </div>
+                  <div>
+                    <label for="accountNumber" class="block text-sm font-medium text-gray-700">Account Number *</label>
+                    <input id="accountNumber" type="text" v-model="disbursementDetails.accountNumber" placeholder="e.g. 123456789" required
+                      class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="disbursementMethod === 'cheque'">
+                <label for="payee" class="block text-sm font-medium text-gray-700">Payee Name *</label>
+                <input id="payee" type="text" v-model="disbursementDetails.payee" placeholder="Enter Payee Name" required
+                  class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+            </div>
+          </section>
+
+          <!-- Guarantors -->
+          <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+              <h3 class="text-base sm:text-lg font-semibold text-white">Guarantors</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <p class="text-sm text-gray-600 mb-2">
+                Select guarantors from members. <span class="font-medium text-blue-900">Selected guarantors will be notified.</span>
+              </p>
+
+              <div v-for="(guarantor, index) in form.guarantors" :key="index" class="p-4 border rounded-lg space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div v-if="!isMemberRole">
-                    <label for="member_id" class="block text-sm font-medium text-gray-700">Select Member *</label>
-                    <select v-model="form.member_id" @change="onMemberChange" id="member_id" required
-                      class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Select Member *</label>
+                    <select v-model="guarantor.member_id" class="mt-2 block w-full rounded-lg border border-gray-300 p-3">
                       <option value="">Choose a member...</option>
                       <option v-for="member in members" :key="member.id" :value="member.id">
                         {{ member.first_name }} {{ member.last_name }} - {{ member.membership_id }}
@@ -75,397 +227,156 @@
                     </select>
                   </div>
 
-                  <div v-if="selectedMember || isMemberRole">
-                    <label class="block text-sm font-medium text-gray-700">Member Details</label>
-                    <div class="mt-1 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <p class="text-sm font-medium text-gray-900">
-                        {{ memberInfo.first_name }} {{ memberInfo.last_name }}
-                      </p>
-                      <p class="text-xs text-gray-500">{{ memberInfo.membership_id }}</p>
-                      <p class="text-xs text-gray-500">Phone: {{ auth.user.phone }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Loan Product -->
-            <div class="bg-white shadow-md sm:rounded-lg border border-gray-100">
-              <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                <h3 class="text-lg font-semibold text-blue-900">Loan Product</h3>
-              </div>
-              <div class="p-6">
-                <label for="loan_product_id" class="block text-sm font-medium text-gray-700">Select Loan Product
-                  *</label>
-                <select v-model="form.loan_product_id" @change="onProductChange" id="loan_product_id" required
-                  class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2">
-                  <option value="">Choose a loan product...</option>
-                  <option v-for="product in loanProducts" :key="product.id" :value="product.id">
-                    {{ product.name }} - {{ product.interest_rate }}% p.a.
-                  </option>
-                </select>
-
-                <div v-if="selectedProduct" class="mt-4 bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                  <h4 class="font-semibold text-blue-900 mb-2">Product Details</h4>
-                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div><span class="text-blue-600">Interest Rate:</span>
-                      <p class="font-medium">{{ selectedProduct.interest_rate }}% p.a.</p>
-                    </div>
-                    <div><span class="text-blue-600">Amount Range:</span>
-                      <p class="font-medium">KES {{ formatCurrency(selectedProduct.min_amount) }} - {{
-    formatCurrency(selectedProduct.max_amount) }}</p>
-                    </div>
-                    <div><span class="text-blue-600">Term Range:</span>
-                      <p class="font-medium">{{ selectedProduct.min_term_months }} - {{ selectedProduct.max_term_months
-                        }}
-                        months</p>
-                    </div>
-                    <div><span class="text-blue-600">Processing Fee:</span>
-                      <p class="font-medium">{{ selectedProduct.processing_fee_rate }}%</p>
-                    </div>
-                  </div>
-                  <div class="mt-3">
-                    <span class="text-blue-600">Description:</span>
-                    <p class="text-sm text-gray-700">{{ selectedProduct.description }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Loan Details -->
-            <div class="bg-white shadow-md sm:rounded-lg border border-gray-100">
-              <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                <h3 class="text-lg font-semibold text-blue-900">Loan Details</h3>
-              </div>
-              <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label for="amount" class="block text-sm font-medium text-gray-700">Loan Amount *</label>
-                  <input v-model="form.applied_amount" type="number" id="amount" required
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2" />
-                </div>
-                <div>
-                  <label for="term" class="block text-sm font-medium text-gray-700">Repayment Term (months) *</label>
-                  <input v-model="form.term_months" type="number" id="term" required
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2" />
-                </div>
-                <div class="md:col-span-2">
-                  <label for="purpose" class="block text-sm font-medium text-gray-700">Purpose *</label>
-                  <textarea v-model="form.purpose" id="purpose" rows="3" required
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"></textarea>
-                </div>
-              </div>
-            </div>
-
-            <!-- Disbursement Section -->
-            <div class="bg-white shadow-md sm:rounded-lg border border-gray-100">
-              <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                <h3 class="text-lg font-semibold text-blue-900">Disbursement Method</h3>
-              </div>
-              <div class="p-6 space-y-4">
-                <!-- Method Select -->
-                <div>
-                  <label for="disbursement" class="block text-sm font-medium text-gray-700">
-                    Choose Method *
-                  </label>
-                  <select id="disbursement" v-model="disbursementMethod"
-                    class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    required>
-                    <option value="">-- Select Method --</option>
-                    <option value="mpesa">M-Pesa</option>
-                    <option value="bank">Bank</option>
-                    <option value="cheque">Cheque</option>
-                  </select>
-                </div>
-
-                <!-- Conditional Inputs -->
-                <div v-if="disbursementMethod === 'mpesa'" class="space-y-3">
-                  <label for="mpesaNumber" class="block text-sm font-medium text-gray-700">
-                    M-Pesa Number *
-                  </label>
-                  <input id="mpesaNumber" type="text" v-model="disbursementDetails.mpesaNumber"
-                    placeholder="e.g. 0712345678"
-                    class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    required />
-                </div>
-
-                <div v-if="disbursementMethod === 'bank'" class="space-y-3">
-                  <label for="bankName" class="block text-sm font-medium text-gray-700">
-                    Bank Name *
-                  </label>
-                  <input id="bankName" type="text" v-model="disbursementDetails.bankName" placeholder="e.g. Equity Bank"
-                    class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    required />
-
-                  <label for="branch" class="block text-sm font-medium text-gray-700">
-                    Branch *
-                  </label>
-                  <input id="branch" type="text" v-model="disbursementDetails.branch" placeholder="e.g. Nairobi CBD"
-                    class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    required />
-
-                  <label for="accountNumber" class="block text-sm font-medium text-gray-700">
-                    Account Number *
-                  </label>
-                  <input id="accountNumber" type="text" v-model="disbursementDetails.accountNumber"
-                    placeholder="e.g. 123456789"
-                    class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    required />
-                </div>
-
-                <div v-if="disbursementMethod === 'cheque'" class="space-y-3">
-                  <label for="payee" class="block text-sm font-medium text-gray-700">
-                    Payee Name *
-                  </label>
-                  <input id="payee" type="text" v-model="disbursementDetails.payee" placeholder="Enter Payee Name"
-                    class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    required />
-                </div>
-              </div>
-            </div>
-
-
-            <!-- Guarantors -->
-            <div class="bg-white shadow-md sm:rounded-lg border border-gray-100">
-              <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                <h3 class="text-lg font-semibold text-blue-900">
-                  Guarantors
-                </h3>
-              </div>
-              <div class="p-6 space-y-4">
-                <p class="text-sm text-gray-600 mb-4">
-                  Select guarantors from members.
-                  <span class="text-blue-900 font-medium">
-                    The selected guarantors will receive a notification about this loan application.
-                  </span>
-                </p>
-
-                <div v-for="(guarantor, index) in form.guarantors" :key="index" class="p-4 border rounded-lg space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <!-- Guarantor Select -->
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700">Select Member *</label>
-                      <select v-model="guarantor.member_id" class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm 
-                              focus:border-orange-500 focus:ring-orange-500 p-2">
-                        <option value="">Choose a member...</option>
-                        <option v-for="member in members" :key="member.id" :value="member.id">
-                          {{ member.first_name }} {{ member.last_name }} - {{ member.membership_id }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <!-- Guaranteed Amount -->
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700">
-                        Guaranteed Amount (KES) *
-                      </label>
-                      <input v-model="guarantor.guaranteed_amount" type="number" step="0.01" min="0"
-                        :max="form.applied_amount" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm 
-                                    focus:border-orange-500 focus:ring-orange-500 p-2" />
-                    </div>
-                  </div>
-
-                  <!-- Remove Button -->
-                  <div class="flex justify-end">
-                    <button type="button" @click="removeGuarantor(index)"
-                      class="text-red-600 hover:text-red-800 text-sm font-medium">
-                      ✕ Remove Guarantor
-                    </button>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Guaranteed Amount (KES) *</label>
+                    <input v-model="guarantor.guaranteed_amount" type="number" step="0.01" min="0" :max="form.applied_amount"
+                      class="mt-2 block w-full rounded-lg border border-gray-300 p-3" />
                   </div>
                 </div>
 
-                <!-- Add Guarantor -->
-                <button type="button" @click="addGuarantor" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg 
-                        text-sm font-medium shadow">
+                <div class="flex justify-end">
+                  <button type="button" @click="removeGuarantor(index)" class="text-rose-600 hover:text-rose-800 text-sm font-medium">
+                    ✕ Remove Guarantor
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <button type="button" @click="addGuarantor" class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg shadow">
                   + Add Guarantor
                 </button>
               </div>
             </div>
+          </section>
 
-
-            <!-- Support Documents -->
-            <div class="bg-white shadow-md sm:rounded-lg border border-gray-100">
-              <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                <h3 class="text-lg font-semibold text-blue-900">Support Documents</h3>
+          <!-- Support Documents (single combined PDF) -->
+          <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+              <h3 class="text-base sm:text-lg font-semibold text-white">Support Documents</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <!-- Instruction -->
+              <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg text-sm text-blue-900">
+                <strong>Important:</strong> Please <em>combine all required supporting documents</em> (Payslip, ID/Passport copy, 6 months Bank Statement, Employment Letter, Guarantor Form) into <strong>one single PDF file</strong> and upload it below. This helps us process your application faster.
               </div>
-              <div class="p-6 space-y-5">
-                <div v-for="doc in requiredDocuments" :key="doc.key"
-                  class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-                  <label :for="doc.key" class="block text-sm font-medium text-gray-700 w-40">
-                    {{ doc.label }} *
-                  </label>
 
-                  <div class="flex items-center space-x-3">
+              <!-- Single file input -->
+              <div class="flex items-center gap-4">
+                <label for="combined_docs" class="inline-flex items-center gap-2 cursor-pointer bg-[rgba(7,40,75,0.95)] hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 rounded-lg shadow">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  Choose File
+                </label>
 
-                    <label :for="doc.key"
-                      class="bg-blue-800 hover:bg-blue-900 text-white px-3 py-1 max-sm:text-sm rounded-lg shadow cursor-pointer transition">
-                      Choose File
-                    </label>
-                    <input type="file" :id="doc.key" :name="doc.key" class="hidden"
-                      @change="handleFileChange($event, doc.key)" required />
+                <input id="combined_docs" type="file" accept="application/pdf" class="hidden" @change="handleCombinedFile($event)" />
 
-                    <!-- Filename -->
-                    <span v-if="uploadedFiles[doc.key]" class="max-sm:text-xs sm:text-sm text-gray-700">
-                      {{ uploadedFiles[doc.key].name }}
-                    </span>
-
-                    <span v-else class="text-sm text-gray-400 italic">
-                      No file chosen
-                    </span>
+                <div class="flex-1 min-w-0">
+                  <div v-if="uploadedFiles.combined" class="text-sm text-gray-700">
+                    <strong>Selected:</strong> {{ uploadedFiles.combined.name }} <span class="text-xs text-gray-500">({{ humanFileSize(uploadedFiles.combined.size) }})</span>
                   </div>
+                  <div v-else class="text-sm text-gray-400 italic">No file chosen — upload a single combined PDF (max 10 MB).</div>
+                </div>
+
+                <div>
+                  <button v-if="uploadedFiles.combined" type="button" @click="removeCombinedFile" class="text-sm text-rose-600 hover:text-rose-800">Remove</button>
                 </div>
               </div>
+
+              <p class="text-xs text-gray-400">Only PDF allowed. Maximum recommended size: 10 MB.</p>
             </div>
+          </section>
 
-          </div>
-
-          <!-- Submit -->
-          <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <Link :href="isMemberRole ? route('my-loans') : route('loans.index')"
-              class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-sm font-medium shadow">
-            Cancel
+          <!-- Submit row -->
+          <div class="flex justify-end items-center gap-4">
+            <Link :href="isMemberRole ? route('my-loans') : route('loans.index')" class="px-5 py-3 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 shadow">
+              Cancel
             </Link>
-            <button type="submit" :disabled="!canSubmit || processing"
-              class="bg-blue-900 hover:bg-blue-800 hover:cursor-pointer disabled:bg-gray-400 text-white px-6 py-3 rounded-lg text-sm font-medium flex items-center shadow transition">
+            <button type="submit" :disabled="!canSubmit || processing" class="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-medium shadow">
+              <svg v-if="processing" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
               <span v-if="processing">Submitting...</span>
               <span v-else>Submit Application</span>
             </button>
           </div>
-
         </form>
 
-        <!-- Confirmation Modal -->
-        <div v-if="showConfirm"
-          class="fixed inset-0 bg-[rgba(0,0,0,0.7)] max-sm:px-5 flex items-center justify-center z-50">
-          <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]">
-            <h3 class="text-lg font-semibold text-blue-900 mb-4">Review Your Loan Application</h3>
+        <!-- Confirmation modal -->
+        <div v-if="showConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.7)] p-4">
+          <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Review Your Loan Application</h3>
 
-            <!-- Summary Section -->
-            <div class="space-y-4 text-sm text-gray-700">
-              <div>
-                <span class="font-medium text-gray-900">Member:</span>
-                {{ memberInfo.first_name }} {{ memberInfo.last_name }}
-                <span class="text-xs text-gray-500">({{ memberInfo.membership_id }})</span>
-              </div>
+            <div class="space-y-3 text-sm text-gray-700">
+              <div><span class="font-medium text-gray-900">Member:</span> {{ memberInfo.first_name }} {{ memberInfo.last_name }} <span class="text-xs text-gray-500">({{ memberInfo.membership_id }})</span></div>
+              <div><span class="font-medium text-gray-900">Loan Product:</span> {{ loanProducts.find(p => p.id === form.loan_product_id)?.name }}</div>
+              <div><span class="font-medium text-gray-900">Applied Amount:</span> KES {{ form.applied_amount }}</div>
+              <div><span class="font-medium text-gray-900">Term:</span> {{ form.term_months }} months</div>
+              <div><span class="font-medium text-gray-900">Purpose:</span> {{ form.purpose }}</div>
 
-
-              <div>
-                <span class="font-medium text-gray-900">Loan Product:</span>
-                {{ loanProducts.find(p => p.id === form.loan_product_id)?.name }}
-              </div>
-
-              <div>
-                <span class="font-medium text-gray-900">Applied Amount:</span>
-                KES {{ form.applied_amount }}
-              </div>
-
-              <div>
-                <span class="font-medium text-gray-900">Term:</span>
-                {{ form.term_months }} months
-              </div>
-
-              <div>
-                <span class="font-medium text-gray-900">Purpose:</span>
-                {{ form.purpose }}
-              </div>
-
-              <!-- Guarantors -->
               <div v-if="form.guarantors.length">
                 <span class="font-medium text-gray-900">Guarantors:</span>
                 <ul class="list-disc ml-6 mt-1">
                   <li v-for="(g, index) in form.guarantors" :key="index">
-                    {{ members.find(m => m.id === g.member_id)?.first_name }}
-                    {{ members.find(m => m.id === g.member_id)?.last_name }}
-                    — Guaranteed: KES {{ g.guaranteed_amount }}
+                    {{ members.find(m => m.id === g.member_id)?.first_name }} {{ members.find(m => m.id === g.member_id)?.last_name }} — Guaranteed: KES {{ g.guaranteed_amount }}
                   </li>
                 </ul>
               </div>
 
-              <!-- Disbursement -->
               <div>
-                <span class="font-medium text-gray-900">Disbursement Method:</span>
-                {{ disbursementMethod }}
-                <div class="ml-4 mt-1">
-                  <div v-if="disbursementMethod === 'mpesa'">
-                    M-Pesa Number: {{ disbursementDetails.mpesaNumber }}
-                  </div>
-                  <div v-if="disbursementMethod === 'bank'">
-                    Bank: {{ disbursementDetails.bankName }},
-                    Branch: {{ disbursementDetails.branch }},
-                    Account: {{ disbursementDetails.accountNumber }}
-                  </div>
-                  <div v-if="disbursementMethod === 'cheque'">
-                    Payee: {{ disbursementDetails.payee }}
-                  </div>
+                <span class="font-medium text-gray-900">Disbursement Method:</span> {{ disbursementMethod }}
+                <div class="ml-4 mt-1 text-sm">
+                  <div v-if="disbursementMethod === 'mpesa'">M-Pesa Number: {{ disbursementDetails.mpesaNumber }}</div>
+                  <div v-if="disbursementMethod === 'bank'">Bank: {{ disbursementDetails.bankName }}, Branch: {{ disbursementDetails.branch }}, Account: {{ disbursementDetails.accountNumber }}</div>
+                  <div v-if="disbursementMethod === 'cheque'">Payee: {{ disbursementDetails.payee }}</div>
                 </div>
               </div>
 
-              <!-- Documents -->
               <div>
                 <span class="font-medium text-gray-900">Attached Documents:</span>
-                <ul class="list-disc ml-6 mt-1 max-sm:text-xs">
-                  <li v-for="doc in requiredDocuments" :key="doc.key">
-                    {{ doc.label }} —
-                    <span v-if="uploadedFiles[doc.key]">{{ uploadedFiles[doc.key].name }}</span>
-                    <span v-else class="italic text-gray-400">Not uploaded</span>
-                  </li>
-                </ul>
+                <div class="ml-4 mt-1">
+                  <div v-if="uploadedFiles.combined">{{ uploadedFiles.combined.name }} <span class="text-xs text-gray-500">({{ humanFileSize(uploadedFiles.combined.size) }})</span></div>
+                  <div v-else class="italic text-gray-400">No combined PDF uploaded</div>
+                </div>
               </div>
             </div>
 
-            <!-- Actions -->
-            <div class="flex justify-end space-x-3 mt-6">
-              <button type="button" @click="showConfirm = false"
-                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
-                Cancel
-              </button>
-              <button type="button" @click="confirmSubmit"
-                class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow">
-                Yes, Submit
-              </button>
+            <div class="flex justify-end gap-3 mt-6">
+              <button type="button" @click="showConfirm = false" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Cancel</button>
+              <button type="button" @click="confirmSubmit" class="px-4 py-2 rounded-lg bg-[rgba(7,40,75,0.95)] text-white hover:bg-blue-800 shadow">Yes, Submit</button>
             </div>
           </div>
         </div>
 
-        <!-- Fullscreen Loader -->
-        <div v-if="processing" class="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex items-center justify-center z-50">
-          <div class="bg-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3">
-            <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-              viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
-            <span class="text-gray-800 font-medium">Submitting your loan application...</span>
+        <!-- Fullscreen loader (subtle) -->
+        <div v-if="processing" class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.6)]">
+          <div class="bg-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
+            <svg class="animate-spin h-6 w-6 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+            <span class="text-gray-900 font-medium">Submitting your loan application...</span>
           </div>
         </div>
-
 
       </div>
     </div>
   </AppLayout>
 </template>
 
-
-
 <script setup>
-import { ref, reactive, computed } from 'vue'
+/* modernized loan application — single combined PDF for support docs */
+import { ref, reactive, computed, watch } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import axios from 'axios'
 
-const successMessage = ref(null)
-const errorMessages = ref(null)
-const processing = ref(false)
-
+/* props from server */
 const props = defineProps({
   loanProducts: Array,
   members: Array,
   auth: Object
 })
 
+/* state */
+const successMessage = ref(null)
+const errorMessages = ref(null)
+const processing = ref(false)
+const showConfirm = ref(false)
 
-
-// Reactive data
 const form = reactive({
   member_id: '',
   loan_product_id: '',
@@ -473,11 +384,11 @@ const form = reactive({
   term_months: '',
   purpose: '',
   guarantors: [],
-  documents: [],
+  // documents replaced by single combined upload
   disbursement_method: '',
   bank_account: '',
   bank_name: '',
-  mpesa_number: '',
+  mpesa_number: ''
 })
 
 const disbursementMethod = ref('')
@@ -489,82 +400,30 @@ const disbursementDetails = reactive({
   payee: ''
 })
 
-
 const selectedMember = ref(null)
 const selectedProduct = ref(null)
 const loanCalculation = ref(null)
 
-// Computed properties
+/* uploaded files: single combined PDF */
+const uploadedFiles = reactive({
+  combined: null
+})
+
+/* derived */
 const isMemberRole = computed(() => props.auth.user.role === 'member')
 
 const memberInfo = computed(() => {
-  if (isMemberRole.value) {
-    return props.auth.user.member
-  }
+  if (isMemberRole.value) return props.auth.user.member || {}
   return selectedMember.value || {}
 })
 
-const availableGuarantors = computed(() => {
-  return props.members.filter(member =>
-    member.id !== form.member_id &&
-    member.membership_status === 'active'
-  )
-})
-
-const canSubmit = computed(() => {
-  const hasBasics = form.member_id &&
-    form.loan_product_id &&
-    form.applied_amount &&
-    form.term_months &&
-    form.purpose.trim()
-
-  // ensure disbursement details are filled
-  let hasDisbursement = false
-  if (disbursementMethod.value === 'mpesa') {
-    hasDisbursement = !!disbursementDetails.mpesaNumber
-  } else if (disbursementMethod.value === 'bank') {
-    hasDisbursement =
-      !!disbursementDetails.bankName &&
-      !!disbursementDetails.branch &&
-      !!disbursementDetails.accountNumber
-  } else if (disbursementMethod.value === 'cheque') {
-    hasDisbursement = !!disbursementDetails.payee
-  }
-
-  // ensure all required docs are uploaded
-  const hasDocs = requiredDocuments.every(doc => uploadedFiles[doc.key])
-
-  return hasBasics && hasDisbursement && hasDocs
-})
-
-
-// Initialize member for member role
+/* initialize if member */
 if (isMemberRole.value && props.auth.user.member) {
   form.member_id = props.auth.user.member.id
   selectedMember.value = props.auth.user.member
 }
 
-// Reset form after success
-const resetForm = () => {
-  form.member_id = isMemberRole.value ? props.auth.user.member.id : ''
-  form.loan_product_id = ''
-  form.applied_amount = ''
-  form.term_months = ''
-  form.purpose = ''
-  form.guarantors = []
-  form.documents = []
-  uploadedFiles.value = []
-  selectedMember.value = isMemberRole.value ? props.auth.user.member : null
-  selectedProduct.value = null
-  loanCalculation.value = null
-  form.disbursement_method = ''
-  form.bank_account = ''
-  form.bank_name = ''
-  form.mpesa_number = ''
-
-}
-
-// Helpers
+/* helpers */
 const onMemberChange = () => {
   selectedMember.value = props.members.find(m => m.id == form.member_id)
 }
@@ -605,66 +464,74 @@ const calculateRepayment = () => {
   }
 }
 
+/* guarantor functions */
 const addGuarantor = () => {
-  form.guarantors.push({
-    member_id: '',
-    guaranteed_amount: ''
-  })
+  form.guarantors.push({ member_id: '', guaranteed_amount: '' })
 }
+const removeGuarantor = (index) => form.guarantors.splice(index, 1)
 
-const removeGuarantor = (index) => {
-  form.guarantors.splice(index, 1)
-}
-
-const isGuarantorSelected = (memberId) => {
-  return form.guarantors.some(g => g.member_id == memberId)
-}
-
-const handleFileUpload = (event) => {
-  const files = Array.from(event.target.files)
-  files.forEach(file => {
-    if (file.size <= 10 * 1024 * 1024) {
-      uploadedFiles.value.push(file)
-    }
-  })
-}
-
-
-// list of required docs
-const requiredDocuments = [
-  { key: 'payslip', label: 'Payslip (latest)' },
-  { key: 'id_copy', label: 'ID/Passport Copy' },
-  { key: 'bank_statement', label: 'Bank Statement (6 months)' },
-  { key: 'employment_letter', label: 'Employment Letter' },
-  { key: 'guarantor_form', label: 'Guarantor Form' }
-]
-
-// store filenames per doc
-const uploadedFiles = reactive({})
-
-function handleFileChange(e, key) {
+/* file handling for combined PDF */
+function handleCombinedFile(e) {
   const input = e.target
   if (input.files && input.files.length > 0) {
-    uploadedFiles[key] = input.files[0]
+    const file = input.files[0]
+    // Accept only PDF and max 10 MB
+    if (file.type !== 'application/pdf') {
+      showMessage('error', 'Please upload a PDF file.')
+      input.value = ''
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showMessage('error', 'File is too large. Maximum allowed is 10 MB.')
+      input.value = ''
+      return
+    }
+    uploadedFiles.combined = file
   } else {
-    uploadedFiles[key] = null
+    uploadedFiles.combined = null
   }
 }
 
-const removeFile = (index) => {
-  uploadedFiles.value.splice(index, 1)
+function removeCombinedFile() {
+  uploadedFiles.combined = null
+  const el = document.getElementById('combined_docs')
+  if (el) el.value = ''
 }
 
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-KE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount)
+/* human readable filesize */
+function humanFileSize(bytes) {
+  if (!bytes) return '0 B'
+  const thresh = 1024
+  if (Math.abs(bytes) < thresh) return bytes + ' B'
+  const units = ['KB','MB','GB','TB','PB','EB','ZB','YB']
+  let u = -1
+  do {
+    bytes /= thresh
+    ++u
+  } while (Math.abs(bytes) >= thresh && u < units.length - 1)
+  return bytes.toFixed(1) + ' ' + units[u]
 }
 
+/* submit controls */
+const canSubmit = computed(() => {
+  const hasBasics = form.member_id && form.loan_product_id && form.applied_amount && form.term_months && form.purpose?.trim()
+  // disbursement checks
+  let hasDisbursement = false
+  if (disbursementMethod.value === 'mpesa') {
+    hasDisbursement = !!disbursementDetails.mpesaNumber
+  } else if (disbursementMethod.value === 'bank') {
+    hasDisbursement = !!disbursementDetails.bankName && !!disbursementDetails.branch && !!disbursementDetails.accountNumber
+  } else if (disbursementMethod.value === 'cheque') {
+    hasDisbursement = !!disbursementDetails.payee
+  }
+  // must have combined file
+  const hasDocs = !!uploadedFiles.combined
+  return hasBasics && hasDisbursement && hasDocs
+})
+
+/* feedback helper */
 const showMessage = (type, message, errors = null, callback = null) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
-
   if (type === 'success') {
     successMessage.value = message
     errorMessages.value = null
@@ -672,17 +539,30 @@ const showMessage = (type, message, errors = null, callback = null) => {
     errorMessages.value = errors || { general: [message] }
     successMessage.value = null
   }
-
   setTimeout(() => {
     successMessage.value = null
     errorMessages.value = null
-
     if (callback) callback()
   }, 5000)
 }
 
-const showConfirm = ref(false)
+/* reset form */
+const resetForm = () => {
+  form.member_id = isMemberRole.value ? (props.auth.user.member?.id || '') : ''
+  form.loan_product_id = ''
+  form.applied_amount = ''
+  form.term_months = ''
+  form.purpose = ''
+  form.guarantors = []
+  uploadedFiles.combined = null
+  selectedMember.value = isMemberRole.value ? props.auth.user.member : null
+  selectedProduct.value = null
+  loanCalculation.value = null
+  disbursementMethod.value = ''
+  Object.assign(disbursementDetails, { mpesaNumber: '', bankName: '', branch: '', accountNumber: '', payee: '' })
+}
 
+/* submit flow (confirm -> send) */
 const submitApplication = () => {
   showConfirm.value = true
 }
@@ -690,25 +570,27 @@ const submitApplication = () => {
 const confirmSubmit = async () => {
   showConfirm.value = false
   processing.value = true
+
   const formData = new FormData()
-
   Object.keys(form).forEach(key => {
-    if (key !== 'guarantors' && key !== 'documents') {
-      formData.append(key, form[key] ?? "")
+    if (key !== 'guarantors') {
+      formData.append(key, form[key] ?? '')
     }
   })
 
-  form.guarantors.forEach((guarantor, index) => {
-    Object.keys(guarantor).forEach(key => {
-      formData.append(`guarantors[${index}][${key}]`, guarantor[key] ?? "")
-    })
+  form.guarantors.forEach((g, i) => {
+    Object.keys(g).forEach(k => formData.append(`guarantors[${i}][${k}]`, g[k] ?? ''))
   })
 
-  Object.entries(uploadedFiles).forEach(([key, file]) => {
-    if (file) {
-      formData.append(`documents[${key}]`, file)
-    }
+  // disbursement details
+  Object.keys(disbursementDetails).forEach(k => {
+    formData.append(k, disbursementDetails[k] ?? '')
   })
+
+  // combined PDF
+  if (uploadedFiles.combined) {
+    formData.append('documents[combined]', uploadedFiles.combined)
+  }
 
   try {
     const response = await axios.post(route('loans.store'), formData, {
@@ -718,13 +600,14 @@ const confirmSubmit = async () => {
     if (response.data?.success) {
       resetForm()
       showMessage('success', response.data.message, null, () => {
-
         if (isMemberRole.value) {
           router.visit(route('my-loans'))
         } else {
           router.visit(route('loans.index'))
         }
       })
+    } else {
+      showMessage('error', response.data?.message || 'Unexpected response from server.')
     }
   } catch (error) {
     if (error.response?.status === 422) {
@@ -735,11 +618,17 @@ const confirmSubmit = async () => {
         showMessage('error', data.message)
       }
     } else {
-      console.error("Unexpected error:", error)
-      showMessage('error', "Something went wrong. Please try again.")
+      console.error('Unexpected error:', error)
+      showMessage('error', 'Something went wrong. Please try again.')
     }
   } finally {
     processing.value = false
   }
 }
 </script>
+
+<style scoped>
+/* small extras to enhance the modern feel (feel free to move into your global styles) */
+input[type="file"] { display: none; }
+.rounded-2xl { border-radius: 1rem; }
+</style>

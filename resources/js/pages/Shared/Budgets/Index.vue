@@ -3,7 +3,7 @@
     <!-- Page Title -->
 
     <Head title="Budget Management" />
-    <h2 class="font-bold text-lg ml-5 sm:ml-10 mt-3 sm:text-xl text-blue-900 tracking-tight">
+    <h2 class="font-bold text-lg ml-5 sm:ml-10 mt-3 sm:text-xl text-[#0a2342] mt-6 tracking-tight">
       Budget Management
     </h2>
 
@@ -16,7 +16,7 @@
     {
       label: 'Total Budgets',
       value: stats.total_budgets,
-      color: 'bg-blue-700',
+      color: 'bg-[#0a2342]',
       icon: 'M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z M4 10h16 M10 4v16'
     },
     {
@@ -138,7 +138,7 @@
               <thead class="bg-blue-50">
                 <tr>
                   <th v-for="head in ['Budget', 'Year', 'Total Amount', 'Status', 'Period', 'Created By', 'Actions']"
-                    :key="head" class="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wide">
+                    :key="head" class="px-6 py-3 text-left text-xs font-semibold text-[#0a2342] uppercase tracking-wide">
                     {{ head }}
                   </th>
                 </tr>

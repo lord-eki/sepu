@@ -139,12 +139,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Member account access - Members can view their own accounts
-        Route::middleware('role:member')->group(function () {
-            Route::get('/my-accounts', function () {
-                $member = auth()->user()->member;
-                return redirect()->route('members.accounts', $member);
-            })->name('my-accounts');
-        });
+        // Route::middleware('role:member')->group(function () {
+        //     Route::get('/my-accounts', function () {
+        //         $member = auth()->user()->member;
+        //         return redirect()->route('members.accounts', $member);
+        //     })->name('my-accounts');
+        // });
     });
 
    // LOANS ROUTES

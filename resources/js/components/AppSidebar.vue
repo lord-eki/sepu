@@ -24,6 +24,13 @@ import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import type { AppPageProps } from '@/types';
 
+const page = usePage<AppPageProps>()
+const user = page.props.auth.user
+const member = page.props.auth?.member ?? null
+
+
+
+
 /**
  * ---- Types ----
  */
@@ -41,103 +48,137 @@ export interface NavItem {
 
 // Member navigation
 const memberNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Accounts',
-        href: '/my-accounts',
-        icon: NotebookTabs
-    },
-    {
-        title: 'Loans',
-        icon: BriefcaseConveyorBelt,
-        children: [
-            {
-                title: 'My Loans',
-                href: '/my-loans',
-                icon: FileText,
-            },
-            {
-                title: 'Loan Calculator',
-                href: '/loan-calculator',
-                icon: Calculator,
-            },
-            {
-                title: 'Loan Application',
-                href: '/loans/create',
-                icon: FileSignature,
-            },
-            
-        ]
-    },
-    {
-        title: 'Transactions',
-        href: '/my-transactions',
-        icon: ArrowRightLeft,
-    },
-    {
-        title: 'Dividends',
-        href: '/my-dividends',
-        icon: HandCoins,
-    },
-    {
-        title: 'My Profile',
-        href: '/profile/show',
-        icon: User,
-    }
+  {
+    title: 'Dashboard',
+    href: route('dashboard'),
+    routeName: 'dashboard',
+    icon: LayoutGrid,
+  },
+  {
+    title: 'Accounts',
+    href: member ? route('members.accounts', member.id) : '#',
+    routeName: 'members.accounts',
+    icon: NotebookTabs,
+  },
+  {
+    title: 'Loans',
+    icon: BriefcaseConveyorBelt,
+    children: [
+      {
+        title: 'My Loans',
+        href: member ? route('members.loans', member.id) : '#',
+        routeName: 'members.loans',
+        icon: FileText,
+      },
+      {
+        title: 'Loan Calculator',
+        href: route('loan-calculator.index'),
+        routeName: 'loan-calculator.index',
+        icon: Calculator,
+        },
+
+      {
+        title: 'Loan Application',
+        href: route('loans.create'),
+        routeName: 'loans.create',
+        icon: FileSignature,
+      },
+    ],
+  },
+  {
+    title: 'Transactions',
+    href: member ? route('members.transactions', member.id) : '#',
+    routeName: 'members.transactions',
+    icon: ArrowRightLeft,
+  },
+  {
+    title: 'Dividends',
+    href: member ? route('members.dividends', member.id) : '#',
+    routeName: 'members.dividends',
+    icon: HandCoins,
+  },
+  {
+    title: 'My Profile',
+    href: route('member.profile'),
+    routeName: 'member.profile',
+    icon: User,
+  },
 ];
 
 // Admin navigation
 const adminNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Dividends',
-        href: '/dividends',
-        icon: HandCoins,
-    },
-    {
-        title: 'Budgets',
-        href: '/budgets',
-        icon: ClipboardList,
-    },
-    {
-        title: 'Payment Vouchers',
-        href: '/vouchers',
-        icon: Ticket,
-    },
-    {
-        title: 'Loans',
-        href: '/loans',
-        icon: BriefcaseConveyorBelt,
-    },
-    {
-        title: 'Members',
-        href: '/members',
-        icon: Users,
-    },
-    {
-        title: 'Accounts',
-        href: '/accounts',
-        icon: NotebookTabs
-    },
-    {
-        title: 'Transactions',
-        href: '/transactions',
-        icon: ArrowRightLeft,
-    }
+  {
+    title: 'Dashboard',
+    href: route('dashboard'),
+    routeName: 'dashboard',
+    icon: LayoutGrid,
+  },
+  {
+    title: 'Dividends',
+    href: route('dividends.index'),
+    routeName: 'dividends.index',
+    icon: HandCoins,
+  },
+  {
+    title: 'Budgets',
+    href: route('budgets.index'),
+    routeName: 'budgets.index',
+    icon: ClipboardList,
+  },
+  {
+    title: 'Payment Vouchers',
+    href: route('vouchers.index'),
+    routeName: 'vouchers.index',
+    icon: Ticket,
+  },
+  {
+    title: 'Loans',
+    icon: BriefcaseConveyorBelt,
+    children: [
+      {
+        title: 'Loans Overview',
+        href: route('loans.index'),
+        routeName: 'loans.index',
+        icon: FileText,
+      },
+      {
+        title: 'Loan Calculator',
+        href: route('loan-calculator.index'),
+        routeName: 'loan-calculator.index',
+        icon: Calculator,
+      },
+      {
+        title: 'Loan Application',
+        href: route('loans.create'),
+        routeName: 'loans.create',
+        icon: FileSignature,
+      },
+    ],
+  },
+  {
+    title: 'Members',
+    href: route('members.index'),
+    routeName: 'members.index',
+    icon: Users,
+  },
+  {
+    title: 'Accounts',
+    href: route('accounts.index'),
+    routeName: 'accounts.index',
+    icon: NotebookTabs,
+  },
+ {
+  title: 'Transactions',
+  href: route('members.transactions', member.id),
+  routeName: 'members.transactions',
+  icon: ArrowRightLeft,
+},
 ];
 
 /**
  * ---- Role detection ----
  */
-const page = usePage<AppPageProps>();
+
 const userRole = page.props.auth.user.role;
 const isAdmin = userRole === 'admin';
 

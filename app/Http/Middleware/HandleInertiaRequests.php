@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
+use App\Models\Member;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -46,6 +47,9 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'member' => $request->user()
+                ? Member::where('user_id', $request->user()->id)->first()
+                : null,
             ],
             'status' => fn () => $request->session()->get('status'),
             'ziggy' => [

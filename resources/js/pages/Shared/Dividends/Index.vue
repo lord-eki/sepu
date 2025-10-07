@@ -2,7 +2,7 @@
   <AppLayout :breadcrumbs="[{ title: 'Dividends', href: '/dividends' }]">
     <!-- Header -->
     <div class="px-4 sm:px-6 lg:px-8 mt-6">
-      <h2 class="text-lg sm:text-xl sm:text-3xl font-bold tracking-tight text-blue-900">
+      <h2 class="text-lg sm:text-xl font-bold tracking-tight text-[#0a2342]">
         Dividends Management
       </h2>
       <p class="mt-1 text-gray-600 text-sm">
@@ -16,7 +16,7 @@
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div v-for="card in [
-    { label: 'Total Dividends', value: stats.total_dividends, color: 'bg-blue-700', icon: 'M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z' },
+    { label: 'Total Dividends', value: stats.total_dividends, color: 'bg-[#0a2342]', icon: 'M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z' },
     { label: 'Total Distributed', value: 'KSh ' + formatCurrency(stats.total_distributed), color: 'bg-orange-500', icon: 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 111.414-1.414L9 9.586l3.293-3.293a1 1 0 111.414 1.414z' },
     { label: 'Pending Approval', value: stats.pending_approval, color: 'bg-yellow-500', icon: 'M10 2a8 8 0 100 16 8 8 0 000-16zm1 9H9V5a1 1 0 112 0v6z' },
     { label: 'Ready to Distribute', value: stats.approved_pending_distribution, color: 'bg-blue-500', icon: 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 111.414-1.414L9 9.586l3.293-3.293a1 1 0 111.414 1.414z' },
@@ -69,7 +69,7 @@
               </Link>
 
               <Link :href="route('dividends.create')"
-                class="inline-flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg bg-blue-900 text-white text-xs sm:text-sm font-medium hover:bg-blue-800 transition">
+                class="inline-flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg bg-[#0a2342] text-white text-xs sm:text-sm font-medium hover:bg-blue-900 transition">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
                 </svg>
@@ -88,7 +88,7 @@
                   <th
                     v-for="head in ['Year', 'Total Profit', 'Dividend Rate', 'Total Dividends', 'Status', 'Dates', 'Actions']"
                     :key="head"
-                    class="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wide">
+                    class="px-6 py-3 text-left text-xs font-semibold text-[#0a2342] uppercase tracking-wide">
                     {{ head }}
                   </th>
                 </tr>

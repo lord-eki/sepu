@@ -3,7 +3,7 @@
 
     <Head title="Loan Management" />
     <div class="sm:pt-2">
-      <div class="max-w-7xl mx-auto py-4 sm:px-6 lg:px-8 space-y-8">
+      <div class="max-w-7xl mx-auto py-3 sm:px-6 lg:px-8 space-y-8">
 
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between max-sm:ml-4  gap-4">
@@ -47,7 +47,7 @@
       color: 'bg-red-500',
       icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
     }
-  ]" :key="card.label" class="bg-white rounded-2xl shadow-sm hover:shadow-md transition p-5">
+  ]" :key="card.label" class="bg-white rounded-2xl shadow-md border hover:shadow-md transition p-5">
             <div class="flex items-center">
               <div
                 :class="[card.color, 'w-7 sm:w-9 h-7 sm:h-9 rounded-xl flex items-center justify-center text-white']">

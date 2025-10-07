@@ -86,7 +86,8 @@ class LoanController extends Controller
             'loanProducts' => $loanProducts,
             'members' => $members,
             'auth' => [
-                'user' => auth()->user()->load('member') 
+                'user' => auth()->user()->load('member'),
+                'member' => auth()->user()->member, 
             ]
         ]);
     }
