@@ -126,7 +126,7 @@ const adminNavItems: NavItem[] = [
     icon: ClipboardList,
   },
   {
-    title: 'Payment Vouchers',
+    title: 'Vouchers',
     href: route('vouchers.index'),
     routeName: 'vouchers.index',
     icon: Ticket,
@@ -169,10 +169,11 @@ const adminNavItems: NavItem[] = [
   },
  {
   title: 'Transactions',
-  href: route('members.transactions', member.id),
-  routeName: 'members.transactions',
+  href: '/transactions',
+  routeName: '#',
   icon: ArrowRightLeft,
 },
+
 ];
 
 /**
