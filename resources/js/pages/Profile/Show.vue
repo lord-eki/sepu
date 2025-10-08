@@ -151,7 +151,7 @@ function submit() {
 <template>
 
   <Head title="My Profile" />
-  <AppLayout :breadcrumbs="[{ title: 'Profile', href: '/member/profile' }]">
+  <AppLayout :breadcrumbs="[{ title: 'My Profile', href: '/member/profile' }]">
     <div class="p-4">
       <!-- Flash -->
       <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
@@ -186,7 +186,7 @@ function submit() {
 
             <!-- Upload -->
             <label
-              class="mt-4 px-3 py-1.5 bg-blue-100 text-blue-900 text-sm rounded-lg shadow-md hover:bg-blue-50 cursor-pointer">
+              class="mt-4 px-3 py-1.5 bg-orange-100 text-blue-900 text-sm rounded-lg shadow-sm hover:bg-orange-200 cursor-pointer">
               Edit Photo
               <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
             </label>
@@ -218,15 +218,15 @@ function submit() {
             <h3 class="text-lg font-semibold text-blue-900 ">Personal Info</h3>
             <div class="flex gap-3">
               <Button v-if="!isEditing" @click="isEditing = true"
-                class="bg-blue-900 hover:bg-blue-800 text-white rounded-md px-3 py-2 shadow-sm flex items-center gap-2">
+                class="bg-blue-900 hover:cursor-pointer hover:bg-blue-800 text-white rounded-md px-3 py-2 shadow-sm flex items-center gap-2">
                 <Pencil class="w-4 h-4" /> Edit
               </Button>
               <Button v-if="isEditing" @click="isEditing = false"
-                class="bg-gray-500 hover:bg-gray-600 text-white rounded-md px-3 py-2 shadow-sm">
+                class="bg-gray-500 hover:cursor-pointer hover:bg-gray-600 text-white rounded-md px-3 py-2 shadow-sm">
                 Cancel
               </Button>
               <Button v-if="isEditing" type="button" @click="submit"
-                class="bg-orange-500 hover:bg-orange-600 text-white rounded-md px-3 py-2 shadow-sm flex items-center gap-2">
+                class="bg-orange-500 hover:cursor-pointer hover:bg-orange-600 text-white rounded-md px-3 py-2 shadow-sm flex items-center gap-2">
                 <Save class="w-4 h-4" /> <span>Save</span>
               </Button>
             </div>
@@ -248,9 +248,16 @@ function submit() {
               <label class="block text-sm font-medium mb-1 text-[#081642]">{{
     field.label
   }}</label>
-              <input v-if="field.type !== 'select'" v-model="form[field.key as keyof typeof form]" :type="field.type || 'text'"
-                class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
-                :disabled="!isEditing || field.disabled" />
+              <input
+                v-if="field.type !== 'select'"
+                v-model="form[field.key as keyof typeof form]"
+                :type="field.type || 'text'"
+                :class="[
+                  'w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200',
+                  ['first_name', 'last_name', 'email', 'phone'].includes(field.key) ? 'bg-blue-50' : 'bg-white'
+                ]"
+                :disabled="!isEditing || field.disabled"
+              />
               <select v-else v-model="form.marital_status"
                 class="w-full rounded-lg border border-gray-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
                 :disabled="!isEditing">

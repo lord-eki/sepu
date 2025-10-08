@@ -5,9 +5,37 @@
   ]">
 
     <Head title="New Loan Application" />
+    <!-- Flash messages -->
+        <div class="">
+          <transition
+            enter-active-class="transition ease-out duration-300"
+            enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition ease-in duration-200"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-2"
+          >
+            <div v-if="successMessage || errorMessages" :class="[
+                successMessage ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-rose-100 text-rose-900 border-rose-300',
+                'relative w-fit mx-auto px-6 py-3 rounded-xl mb-4 flex items-start gap-4 shadow-md'
+              ]">
+              <div class="flex-1">
+                <p v-if="successMessage">{{ successMessage }}</p>
+                <ul v-else class="list-disc pl-5 space-y-1">
+                  <li v-for="(errs, field) in errorMessages" :key="field">
+                    <span v-if="field !== 'general'"><strong class="capitalize">{{ field }}:</strong> </span>
+                    <span>{{ Array.isArray(errs) ? errs.join(', ') : errs }}</span>
+                  </li>
+                </ul>
+              </div>
+              <button type="button" class="ml-2 text-gray-400 hover:text-gray-200" @click="() => { successMessage = null; errorMessages = null }">✕</button>
+            </div>
+          </transition>
+        </div>
+
 
     <!-- Dark modern background -->
-  <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-blue-50 via-white to-orange-50 text-gray-800">
+  <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-blue-50 via-white to-orange-50 text-gray-800">
 
       <div class="max-w-4xl mx-auto">
 
@@ -22,36 +50,9 @@
             :href="isMemberRole ? route('my-loans') : route('loans.index')"
             class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl shadow-lg text-sm font-medium transition"
           >
-            ← Back to Loans
+            <ArrowLeft class="w-4 h-4" />
+              <p>Back&nbsp;<span class="max-sm:hidden">to Loans</span></p>
           </Link>
-        </div>
-
-        <!-- Flash messages -->
-        <div class="mb-6">
-          <transition
-            enter-active-class="transition ease-out duration-300"
-            enter-from-class="opacity-0 -translate-y-2"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition ease-in duration-200"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 -translate-y-2"
-          >
-            <div v-if="successMessage || errorMessages" :class="[
-                successMessage ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-rose-100 text-rose-900 border-rose-300',
-                'relative w-full px-6 py-3 rounded-xl mb-4 flex items-start gap-4 shadow-md'
-              ]">
-              <div class="flex-1">
-                <p v-if="successMessage" class="font-medium">{{ successMessage }}</p>
-                <ul v-else class="list-disc pl-5 space-y-1">
-                  <li v-for="(errs, field) in errorMessages" :key="field">
-                    <span v-if="field !== 'general'"><strong class="capitalize">{{ field }}:</strong> </span>
-                    <span>{{ Array.isArray(errs) ? errs.join(', ') : errs }}</span>
-                  </li>
-                </ul>
-              </div>
-              <button type="button" class="ml-2 text-gray-400 hover:text-gray-200" @click="() => { successMessage = null; errorMessages = null }">✕</button>
-            </div>
-          </transition>
         </div>
 
         <!-- Form -->
@@ -261,7 +262,7 @@
               </div>
 
               <!-- Single file input -->
-              <div class="flex items-center gap-4">
+              <div class="flex max-sm:flex-col max-sm:items-start items-center gap-4">
                 <label for="combined_docs" class="inline-flex items-center gap-2 cursor-pointer bg-[rgba(7,40,75,0.95)] hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 rounded-lg shadow">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                   Choose File
@@ -290,7 +291,7 @@
             <Link :href="isMemberRole ? route('my-loans') : route('loans.index')" class="px-5 py-3 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 shadow">
               Cancel
             </Link>
-            <button type="submit" :disabled="!canSubmit || processing" class="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-medium shadow">
+            <button type="submit" :disabled="!canSubmit || processing" class="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 hover:cursor-pointer disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-medium shadow">
               <svg v-if="processing" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
               <span v-if="processing">Submitting...</span>
               <span v-else>Submit Application</span>
@@ -338,8 +339,8 @@
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
-              <button type="button" @click="showConfirm = false" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Cancel</button>
-              <button type="button" @click="confirmSubmit" class="px-4 py-2 rounded-lg bg-[rgba(7,40,75,0.95)] text-white hover:bg-blue-800 shadow">Yes, Submit</button>
+              <button type="button" @click="showConfirm = false" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:cursor-pointer hover:bg-gray-100">Cancel</button>
+              <button type="button" @click="confirmSubmit" class="px-4 py-2 rounded-lg bg-[rgba(7,40,75,0.95)] text-white hover:cursor-pointer hover:bg-blue-800 shadow">Yes, Submit</button>
             </div>
           </div>
         </div>
@@ -358,7 +359,6 @@
 </template>
 
 <script setup>
-/* modernized loan application — single combined PDF for support docs */
 import { ref, reactive, computed, watch } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -376,6 +376,7 @@ const successMessage = ref(null)
 const errorMessages = ref(null)
 const processing = ref(false)
 const showConfirm = ref(false)
+import { ArrowLeft } from 'lucide-vue-next'
 
 const form = reactive({
   member_id: '',
@@ -384,12 +385,22 @@ const form = reactive({
   term_months: '',
   purpose: '',
   guarantors: [],
-  // documents replaced by single combined upload
+ 
   disbursement_method: '',
   bank_account: '',
   bank_name: '',
   mpesa_number: ''
 })
+
+function formatCurrency(value) {
+  if (value == null || value === '' || isNaN(value)) return '0.00'
+  return new Intl.NumberFormat('en-KE', {
+    style: 'decimal',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value)
+}
+
 
 const disbursementMethod = ref('')
 const disbursementDetails = reactive({

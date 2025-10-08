@@ -331,14 +331,6 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium">Employee Number</label>
-                <input
-                  v-model="form.employee_number"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
-              </div>
-              <div>
                 <label class="block text-sm font-medium">Monthly Income</label>
                 <input
                   v-model="form.monthly_income"
@@ -540,7 +532,6 @@ const form = useForm({
   occupation: '',
   employer: '',
   monthly_income: '',
-  employee_number: '',
   profile_photo: null,
   documents: [],
   emergency_contact_name: '',
