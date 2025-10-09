@@ -19,6 +19,8 @@ import {
     ArrowRightLeft,
     Calculator,
     FileSignature,
+    Bell,
+    Settings,
 } from 'lucide-vue-next';
 import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
@@ -105,6 +107,7 @@ const memberNavItems: NavItem[] = [
   },
 ];
 
+
 // Admin navigation
 const adminNavItems: NavItem[] = [
   {
@@ -167,13 +170,30 @@ const adminNavItems: NavItem[] = [
     routeName: 'accounts.index',
     icon: NotebookTabs,
   },
- {
-  title: 'Transactions',
-  href: '/transactions',
-  routeName: '#',
-  icon: ArrowRightLeft,
-},
-
+  {
+    title: 'Transactions',
+    href: route('transactions.index'),
+    routeName: 'transactions.index',
+    icon: ArrowRightLeft,
+  },
+  {
+    title: 'Reports',
+    href: route('reports.index'),
+    routeName: 'reports.index',
+    icon: FileText,
+  },
+  {
+    title: 'Notifications',
+    href: '/na',
+    routeName: '#',
+    icon: Bell,
+  },
+  {
+    title: 'Settings',
+    href: '/na',
+    routeName: '#',
+    icon: Settings,
+  },
 ];
 
 /**

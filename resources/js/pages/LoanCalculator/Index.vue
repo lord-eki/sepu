@@ -5,7 +5,7 @@
       <div class="bg-blue-900 shadow-md px-4 py-5 sm:px-6">
         <div class="md:flex md:items-center md:justify-between">
           <div class="min-w-0 flex-1">
-            <h2 class="text-lg sm:text-xl font-bold leading-7 text-white">
+            <h2 class="text-xl sm:text-2xl font-bold leading-7 text-white">
               Loan Calculator
             </h2>
             <p class="mt-1 text-sm text-orange-300">
@@ -14,9 +14,9 @@
           </div>
 
           <!-- Admin badge -->
-          <div v-if="isAdmin" class="mt-3 md:mt-0">
-            <span class="inline-flex items-center bg-orange-800 text-white text-xs font-semibold px-3 py-1 rounded">
-              You are viewing as Admin
+          <div v-if="isAdmin" class="mt-3 md:mt-0 self-end">
+            <span class="inline-flex items-center text-white text-xs font-semibold px-3 py-1 rounded">
+              Viewing as Admin
             </span>
           </div>
         </div>

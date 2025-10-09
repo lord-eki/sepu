@@ -22,6 +22,12 @@ use Illuminate\Support\Facades\Response;
 
 class ReportController extends Controller
 {
+    public function index()
+    {
+        return Inertia::render('Reports/Index');
+    }
+
+    
     /**
      * Financial Reports
      */

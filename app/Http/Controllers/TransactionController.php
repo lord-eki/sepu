@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Exception;
+use Inertia\Inertia;
 
 class TransactionController extends Controller
 {
@@ -96,11 +97,16 @@ class TransactionController extends Controller
             'reversed_count' => $query->where('status', 'reversed')->count(),
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $transactions,
+        // return response()->json([
+        //     'success' => true,
+        //     'data' => $transactions,
+        //     'statistics' => $statistics,
+        // ]);
+        return Inertia::render('Transactions/Index', [
+            'transactions' => $transactions,
             'statistics' => $statistics,
         ]);
+
     }
 
     /**

@@ -279,6 +279,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // REPORTS ROUTES
     Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
         // Financial reports
         Route::get('/financial/balance-sheet', [ReportController::class, 'balanceSheet'])->name('financial.balance-sheet');
         Route::get('/financial/income-statement', [ReportController::class, 'incomeStatement'])->name('financial.income-statement');
@@ -475,3 +476,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::post('/member/profile/photo', [ProfileController::class, 'updatePhoto'])
     ->name('member.updatePhoto');
+
+Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+
+

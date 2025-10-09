@@ -20,7 +20,7 @@
                 </div>
 
                 <div>
-                  <h1 class="text-white font-semibold text-lg sm:text-2xl tracking-tight">Loan Management</h1>
+                  <h1 class="text-white font-semibold text-xl sm:text-2xl tracking-tight">Loan Management</h1>
                   <p class="text-orange-200 max-sm:text-xs text-sm mt-0.5">Manage loan applications, approvals and disbursements</p>
                 </div>
               </div>

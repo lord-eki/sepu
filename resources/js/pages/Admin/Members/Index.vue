@@ -9,7 +9,7 @@
       <div class="bg-gradient-to-r from-[#0a2342] via-[#0c2e55] to-[#103a66] rounded-2xl mt-5 px-2 mx-2 shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between text-white">
           <div>
-            <h1 class="text-xl font-bold tracking-tight">Members Management</h1>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Members Management</h1>
             <p class="text-blue-100 text-xs sm:text-sm mt-1">Manage, view, and organize SACCO members efficiently.</p>
           </div>
           <Link
