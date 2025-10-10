@@ -4,13 +4,14 @@
     { title: 'Create' }
   ]">
     <!-- Header -->
-      <div class="flex items-center space-x-4">
-        <Link :href="route('budgets.index')" class="text-gray-400 hover:text-blue-700 transition">
+      <div class="flex flex-col space-x-4">
+        <Link :href="route('budgets.index')" class="text-orange-500 py-1 px-6 flex hover:text-orange-600 w-fit transition">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
+          Back
         </Link>
-        <h2 class="font-bold text-lg sm:text-xl text-blue-900 px-4 pt-4 tracking-tight">
+        <h2 class="font-bold text-lg sm:text-xl text-[#0a2342] px-8 pt-4 tracking-tight">
           Create New Budget
         </h2>
       </div>
@@ -173,7 +174,7 @@
                       <label class="block text-sm font-medium text-gray-700">Category</label>
                       <select
                         v-model="item.category"
-                        class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-600 focus:border-blue-600"
+                        class="mt-1 block w-full border border-gray-300 p-2 rounded-lg shadow-sm focus:ring-blue-600 focus:border-blue-600"
                         required
                       >
                         <option value="">Select Category</option>
@@ -192,7 +193,7 @@
                       <input
                         v-model="item.item_name"
                         type="text"
-                        class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-600 focus:border-blue-600"
+                        class="mt-1 block w-full border p-2 border-gray-300 rounded-lg shadow-sm focus:ring-blue-600 focus:border-blue-600"
                         required
                       >
                       <p v-if="errors[`budget_items.${index}.item_name`]" class="mt-1 text-sm text-red-600">
@@ -206,7 +207,7 @@
                       <textarea
                         v-model="item.description"
                         rows="2"
-                        class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-600 focus:border-blue-600"
+                        class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm focus:ring-blue-600 focus:border-blue-600"
                       ></textarea>
                       <p v-if="errors[`budget_items.${index}.description`]" class="mt-1 text-sm text-red-600">
                         {{ errors[`budget_items.${index}.description`] }}
@@ -221,7 +222,7 @@
                         type="number"
                         step="0.01"
                         min="0"
-                        class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-600 focus:border-blue-600"
+                        class="mt-1 block w-full border p-2 border-gray-300 rounded-lg shadow-sm focus:ring-blue-600 focus:border-blue-600"
                         required
                         @input="calculateTotalBudget"
                       >
@@ -245,11 +246,11 @@
                       step="0.01"
                       min="0"
                       readonly
-                      class="mt-1 block w-full border-gray-300 rounded-lg bg-gray-50 shadow-sm focus:ring-blue-600 focus:border-blue-600"
+                      class="mt-1 block w-full p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm focus:ring-blue-600 focus:border-blue-600"
                     >
                   </div>
                   <div class="text-right">
-                    <div class="text-2xl font-bold text-blue-900">{{ formatCurrency(form.total_budget) }}</div>
+                    <div class="text-xl font-bold text-blue-900">{{ formatCurrency(form.total_budget) }}</div>
                     <div class="text-sm text-gray-500">Total Budget Amount</div>
                   </div>
                 </div>

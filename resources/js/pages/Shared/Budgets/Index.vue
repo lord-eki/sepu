@@ -207,7 +207,7 @@
           </div>
 
           <!-- Pagination -->
-          <div v-if="budgets.links" class="px-6 py-4 border-t border-gray-100">
+          <div v-if="budgets.links" class="sm:px-6 py-4 border-t border-gray-100">
             <Pagination :data="budgets" />
           </div>
         </div>

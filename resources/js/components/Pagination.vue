@@ -11,7 +11,7 @@ defineProps({
 
 <template>
   <div class="px-6 py-4 border-t border-gray-200">
-    <div class="flex items-center justify-between">
+    <div class="flex max-sm:flex-col items-center justify-between">
       <!-- Results Info -->
       <div class="text-sm text-gray-700">
         Showing {{ data.from }} to {{ data.to }} of {{ data.total }} results

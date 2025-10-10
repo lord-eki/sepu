@@ -1,98 +1,106 @@
 <template>
-  <AppLayout :title="`Budget Items - ${budget.title}`">
-    <template #header>
-      <div class="flex items-center space-x-4">
-        <Link :href="route('budgets.show', budget.id)" class="text-gray-500 hover:text-gray-700">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-        </Link>
-        <div>
-          <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Budget Items - {{ budget.title }}
-          </h2>
-          <p class="text-sm text-gray-600">{{ budget.budget_year }} Budget</p>
-        </div>
+  <AppLayout :breadcrumbs="[{ title: `Budget Items - ${budget.title}` }]">
+    <!-- Header -->
+    <div class="flex items-center space-x-4 mt-2 p-2 mb-4">
+      <Link
+        :href="route('budgets.show', budget.id)"
+        class="text-slate-500 hover:text-[#f97316] transition"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </Link>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-semibold text-[#102a54] dark:text-white">
+          Budget Items - {{ budget.title }}
+        </h2>
+        <p class="text-sm text-slate-500">{{ budget.budget_year }} Budget</p>
       </div>
-    </template>
+    </div>
 
-    <div class="py-12">
+    <div class="sm:py-4 px-4">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        
         <!-- Budget Summary -->
-        <div class="bg-white shadow-sm sm:rounded-lg">
-          <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div class="text-center">
-                <div class="text-2xl font-bold text-gray-900">{{ Object.keys(items_by_category).length }}</div>
-                <div class="text-sm text-gray-500">Categories</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-gray-900">{{ totalItems }}</div>
-                <div class="text-sm text-gray-500">Total Items</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-indigo-600">{{ formatCurrency(totalBudgeted) }}</div>
-                <div class="text-sm text-gray-500">Total Budgeted</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-green-600">{{ formatCurrency(totalRemaining) }}</div>
-                <div class="text-sm text-gray-500">Total Remaining</div>
-              </div>
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md rounded-2xl p-6">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div>
+              <p class="text-2xl font-semibold text-blue-900">{{ Object.keys(items_by_category).length }}</p>
+              <p class="text-sm text-gray-600">Categories</p>
+            </div>
+            <div>
+              <p class="text-2xl font-semibold text-blue-900">{{ totalItems }}</p>
+              <p class="text-sm text-gray-600">Total Items</p>
+            </div>
+            <div>
+              <p class="text-lg sm:text-xl font-semibold text-blue-900">{{ formatCurrency(totalBudgeted) }}</p>
+              <p class="text-sm text-gray-600">Total Budgeted</p>
+            </div>
+            <div>
+              <p class="text-lg sm:text-xl font-semibold text-blue-900">{{ formatCurrency(totalRemaining) }}</p>
+              <p class="text-sm text-gray-600">Total Remaining</p>
             </div>
           </div>
         </div>
 
-        <!-- Add New Item (if budget is draft) -->
-        <div v-if="can_edit" class="bg-white shadow-sm sm:rounded-lg">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex justify-between items-center">
-              <h3 class="text-lg font-medium text-gray-900">Add New Budget Item</h3>
-              <button
-                @click="toggleAddForm"
-                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-              >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="showAddForm ? 'M6 18L18 6M6 6l12 12' : 'M12 4v16m8-8H4'"></path>
-                </svg>
-                {{ showAddForm ? 'Cancel' : 'Add Item' }}
-              </button>
-            </div>
+        <!-- Add New Item -->
+        <div
+          v-if="can_edit"
+          class="bg-white shadow-md rounded-2xl border border-gray-100"
+        >
+          <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+            <h3 class="text-lg font-semibold text-slate-800">Add New Budget Item</h3>
+            <button
+              @click="toggleAddForm"
+              class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  :d="showAddForm ? 'M6 18L18 6M6 6l12 12' : 'M12 4v16m8-8H4'" />
+              </svg>
+              {{ showAddForm ? 'Cancel' : 'Add Item' }}
+            </button>
           </div>
-          
-          <div v-if="showAddForm" class="p-6 border-t border-gray-200">
+
+          <div v-if="showAddForm" class="p-6 border-t border-gray-100 bg-gray-50/50">
             <form @submit.prevent="addNewItem" class="space-y-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Category</label>
                   <select
                     v-model="newItemForm.category"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   >
                     <option value="">Select Category</option>
-                    <option v-for="category in availableCategories" :key="category" :value="category">
+                    <option
+                      v-for="category in availableCategories"
+                      :key="category"
+                      :value="category"
+                    >
                       {{ category }}
                     </option>
                   </select>
                 </div>
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Item Name</label>
                   <input
                     v-model="newItemForm.item_name"
                     type="text"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                     required
-                  >
+                  />
                 </div>
+
                 <div class="md:col-span-2">
                   <label class="block text-sm font-medium text-gray-700">Description</label>
                   <textarea
                     v-model="newItemForm.description"
                     rows="2"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   ></textarea>
                 </div>
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Budgeted Amount (KES)</label>
                   <input
@@ -100,23 +108,24 @@
                     type="number"
                     step="0.01"
                     min="0"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                     required
-                  >
+                  />
                 </div>
               </div>
-              <div class="flex justify-end space-x-3">
+
+              <div class="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   @click="showAddForm = false"
-                  class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   :disabled="addingItem"
-                  class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                  class="px-4 py-2 bg-blue-900 text-white rounded-lg text-sm font-medium hover:bg-blue-900 transition disabled:opacity-50"
                 >
                   {{ addingItem ? 'Adding...' : 'Add Item' }}
                 </button>
@@ -125,93 +134,120 @@
           </div>
         </div>
 
-        <!-- Budget Items by Category -->
-        <div v-for="(items, category) in items_by_category" :key="category" class="bg-white shadow-sm sm:rounded-lg">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="text-lg font-medium text-gray-900">{{ category }}</h3>
-                <p class="text-sm text-gray-500">
-                  {{ items.length }} item{{ items.length !== 1 ? 's' : '' }} • 
-                  {{ formatCurrency(getCategoryTotal(items).budgeted) }} budgeted • 
-                  {{ formatCurrency(getCategoryTotal(items).remaining) }} remaining
-                </p>
-              </div>
-              <div class="text-right">
-                <div class="text-sm text-gray-900">
-                  {{ getCategoryUtilization(items).toFixed(1) }}% utilized
-                </div>
-                <div class="w-32 bg-gray-200 rounded-full h-2 mt-1">
-                  <div 
-                    class="h-2 rounded-full transition-all duration-300"
-                    :class="getCategoryUtilization(items) > 90 ? 'bg-red-500' : getCategoryUtilization(items) > 75 ? 'bg-yellow-500' : 'bg-green-500'"
-                    :style="`width: ${Math.min(getCategoryUtilization(items), 100)}%`"
-                  ></div>
-                </div>
+        <!-- Budget Items -->
+        <div
+          v-for="(items, category) in items_by_category"
+          :key="category"
+          class="bg-white shadow-md rounded-2xl border border-gray-100 overflow-hidden"
+        >
+          <div class="px-6 py-4 flex justify-between items-center bg-gray-50">
+            <div>
+              <h3 class="text-lg font-semibold text-slate-800">{{ category }}</h3>
+              <p class="text-sm text-gray-500">
+                {{ items.length }} item{{ items.length !== 1 ? 's' : '' }} •
+                {{ formatCurrency(getCategoryTotal(items).budgeted) }} budgeted •
+                {{ formatCurrency(getCategoryTotal(items).remaining) }} remaining
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-medium text-slate-800">
+                {{ getCategoryUtilization(items).toFixed(1) }}% utilized
+              </p>
+              <div class="w-32 bg-gray-200 rounded-full h-2 mt-1 overflow-hidden">
+                <div
+                  class="h-2 rounded-full transition-all duration-500"
+                  :class="getCategoryUtilization(items) > 90
+                    ? 'bg-red-500'
+                    : getCategoryUtilization(items) > 75
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500'"
+                  :style="`width: ${Math.min(getCategoryUtilization(items), 100)}%`"
+                ></div>
               </div>
             </div>
           </div>
-          
+
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+              <thead class="bg-indigo-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Budgeted</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Spent</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</th>
-                  <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Utilization</th>
-                  <th v-if="can_edit" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th class="px-6 py-3 text-left font-semibold text-gray-600">Item</th>
+                  <th class="px-6 py-3 text-right font-semibold text-gray-600">Budgeted</th>
+                  <th class="px-6 py-3 text-right font-semibold text-gray-600">Spent</th>
+                  <th class="px-6 py-3 text-right font-semibold text-gray-600">Remaining</th>
+                  <th class="px-6 py-3 text-center font-semibold text-gray-600">Utilization</th>
+                  <th
+                    v-if="can_edit"
+                    class="px-6 py-3 text-right font-semibold text-gray-600"
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap">
+
+              <tbody class="divide-y divide-gray-100">
+                <tr
+                  v-for="item in items"
+                  :key="item.id"
+                  class="hover:bg-gray-50 transition"
+                >
+                  <td class="px-6 py-4">
                     <div>
-                      <div class="text-sm font-medium text-gray-900">{{ item.item_name }}</div>
-                      <div class="text-sm text-gray-500" v-if="item.description">{{ item.description }}</div>
+                      <p class="font-medium text-slate-800">{{ item.item_name }}</p>
+                      <p
+                        v-if="item.description"
+                        class="text-gray-500 text-xs mt-1"
+                      >
+                        {{ item.description }}
+                      </p>
                     </div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                    {{ formatCurrency(item.budgeted_amount) }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                    {{ formatCurrency(item.spent_amount) }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                    <span :class="item.remaining_amount < 0 ? 'text-red-600 font-medium' : 'text-green-600'">
+                  <td class="px-6 py-4 text-right">{{ formatCurrency(item.budgeted_amount) }}</td>
+                  <td class="px-6 py-4 text-right">{{ formatCurrency(item.spent_amount) }}</td>
+                  <td class="px-6 py-4 text-right">
+                    <span
+                      :class="item.remaining_amount < 0
+                        ? 'text-red-600 font-semibold'
+                        : 'text-green-600 font-medium'"
+                    >
                       {{ formatCurrency(item.remaining_amount) }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <td class="px-6 py-4 text-center">
                     <div class="flex items-center justify-center">
-                      <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                        <div 
-                          class="h-2 rounded-full transition-all duration-300"
-                          :class="getItemUtilization(item) > 100 ? 'bg-red-500' : getItemUtilization(item) > 90 ? 'bg-yellow-500' : 'bg-green-500'"
+                      <div class="w-16 bg-gray-200 rounded-full h-2 mr-2 overflow-hidden">
+                        <div
+                          class="h-2 rounded-full transition-all duration-500"
+                          :class="getItemUtilization(item) > 100
+                            ? 'bg-red-500'
+                            : getItemUtilization(item) > 90
+                            ? 'bg-yellow-500'
+                            : 'bg-green-500'"
                           :style="`width: ${Math.min(getItemUtilization(item), 100)}%`"
                         ></div>
                       </div>
-                      <span class="text-xs text-gray-600">{{ getItemUtilization(item).toFixed(0) }}%</span>
+                      <span class="text-xs text-gray-600">
+                        {{ getItemUtilization(item).toFixed(0) }}%
+                      </span>
                     </div>
                   </td>
-                  <td v-if="can_edit" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div class="flex justify-end space-x-2">
-                      <button
-                        @click="editItem(item)"
-                        class="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        @click="deleteItem(item)"
-                        :disabled="item.spent_amount > 0"
-                        class="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed"
-                        :title="item.spent_amount > 0 ? 'Cannot delete item with expenses' : 'Delete item'"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                  <td
+                    v-if="can_edit"
+                    class="px-6 py-4 text-right space-x-3"
+                  >
+                    <button
+                      @click="editItem(item)"
+                      class="text-blue-900 hover:text-indigo-900 font-medium"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      @click="deleteItem(item)"
+                      :disabled="item.spent_amount > 0"
+                      class="text-red-600 hover:text-red-800 disabled:text-gray-400 disabled:cursor-not-allowed font-medium"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -219,110 +255,39 @@
           </div>
         </div>
 
-        <!-- No Items Message -->
-        <div v-if="Object.keys(items_by_category).length === 0" class="bg-white shadow-sm sm:rounded-lg">
-          <div class="p-12 text-center">
-            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h5.586a1 1 0 00.707-.293l5.414-5.414a1 1 0 00.293-.707V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-            </svg>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No Budget Items</h3>
-            <p class="text-gray-500 mb-4">This budget doesn't have any items yet.</p>
-            <Link
-              v-if="can_edit"
-              :href="route('budgets.edit', budget.id)"
-              class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
-            >
-              Add Budget Items
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Edit Item Modal -->
-    <div v-if="showEditModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <form @submit.prevent="updateItem">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div class="sm:flex sm:items-start">
-                <div class="w-full">
-                  <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Edit Budget Item
-                  </h3>
-                  <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700">Category</label>
-                        <select
-                          v-model="editItemForm.category"
-                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                          required
-                        >
-                          <option value="">Select Category</option>
-                          <option v-for="category in availableCategories" :key="category" :value="category">
-                            {{ category }}
-                          </option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700">Item Name</label>
-                        <input
-                          v-model="editItemForm.item_name"
-                          type="text"
-                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                          required
-                        >
-                      </div>
-                      <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea
-                          v-model="editItemForm.description"
-                          rows="2"
-                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        ></textarea>
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700">Budgeted Amount (KES)</label>
-                        <input
-                          v-model="editItemForm.budgeted_amount"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                          required
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                type="submit"
-                :disabled="updatingItem"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-              >
-                {{ updatingItem ? 'Updating...' : 'Update' }}
-              </button>
-              <button
-                @click="closeEditModal"
-                type="button"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+        <!-- Empty State -->
+        <div
+          v-if="Object.keys(items_by_category).length === 0"
+          class="bg-white rounded-2xl shadow-md border border-gray-100 p-12 text-center"
+        >
+          <svg
+            class="w-16 h-16 text-gray-400 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1"
+              d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h5.586a1 1 0 00.707-.293l5.414-5.414a1 1 0 00.293-.707V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
+          </svg>
+          <h3 class="text-lg font-semibold text-slate-800 mb-2">No Budget Items</h3>
+          <p class="text-gray-500 mb-4">This budget doesn't have any items yet.</p>
+          <Link
+            v-if="can_edit"
+            :href="route('budgets.edit', budget.id)"
+            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+          >
+            Add Budget Items
+          </Link>
         </div>
       </div>
     </div>
   </AppLayout>
 </template>
+
 
 <script setup>
 import { ref, computed } from 'vue'
