@@ -4,14 +4,13 @@
     { title: 'Create' }
   ]">
     <!-- Header -->
-      <div class="flex flex-col space-x-4">
-        <Link :href="route('budgets.index')" class="text-orange-500 py-1 px-6 flex hover:text-orange-600 w-fit transition">
+      <div class="flex pt-4 gap-2 items-center px-4">
+        <Link :href="route('budgets.index')" class="text-blue-900 py-1 px-1 bg-slate-300 rounded-full flex hover:text-orange-600 w-fit transition">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
-          Back
         </Link>
-        <h2 class="font-bold text-lg sm:text-xl text-[#0a2342] px-8 pt-4 tracking-tight">
+        <h2 class="font-bold text-lg sm:text-xl text-[#0a2342] tracking-tight">
           Create New Budget
         </h2>
       </div>
