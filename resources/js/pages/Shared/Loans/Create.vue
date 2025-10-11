@@ -250,41 +250,104 @@
             </div>
           </section>
 
-          <!-- Support Documents (single combined PDF) -->
+          <!-- Support Documents -->
           <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
             <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
               <h3 class="text-base sm:text-lg font-semibold text-white">Support Documents</h3>
             </div>
             <div class="p-6 space-y-4">
-              <!-- Instruction -->
+              <!-- Instructions -->
               <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg text-sm text-blue-900">
-                <strong>Important:</strong> Please <em>combine all required supporting documents</em> (Payslip, ID/Passport copy, 6 months Bank Statement, Employment Letter, Guarantor Form) into <strong>one single PDF file</strong> and upload it below. This helps us process your application faster.
+                <strong>Important:</strong>
+                <ul class="list-disc pl-6 mt-1 space-y-1">
+                  <li> Click 'Choose Document' button to select each document separately (Payslip, ID, Bank Statement, Employment Letter, Guarantor Form).</li>
+                </ul>
               </div>
 
-              <!-- Single file input -->
-              <div class="flex max-sm:flex-col max-sm:items-start items-center gap-4">
-                <label for="combined_docs" class="inline-flex items-center gap-2 cursor-pointer bg-[rgba(7,40,75,0.95)] hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 rounded-lg shadow">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                  Choose File
-                </label>
+              <!-- File Upload Control -->
+              <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <button
+                  type="button"
+                  @click="showDocTypeSelector = true"
+                  class="inline-flex items-center gap-2 bg-[rgba(7,40,75,0.95)] hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 w-fit rounded-lg shadow"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Choose Document
+                </button>
 
-                <input id="combined_docs" type="file" accept="application/pdf" class="hidden" @change="handleCombinedFile($event)" />
-
+                <!-- Selected Files Display -->
                 <div class="flex-1 min-w-0">
-                  <div v-if="uploadedFiles.combined" class="text-sm text-gray-700">
-                    <strong>Selected:</strong> {{ uploadedFiles.combined.name }} <span class="text-xs text-gray-500">({{ humanFileSize(uploadedFiles.combined.size) }})</span>
+                  <template v-if="uploadedFiles.multiple.length">
+                    <strong class="block mb-1 text-sm">Uploaded Documents:</strong>
+                    <ul class="list-disc pl-5 text-sm space-y-1">
+                      <li v-for="(file, index) in uploadedFiles.multiple" :key="file.type" class="flex justify-between items-center">
+                        <div>
+                          <span class="font-medium">{{ file.type }}</span> —
+                          {{ file.file.name }}
+                          <span class="text-xs text-gray-500">({{ humanFileSize(file.file.size) }})</span>
+                        </div>
+                        <button
+                          type="button"
+                          @click="removeSingleFile(file.type)"
+                          class="text-xs text-rose-600 hover:text-rose-800"
+                        >
+                          ✕ Remove
+                        </button>
+                      </li>
+                    </ul>
+                  </template>
+                  <div v-else class="text-sm text-gray-400 italic">
+                    No files uploaded yet — upload one or more required documents (PDF only, max 10MB each).
                   </div>
-                  <div v-else class="text-sm text-gray-400 italic">No file chosen — upload a single combined PDF (max 10 MB).</div>
                 </div>
 
-                <div>
-                  <button v-if="uploadedFiles.combined" type="button" @click="removeCombinedFile" class="text-sm text-rose-600 hover:text-rose-800">Remove</button>
+                <!-- Remove All -->
+                <div v-if="uploadedFiles.multiple.length" class="flex flex-col gap-2">
+                  <button type="button" @click="removeSupportFiles" class="text-sm text-rose-600 hover:text-rose-800">
+                    Remove All
+                  </button>
                 </div>
               </div>
 
-              <p class="text-xs text-gray-400">Only PDF allowed. Maximum recommended size: 10 MB.</p>
+              <!-- Modal: Choose Document Type -->
+              <div
+                v-if="showDocTypeSelector"
+                class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+              >
+                <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+                  <h4 class="text-lg font-semibold mb-4">Select Document Type</h4>
+                  <div class="space-y-3">
+                    <button
+                      v-for="type in remainingDocTypes"
+                      :key="type"
+                      @click="chooseDocType(type)"
+                      class="w-full text-left px-4 py-2 hover:cursor-pointer border rounded-lg hover:bg-blue-50 transition"
+                    >
+                      {{ type }}
+                    </button>
+                  </div>
+                  <div class="flex justify-end mt-4">
+                    <button @click="showDocTypeSelector = false" class="text-gray-600 hover:cursor-pointer bg-slate-300 hover:bg-slate-200 rounded-md py-2 px-3 text-sm hover:text-gray-800">Cancel</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hidden File Input -->
+              <input
+                ref="supportFileInput"
+                type="file"
+                accept="application/pdf"
+                class="hidden"
+                @change="handleSupportFiles"
+              />
+
+              <p class="text-xs text-gray-400 mt-2">Only PDF files allowed. Maximum 10MB each.</p>
             </div>
           </section>
+
+
 
           <!-- Submit row -->
           <div class="flex justify-end items-center gap-4">
@@ -330,12 +393,48 @@
               </div>
 
               <div>
-                <span class="font-medium text-gray-900">Attached Documents:</span>
-                <div class="ml-4 mt-1">
-                  <div v-if="uploadedFiles.combined">{{ uploadedFiles.combined.name }} <span class="text-xs text-gray-500">({{ humanFileSize(uploadedFiles.combined.size) }})</span></div>
-                  <div v-else class="italic text-gray-400">No combined PDF uploaded</div>
+              <span class="font-medium text-gray-900">Attached Documents:</span>
+
+              <div class="ml-4 mt-2 space-y-1 text-sm">
+                <!-- Combined PDF (if uploaded) -->
+                <div v-if="uploadedFiles.combined">
+                  <svg class="w-4 h-4 text-blue-600 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span class="text-gray-800">
+                    {{ uploadedFiles.combined.name || 'Combined Documents.pdf' }}
+                    <span class="text-xs text-gray-500">
+                      ({{ humanFileSize(uploadedFiles.combined.size || 0) }})
+                    </span>
+                  </span>
+                </div>
+
+                <!-- Individual Files -->
+                <div v-else-if="uploadedFiles.multiple?.length">
+                  <ul class="list-disc pl-5 space-y-1 text-gray-800">
+                    <li
+                      v-for="(fileObj, index) in uploadedFiles.multiple"
+                      :key="index"
+                      class="flex items-center justify-between"
+                    >
+                      <span>
+                        {{ fileObj.type || fileObj.file?.name }}
+                        <span class="text-xs text-gray-500">
+                          ({{ humanFileSize(fileObj.file?.size || 0) }})
+                        </span>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- None -->
+                <div v-else class="italic text-gray-400">
+                  No documents uploaded
                 </div>
               </div>
+            </div>
+
+
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
@@ -402,6 +501,8 @@ function formatCurrency(value) {
 }
 
 
+
+
 const disbursementMethod = ref('')
 const disbursementDetails = reactive({
   mpesaNumber: '',
@@ -415,10 +516,25 @@ const selectedMember = ref(null)
 const selectedProduct = ref(null)
 const loanCalculation = ref(null)
 
+// Watch relevant fields to recalculate repayment
+watch(
+  [() => form.applied_amount, () => form.term_months, selectedProduct],
+  ([amount, term, product]) => {
+    if (product && amount && term) {
+      calculateRepayment(product, amount, term)
+    } else {
+      loanCalculation.value = null
+    }
+  }
+)
+
+
 /* uploaded files: single combined PDF */
 const uploadedFiles = reactive({
-  combined: null
+  combined: null,
+  multiple: []
 })
+
 
 /* derived */
 const isMemberRole = computed(() => props.auth.user.role === 'member')
@@ -481,33 +597,52 @@ const addGuarantor = () => {
 }
 const removeGuarantor = (index) => form.guarantors.splice(index, 1)
 
-/* file handling for combined PDF */
-function handleCombinedFile(e) {
-  const input = e.target
-  if (input.files && input.files.length > 0) {
-    const file = input.files[0]
-    // Accept only PDF and max 10 MB
-    if (file.type !== 'application/pdf') {
-      showMessage('error', 'Please upload a PDF file.')
-      input.value = ''
-      return
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      showMessage('error', 'File is too large. Maximum allowed is 10 MB.')
-      input.value = ''
-      return
-    }
-    uploadedFiles.combined = file
-  } else {
-    uploadedFiles.combined = null
-  }
+
+
+// For dynamic support documents
+const showDocTypeSelector = ref(false)
+const selectedDocType = ref(null)
+const supportFileInput = ref(null)
+
+const docTypes = ['Payslip', 'ID Copy', 'Bank Statement', 'Employment Letter', 'Guarantor Form']
+
+const remainingDocTypes = computed(() =>
+  docTypes.filter(type => !uploadedFiles.multiple.some(f => f.type === type))
+)
+
+function chooseDocType(type) {
+  selectedDocType.value = type
+  showDocTypeSelector.value = false
+  supportFileInput.value.click() // trigger file chooser
 }
 
-function removeCombinedFile() {
-  uploadedFiles.combined = null
-  const el = document.getElementById('combined_docs')
-  if (el) el.value = ''
+function handleSupportFiles(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.type !== 'application/pdf') {
+    alert('Only PDF files are allowed.')
+    return
+  }
+
+  // prevent duplicates
+  if (uploadedFiles.multiple.some(f => f.type === selectedDocType.value)) {
+    alert(`${selectedDocType.value} is already attached.`)
+    return
+  }
+
+  uploadedFiles.multiple.push({ type: selectedDocType.value, file })
+  selectedDocType.value = null
+  supportFileInput.value.value = '' // reset input
 }
+
+function removeSingleFile(type) {
+  uploadedFiles.multiple = uploadedFiles.multiple.filter(f => f.type !== type)
+}
+
+function removeSupportFiles() {
+  uploadedFiles.multiple = []
+}
+
 
 /* human readable filesize */
 function humanFileSize(bytes) {
@@ -525,20 +660,31 @@ function humanFileSize(bytes) {
 
 /* submit controls */
 const canSubmit = computed(() => {
-  const hasBasics = form.member_id && form.loan_product_id && form.applied_amount && form.term_months && form.purpose?.trim()
-  // disbursement checks
-  let hasDisbursement = false
-  if (disbursementMethod.value === 'mpesa') {
-    hasDisbursement = !!disbursementDetails.mpesaNumber
-  } else if (disbursementMethod.value === 'bank') {
-    hasDisbursement = !!disbursementDetails.bankName && !!disbursementDetails.branch && !!disbursementDetails.accountNumber
-  } else if (disbursementMethod.value === 'cheque') {
-    hasDisbursement = !!disbursementDetails.payee
-  }
-  // must have combined file
-  const hasDocs = !!uploadedFiles.combined
-  return hasBasics && hasDisbursement && hasDocs
+  const hasBasicInfo =
+    !!form.member_id &&
+    !!form.loan_product_id &&
+    !!form.applied_amount &&
+    !!form.term_months &&
+    !!form.purpose
+
+  const hasDisbursement =
+    !!disbursementMethod.value &&
+    (
+      (disbursementMethod.value === 'mpesa' && !!disbursementDetails.mpesaNumber) ||
+      (disbursementMethod.value === 'bank' &&
+        !!disbursementDetails.bankName &&
+        !!disbursementDetails.branch &&
+        !!disbursementDetails.accountNumber) ||
+      (disbursementMethod.value === 'cheque' && !!disbursementDetails.payee)
+    )
+
+  const hasDocuments =
+    (uploadedFiles.combined !== null) ||
+    (Array.isArray(uploadedFiles.multiple) && uploadedFiles.multiple.length > 0)
+
+  return hasBasicInfo && hasDisbursement && hasDocuments
 })
+
 
 /* feedback helper */
 const showMessage = (type, message, errors = null, callback = null) => {
