@@ -1,0 +1,3 @@
+<template>
+    Shares Modal
+</template>
