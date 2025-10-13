@@ -736,7 +736,6 @@ class MemberController extends Controller
     public function exportMembers(Request $request)
     {
         // Implementation for CSV/Excel export
-        // This would typically use a package like maatwebsite/excel
         return response()->json(['message' => 'Export functionality to be implemented']);
     }
 
@@ -754,15 +753,31 @@ class MemberController extends Controller
     }
 
     /**
-     * Generate unique membership ID
+     * Generate unique membership ID in format SEPU/SACCO/XXX
      */
     private function generateMembershipId(): string
     {
-        do {
-            $id = 'MEM' . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
-        } while (Member::where('membership_id', $id)->exists());
-
-        return $id;
+        // Get the last member ordered by ID
+        $lastMember = Member::orderBy('id', 'desc')->first();
+        
+        if (!$lastMember) {
+            // First member
+            $number = 1;
+        } else {
+            // Extract number from last membership ID
+            $lastId = $lastMember->membership_id;
+            preg_match('/SEPU\/SACCO\/(\d+)/', $lastId, $matches);
+            
+            if (isset($matches[1])) {
+                $number = intval($matches[1]) + 1;
+            } else {
+                // Fallback: count all members + 1
+                $number = Member::count() + 1;
+            }
+        }
+        
+        
+        return 'SEPU/SACCO/' . str_pad($number, 4, '0', STR_PAD_LEFT);
     }
 
     /**
