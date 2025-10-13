@@ -8,7 +8,7 @@ use Inertia\Inertia;
 
 class LoanProductController extends Controller
 {
-     /**
+    /**
      * Display a listing of loan products.
      */
     public function index()
@@ -40,6 +40,7 @@ class LoanProductController extends Controller
             'min_amount' => 'required|numeric|min:0',
             'max_amount' => 'required|numeric|gt:min_amount',
             'interest_rate' => 'required|numeric|min:0|max:100',
+            'interest_method' => 'required|in:reducing_balance,flat_rate',
             'min_term_months' => 'required|integer|min:1',
             'max_term_months' => 'required|integer|gt:min_term_months',
             'processing_fee_rate' => 'required|numeric|min:0|max:100',
@@ -47,6 +48,12 @@ class LoanProductController extends Controller
             'grace_period_days' => 'required|integer|min:0',
             'penalty_rate' => 'required|numeric|min:0|max:100',
             'eligibility_criteria' => 'required|array',
+            'eligibility_criteria.minimum_membership_months' => 'required|integer|min:0',
+            'eligibility_criteria.minimum_shares_balance' => 'required|numeric|min:0',
+            'eligibility_criteria.maximum_loan_to_shares_ratio' => 'required|numeric|min:0',
+            'eligibility_criteria.maximum_salary_deduction_ratio' => 'required|numeric|min:0|max:1',
+            'eligibility_criteria.clean_credit_history' => 'required|boolean',
+            'eligibility_criteria.regular_deposits_required' => 'required|boolean',
             'required_documents' => 'required|array',
             'requires_guarantor' => 'required|boolean',
             'min_guarantors' => 'required|integer|min:0',

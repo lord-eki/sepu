@@ -14,7 +14,7 @@ class LoanProduct extends Model
         'interest_rate', 'min_term_months', 'max_term_months',
         'processing_fee_rate', 'insurance_rate', 'grace_period_days',
         'penalty_rate', 'eligibility_criteria', 'required_documents',
-        'requires_guarantor', 'min_guarantors', 'is_active'
+        'requires_guarantor', 'min_guarantors', 'is_active','interest_method'
     ];
 
     protected $casts = [
