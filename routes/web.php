@@ -88,6 +88,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{member}/documents', [MemberController::class, 'uploadDocuments'])->name('upload-documents');
         Route::delete('/{member}/documents/{document}', [MemberController::class, 'deleteDocument'])->name('delete-document');
 
+        Route::post('/loans/check-eligibility', [LoanController::class, 'checkEligibility'])
+            ->name('loans.check-eligibility');
+
+        Route::get('/members/{member}/loan-eligibility', [MemberController::class, 'loanEligibility'])
+            ->name('members.loan-eligibility');
+
         // Bulk operations
         Route::post('/bulk-import', [MemberController::class, 'bulkImport'])->name('bulk-import');
         Route::post('/bulk-export', [MemberController::class, 'bulkExport'])->name('bulk-export');
