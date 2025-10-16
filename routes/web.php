@@ -94,8 +94,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/members/{member}/loan-eligibility', [MemberController::class, 'loanEligibility'])
             ->name('members.loan-eligibility');
 
-        // Bulk operations
-        Route::post('/bulk-import', [MemberController::class, 'bulkImport'])->name('bulk-import');
+        // Show import form
+        Route::get('/members/import', [MemberController::class, 'showImportForm'])
+            ->name('import.form');
+
+        // Process bulk import
+        Route::post('/members/import', [MemberController::class, 'bulkImport'])
+            ->name('import');
+
+        // Download template
+        Route::get('/members/import/template', [MemberController::class, 'downloadTemplate'])
+            ->name('import.template');
+
         Route::post('/bulk-export', [MemberController::class, 'bulkExport'])->name('bulk-export');
 
     });

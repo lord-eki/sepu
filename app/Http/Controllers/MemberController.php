@@ -17,13 +17,35 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class MemberController extends Controller
 {
+
+
+    /**
+     * Show the import form
+     */
+
+    public function showImportForm()
+    {
+        return  Inertia::render('Admin/Members/Import',[
+            'sampleHeaders' => [
+            'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender',
+                'marital_status', 'email', 'phone', 'physical_address', 'postal_address',
+                'city', 'county', 'id_type', 'id_number', 'occupation', 'employer',
+                'monthly_income', 'emergency_contact_name', 'emergency_contact_phone',
+                'emergency_contact_relationship'
+            ]
+            ]);
+    }
+
+
     /**
      * Display a listing of members
      */
@@ -793,12 +815,208 @@ class MemberController extends Controller
      */
     public function bulkImport(Request $request): RedirectResponse
     {
-        $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx,xls',
+            $request->validate([
+            'file' => 'required|file|mimes:csv,xlsx,xls|max:5120',
         ]);
 
-        // Implementation for bulk import
-        return back()->with('success', 'Bulk import functionality to be implemented');
+        try {
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            // Get headers from first row
+            $headers = array_map('trim', array_map('strtolower', $rows[0]));
+            
+            // Remove header row
+            array_shift($rows);
+
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+
+            DB::beginTransaction();
+
+            foreach ($rows as $index => $row) {
+                $rowNumber = $index + 2; // +2 because we removed header and Excel rows start at 1
+
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+
+                // Map row data to headers
+                $data = array_combine($headers, $row);
+
+                // Validate row data
+                $validator = Validator::make($data, [
+                    'first_name' => 'required|string|max:255',
+                    'last_name' => 'required|string|max:255',
+                    'middle_name' => 'nullable|string|max:255',
+                    'date_of_birth' => 'required|date',
+                    'gender' => 'required|in:male,female,other',
+                    'marital_status' => 'required|in:single,married,divorced,widowed',
+                    'email' => 'required|email|unique:users,email',
+                    'phone' => 'required|string|max:20',
+                    'physical_address' => 'required|string',
+                    'postal_address' => 'required|string',
+                    'city' => 'nullable|string|max:255',
+                    'county' => 'required|string|max:255',
+                    'id_type' => 'required|in:national_id,passport,driving_license',
+                    'id_number' => 'required|string|unique:members,id_number',
+                    'occupation' => 'nullable|string|max:255',
+                    'employer' => 'nullable|string|max:255',
+                    'monthly_income' => 'nullable|numeric|min:0',
+                    'emergency_contact_name' => 'required|string|max:255',
+                    'emergency_contact_phone' => 'required|string|max:20',
+                    'emergency_contact_relationship' => 'required|string|max:255',
+                ]);
+
+                if ($validator->fails()) {
+                    $errorCount++;
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'name' => ($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''),
+                        'errors' => $validator->errors()->all()
+                    ];
+                    continue;
+                }
+
+                try {
+                    // Create user account
+                    $user = User::create([
+                        'name' => trim($data['first_name'] . ' ' . $data['last_name']),
+                        'email' => trim($data['email']),
+                        'phone' => trim($data['phone']),
+                        'password' => Hash::make(Str::random(12)), // Random password
+                        'role' => 'member',
+                        'is_active' => true,
+                    ]);
+
+                    // Create member profile
+                    $member = Member::create([
+                        'user_id' => $user->id,
+                        'membership_id' => $this->generateMembershipId(),
+                        'first_name' => trim($data['first_name']),
+                        'last_name' => trim($data['last_name']),
+                        'middle_name' => isset($data['middle_name']) ? trim($data['middle_name']) : null,
+                        'date_of_birth' => $data['date_of_birth'],
+                        'gender' => $data['gender'],
+                        'marital_status' => $data['marital_status'],
+                        'physical_address' => trim($data['physical_address']),
+                        'postal_address' => trim($data['postal_address']),
+                        'city' => isset($data['city']) ? trim($data['city']) : null,
+                        'county' => trim($data['county']),
+                        'id_type' => $data['id_type'],
+                        'id_number' => trim($data['id_number']),
+                        'occupation' => isset($data['occupation']) ? trim($data['occupation']) : null,
+                        'employer' => isset($data['employer']) ? trim($data['employer']) : null,
+                        'monthly_income' => isset($data['monthly_income']) ? $data['monthly_income'] : null,
+                        'emergency_contact_name' => trim($data['emergency_contact_name']),
+                        'emergency_contact_phone' => trim($data['emergency_contact_phone']),
+                        'emergency_contact_relationship' => trim($data['emergency_contact_relationship']),
+                        'membership_date' => now(),
+                        'membership_status' => 'active',
+                    ]);
+
+                    // Create default accounts
+                    $member->accounts()->create([
+                        'account_number' => $this->generateAccountNumber('SAV'),
+                        'account_type' => 'savings',
+                        'balance' => 0,
+                        'available_balance' => 0,
+                        'is_active' => true,
+                    ]);
+
+                    $member->accounts()->create([
+                        'account_number' => $this->generateAccountNumber('SHR'),
+                        'account_type' => 'shares',
+                        'balance' => 0,
+                        'available_balance' => 0,
+                        'is_active' => true,
+                    ]);
+
+                    $successCount++;
+
+                } catch (\Exception $e) {
+                    $errorCount++;
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'name' => ($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''),
+                        'errors' => [$e->getMessage()]
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('members.index')->with('success', 
+                "Import completed: {$successCount} members imported successfully" . 
+                ($errorCount > 0 ? ", {$errorCount} failed." : ".")
+            )->with('import_errors', $errors);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to process import: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Download sample template
+     */
+    public function downloadTemplate()
+    {
+        $headers = [
+            'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender',
+            'marital_status', 'email', 'phone', 'physical_address', 'postal_address',
+            'city', 'county', 'id_type', 'id_number', 'occupation', 'employer',
+            'monthly_income', 'emergency_contact_name', 'emergency_contact_phone',
+            'emergency_contact_relationship'
+        ];
+
+        $sampleData = [
+            [
+                'John', 'Doe', 'Smith', '1990-01-15', 'male',
+                'married', 'john.doe@example.com', '+254712345678', '123 Main St',
+                'P.O. Box 123', 'Nairobi', 'Nairobi', 'national_id', '12345678',
+                'Teacher', 'ABC School', '50000', 'Jane Doe', '+254712345679',
+                'Spouse'
+            ]
+        ];
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set headers
+        $sheet->fromArray($headers, null, 'A1');
+        
+        // Add sample data
+        $sheet->fromArray($sampleData, null, 'A2');
+
+        // Style headers
+        $headerStyle = [
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '0A2342']
+            ],
+            'font' => ['color' => ['rgb' => 'FFFFFF']]
+        ];
+        $sheet->getStyle('A1:T1')->applyFromArray($headerStyle);
+
+        // Auto-size columns
+        foreach (range('A', 'T') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        
+        $fileName = 'members_import_template_' . date('Y-m-d') . '.xlsx';
+        $temp_file = tempnam(sys_get_temp_dir(), $fileName);
+        
+        $writer->save($temp_file);
+
+        return response()->download($temp_file, $fileName)->deleteFileAfterSend(true);
     }
 
     /**
