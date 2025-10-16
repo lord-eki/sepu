@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Member;
-use App\Models\User;
-use App\Models\MemberNextOfKin;
 use App\Http\Requests\StoreMemberRequest;
-use App\Http\Requests\UpdateMemberRequest;
 use App\Http\Requests\StoreNextOfKinRequest;
+use App\Http\Requests\UpdateMemberRequest;
 use App\Http\Requests\UpdateNextOfKinRequest;
+use App\Models\Account;
+use App\Models\LoanProduct;
+use App\Models\Member;
+use App\Models\MemberNextOfKin;
+use App\Models\Transaction;
+use App\Models\User;
+use App\Services\LoanEligibilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,9 +21,6 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-
-use App\Models\Account;
-use App\Models\Transaction;
 
 class MemberController extends Controller
 {
@@ -32,13 +33,13 @@ class MemberController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('membership_id', 'like', "%{$search}%")
-                      ->orWhere('id_number', 'like', "%{$search}%")
-                      ->orWhereHas('user', function ($userQuery) use ($search) {
-                          $userQuery->where('email', 'like', "%{$search}%")
-                                   ->orWhere('phone', 'like', "%{$search}%");
-                      });
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('membership_id', 'like', "%{$search}%")
+                        ->orWhere('id_number', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('email', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($request->status, function ($query, $status) {
@@ -61,7 +62,7 @@ class MemberController extends Controller
                 'active' => Member::where('membership_status', 'active')->count(),
                 'inactive' => Member::where('membership_status', 'inactive')->count(),
                 'suspended' => Member::where('membership_status', 'suspended')->count(),
-            ]
+            ],
         ]);
     }
 
@@ -75,19 +76,19 @@ class MemberController extends Controller
             'idTypes' => [
                 'national_id' => 'National ID',
                 'passport' => 'Passport',
-                'driving_license' => 'Driving License'
+                'driving_license' => 'Driving License',
             ],
             'genders' => [
                 'male' => 'Male',
                 'female' => 'Female',
-                'other' => 'Other'
+                'other' => 'Other',
             ],
             'maritalStatuses' => [
                 'single' => 'Single',
                 'married' => 'Married',
                 'divorced' => 'Divorced',
-                'widowed' => 'Widowed'
-            ]
+                'widowed' => 'Widowed',
+            ],
         ]);
     }
 
@@ -101,7 +102,7 @@ class MemberController extends Controller
 
             // Create user account
             $user = User::create([
-                'name' => $request->first_name . ' ' . $request->last_name,
+                'name' => $request->first_name.' '.$request->last_name,
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'password' => Hash::make($request->password ?? Str::random(12)),
@@ -132,7 +133,7 @@ class MemberController extends Controller
                         'path' => $path,
                         'size' => $file->getSize(),
                         'type' => $file->getClientMimeType(),
-                        'uploaded_at' => now()
+                        'uploaded_at' => now(),
                     ];
                 }
                 $memberData['documents'] = json_encode($documents);
@@ -164,7 +165,8 @@ class MemberController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to create member: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to create member: '.$e->getMessage()]);
         }
     }
 
@@ -187,8 +189,22 @@ class MemberController extends Controller
             },
             'dividends' => function ($query) {
                 $query->with('dividend')->latest();
-            }
+            },
         ]);
+
+        $eligibilityService = new LoanEligibilityService;
+
+        // Get a sample loan product for general eligibility check
+        $sampleLoanProduct = LoanProduct::where('is_active', true)->first();
+        $eligibilitySummary = null;
+
+        if ($sampleLoanProduct) {
+            $eligibilitySummary = $eligibilityService->checkEligibility(
+                $member,
+                $sampleLoanProduct,
+                $sampleLoanProduct->min_amount
+            );
+        }
 
         return Inertia::render('Admin/Members/Show', [
             'member' => $member,
@@ -197,7 +213,7 @@ class MemberController extends Controller
                 'total_shares' => $member->accounts->where('account_type', 'shares')->sum('balance'),
                 'total_loans' => $member->loans->where('status', 'active')->sum('outstanding_balance'),
                 'total_dividends' => $member->dividends->sum('dividend_amount'),
-            ]
+            ],
         ]);
     }
 
@@ -213,19 +229,19 @@ class MemberController extends Controller
             'idTypes' => [
                 'national_id' => 'National ID',
                 'passport' => 'Passport',
-                'driving_license' => 'Driving License'
+                'driving_license' => 'Driving License',
             ],
             'genders' => [
                 'male' => 'Male',
                 'female' => 'Female',
-                'other' => 'Other'
+                'other' => 'Other',
             ],
             'maritalStatuses' => [
                 'single' => 'Single',
                 'married' => 'Married',
                 'divorced' => 'Divorced',
-                'widowed' => 'Widowed'
-            ]
+                'widowed' => 'Widowed',
+            ],
         ]);
     }
 
@@ -239,7 +255,7 @@ class MemberController extends Controller
 
             // Update user information
             $member->user->update([
-                'name' => $request->first_name . ' ' . $request->last_name,
+                'name' => $request->first_name.' '.$request->last_name,
                 'email' => $request->email,
                 'phone' => $request->phone,
             ]);
@@ -261,7 +277,6 @@ class MemberController extends Controller
             if ($request->hasFile('documents')) {
                 $existingDocuments = json_decode($member->documents, true) ?? [];
                 $newDocuments = [];
-                
                 foreach ($request->file('documents') as $file) {
                     $path = $file->store('members/documents', 'public');
                     $newDocuments[] = [
@@ -269,10 +284,10 @@ class MemberController extends Controller
                         'path' => $path,
                         'size' => $file->getSize(),
                         'type' => $file->getClientMimeType(),
-                        'uploaded_at' => now()
+                        'uploaded_at' => now(),
                     ];
                 }
-                
+
                 $memberData['documents'] = json_encode(array_merge($existingDocuments, $newDocuments));
             }
 
@@ -285,7 +300,8 @@ class MemberController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to update member: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to update member: '.$e->getMessage()]);
         }
     }
 
@@ -320,7 +336,8 @@ class MemberController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to delete member: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to delete member: '.$e->getMessage()]);
         }
     }
 
@@ -368,15 +385,14 @@ class MemberController extends Controller
 
         return Inertia::render('Members/Accounts', [
             'member' => $member,
-            'accounts' => $accounts
+            'accounts' => $accounts,
         ]);
     }
 
-
     public function showDeposit(Member $member, Account $account)
     {
-        $this->authorizeAccount($member, $account); 
-        
+        $this->authorizeAccount($member, $account);
+
         return Inertia::render('Accounts/Deposit', [
             'account' => $account->load('member'),
             'paymentMethods' => [
@@ -407,17 +423,17 @@ class MemberController extends Controller
 
         // Create transaction with before/after balances
         Transaction::create([
-            'transaction_id'   => 'TXN' . now()->format('Ymd') . strtoupper(Str::random(6)),
-            'account_id'       => $account->id,
-            'member_id'        => $member->id,
-            'amount'           => $request->amount,
+            'transaction_id' => 'TXN'.now()->format('Ymd').strtoupper(Str::random(6)),
+            'account_id' => $account->id,
+            'member_id' => $member->id,
+            'amount' => $request->amount,
             'transaction_type' => 'deposit',
-            'description'      => $request->payment_method,
-            'status'           => 'completed',
-            'processed_by'     => auth()->id(),
-            'processed_at'     => now(),
-            'balance_before'   => $balanceBefore,
-            'balance_after'    => $account->balance,
+            'description' => $request->payment_method,
+            'status' => 'completed',
+            'processed_by' => auth()->id(),
+            'processed_at' => now(),
+            'balance_before' => $balanceBefore,
+            'balance_after' => $account->balance,
         ]);
 
         return back()->with('success', 'Deposit successful!');
@@ -461,17 +477,17 @@ class MemberController extends Controller
 
         // Record transaction
         Transaction::create([
-            'transaction_id'   => 'TXN' . now()->format('Ymd') . strtoupper(Str::random(6)),
-            'account_id'       => $account->id,
-            'member_id'        => $member->id,
-            'amount'           => $request->amount,
+            'transaction_id' => 'TXN'.now()->format('Ymd').strtoupper(Str::random(6)),
+            'account_id' => $account->id,
+            'member_id' => $member->id,
+            'amount' => $request->amount,
             'transaction_type' => 'withdrawal',
-            'description'      => $request->payment_method,
-            'status'           => 'completed',
-            'processed_by'     => auth()->id(),
-            'processed_at'     => now(),
-            'balance_before'   => $balanceBefore,
-            'balance_after'    => $account->balance,
+            'description' => $request->payment_method,
+            'status' => 'completed',
+            'processed_by' => auth()->id(),
+            'processed_at' => now(),
+            'balance_before' => $balanceBefore,
+            'balance_after' => $account->balance,
         ]);
 
         return redirect()->route('members.accounts', $member)
@@ -481,12 +497,11 @@ class MemberController extends Controller
     private function generateTransactionId(): string
     {
         do {
-            $id = 'TXN' . date('Ymd') . strtoupper(Str::random(6));
+            $id = 'TXN'.date('Ymd').strtoupper(Str::random(6));
         } while (Transaction::where('transaction_id', $id)->exists());
 
         return $id;
     }
-
 
     protected function authorizeAccount(Member $member, Account $account)
     {
@@ -494,7 +509,6 @@ class MemberController extends Controller
             abort(403, 'Unauthorized action.');
         }
     }
-
 
     /**
      * Get member transactions
@@ -516,7 +530,7 @@ class MemberController extends Controller
             'member' => $member,
             'transactions' => $transactions,
             'accounts' => $member->accounts,
-            'filters' => $request->only(['type', 'account_id'])
+            'filters' => $request->only(['type', 'account_id']),
         ]);
     }
 
@@ -532,7 +546,40 @@ class MemberController extends Controller
 
         return Inertia::render('Members/Loans', [
             'member' => $member,
-            'loans' => $loans
+            'loans' => $loans,
+        ]);
+    }
+
+    /**
+     * Get member loan eligibility
+     */
+    public function loanEligibility(Member $member, Request $request)
+    {
+        $loanProducts = LoanProduct::where('is_active', true)->get();
+
+        if ($request->has('loan_product_id') && $request->has('requested_amount')) {
+            $loanProduct = LoanProduct::findOrFail($request->loan_product_id);
+
+            $eligibilityService = new LoanEligibilityService;
+            $eligibility = $eligibilityService->checkEligibility(
+                $member,
+                $loanProduct,
+                $request->requested_amount
+            );
+
+            $maxLoanAmount = $eligibilityService->getMaximumLoanAmount($member, $loanProduct);
+
+            return response()->json([
+                'success' => true,
+                'data' => array_merge($eligibility, [
+                    'max_loan_amount' => $maxLoanAmount,
+                ]),
+            ]);
+        }
+
+        return Inertia::render('Members/LoanEligibility', [
+            'member' => $member,
+            'loanProducts' => $loanProducts,
         ]);
     }
 
@@ -548,7 +595,7 @@ class MemberController extends Controller
 
         return Inertia::render('Members/Dividends', [
             'member' => $member,
-            'dividends' => $dividends
+            'dividends' => $dividends,
         ]);
     }
 
@@ -564,7 +611,7 @@ class MemberController extends Controller
 
         return Inertia::render('Members/Guarantees', [
             'member' => $member,
-            'guarantees' => $guarantees
+            'guarantees' => $guarantees,
         ]);
     }
 
@@ -577,7 +624,7 @@ class MemberController extends Controller
 
         return Inertia::render('Admin/Members/NextOfKin', [
             'member' => $member,
-            'nextOfKin' => $nextOfKin
+            'nextOfKin' => $nextOfKin,
         ]);
     }
 
@@ -617,13 +664,12 @@ class MemberController extends Controller
     public function uploadDocuments(Request $request, Member $member): RedirectResponse
     {
         $request->validate([
-            'documents.*' => 'required|file|max:10240|mimes:pdf,jpg,jpeg,png,doc,docx'
+            'documents.*' => 'required|file|max:10240|mimes:pdf,jpg,jpeg,png,doc,docx',
         ]);
 
         if ($request->hasFile('documents')) {
             $existingDocuments = json_decode($member->documents, true) ?? [];
             $newDocuments = [];
-            
             foreach ($request->file('documents') as $file) {
                 $path = $file->store('members/documents', 'public');
                 $newDocuments[] = [
@@ -631,12 +677,12 @@ class MemberController extends Controller
                     'path' => $path,
                     'size' => $file->getSize(),
                     'type' => $file->getClientMimeType(),
-                    'uploaded_at' => now()
+                    'uploaded_at' => now(),
                 ];
             }
-            
+
             $member->update([
-                'documents' => json_encode(array_merge($existingDocuments, $newDocuments))
+                'documents' => json_encode(array_merge($existingDocuments, $newDocuments)),
             ]);
         }
 
@@ -649,17 +695,17 @@ class MemberController extends Controller
     public function deleteDocument(Member $member, $documentIndex): RedirectResponse
     {
         $documents = json_decode($member->documents, true) ?? [];
-        
+
         if (isset($documents[$documentIndex])) {
             // Delete file from storage
             Storage::disk('public')->delete($documents[$documentIndex]['path']);
-            
+
             // Remove from array
             unset($documents[$documentIndex]);
-            
+
             // Reindex array
             $documents = array_values($documents);
-            
+
             $member->update(['documents' => json_encode($documents)]);
         }
 
@@ -672,20 +718,20 @@ class MemberController extends Controller
     public function searchMembers(Request $request)
     {
         $query = $request->get('q');
-        
+
         $members = Member::with('user')
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
-                  ->orWhere('last_name', 'like', "%{$query}%")
-                  ->orWhere('membership_id', 'like', "%{$query}%")
-                  ->orWhere('id_number', 'like', "%{$query}%");
+                    ->orWhere('last_name', 'like', "%{$query}%")
+                    ->orWhere('membership_id', 'like', "%{$query}%")
+                    ->orWhere('id_number', 'like', "%{$query}%");
             })
             ->limit(10)
             ->get()
             ->map(function ($member) {
                 return [
                     'id' => $member->id,
-                    'name' => $member->first_name . ' ' . $member->last_name,
+                    'name' => $member->first_name.' '.$member->last_name,
                     'membership_id' => $member->membership_id,
                     'email' => $member->user->email,
                     'phone' => $member->user->phone,
@@ -717,7 +763,7 @@ class MemberController extends Controller
                     ELSE "Unknown"
                 END as age_group'),
                 DB::raw('count(*) as count')
-            )->groupBy('age_group')->get()
+            )->groupBy('age_group')->get(),
         ]);
     }
 
@@ -736,7 +782,6 @@ class MemberController extends Controller
     public function exportMembers(Request $request)
     {
         // Implementation for CSV/Excel export
-        // This would typically use a package like maatwebsite/excel
         return response()->json(['message' => 'Export functionality to be implemented']);
     }
 
@@ -746,7 +791,7 @@ class MemberController extends Controller
     public function bulkImport(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx,xls'
+            'file' => 'required|file|mimes:csv,xlsx,xls',
         ]);
 
         // Implementation for bulk import
@@ -754,15 +799,30 @@ class MemberController extends Controller
     }
 
     /**
-     * Generate unique membership ID
+     * Generate unique membership ID in format SEPU/SACCO/XXX
      */
     private function generateMembershipId(): string
     {
-        do {
-            $id = 'MEM' . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
-        } while (Member::where('membership_id', $id)->exists());
+        // Get the last member ordered by ID
+        $lastMember = Member::orderBy('id', 'desc')->first();
 
-        return $id;
+        if (! $lastMember) {
+            // First member
+            $number = 1;
+        } else {
+            // Extract number from last membership ID
+            $lastId = $lastMember->membership_id;
+            preg_match('/SEPU\/SACCO\/(\d+)/', $lastId, $matches);
+
+            if (isset($matches[1])) {
+                $number = intval($matches[1]) + 1;
+            } else {
+                // Fallback: count all members + 1
+                $number = Member::count() + 1;
+            }
+        }
+
+        return 'SEPU/SACCO/'.str_pad($number, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -771,7 +831,7 @@ class MemberController extends Controller
     private function generateAccountNumber(string $prefix): string
     {
         do {
-            $number = $prefix . str_pad(random_int(1, 9999999), 7, '0', STR_PAD_LEFT);
+            $number = $prefix.str_pad(random_int(1, 9999999), 7, '0', STR_PAD_LEFT);
         } while (DB::table('accounts')->where('account_number', $number)->exists());
 
         return $number;

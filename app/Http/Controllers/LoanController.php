@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Loan;
-use App\Models\LoanProduct;
-use App\Models\LoanGuarantor;
-use App\Models\LoanRepayment;
-use App\Models\Member;
-use App\Models\Transaction;
-use App\Models\PaymentVoucher;
 use App\Models\Account;
 use App\Models\AuditLog;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use App\Models\Loan;
+use App\Models\LoanGuarantor;
+use App\Models\LoanProduct;
+use App\Models\LoanRepayment;
+use App\Models\Member;
+use App\Models\PaymentVoucher;
+use App\Models\Transaction;
+use App\Services\LoanEligibilityService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class LoanController extends Controller
@@ -70,7 +70,7 @@ class LoanController extends Controller
         return Inertia::render('Shared/Loans/Index', [
             'loans' => $loans,
             'summary' => $this->getLoansSummary(),
-            'filters' => $request->only(['status', 'search', 'member_id', 'loan_product_id', 'date_from', 'date_to'])
+            'filters' => $request->only(['status', 'search', 'member_id', 'loan_product_id', 'date_from', 'date_to']),
         ]);
     }
 
@@ -87,8 +87,46 @@ class LoanController extends Controller
             'members' => $members,
             'auth' => [
                 'user' => auth()->user()->load('member'),
-                'member' => auth()->user()->member, 
-            ]
+                'member' => auth()->user()->member,
+            ],
+        ]);
+    }
+
+    /**
+     * Check loan eligibility for a member
+     */
+    public function checkEligibility(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'member_id' => 'required|exists:members,id',
+            'loan_product_id' => 'required|exists:loan_products,id',
+            'requested_amount' => 'required|numeric|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $member = Member::findOrFail($request->member_id);
+        $loanProduct = LoanProduct::findOrFail($request->loan_product_id);
+
+        $eligibilityService = new LoanEligibilityService;
+        $eligibility = $eligibilityService->checkEligibility(
+            $member,
+            $loanProduct,
+            $request->requested_amount
+        );
+
+        $maxLoanAmount = $eligibilityService->getMaximumLoanAmount($member, $loanProduct);
+
+        return response()->json([
+            'success' => true,
+            'data' => array_merge($eligibility, [
+                'max_loan_amount' => $maxLoanAmount,
+            ]),
         ]);
     }
 
@@ -106,14 +144,14 @@ class LoanController extends Controller
             'guarantors' => 'sometimes|array',
             'guarantors.*.member_id' => 'required_with:guarantors|exists:members,id',
             'guarantors.*.guaranteed_amount' => 'required_with:guarantors|numeric|min:0',
-            'documents' => 'sometimes|array'
+            'documents' => 'sometimes|array',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -123,6 +161,21 @@ class LoanController extends Controller
             $loanProduct = LoanProduct::findOrFail($request->loan_product_id);
             $member = Member::findOrFail($request->member_id);
 
+            $eligibilityService = new LoanEligibilityService;
+            $eligibility = $eligibilityService->checkEligibility(
+                $member,
+                $loanProduct,
+                $request->applied_amount
+            );
+
+            if (! $eligibility['eligible']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Member is not eligible for this loan',
+                    'eligibility' => $eligibility,
+                ], 422);
+            }
+
             // Validate loan amount against product limits
             if (
                 $request->applied_amount < $loanProduct->min_amount ||
@@ -130,7 +183,7 @@ class LoanController extends Controller
             ) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Loan amount must be between {$loanProduct->min_amount->toFixed(2)} and {$loanProduct->max_amount->toFixed(2)}"
+                    'message' => "Loan amount must be between {$loanProduct->min_amount->toFixed(2)} and {$loanProduct->max_amount->toFixed(2)}",
                 ], 422);
             }
 
@@ -141,7 +194,7 @@ class LoanController extends Controller
             ) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Loan term must be between {$loanProduct->min_term_months} and {$loanProduct->max_term_months} months"
+                    'message' => "Loan term must be between {$loanProduct->min_term_months} and {$loanProduct->max_term_months} months",
                 ], 422);
             }
 
@@ -153,7 +206,7 @@ class LoanController extends Controller
             if ($existingLoans > 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Member has existing active loan applications'
+                    'message' => 'Member has existing active loan applications',
                 ], 422);
             }
 
@@ -167,7 +220,6 @@ class LoanController extends Controller
                 $request->term_months
             );
             $totalRepayable = $monthlyRepayment * $request->term_months;
-            
 
             // Create loan
             $loan = Loan::create([
@@ -189,7 +241,7 @@ class LoanController extends Controller
                 'principal_balance' => $request->applied_amount,
                 'interest_balance' => $totalRepayable - $request->applied_amount,
                 'penalty_balance' => 0,
-                'days_in_arrears' => 0
+                'days_in_arrears' => 0,
             ]);
 
             // Add guarantors if provided
@@ -199,7 +251,7 @@ class LoanController extends Controller
                         'loan_id' => $loan->id,
                         'guarantor_member_id' => $guarantorData['member_id'],
                         'guaranteed_amount' => $guarantorData['guaranteed_amount'],
-                        'status' => 'pending'
+                        'status' => 'pending',
                     ]);
                 }
             }
@@ -212,7 +264,7 @@ class LoanController extends Controller
                 'model_id' => $loan->id,
                 'new_values' => $loan->toArray(),
                 'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
             ]);
 
             DB::commit();
@@ -220,14 +272,15 @@ class LoanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Loan application submitted successfully',
-                'data' => $loan->load(['member', 'loanProduct', 'guarantors.guarantorMember'])
+                'data' => $loan->load(['member', 'loanProduct', 'guarantors.guarantorMember']),
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating loan application: ' . $e->getMessage()
+                'message' => 'Error creating loan application: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -243,15 +296,14 @@ class LoanController extends Controller
             'guarantors.guarantorMember',
             'repayments',
             'approvedBy',
-            'disbursedBy'
+            'disbursedBy',
         ])->findOrFail($id);
 
         return Inertia::render('Shared/Loans/Show', [
-            'loan' => $loan
+            'loan' => $loan,
         ]);
-        
-    }
 
+    }
 
     /**
      * Show loan repayments
@@ -265,10 +317,9 @@ class LoanController extends Controller
 
         return Inertia::render('Shared/Loans/Repayment', [
             'loan' => $loan,
-            'repayments' => $repayments
+            'repayments' => $repayments,
         ]);
     }
-
 
     /**
      * Show the form for editing the specified loan
@@ -288,7 +339,7 @@ class LoanController extends Controller
         return Inertia::render('Shared/Loans/Edit', [
             'loan' => $loan,
             'loanProducts' => $loanProducts,
-            'members' => $members
+            'members' => $members,
         ]);
     }
 
@@ -303,7 +354,7 @@ class LoanController extends Controller
         if ($loan->status !== 'pending') {
             return response()->json([
                 'success' => false,
-                'message' => 'Only pending loans can be updated'
+                'message' => 'Only pending loans can be updated',
             ], 422);
         }
 
@@ -311,14 +362,14 @@ class LoanController extends Controller
             'applied_amount' => 'sometimes|numeric|min:1',
             'term_months' => 'sometimes|integer|min:1',
             'purpose' => 'sometimes|string|max:500',
-            'documents' => 'sometimes|array'
+            'documents' => 'sometimes|array',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -330,7 +381,7 @@ class LoanController extends Controller
                 'applied_amount',
                 'term_months',
                 'purpose',
-                'documents'
+                'documents',
             ]));
 
             // Recalculate loan details if amount or term changed
@@ -353,7 +404,7 @@ class LoanController extends Controller
                     'insurance_fee' => $insuranceFee,
                     'outstanding_balance' => $loan->applied_amount,
                     'principal_balance' => $loan->applied_amount,
-                    'interest_balance' => $totalRepayable - $loan->applied_amount
+                    'interest_balance' => $totalRepayable - $loan->applied_amount,
                 ]);
             }
 
@@ -366,7 +417,7 @@ class LoanController extends Controller
                 'old_values' => $oldValues,
                 'new_values' => $loan->toArray(),
                 'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
             ]);
 
             DB::commit();
@@ -374,14 +425,15 @@ class LoanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Loan updated successfully',
-                'data' => $loan->load(['member', 'loanProduct'])
+                'data' => $loan->load(['member', 'loanProduct']),
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating loan: ' . $e->getMessage()
+                'message' => 'Error updating loan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -393,14 +445,14 @@ class LoanController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'approved_amount' => 'required|numeric|min:1',
-            'approval_notes' => 'sometimes|string|max:1000'
+            'approval_notes' => 'sometimes|string|max:1000',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -409,7 +461,7 @@ class LoanController extends Controller
         if ($loan->status !== 'pending') {
             return response()->json([
                 'success' => false,
-                'message' => 'Only pending loans can be approved'
+                'message' => 'Only pending loans can be approved',
             ], 422);
         }
 
@@ -424,7 +476,7 @@ class LoanController extends Controller
                 'status' => 'approved',
                 'approval_date' => now(),
                 'approved_by' => Auth::id(),
-                'approval_notes' => $request->approval_notes
+                'approval_notes' => $request->approval_notes,
             ]);
 
             // Recalculate loan details based on approved amount
@@ -446,7 +498,7 @@ class LoanController extends Controller
                 'insurance_fee' => $insuranceFee,
                 'outstanding_balance' => $request->approved_amount,
                 'principal_balance' => $request->approved_amount,
-                'interest_balance' => $totalRepayable - $request->approved_amount
+                'interest_balance' => $totalRepayable - $request->approved_amount,
             ]);
 
             // Log the activity
@@ -458,7 +510,7 @@ class LoanController extends Controller
                 'old_values' => $oldValues,
                 'new_values' => $loan->toArray(),
                 'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
             ]);
 
             DB::commit();
@@ -466,14 +518,15 @@ class LoanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Loan approved successfully',
-                'data' => $loan->load(['member', 'loanProduct'])
+                'data' => $loan->load(['member', 'loanProduct']),
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error approving loan: ' . $e->getMessage()
+                'message' => 'Error approving loan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -484,23 +537,23 @@ class LoanController extends Controller
     public function reject(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'rejection_reason' => 'required|string|max:1000'
+            'rejection_reason' => 'required|string|max:1000',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $loan = Loan::findOrFail($id);
 
-        if (!in_array($loan->status, ['pending', 'approved'])) {
+        if (! in_array($loan->status, ['pending', 'approved'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only pending or approved loans can be rejected'
+                'message' => 'Only pending or approved loans can be rejected',
             ], 422);
         }
 
@@ -513,7 +566,7 @@ class LoanController extends Controller
                 'status' => 'rejected',
                 'rejection_reason' => $request->rejection_reason,
                 'approved_by' => Auth::id(),
-                'approval_date' => now()
+                'approval_date' => now(),
             ]);
 
             // Log the activity
@@ -525,7 +578,7 @@ class LoanController extends Controller
                 'old_values' => $oldValues,
                 'new_values' => $loan->toArray(),
                 'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
             ]);
 
             DB::commit();
@@ -533,14 +586,15 @@ class LoanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Loan rejected successfully',
-                'data' => $loan->load(['member', 'loanProduct'])
+                'data' => $loan->load(['member', 'loanProduct']),
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error rejecting loan: ' . $e->getMessage()
+                'message' => 'Error rejecting loan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -553,14 +607,14 @@ class LoanController extends Controller
         $validator = Validator::make($request->all(), [
             'disbursed_amount' => 'required|numeric|min:1',
             'disbursement_method' => 'required|in:cash,mobile_money,bank_transfer',
-            'disbursement_reference' => 'sometimes|string|max:100'
+            'disbursement_reference' => 'sometimes|string|max:100',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -569,7 +623,7 @@ class LoanController extends Controller
         if ($loan->status !== 'approved') {
             return response()->json([
                 'success' => false,
-                'message' => 'Only approved loans can be disbursed'
+                'message' => 'Only approved loans can be disbursed',
             ], 422);
         }
 
@@ -582,12 +636,12 @@ class LoanController extends Controller
             // Get or create member's savings account
             $savingsAccount = Account::firstOrCreate([
                 'member_id' => $member->id,
-                'account_type' => 'savings'
+                'account_type' => 'savings',
             ], [
                 'account_number' => $this->generateAccountNumber(),
                 'balance' => 0,
                 'available_balance' => 0,
-                'is_active' => true
+                'is_active' => true,
             ]);
 
             // Calculate net disbursement (after fees)
@@ -615,15 +669,15 @@ class LoanController extends Controller
                     'gross_amount' => $request->disbursed_amount,
                     'processing_fee' => $loan->processing_fee,
                     'insurance_fee' => $loan->insurance_fee,
-                    'net_amount' => $netDisbursement
-                ]
+                    'net_amount' => $netDisbursement,
+                ],
             ]);
 
             // Update account balance
             $savingsAccount->update([
                 'balance' => $savingsAccount->balance + $netDisbursement,
                 'available_balance' => $savingsAccount->available_balance + $netDisbursement,
-                'last_transaction_at' => now()
+                'last_transaction_at' => now(),
             ]);
 
             // Update loan status
@@ -633,7 +687,7 @@ class LoanController extends Controller
                 'disbursement_date' => now(),
                 'disbursed_by' => Auth::id(),
                 'first_repayment_date' => now()->addMonth(),
-                'maturity_date' => now()->addMonths($loan->term_months)
+                'maturity_date' => now()->addMonths($loan->term_months),
             ]);
 
             // Generate repayment schedule
@@ -643,7 +697,7 @@ class LoanController extends Controller
             PaymentVoucher::create([
                 'voucher_number' => $this->generateVoucherNumber(),
                 'voucher_type' => 'loan_disbursement',
-                'payee_name' => $member->first_name . ' ' . $member->last_name,
+                'payee_name' => $member->first_name.' '.$member->last_name,
                 'payee_phone' => $member->user->phone,
                 'amount' => $request->disbursed_amount,
                 'purpose' => 'Loan disbursement',
@@ -654,7 +708,7 @@ class LoanController extends Controller
                 'approved_by' => Auth::id(),
                 'paid_by' => Auth::id(),
                 'approval_date' => now(),
-                'payment_date' => now()
+                'payment_date' => now(),
             ]);
 
             // Log the activity
@@ -666,7 +720,7 @@ class LoanController extends Controller
                 'old_values' => $oldValues,
                 'new_values' => $loan->toArray(),
                 'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
             ]);
 
             DB::commit();
@@ -677,15 +731,16 @@ class LoanController extends Controller
                 'data' => [
                     'loan' => $loan->load(['member', 'loanProduct']),
                     'transaction' => $transaction,
-                    'net_disbursement' => $netDisbursement
-                ]
+                    'net_disbursement' => $netDisbursement,
+                ],
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error disbursing loan: ' . $e->getMessage()
+                'message' => 'Error disbursing loan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -707,7 +762,7 @@ class LoanController extends Controller
             'total_outstanding_balance' => Loan::whereIn('status', ['disbursed', 'active'])->sum('outstanding_balance'),
             'overdue_loans' => Loan::where('days_in_arrears', '>', 0)->count(),
             'this_month_applications' => Loan::whereMonth('application_date', now()->month)->count(),
-            'this_month_disbursements' => Loan::whereMonth('disbursement_date', now()->month)->count()
+            'this_month_disbursements' => Loan::whereMonth('disbursement_date', now()->month)->count(),
         ];
 
         return $summary;
@@ -745,7 +800,7 @@ class LoanController extends Controller
             $newNumber = 1;
         }
 
-        return $prefix . $year . $month . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix.$year.$month.str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -754,7 +809,7 @@ class LoanController extends Controller
     private function generateAccountNumber()
     {
         do {
-            $accountNumber = '01' . str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT);
+            $accountNumber = '01'.str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT);
         } while (Account::where('account_number', $accountNumber)->exists());
 
         return $accountNumber;
@@ -766,7 +821,7 @@ class LoanController extends Controller
     private function generateTransactionId()
     {
         do {
-            $transactionId = 'TXN' . date('YmdHis') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+            $transactionId = 'TXN'.date('YmdHis').str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         } while (Transaction::where('transaction_id', $transactionId)->exists());
 
         return $transactionId;
@@ -778,7 +833,7 @@ class LoanController extends Controller
     private function generateVoucherNumber()
     {
         do {
-            $voucherNumber = 'VOU' . date('YmdHis') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+            $voucherNumber = 'VOU'.date('YmdHis').str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         } while (PaymentVoucher::where('voucher_number', $voucherNumber)->exists());
 
         return $voucherNumber;
@@ -815,7 +870,7 @@ class LoanController extends Controller
                 'paid_amount' => 0,
                 'outstanding_amount' => $monthlyRepayment,
                 'status' => 'pending',
-                'days_late' => 0
+                'days_late' => 0,
             ]);
 
             $remainingBalance -= $principalAmount;

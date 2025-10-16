@@ -21,6 +21,7 @@ import {
     FileSignature,
     Bell,
     Settings,
+    Package,
 } from 'lucide-vue-next';
 import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
@@ -143,6 +144,12 @@ const adminNavItems: NavItem[] = [
         href: route('loans.index'),
         routeName: 'loans.index',
         icon: FileText,
+      },
+      {
+        title: 'Loan Products',
+        href: route('loan-products.index'),
+        routeName: 'loan-products.index',
+        icon: Package,
       },
       {
         title: 'Loan Calculator',

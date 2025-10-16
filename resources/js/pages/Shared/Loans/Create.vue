@@ -484,7 +484,7 @@ const form = reactive({
   term_months: '',
   purpose: '',
   guarantors: [],
- 
+
   disbursement_method: '',
   bank_account: '',
   bank_name: '',
@@ -500,9 +500,6 @@ function formatCurrency(value) {
   }).format(value)
 }
 
-
-
-
 const disbursementMethod = ref('')
 const disbursementDetails = reactive({
   mpesaNumber: '',
@@ -516,7 +513,16 @@ const selectedMember = ref(null)
 const selectedProduct = ref(null)
 const loanCalculation = ref(null)
 
-// Watch relevant fields to recalculate repayment
+/* --- NEW: eligibility state and debounce timer --- */
+const eligibility = reactive({
+  checking: false,
+  eligible: true,
+  reason: ''
+})
+let eligibilityDebounceTimer = null
+/* -------------------------------------------------- */
+
+/* Watch relevant fields to recalculate repayment */
 watch(
   [() => form.applied_amount, () => form.term_months, selectedProduct],
   ([amount, term, product]) => {
@@ -553,33 +559,49 @@ if (isMemberRole.value && props.auth.user.member) {
 /* helpers */
 const onMemberChange = () => {
   selectedMember.value = props.members.find(m => m.id == form.member_id)
+  triggerEligibilityCheckDebounced()
 }
 
 const onProductChange = () => {
   selectedProduct.value = props.loanProducts.find(p => p.id == form.loan_product_id)
   calculateRepayment()
+  triggerEligibilityCheckDebounced()
 }
 
-const calculateRepayment = () => {
-  if (!selectedProduct.value || !form.applied_amount || !form.term_months) {
+/* --- NEW: watch applied_amount and term to trigger eligibility checks --- */
+watch(() => form.applied_amount, () => {
+  triggerEligibilityCheckDebounced()
+})
+watch(() => form.term_months, () => {
+  triggerEligibilityCheckDebounced()
+})
+/* --------------------------------------------------------------- */
+
+const calculateRepayment = (product, amount, term) => {
+  // keep backward compatibility if function is called with different args
+  let prod = product || selectedProduct.value
+  let applied = amount ?? form.applied_amount
+  let months = term ?? form.term_months
+
+  if (!prod || !applied || !months) {
     loanCalculation.value = null
     return
   }
 
-  const principal = parseFloat(form.applied_amount)
-  const monthlyRate = selectedProduct.value.interest_rate / 100 / 12
-  const months = parseInt(form.term_months)
+  const principal = parseFloat(applied)
+  const monthlyRate = prod.interest_rate / 100 / 12
+  const monthsInt = parseInt(months)
 
   let monthlyRepayment
   if (monthlyRate === 0) {
-    monthlyRepayment = principal / months
+    monthlyRepayment = principal / monthsInt
   } else {
-    monthlyRepayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1)
+    monthlyRepayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, monthsInt)) / (Math.pow(1 + monthlyRate, monthsInt) - 1)
   }
 
-  const totalRepayable = monthlyRepayment * months
-  const processingFee = principal * (selectedProduct.value.processing_fee_rate / 100)
-  const insuranceFee = principal * (selectedProduct.value.insurance_rate / 100)
+  const totalRepayable = monthlyRepayment * monthsInt
+  const processingFee = principal * (prod.processing_fee_rate / 100)
+  const insuranceFee = principal * (prod.insurance_rate / 100)
   const netAmount = principal - processingFee - insuranceFee
 
   loanCalculation.value = {
@@ -658,7 +680,98 @@ function humanFileSize(bytes) {
   return bytes.toFixed(1) + ' ' + units[u]
 }
 
-/* submit controls */
+/* --- NEW: Eligibility check helpers --- */
+
+/**
+ * Calls the server endpoint to check eligibility.
+ * Returns the server response data or throws.
+ */
+async function checkEligibilityServer() {
+  // require fields
+  if (!form.member_id || !form.loan_product_id || !form.applied_amount) {
+    return { eligible: true } // treat as unknown/ok until filled
+  }
+
+  eligibility.checking = true
+  try {
+    // controller expects 'requested_amount'
+    const payload = {
+      member_id: form.member_id,
+      loan_product_id: form.loan_product_id,
+      requested_amount: form.applied_amount
+    }
+
+    const response = await axios.post(route('members.loans.check-eligibility'), payload)
+
+
+    // Controller shape: { success: true, data: { eligible: bool, ... } }
+    const respData = response.data?.data ?? response.data
+    const eligible = !!respData?.eligible
+    const reason = respData?.messages?.length 
+        ? respData.messages.join(', ') 
+        : (respData?.reason || respData?.message || (eligible ? '' : 'Member is not eligible for this loan product'))
+
+
+    eligibility.eligible = eligible
+    eligibility.reason = reason
+
+    // push errors to UI (keeps template untouched)
+    if (!eligible) {
+      showMessage('error', null, { eligibility: [reason] })
+    } else {
+      // clear eligibility related errors if any
+      if (errorMessages && typeof errorMessages.value === 'object' && errorMessages.value.eligibility) {
+        // remove eligibility key
+        const em = { ...errorMessages.value }
+        delete em.eligibility
+        errorMessages.value = Object.keys(em).length ? em : null
+      }
+    }
+
+    return { eligible, reason, raw: respData }
+  } catch (err) {
+    // network/server error -> assume not checked; notify user but don't block UI unnecessarily
+    eligibility.eligible = false
+    eligibility.reason = 'Unable to verify eligibility at this time.'
+    showMessage('error', 'Unable to verify eligibility at this time. Please try again.')
+    throw err
+  } finally {
+    eligibility.checking = false
+  }
+}
+
+/**
+ * Debounced trigger for real-time eligibility checks
+ */
+function triggerEligibilityCheckDebounced() {
+  // clear previous timer
+  if (eligibilityDebounceTimer) clearTimeout(eligibilityDebounceTimer)
+
+  // if not enough data, skip
+  if (!form.member_id || !form.loan_product_id || !form.applied_amount) {
+    eligibility.eligible = true
+    eligibility.reason = ''
+    return
+  }
+
+  // small debounce to avoid spamming server
+  eligibilityDebounceTimer = setTimeout(async () => {
+    try {
+      await checkEligibilityServer()
+    } catch (e) {
+      // already handled in checkEligibilityServer (showMessage)
+    }
+  }, 500)
+}
+
+/* Trigger initial check when relevant props change (members/products) */
+watch(() => form.member_id, () => { triggerEligibilityCheckDebounced() })
+watch(() => form.loan_product_id, () => { triggerEligibilityCheckDebounced() })
+watch(() => form.applied_amount, () => { triggerEligibilityCheckDebounced() })
+
+/* --------------------------------------------------------------- */
+
+/* submit controls - updated to include eligibility check */
 const canSubmit = computed(() => {
   const hasBasicInfo =
     !!form.member_id &&
@@ -682,9 +795,12 @@ const canSubmit = computed(() => {
     (uploadedFiles.combined !== null) ||
     (Array.isArray(uploadedFiles.multiple) && uploadedFiles.multiple.length > 0)
 
-  return hasBasicInfo && hasDisbursement && hasDocuments
-})
+  // Also require that eligibility has been checked and is true.
+  // If eligibility.checking is true, we conservatively disallow submit (to avoid race).
+  const eligibilityOk = eligibility.eligible === true && !eligibility.checking
 
+  return hasBasicInfo && hasDisbursement && hasDocuments && eligibilityOk
+})
 
 /* feedback helper */
 const showMessage = (type, message, errors = null, callback = null) => {
@@ -717,16 +833,55 @@ const resetForm = () => {
   loanCalculation.value = null
   disbursementMethod.value = ''
   Object.assign(disbursementDetails, { mpesaNumber: '', bankName: '', branch: '', accountNumber: '', payee: '' })
+
+  // reset eligibility
+  eligibility.checking = false
+  eligibility.eligible = true
+  eligibility.reason = ''
 }
 
 /* submit flow (confirm -> send) */
 const submitApplication = () => {
-  showConfirm.value = true
+  // attempt to run a final eligibility check before showing confirm modal.
+  // If eligibility fails, show error and don't open confirm modal.
+  // If check throws network error, we block submission and show message.
+  showConfirm.value = false // ensure closed while checking
+  processing.value = true
+  checkEligibilityServer()
+    .then(result => {
+      if (!result.eligible) {
+        // show message and prevent opening confirm
+        showMessage('error', null, { eligibility: [result.reason || 'Member not eligible for this loan'] })
+      } else {
+        // open confirmation modal when eligible
+        showConfirm.value = true
+      }
+    })
+    .catch(() => {
+      // checkEligibilityServer already called showMessage; keep confirm closed
+    })
+    .finally(() => {
+      processing.value = false
+    })
 }
 
 const confirmSubmit = async () => {
   showConfirm.value = false
   processing.value = true
+
+  // Final server-side eligibility check before creating the loan (defense in depth)
+  try {
+    const result = await checkEligibilityServer()
+    if (!result.eligible) {
+      showMessage('error', null, { eligibility: [result.reason || 'Member is not eligible'] })
+      processing.value = false
+      return
+    }
+  } catch (err) {
+    // If server check failed (network), stop and show message (already handled in checkEligibilityServer)
+    processing.value = false
+    return
+  }
 
   const formData = new FormData()
   Object.keys(form).forEach(key => {
@@ -744,9 +899,15 @@ const confirmSubmit = async () => {
     formData.append(k, disbursementDetails[k] ?? '')
   })
 
-  // combined PDF
+  // support documents (multiple)
   if (uploadedFiles.combined) {
     formData.append('documents[combined]', uploadedFiles.combined)
+  } else if (Array.isArray(uploadedFiles.multiple) && uploadedFiles.multiple.length) {
+    uploadedFiles.multiple.forEach((fileObj, idx) => {
+      // include type metadata if backend expects it
+      formData.append(`documents[${idx}][type]`, fileObj.type)
+      formData.append(`documents[${idx}][file]`, fileObj.file)
+    })
   }
 
   try {

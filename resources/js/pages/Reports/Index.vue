@@ -285,8 +285,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Head } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
-import ReportCard from '@/Components/ReportCard.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+import ReportCard from '@/components/ReportCard.vue'
 
 const tabs = [
   { label: 'Financial Reports', value: 'financial' },

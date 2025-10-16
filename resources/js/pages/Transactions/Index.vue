@@ -229,7 +229,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Head, router, usePage } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const page = usePage()
 const transactions = ref(page.props.transactions)
