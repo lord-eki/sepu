@@ -26,19 +26,27 @@
               </div>
 
               <div class="flex max-sm:flex-col w-fit gap-2">
-                <Link :href="route('loans.create')"
-                  class="inline-flex items-center gap-2 rounded-lg bg-white text-[#0a2342] px-4 py-2 text-sm font-medium shadow hover:scale-[1.01] transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
+                <!-- New Loan Application -->
+                <Link
+                  :href="route('loans.create')"
+                  class="inline-flex items-center gap-2 rounded-lg bg-white text-[#0a2342] px-4 py-2 text-sm font-medium shadow hover:scale-[1.01] transition"
+                >
                   New Loan Application
                 </Link>
 
-                <Link :href="route('loan-calculator.index')"
-                  class="inline-flex items-center gap-2 rounded-lg bg-orange-500 text-white px-4 py-2 text-sm font-medium shadow hover:opacity-95 transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h4l3-7 4 14 3-7h4" />
-                  </svg>
+                <!-- Check Eligibility -->
+                <button
+                  @click="openModal = true"
+                  class="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium shadow hover:bg-blue-700 transition"
+                >
+                  Check Eligibility
+                </button>
+
+                <!-- Loan Calculator -->
+                <Link
+                  :href="route('loan-calculator.index')"
+                  class="inline-flex items-center gap-2 rounded-lg bg-orange-500 text-white px-4 py-2 text-sm font-medium shadow hover:opacity-95 transition"
+                >
                   Loan Calculator
                 </Link>
               </div>
@@ -46,6 +54,44 @@
           </div>
         </div>
       </header>
+
+
+      <!-- Member Selection Modal -->
+        <div
+          v-if="openModal"
+          class="fixed inset-0 bg-black/50 flex justify-center items-center z-9999"
+        >
+          <div class="bg-white p-6 rounded-lg shadow-lg max-sm:w-[90%] w-96">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Select Member</h2>
+
+            <select
+              v-model="selectedMember"
+              class="w-full border border-gray-300 rounded-md p-2 mb-4 focus:ring focus:ring-blue-200"
+            >
+              <option disabled value="">-- Choose a member --</option>
+              <option v-for="member in members" :key="member.id" :value="member.id">
+                {{ member.name }}
+              </option>
+            </select>
+
+            <div class="flex justify-end gap-2">
+              <button
+                @click="openModal = false"
+                class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                @click="checkEligibility"
+                :disabled="!selectedMember"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+
 
       <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <!-- Summary cards -->
@@ -426,6 +472,29 @@ const cards = computed(() => ([
   { label: 'Active Loans', value: props.summary?.disbursed_loans ?? 0, bg: 'bg-green-500', icon: 'M5 13l4 4L19 7M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z' },
   { label: 'Overdue', value: props.summary?.overdue_loans ?? 0, bg: 'bg-red-500', icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
 ]))
+
+
+const openModal = ref(false)
+const selectedMember = ref('')
+
+
+import axios from 'axios'
+import { onMounted } from 'vue'
+
+const members = ref([])
+
+onMounted(async () => {
+  const response = await axios.get('/api/search/members')
+  members.value = response.data
+})
+
+
+const checkEligibility = () => {
+  if (selectedMember.value) {
+    openModal.value = false
+    router.visit(route('members.members.loan-eligibility', selectedMember.value))
+  }
+}
 
 </script>
 

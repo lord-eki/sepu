@@ -5,6 +5,26 @@
     { title: 'Loan Details' }
   ]" >
 
+ <!-- FlashMessage.vue -->
+  <div>
+    <transition
+      enter-active-class="transition ease-out duration-300"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2"
+    >
+      <div v-if="visible" :class="messageClass" class="relative w-fit mx-auto px-6 py-3 rounded-xl mb-4 flex items-start gap-4 shadow-md">
+        <div class="flex-1">
+          <p v-if="type === 'success'">{{ message }}</p>
+          <p v-else-if="type === 'error'" class="whitespace-pre-wrap">{{ message }}</p>
+        </div>
+        <button type="button" class="ml-2 text-gray-400 hover:text-gray-200" @click="close">✕</button>
+      </div>
+    </transition>
+    </div>
+
       <div class="flex justify-between mt-4 mx-4 items-center">
         <h2 class="font-semibold text-base sm:text-lg text-blue-900 leading-tight">
           Loan Details - {{ loan.loan_number }}
@@ -640,10 +660,14 @@ import { ref, reactive, computed } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import axios from 'axios'
 
 const props = defineProps({
   loan: Object,
-  auth: Object
+  auth: Object,`
+  message: String,
+  type: { type: String, default: 'success' }, // success or error
+  duration: { type: Number, default: 5000 }
 })
 
 const isMemberRole = computed(() => props.auth.user.role === 'member')
@@ -763,27 +787,34 @@ const getGuarantorStatusClass = (status) => {
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
 
-const approveLoan = () => {
-  router.post(route('loans.approve', props.loan.id), approvalForm, {
-    onSuccess: () => {
-      showApprovalModal.value = false
-    }
-  })
+const approveLoan = async () => {
+  try {
+    const response = await axios.post(`/loans/${props.loan.id}/approve`, approvalForm)
+    alert(response.data.message)
+    showApprovalModal.value = false
+    // Optionally refresh data or emit an event
+  } catch (error) {
+    alert(error.response?.data?.message || 'Failed to approve loan.')
+  }
 }
 
-const rejectLoan = () => {
-  router.post(route('loans.reject', props.loan.id), rejectionForm, {
-    onSuccess: () => {
-      showRejectionModal.value = false
-    }
-  })
+const rejectLoan = async () => {
+  try {
+    const response = await axios.post(`/loans/${props.loan.id}/reject`, rejectionForm)
+    alert(response.data.message)
+    showRejectionModal.value = false
+  } catch (error) {
+    alert(error.response?.data?.message || 'Failed to reject loan.')
+  }
 }
 
-const disburseLoan = () => {
-  router.post(route('loans.disburse', props.loan.id), disbursementForm, {
-    onSuccess: () => {
-      showDisbursementModal.value = false
-    }
-  })
+const disburseLoan = async () => {
+  try {
+    const response = await axios.post(`/loans/${props.loan.id}/disburse`, disbursementForm)
+    alert(response.data.message)
+    showDisbursementModal.value = false
+  } catch (error) {
+    alert(error.response?.data?.message || 'Failed to disburse loan.')
+  }
 }
 </script>
