@@ -24,7 +24,15 @@
                 <ul v-else class="list-disc pl-5 space-y-1">
                   <li v-for="(errs, field) in errorMessages" :key="field">
                     <span v-if="field !== 'general'"><strong class="capitalize">{{ field }}:</strong> </span>
-                    <span>{{ Array.isArray(errs) ? errs.join(', ') : errs }}</span>
+                    <span v-if="Array.isArray(errs)">
+                      <!-- <span v-for="(err, i) in errs" :key="i" class="block">{{ err }}</span> -->
+                      <span v-for="(err, i) in errs" :key="i" class="block">
+                        <pre class="whitespace-pre-wrap">{{ err }}</pre>
+                      </span>
+
+                    </span>
+                    <span v-else>{{ errs }}</span>  
+
                   </li>
                 </ul>
               </div>
@@ -491,6 +499,9 @@ const form = reactive({
   mpesa_number: ''
 })
 
+
+
+
 function formatCurrency(value) {
   if (value == null || value === '' || isNaN(value)) return '0.00'
   return new Intl.NumberFormat('en-KE', {
@@ -680,65 +691,80 @@ function humanFileSize(bytes) {
   return bytes.toFixed(1) + ' ' + units[u]
 }
 
-/* --- NEW: Eligibility check helpers --- */
+/* ---  Eligibility check helpers --- */
 
 /**
  * Calls the server endpoint to check eligibility.
  * Returns the server response data or throws.
  */
-async function checkEligibilityServer() {
-  // require fields
+ async function checkEligibilityServer() {
+  // Require mandatory fields before sending request
   if (!form.member_id || !form.loan_product_id || !form.applied_amount) {
-    return { eligible: true } // treat as unknown/ok until filled
+    return { eligible: true } // allow UI to remain usable until filled
+  }
+
+  // Ensure eligibility object always exists
+  if (!eligibility) {
+    eligibility = {}
   }
 
   eligibility.checking = true
+
   try {
-    // controller expects 'requested_amount'
     const payload = {
       member_id: form.member_id,
       loan_product_id: form.loan_product_id,
-      requested_amount: form.applied_amount
+      requested_amount: form.applied_amount,
     }
 
     const response = await axios.post(route('members.loans.check-eligibility'), payload)
 
+    // Safely handle possibly missing data
+    const data = response?.data ?? {}
+    const respData = data.data ?? {}
 
-    // Controller shape: { success: true, data: { eligible: bool, ... } }
-    const respData = response.data?.data ?? response.data
+    // Extract fields safely
     const eligible = !!respData?.eligible
-    const reason = respData?.messages?.length 
-        ? respData.messages.join(', ') 
-        : (respData?.reason || respData?.message || (eligible ? '' : 'Member is not eligible for this loan product'))
+    const reason =
+      respData?.messages?.length
+        ? respData.messages.join(' ,')
+        : (
+          respData?.reason ||
+          respData?.message ||
+          (eligible
+            ? 'Member is eligible for this loan product'
+            : 'Member is not eligible for this loan product')
+        )
 
-
+    // Assign the results safely (create missing keys if needed)
     eligibility.eligible = eligible
     eligibility.reason = reason
+    eligibility.requirements = respData?.requirements || {}
+    eligibility.maxLoanAmount = respData?.max_loan_amount || null
 
-    // push errors to UI (keeps template untouched)
+    // Handle frontend validation errors
     if (!eligible) {
       showMessage('error', null, { eligibility: [reason] })
-    } else {
-      // clear eligibility related errors if any
-      if (errorMessages && typeof errorMessages.value === 'object' && errorMessages.value.eligibility) {
-        // remove eligibility key
-        const em = { ...errorMessages.value }
-        delete em.eligibility
-        errorMessages.value = Object.keys(em).length ? em : null
-      }
+    } else if (errorMessages && typeof errorMessages.value === 'object' && errorMessages.value?.eligibility) {
+      // Clear old eligibility errors
+      const em = { ...errorMessages.value }
+      delete em.eligibility
+      errorMessages.value = Object.keys(em).length ? em : null
     }
 
     return { eligible, reason, raw: respData }
+
   } catch (err) {
-    // network/server error -> assume not checked; notify user but don't block UI unnecessarily
+    console.error('Eligibility check failed:', err.response?.data || err.message)
     eligibility.eligible = false
     eligibility.reason = 'Unable to verify eligibility at this time.'
     showMessage('error', 'Unable to verify eligibility at this time. Please try again.')
-    throw err
   } finally {
     eligibility.checking = false
   }
 }
+
+
 
 /**
  * Debounced trigger for real-time eligibility checks
