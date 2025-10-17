@@ -27,9 +27,8 @@
                     <span v-if="Array.isArray(errs)">
                       <!-- <span v-for="(err, i) in errs" :key="i" class="block">{{ err }}</span> -->
                       <span v-for="(err, i) in errs" :key="i" class="block">
-                        <pre class="whitespace-pre-wrap">{{ err }}</pre>
+                        <span class="whitespace-pre-wrap"> {{ err }}</span>
                       </span>
-
                     </span>
                     <span v-else>{{ errs }}</span>  
 
@@ -63,8 +62,53 @@
           </Link>
         </div>
 
-        <!-- Form -->
-        <form @submit.prevent="submitApplication" class="space-y-8">
+        <!-- Eligibility Check Message -->
+        <div
+          v-if="!isEligible"
+          class="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-6 mb-8 shadow"
+        >
+          <h3 class="font-semibold text-lg mb-2">
+            <template v-if="isMemberRole">
+              You are currently not eligible for a loan.
+            </template>
+            <template v-else>
+              Loan Application Not Allowed
+            </template>
+          </h3>
+
+          <p class="text-sm mb-3">
+            <template v-if="isMemberRole">
+              Reason(s):
+            </template>
+            <template v-else>
+              The selected member with membership ID 
+              <strong>{{ memberInfo.membership_id }}</strong> 
+              is currently <strong>not eligible</strong> for a loan. Reason(s):
+            </template>
+          </p>
+
+          <ul class="list-disc pl-6 text-sm space-y-1 mb-4">
+            <li v-for="(reason, i) in ineligibleReasons" :key="i">{{ reason }}</li>
+          </ul>
+
+          <!-- Only show back button for non-member users -->
+          <div v-if="!isMemberRole" class="flex justify-end">
+            <button
+              type="button"
+              @click="resetMemberSelection"
+              class="inline-flex items-center gap-2 bg-[rgba(7,40,75,0.95)] hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 rounded-lg shadow text-sm transition"
+            >
+              <ArrowLeft class="w-4 h-4" />
+              <span>Go Back to Member Selection</span>
+            </button>
+          </div>
+        </div>
+
+
+
+        <!-- Loan Application Form -->
+        <form v-else @submit.prevent="submitApplication" class="space-y-8">
+
 
           <!-- Member Information (card) -->
           <section class="bg-white text-gray-900 shadow-xl rounded-2xl overflow-hidden border border-gray-100">
@@ -466,7 +510,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import axios from 'axios'
@@ -484,6 +528,7 @@ const errorMessages = ref(null)
 const processing = ref(false)
 const showConfirm = ref(false)
 import { ArrowLeft } from 'lucide-vue-next'
+
 
 const form = reactive({
   member_id: '',
@@ -727,7 +772,7 @@ function humanFileSize(bytes) {
     const eligible = !!respData?.eligible
     const reason =
       respData?.messages?.length
-        ? respData.messages.join(' ,')
+        ? respData.messages.join('\n\n')
         : (
           respData?.reason ||
           respData?.message ||
@@ -842,7 +887,7 @@ const showMessage = (type, message, errors = null, callback = null) => {
     successMessage.value = null
     errorMessages.value = null
     if (callback) callback()
-  }, 5000)
+  }, 10000)
 }
 
 /* reset form */
@@ -969,6 +1014,72 @@ const confirmSubmit = async () => {
     processing.value = false
   }
 }
+
+
+
+// eligibility state
+const isEligible = ref(true)
+const ineligibleReasons = ref([])
+
+/**
+ * Checks loan eligibility
+ */
+const checkEligibility = async () => {
+  // Assign fallback values if not provided
+  const memberId = form.member_id
+  const productId = form.loan_product_id || 1   // fallback to first product ID or 1
+  const amount = form.applied_amount || 1       // fallback to 0
+
+  if (!memberId) {
+    console.log('No member ID available for eligibility check')
+    return
+  }
+
+  try {
+    const payload = {
+      member_id: memberId,
+      loan_product_id: productId,
+      requested_amount: amount,
+    }
+
+    const response = await axios.post(route('members.loans.check-eligibility'), payload)
+
+    const data = response.data.data
+
+    isEligible.value = data.eligible
+    ineligibleReasons.value = data.reasons || data.messages || []
+    console.log('Eligibility data:', data)
+  } catch (error) {
+    console.error('Eligibility check failed:', error)
+    isEligible.value = false
+    ineligibleReasons.value = ['Unable to verify eligibility. Please try again later.']
+  }
+}
+
+// Run automatically for member role
+onMounted(() => {
+  if (isMemberRole.value && props.auth?.member?.id) {
+    form.member_id = props.auth.member.id
+    checkEligibility()
+  }
+})
+
+// Run automatically for admin when selecting a member
+watch(() => form.member_id, (newVal) => {
+  if (!isMemberRole.value && newVal) {
+    checkEligibility()
+  }
+})
+
+
+const resetMemberSelection = () => {
+  form.member_id = '';
+  selectedMember.value = null;
+  isEligible.value = true; // Hide the ineligible message
+};
+
+
+
 </script>
 
 <style scoped>
