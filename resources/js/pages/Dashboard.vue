@@ -93,7 +93,7 @@ const toggleNotifications = () => {
         <!-- Header -->
         <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 class="text-lg md:text-xl font-bold tracking-tight text-blue-900">
+            <h1 class="text-lg md:text-xl font-semibold tracking-tight text-blue-900">
               Welcome, {{ fullName }}
             </h1>
             <p class="text-gray-600 text-sm md:text-base">Your personal account overview</p>
