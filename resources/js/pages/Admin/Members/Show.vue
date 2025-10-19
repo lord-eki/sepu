@@ -213,10 +213,10 @@
                       <dt class="text-sm font-medium text-gray-500">City</dt>
                       <dd class="text-sm text-gray-900">{{ member.city }}</dd>
                     </div>
-                    <span>
+                    <div>
                       <dt class="text-sm font-medium text-gray-500">County</dt>
                       <dd class="text-sm text-gray-900">{{ member.county }}</dd>
-                    </span>
+                    </div>
                   </div>
 
                 </dl>

@@ -78,13 +78,15 @@ const toggleNotifications = () => {
     <Head title="Dashboard" />
     <div class="p-6 bg-gray-50 min-h-screen">
       <div class="w-full rounded-lg bg-gradient-to-r from-blue-900 to-orange-500 mb-4 overflow-hidden">
-        <div class="flex items-center justify-between py-3 px-3 gap-2 text-white text-sm sm:text-base">
+        <div class="flex flex-col sm:flex-row items-center justify-between p-3 gap-2 text-white text-base sm:text-lg">
           <div class="flex gap-1 items-center">
-            <span class="text-white tracking-wide">SEPU SACCO</span>
+            <span class="text-white font-medium text-2xl tracking-wide">SEPU SACCO</span>
           </div>
-          <div class="flex gap-1 items-center justify-between italic">
+          <div class="flex gap-1 items-center">
             <span>Save & grow together</span>
-            <Handshake class="w-3 h-3 text-white mt-0.5" />
+            <span>
+              <Handshake class="w-4 h-4 text-white mt-0.5" />
+            </span>
           </div>
         </div>
       </div>
@@ -93,7 +95,7 @@ const toggleNotifications = () => {
         <!-- Header -->
         <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 class="text-lg md:text-xl font-semibold tracking-tight text-blue-900">
+            <h1 class="text-lg md:text-xl font-medium tracking-tight text-blue-900">
               Welcome, {{ fullName }}
             </h1>
             <p class="text-gray-600 text-sm md:text-base">Your personal account overview</p>
@@ -164,8 +166,8 @@ const toggleNotifications = () => {
               <component :is="stat.icon" class="h-5 w-5 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div class="text-base md:text-xl font-medium">
-                <span v-if="showBalances" class="text-blue-900">{{ stat.value }}</span>
+              <div class="text-lg md:text-xl font-medium">
+                <span v-if="showBalances" class="text-[#0a2342]">{{ stat.value }}</span>
                 <span v-else class="text-gray-300">*******</span>
               </div>
               <p class="text-xs text-gray-500">

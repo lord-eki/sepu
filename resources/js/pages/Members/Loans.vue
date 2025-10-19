@@ -84,37 +84,31 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
       <!-- Header -->
       <div class="flex justify-between items-center border-b pb-4 border-gray-200">
         <div>
-          <h1 class="text-xl font-semibold text-blue-900 tracking-tight">My Loans</h1>
-          <p class="text-gray-600 text-sm mt-1">View, manage, and apply for new loans</p>
+          <h1 class="text-xl font-semibold text-[#0a2342] tracking-tight">My Loans</h1>
+          <p class="text-gray-600 text-sm mt-1">View, track, and apply for new loans</p>
         </div>
         <div v-if="canApplyLoan && (!isMemberRole || isEligible)">
           <Link :href="route('loans.create', { member: props.member.id })">
-            <Button class="bg-blue-800 hover:bg-blue-900 text-white px-5 py-2.5 rounded-xl shadow-sm transition-transform hover:scale-[1.02] flex items-center gap-2">
-              <Plus class="w-5 h-5" />
-              <span>Apply for Loan</span>
-            </Button>
+          <Button
+            class="bg-[#0a2342] hover:bg-blue-900 text-white px-5 py-2.5 rounded-xl shadow-sm transition-transform hover:scale-[1.02] flex items-center gap-2">
+            <Plus class="w-5 h-5" />
+            <span>Apply for Loan</span>
+          </Button>
           </Link>
         </div>
       </div>
 
       <!-- Flash / Status Alerts -->
-      <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-2"
-      >
-        <div
-          v-if="alertType"
-          :class="[
-            'rounded-lg p-4 flex items-start gap-3 shadow-sm border',
-            alertType === 'success' && 'bg-green-50 border-green-500 text-green-700',
-            alertType === 'error' && 'bg-red-50 border-red-500 text-red-700',
-            alertType === 'info' && 'bg-blue-50 border-blue-400 text-blue-700'
-          ]"
-        >
+      <transition v-if="canApplyLoan" enter-active-class="transition ease-out duration-300"
+        enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2">
+        <div v-if="alertType" :class="[
+    'rounded-lg p-4 flex items-start gap-3 shadow-sm border',
+    alertType === 'success' && 'bg-green-50 border-green-500 text-green-700',
+    alertType === 'error' && 'bg-red-50 border-red-500 text-red-700',
+    alertType === 'info' && 'bg-blue-50 border-blue-400 text-blue-700'
+  ]">
           <div class="flex-1">
             <p class="font-medium">{{ alertMessage }}</p>
             <ul v-if="!isEligible && reasons.length" class="list-disc list-inside text-sm mt-2 text-red-600">
@@ -137,7 +131,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
             <CardTitle class="text-gray-800 text-base font-semibold">Total Loans</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-xl font-semibold text-blue-900">{{ props.loans.length }}</p>
+            <p class="text-xl font-semibold text-[#0a2342]">{{ props.loans.length }}</p>
           </CardContent>
         </Card>
 
@@ -146,7 +140,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
             <CardTitle class="text-gray-800 text-base font-semibold">Total Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-xl font-medium text-blue-900">
+            <p class="text-xl font-medium text-[#0a2342]">
               KES {{ formattedTotalAmount }}
             </p>
           </CardContent>
@@ -158,7 +152,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
           </CardHeader>
           <CardContent>
             <p class="text-base font-medium text-orange-600">
-              {{ canApplyLoan ? "No Active Loan" : "Loan in progress" }}
+              {{ canApplyLoan ? "No active loan" : "Loan in progress" }}
             </p>
           </CardContent>
         </Card>
@@ -180,11 +174,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr
-                v-for="loan in props.loans"
-                :key="loan.id"
-                class="hover:bg-gray-50 transition-all duration-150"
-              >
+              <tr v-for="loan in props.loans" :key="loan.id" class="hover:bg-gray-50 transition-all duration-150">
                 <td class="px-6 py-4">{{ loan.loan_number }}</td>
                 <td class="px-6 py-4">{{ loan.loan_product?.name }}</td>
                 <td class="px-6 py-4 font-medium text-gray-700">
@@ -195,26 +185,21 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
                 </td>
                 <td class="px-6 py-4">{{ formatDate(getNextRepaymentDate(loan)) }}</td>
                 <td class="px-6 py-4">
-                  <span
-                    class="px-3 py-1 text-xs rounded-full font-medium capitalize"
-                    :class="{
-                      'text-green-700 bg-green-100': ['completed', 'approved'].includes(loan.status),
-                      'text-orange-700 bg-orange-100': loan.status === 'active',
-                      'text-yellow-700 bg-yellow-100': loan.status === 'pending',
-                      'text-red-700 bg-red-100': loan.status === 'rejected',
-                      'text-gray-700 bg-gray-100': loan.status === 'defaulted',
-                      'text-blue-700 bg-blue-100': loan.status === 'disbursed'
-                    }"
-                  >
+                  <span class="px-3 py-1 text-xs rounded-full font-medium capitalize" :class="{
+    'text-green-700 bg-green-100': ['completed', 'approved'].includes(loan.status),
+    'text-orange-700 bg-orange-100': loan.status === 'active',
+    'text-yellow-700 bg-yellow-100': loan.status === 'pending',
+    'text-red-700 bg-red-100': loan.status === 'rejected',
+    'text-gray-700 bg-gray-100': loan.status === 'defaulted',
+    'text-blue-700 bg-blue-100': loan.status === 'disbursed'
+  }">
                     {{ loan.status }}
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <Link
-                    :href="route('loans.show', loan.id)"
-                    class="text-blue-700 hover:text-blue-900 font-medium hover:underline transition"
-                  >
-                    View
+                  <Link :href="route('loans.show', loan.id)"
+                    class="text-blue-700 hover:text-blue-900 font-medium hover:underline transition">
+                  View
                   </Link>
                 </td>
               </tr>
