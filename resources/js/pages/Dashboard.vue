@@ -227,7 +227,7 @@ const toggleNotifications = () => {
                         <Link :href="route('loans.show', loan.id)">View</Link>
                       </Button>
                       <Button as-child size="sm"
-                        class="text-blue-900 bg-blue-200 border border-blue-300 hover:bg-blue-500 hover:text-white">
+                        class="text-blue-900 bg-blue-200 border border-blue-300 hover:bg-blue-100 hover:text-blue-900">
                         <Link :href="route('loans.repayments', loan.id)">Repay</Link>
                       </Button>
                     </div>
