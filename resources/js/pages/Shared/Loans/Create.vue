@@ -281,7 +281,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-gray-700">Select Member *</label>
-                    <select v-model="guarantor.member_id"
+                    <select v-model="guarantor.member_id" required
                       class="mt-2 block w-full rounded-lg border border-gray-300 p-3">
                       <option value="">Choose a member...</option>
                       <option v-for="member in members" :key="member.id" :value="member.id">
@@ -293,7 +293,7 @@
                   <div>
                     <label class="block text-sm font-medium text-gray-700">Guaranteed Amount (KES) *</label>
                     <input v-model="guarantor.guaranteed_amount" type="number" step="0.01" min="0"
-                      :max="form.applied_amount" class="mt-2 block w-full rounded-lg border border-gray-300 p-3" />
+                      :max="form.applied_amount" required class="mt-2 block w-full rounded-lg border border-gray-300 p-3" />
                   </div>
                 </div>
 
@@ -365,6 +365,13 @@
 
                 <!-- Remove All -->
                 <div v-if="uploadedFiles.multiple.length" class="flex flex-col gap-2">
+                  <p v-if="remainingDocCount > 0" class="text-blue-700 mt-3 text-sm font-medium">
+                    {{ remainingDocCount }} attachment<span v-if="remainingDocCount > 1">s</span> remaining to complete all required documents.
+                  </p>
+                  <p v-else class="text-emerald-700 mt-3 text-sm font-medium">
+                    ✅ All required documents have been attached.
+                  </p>
+
                   <button type="button" @click="removeSupportFiles" class="text-sm text-rose-600 hover:text-rose-800">
                     Remove All
                   </button>
@@ -855,6 +862,23 @@ watch(() => form.member_id, () => { triggerEligibilityCheckDebounced() })
 watch(() => form.loan_product_id, () => { triggerEligibilityCheckDebounced() })
 watch(() => form.applied_amount, () => { triggerEligibilityCheckDebounced() })
 
+
+const requiredDocTypes = [
+  "Payslip",
+  "ID",
+  "Bank Statement",
+  "Employment Letter",
+  "Guarantor Form",
+];
+
+const remainingDocCount = computed(() => {
+  return requiredDocTypes.length - uploadedFiles.multiple.length;
+});
+
+const allDocsUploaded = computed(() => remainingDocCount.value === 0);
+
+const hasGuarantor = computed(() => form.guarantors.some(g => g.member_id));
+
 /* --------------------------------------------------------------- */
 
 /* submit controls - updated to include eligibility check */
@@ -885,7 +909,7 @@ const canSubmit = computed(() => {
   // If eligibility.checking is true, we conservatively disallow submit (to avoid race).
   const eligibilityOk = eligibility.eligible === true && !eligibility.checking
 
-  return hasBasicInfo && hasDisbursement && hasDocuments && eligibilityOk
+  return hasBasicInfo && hasDisbursement && hasDocuments && eligibilityOk && hasGuarantor.value && allDocsUploaded.value
 })
 
 /* feedback helper */
@@ -931,7 +955,17 @@ const submitApplication = () => {
   // attempt to run a final eligibility check before showing confirm modal.
   // If eligibility fails, show error and don't open confirm modal.
   // If check throws network error, we block submission and show message.
-  showConfirm.value = false // ensure closed while checking
+  if (!hasGuarantor.value) {
+    errorMessages = { general: "Please add at least one guarantor before submitting." };
+    return;
+  }
+
+  if (!allDocsUploaded.value) {
+    errorMessages = { general: `Please upload all ${requiredDocTypes.length} required documents before submitting.` };
+    return;
+  }
+
+  showConfirm.value = false 
   processing.value = true
   checkEligibilityServer()
     .then(result => {

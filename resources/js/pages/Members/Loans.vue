@@ -72,7 +72,16 @@ const getNextRepaymentDate = (loan: any) => {
 const formatDate = (date: Date | null) =>
   date ? date.toLocaleDateString("en-KE", { year: "numeric", month: "short", day: "numeric" }) : "N/A"
 
-const totalAmount = computed(() => props.loans.reduce((sum, loan) => sum + Number(loan.outstanding_balance), 0))
+const totalAmount = computed(() =>
+  props.loans
+    .filter(l => ['active', 'disbursed'].includes(l.status))
+    .reduce((sum, loan) => sum + Number(loan.outstanding_balance || 0), 0)
+)
+
+const activeLoans = computed(() =>
+  props.loans.filter(l => ['active', 'disbursed'].includes(l.status))
+)
+
 const formattedTotalAmount = computed(() => Number(totalAmount.value).toLocaleString())
 const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l => ['completed', 'rejected'].includes(l.status)))
 </script>
@@ -84,7 +93,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
       <!-- Header -->
       <div class="flex justify-between items-center border-b pb-4 border-gray-200">
         <div>
-          <h1 class="text-xl font-semibold text-[#0a2342] tracking-tight">My Loans</h1>
+          <h1 class="text-xl font-semibold text-blue-900 tracking-tight">My Loans</h1>
           <p class="text-gray-600 text-sm mt-1">View, track, and apply for new loans</p>
         </div>
         <div v-if="canApplyLoan && (!isMemberRole || isEligible)">
@@ -128,19 +137,19 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <Card class="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition">
           <CardHeader class="pb-2">
-            <CardTitle class="text-gray-800 text-base font-semibold">Total Loans</CardTitle>
+            <CardTitle class="text-gray-800 text-base font-semibold">Total Active Loans</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-xl font-semibold text-[#0a2342]">{{ props.loans.length }}</p>
+            <p class="text-xl font-semibold text-blue-900">{{ activeLoans.length }}</p>
           </CardContent>
         </Card>
 
         <Card class="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition">
           <CardHeader class="pb-2">
-            <CardTitle class="text-gray-800 text-base font-semibold">Total Balance</CardTitle>
+            <CardTitle class="text-gray-800 text-base font-semibold">Total Balance Due</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-xl font-medium text-[#0a2342]">
+            <p class="text-xl font-medium text-blue-900">
               KES {{ formattedTotalAmount }}
             </p>
           </CardContent>
@@ -148,7 +157,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
 
         <Card class="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition">
           <CardHeader class="pb-2">
-            <CardTitle class="text-gray-800 text-base font-semibold">Loan Status</CardTitle>
+            <CardTitle class="text-gray-800 text-base font-semibold">Current Loan Status</CardTitle>
           </CardHeader>
           <CardContent>
             <p class="text-base font-medium text-orange-600">
@@ -181,7 +190,11 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
                   KES {{ Number(loan.applied_amount).toLocaleString() }}
                 </td>
                 <td class="px-6 py-4 font-medium text-gray-700">
-                  KES {{ Number(loan.outstanding_balance).toLocaleString() }}
+                  KES {{
+    ['active', 'disbursed'].includes(loan.status)
+      ? Number(loan.outstanding_balance).toLocaleString()
+      : '0'
+  }}
                 </td>
                 <td class="px-6 py-4">{{ formatDate(getNextRepaymentDate(loan)) }}</td>
                 <td class="px-6 py-4">

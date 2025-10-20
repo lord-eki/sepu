@@ -468,7 +468,7 @@ Route::get('/terms', fn () => Inertia::render('Terms'))->name('terms');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile/show', [ProfileController::class, 'show'])->name('member.profile');
-    Route::put('/profile/show', [ProfileController::class, 'updateProfile'])->name('member.updateProfile');
+    Route::put('/profile/update', [ProfileController::class, 'updateProfile'])->name('member.updateProfile');
 });
 
 Route::post('/member/profile/photo', [ProfileController::class, 'updatePhoto'])
