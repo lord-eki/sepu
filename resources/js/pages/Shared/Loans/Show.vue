@@ -1,30 +1,23 @@
 <template>
-  <AppLayout
-    :breadcrumbs="[
-      { title: 'Loans', href: isMemberRole ? '/my-loans' : route('loans.index') },
-      { title: 'Loan Details' }
-    ]"
-  >
+  <AppLayout :breadcrumbs="[
+    { title: 'Loans', href: isMemberRole ? '/my-loans' : route('loans.index') },
+    { title: 'Loan Details' }
+  ]">
     <!-- Flash Message -->
-    <transition
-      enter-active-class="transition ease-out duration-300"
-      enter-from-class="opacity-0 -translate-y-3"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition ease-in duration-200"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-3"
-    >
-      <div
-        v-if="visible"
-        :class="messageClasses"
-        class="fixed top-6 left-1/2 -translate-x-1/2 bg-white border shadow-xl px-6 py-3 rounded-xl flex items-start gap-4 z-50 max-w-xl w-full"
-      >
+    <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-3"
+      enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-3">
+      <div v-if="visible" :class="messageClasses"
+        class="fixed top-6 left-1/2 -translate-x-1/2 bg-white border shadow-xl px-6 py-3 rounded-xl flex items-start gap-4 z-50 max-w-xl w-full">
         <div class="flex-shrink-0 mt-0.5">
           <template v-if="type === 'success'">
-            <div class="h-6 w-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-semibold">✓</div>
+            <div
+              class="h-6 w-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-semibold">
+              ✓</div>
           </template>
           <template v-else-if="type === 'error'">
-            <div class="h-6 w-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-semibold">✕</div>
+            <div class="h-6 w-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-semibold">✕
+            </div>
           </template>
         </div>
 
@@ -46,33 +39,29 @@
           </svg>
         </div>
         <div>
-          <h2 class="font-bold text-xl text-[#0B2B40]">
+          <h2 class="font-semibold text-xl text-[#0B2B40]">
             Loan Details — <span class="text-orange-600">{{ loan.loan_number }}</span>
           </h2>
-          <p class="text-xs text-slate-500 mt-1">Loan ID: <span class="font-semibold text-slate-700">{{ loan.loan_number }}</span></p>
+          <p class="text-xs text-slate-500 mt-1">Loan ID: <span class="font-semibold text-slate-700">{{ loan.loan_number
+              }}</span></p>
         </div>
       </div>
 
       <div class="flex items-center flex-wrap gap-3">
-        <Link
-          v-if="canEdit"
-          :href="route('loans.edit', loan.id)"
-          class="inline-flex items-center gap-2 bg-[#0B2B40] hover:bg-blue-950 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm"
-        >
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6M4 21v-7a4 4 0 014-4h7" />
-          </svg>
-          Edit
+        <Link v-if="canEdit" :href="route('loans.edit', loan.id)"
+          class="inline-flex items-center gap-2 bg-[#0B2B40] hover:bg-blue-950 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6M4 21v-7a4 4 0 014-4h7" />
+        </svg>
+        Edit
         </Link>
 
-        <Link
-          :href="isMemberRole ? route('my-loans') : route('loans.index')"
-          class="inline-flex items-center gap-2 border border-[#0B2B40]/30 text-[#0B2B40] bg-white hover:bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm"
-        >
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
+        <Link :href="isMemberRole ? route('my-loans') : route('loans.index')"
+          class="inline-flex items-center gap-2 border border-[#0B2B40]/30 text-[#0B2B40] bg-white hover:bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
         </Link>
       </div>
     </div>
@@ -97,54 +86,42 @@
           <div class="p-6">
             <h3 class="text-lg font-semibold text-[#0B2B40] mb-4">Quick Actions</h3>
             <div class="flex flex-wrap gap-3">
-              <button
-                v-if="canApprove"
-                @click="openApproveModal"
-                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 shadow"
-              >
+              <button v-if="canApprove" @click="showApprovalModal"
+                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 shadow">
                 <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg> Approve Loan
               </button>
 
-              <button
-                v-if="canReject"
-                @click="openRejectModal"
-                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 shadow"
-              >
+              <button v-if="canReject" @click="openRejectModal"
+                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 shadow">
                 <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg> Reject Loan
               </button>
 
-              <button
-                v-if="canDisburse"
-                @click="openDisburseModal"
-                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#0B2B40] hover:bg-blue-950 shadow"
-              >
+              <button v-if="canDisburse" @click="openDisburseModal"
+                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#0B2B40] hover:bg-blue-950 shadow">
                 <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" />
                 </svg> Disburse Loan
               </button>
 
-              <Link
-                v-if="canViewSchedule"
-                :href="route('loans.schedule', loan.id)"
-                class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium bg-white text-[#0B2B40] hover:bg-blue-50"
-              >
-                <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                </svg> View Schedule
+              <Link v-if="canViewSchedule" :href="route('loans.schedule', loan.id)"
+                class="inline-flex items-center px-4 py-2 bg-[#0B2B40] rounded-lg border border-slate-200 text-sm font-medium text-white hover:bg-[#2a3a44]">
+              <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+              </svg> View Schedule
               </Link>
 
-              <Link
-                v-if="canViewRepayments"
-                :href="route('loans.repayments', loan.id)"
-                class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium bg-white text-[#0B2B40] hover:bg-blue-50"
-              >
-                <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2" />
-                </svg> Repayments
+              <Link v-if="canViewRepayments" :href="route('loans.repayments', loan.id)"
+                class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium bg-orange-500 text-white hover:bg-orange-600">
+              <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2" />
+              </svg> Repayments
               </Link>
             </div>
           </div>
@@ -172,17 +149,20 @@
 
                   <div>
                     <label class="block text-sm font-medium text-slate-500">Applied Amount</label>
-                    <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.applied_amount) }}</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.applied_amount) }}
+                    </p>
                   </div>
 
                   <div v-if="loan.approved_amount">
                     <label class="block text-sm font-medium text-slate-500">Approved Amount</label>
-                    <p class="mt-1 text-sm font-semibold text-blue-800">KES {{ formatCurrency(loan.approved_amount) }}</p>
+                    <p class="mt-1 text-sm font-semibold text-blue-800">KES {{ formatCurrency(loan.approved_amount) }}
+                    </p>
                   </div>
 
                   <div v-if="loan.disbursed_amount">
                     <label class="block text-sm font-medium text-slate-500">Disbursed Amount</label>
-                    <p class="mt-1 text-sm font-semibold text-blue-800">KES {{ formatCurrency(loan.disbursed_amount) }}</p>
+                    <p class="mt-1 text-sm font-semibold text-blue-800">KES {{ formatCurrency(loan.disbursed_amount) }}
+                    </p>
                   </div>
 
                   <div>
@@ -242,12 +222,15 @@
                 <div class="flex items-center gap-4">
                   <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
                     <svg class="h-6 w-6 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
 
                   <div>
-                    <h4 class="text-lg font-medium text-slate-900">{{ loan.member.first_name }} {{ loan.member.last_name }}</h4>
+                    <h4 class="text-lg font-medium text-slate-900">{{ loan.member.first_name }} {{ loan.member.last_name
+                      }}
+                    </h4>
                     <p class="text-sm text-slate-500">{{ loan.member.membership_id }}</p>
                     <p class="text-sm text-slate-500">{{ loan.member.user?.phone || '-' }}</p>
                   </div>
@@ -256,7 +239,8 @@
                 <div class="mt-4 grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-slate-500">Membership Status</label>
-                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                    <span
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
                       {{ (loan.member.membership_status || '').toUpperCase() }}
                     </span>
                   </div>
@@ -268,49 +252,54 @@
 
                 <div class="mt-4">
                   <Link :href="route('members.show', loan.member.id)"
-                        class="inline-flex items-center px-3 py-2 border border-slate-200 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50">
-                    View Member Profile
+                    class="inline-flex items-center px-3 py-2 border border-slate-200 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50">
+                  View Member Profile
                   </Link>
-                </div>
-              </div>
-            </div>
-
-            <!-- Guarantors -->
-            <div v-if="loan.guarantors && loan.guarantors.length > 0" class="bg-white border border-slate-200 shadow-sm rounded-xl">
-              <div class="px-6 py-4 border-b border-slate-100">
-                <h3 class="text-lg font-semibold text-[#0B2B40]">Guarantors</h3>
-              </div>
-              <div class="p-6 space-y-4">
-                <div v-for="guarantor in loan.guarantors" :key="guarantor.id" class="border border-slate-100 rounded-lg p-4">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                      <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                        <svg class="h-4 w-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h4 class="font-medium text-slate-900">{{ guarantor.guarantor_member.first_name }} {{ guarantor.guarantor_member.last_name }}</h4>
-                        <p class="text-sm text-slate-500">{{ guarantor.guarantor_member.membership_id }}</p>
-                      </div>
-                    </div>
-
-                    <div class="text-right">
-                      <p class="font-medium text-slate-900">KES {{ formatCurrency(guarantor.guaranteed_amount) }}</p>
-                      <span :class="getGuarantorStatusClass(guarantor.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1">
-                        {{ (guarantor.status || '').toUpperCase() }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div v-if="guarantor.comments" class="mt-2">
-                    <p class="text-sm text-slate-600">{{ guarantor.comments }}</p>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Guarantors -->
+          <div v-if="loan.guarantors && loan.guarantors.length > 0"
+            class="bg-white border border-slate-200 shadow-sm rounded-xl">
+            <div class="px-6 py-4 border-b border-slate-100">
+              <h3 class="text-lg font-semibold text-[#0B2B40]">Guarantors</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div v-for="guarantor in loan.guarantors" :key="guarantor.id"
+                class="border border-slate-100 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                      <svg class="h-4 w-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="font-medium text-slate-900">{{ guarantor.guarantor_member.first_name }} {{
+    guarantor.guarantor_member.last_name }}</h4>
+                      <p class="text-sm text-slate-500">{{ guarantor.guarantor_member.membership_id }}</p>
+                    </div>
+                  </div>
+
+                  <div class="text-right">
+                    <p class="font-medium text-slate-900">KES {{ formatCurrency(guarantor.guaranteed_amount) }}</p>
+                    <span :class="getGuarantorStatusClass(guarantor.status)"
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1">
+                      {{ (guarantor.status || '').toUpperCase() }}
+                    </span>
+                  </div>
+                </div>
+
+                <div v-if="guarantor.comments" class="mt-2">
+                  <p class="text-sm text-slate-600">{{ guarantor.comments }}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
           <!-- Sidebar -->
           <div class="space-y-6">
             <!-- Balance Information -->
@@ -326,11 +315,13 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-slate-500">Principal Balance</label>
-                  <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.principal_balance) }}</p>
+                  <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.principal_balance) }}
+                  </p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-slate-500">Interest Balance</label>
-                  <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.interest_balance) }}</p>
+                  <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.interest_balance) }}
+                  </p>
                 </div>
                 <div v-if="loan.penalty_balance > 0">
                   <label class="block text-sm font-medium text-slate-500">Penalty Balance</label>
@@ -390,7 +381,8 @@
                           </div>
                           <div class="min-w-0 flex-1">
                             <div>
-                              <p class="text-sm text-slate-500">Application submitted on {{ formatDate(loan.application_date) }}</p>
+                              <p class="text-sm text-slate-500">Application submitted on {{
+    formatDate(loan.application_date) }}</p>
                             </div>
                           </div>
                         </div>
@@ -450,7 +442,7 @@
               </div>
             </div>
 
-          </div> 
+          </div>
         </div>
       </div>
     </div>
@@ -677,7 +669,7 @@ const getStatusBannerClass = (status) => {
     'approved': 'bg-orange-50 text-orange-800 border border-orange-200',
     'disbursed': 'bg-blue-50 text-blue-800 border border-blue-200',
     'active': 'bg-blue-50 text-blue-800 border border-blue-200',
-    'completed': 'bg-slate-50 text-slate-800 border border-slate-200',
+    'completed': 'bg-green-50 text-slate-800 border border-slate-200',
     'rejected': 'bg-red-50 text-red-800 border border-red-200',
     'cancelled': 'bg-red-50 text-red-800 border border-red-200'
   }
