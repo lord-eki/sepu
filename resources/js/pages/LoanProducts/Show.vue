@@ -209,8 +209,6 @@ const deleteProduct = () => {
 }
 
 
-
-
 function toggleStatus(product: any) {
   router.post(
     route('loan-products.toggle-status', { loanProduct: product.id }),
@@ -230,8 +228,6 @@ function toggleStatus(product: any) {
     }
   );
 }
-
-
 
 
 function showFlashMsg(message: string, isError = false) {

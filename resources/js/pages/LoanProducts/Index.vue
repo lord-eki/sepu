@@ -103,7 +103,7 @@
               </Link>
               <span>|</span>
               <button
-                @click="toggleStatus(product)"
+               @click="toggleStatus(product)"
                 class="text-yellow-600 hover:text-yellow-800 transition"
               >
                 {{ product.is_active ? 'Deactivate' : 'Activate' }}
@@ -132,10 +132,10 @@
     <transition name="fade">
       <div
         v-if="showDeleteModal"
-        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50"
+        class="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
       >
         <div
-          class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4 text-center"
+          class="bg-white rounded-xl shadow-lg w-full max-w-md p-8 space-y-6 text-center"
         >
           <h3 class="text-lg font-semibold text-[#0B2B40]">
             Confirm Delete
@@ -143,16 +143,19 @@
           <p class="text-gray-600">
             Are you sure you want to delete <strong>{{ selectedProduct?.name }}</strong>?
           </p>
-          <div class="flex justify-center space-x-4 mt-4">
+          <div class="flex justify-center space-x-8 mt-4">
             <button
-              @click="deleteProduct"
-              class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-medium"
-            >
-              Yes, Delete
-            </button>
+                @click="deleteProduct"
+                class="bg-red-600 hover:bg-red-700 hover:cursor-pointer text-white px-5 py-2 rounded-lg font-medium flex items-center justify-center gap-2"
+                :disabled="deleting"
+                >
+                <span v-if="deleting" class="loader-border animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
+                <span>{{ deleting ? 'Deleting...' : 'Yes, Delete' }}</span>
+                </button>
+
             <button
               @click="showDeleteModal = false"
-              class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-medium"
+              class="bg-gray-200 hover:bg-gray-300 hover:cursor-pointer text-gray-800 px-5 py-2 rounded-lg font-medium"
             >
               Cancel
             </button>
@@ -177,6 +180,7 @@ const flash = page.props.flash;
 const showDeleteModal = ref(false);
 const selectedProduct = ref<any>(null);
 const showFlash = ref(!!(flash.success || flash.error));
+const deleting = ref(false)
 
 const headers = [
   "#",
@@ -199,6 +203,14 @@ onMounted(() => {
     }, 3000);
   }
 });
+
+function showFlashMsg(message: string, isError = false) {
+  flash.success = isError ? '' : message;
+  flash.error = isError ? message : '';
+  showFlash.value = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => showFlash.value = false, 4000);
+}
 
 watch(
   () => page.props.flash,
@@ -223,14 +235,45 @@ function confirmDelete(product: any) {
 
 function deleteProduct() {
   if (!selectedProduct.value) return;
-  router.delete(route("loan-products.destroy", selectedProduct.value.id), {
-    onFinish: () => (showDeleteModal.value = false),
+  deleting.value = true;
+
+  router.delete(route('loan-products.destroy', selectedProduct.value.id), {
+    onSuccess: (page) => {
+      showFlashMsg(page.props.flash.success || page.props.flash.error, !!page.props.flash.error);
+      // remove deleted product from the list immediately
+      const index = props.loanProducts.findIndex(p => p.id === selectedProduct.value.id);
+      if (index !== -1) props.loanProducts.splice(index, 1);
+    },
+    onError: () => showFlashMsg('Failed to delete product. Please try again.', true),
+    onFinish: () => {
+      deleting.value = false;
+      showDeleteModal.value = false;
+    }
   });
 }
 
+
+
 function toggleStatus(product: any) {
-  router.post(route("loan-products.toggleStatus", product.id));
+  router.post(
+    route('loan-products.toggle-status', { loanProduct: product.id }),
+    {},
+    {
+      preserveState: true,
+      onSuccess: (page) => {
+        // get flash from backend response
+        const message = page.props.flash.success || page.props.flash.error || 'Action completed';
+        const isError = !!page.props.flash.error;
+        showFlashMsg(message, isError);
+
+        // update UI immediately
+        product.is_active = !product.is_active;
+      },
+      onError: () => showFlashMsg('Error updating status.', true),
+    }
+  );
 }
+
 </script>
 
 
