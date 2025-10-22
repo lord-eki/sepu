@@ -35,21 +35,21 @@
       class="flex flex-col m-4 sm:flex-row justify-between items-start sm:items-center bg-[#0B2B40] text-white rounded-xl p-5 shadow-md mb-6"
     >
       <div>
-        <h1 class="text-2xl font-semibold mb-1">Loan Products</h1>
+        <h1 class="text-xl font-semibold mb-1">Loan Products</h1>
         <p class="text-sm opacity-90">
           Manage and view all available loan products.
         </p>
       </div>
       <Link
         :href="route('loan-products.create')"
-        class="mt-4 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg font-medium transition"
+        class="mt-4 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white max-sm:text-sm px-5 py-2 rounded-lg font-medium transition"
       >
         + Add New Product
       </Link>
     </div>
 
     <!-- Table Section -->
-    <div class="bg-white rounded-xl m-4 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-xl m-4 shadow-sm overflow-x-auto overflow-hidden">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-blue-50">
           <tr>
@@ -97,21 +97,21 @@
               <span>|</span>
               <Link
                 :href="route('loan-products.edit', product.id)"
-                class="text-orange-600 hover:text-orange-800 transition"
+                class="text-orange-600 hover:cursor-pointer hover:text-orange-800 transition"
               >
                 Edit
               </Link>
               <span>|</span>
               <button
                @click="toggleStatus(product)"
-                class="text-yellow-600 hover:text-yellow-800 transition"
+                class="text-yellow-600 hover:cursor-pointer hover:text-yellow-800 transition"
               >
                 {{ product.is_active ? 'Deactivate' : 'Activate' }}
               </button>
               <span>|</span>
               <button
                 @click="confirmDelete(product)"
-                class="text-red-600 hover:text-red-800 transition"
+                class="text-red-600 hover:cursor-pointer hover:text-red-800 transition"
               >
                 Delete
               </button>
@@ -128,14 +128,56 @@
       </div>
     </div>
 
+
+    <!-- Status Confirmation Modal -->
+    <transition name="fade">
+      <div
+        v-if="showStatusModal"
+        class="fixed inset-0 flex items-center max-sm:px-2 justify-center bg-black/50 z-50"
+      >
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-md py-8 space-y-6 text-center">
+          <h3 class="text-lg font-semibold text-[#0B2B40]">
+            Confirm {{ statusAction }}
+          </h3>
+          <p class="text-gray-600">
+            Are you sure you want to {{ statusAction.toLowerCase() }} 
+            <strong>{{ statusProduct?.name }}</strong>?
+          </p>
+          <div class="flex justify-center space-x-8 mt-4">
+          <button
+            @click="confirmStatusChange"
+            class="bg-yellow-600 hover:bg-yellow-700 text-white px-5 py-2 rounded-lg font-medium flex items-center justify-center gap-2"
+            :disabled="statusProcessing"
+          >
+            <span v-if="statusProcessing" class="loader-border animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
+            <span>
+              {{ statusProcessing 
+                  ? (statusAction === 'Activate' ? 'Activating...' : 'Deactivating...') 
+                  : 'Yes, ' + statusAction 
+              }}
+            </span>
+          </button>
+
+            <button
+              @click="showStatusModal = false"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+
     <!-- Delete Confirmation Modal -->
     <transition name="fade">
       <div
         v-if="showDeleteModal"
-        class="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+        class="fixed inset-0 flex items-center justify-center max-sm:px-2 bg-black/50 z-50"
       >
         <div
-          class="bg-white rounded-xl shadow-lg w-full max-w-md p-8 space-y-6 text-center"
+          class="bg-white rounded-xl shadow-lg w-full max-w-md py-8 space-y-6 text-center"
         >
           <h3 class="text-lg font-semibold text-[#0B2B40]">
             Confirm Delete
@@ -181,6 +223,13 @@ const showDeleteModal = ref(false);
 const selectedProduct = ref<any>(null);
 const showFlash = ref(!!(flash.success || flash.error));
 const deleting = ref(false)
+
+const showStatusModal = ref(false);
+const statusProduct = ref<any>(null);
+const statusAction = ref(''); // 'Activate' or 'Deactivate'
+const statusProcessing = ref(false);
+
+
 
 const headers = [
   "#",
@@ -253,26 +302,42 @@ function deleteProduct() {
 }
 
 
-
 function toggleStatus(product: any) {
+  statusProduct.value = product;
+  statusAction.value = product.is_active ? 'Deactivate' : 'Activate';
+  showStatusModal.value = true;
+}
+
+
+function confirmStatusChange() {
+  if (!statusProduct.value) return;
+  statusProcessing.value = true;
+
   router.post(
-    route('loan-products.toggle-status', { loanProduct: product.id }),
+    route('loan-products.toggle-status', { loanProduct: statusProduct.value.id }),
     {},
     {
       preserveState: true,
       onSuccess: (page) => {
-        // get flash from backend response
         const message = page.props.flash.success || page.props.flash.error || 'Action completed';
         const isError = !!page.props.flash.error;
         showFlashMsg(message, isError);
 
         // update UI immediately
-        product.is_active = !product.is_active;
+        statusProduct.value.is_active = !statusProduct.value.is_active;
       },
       onError: () => showFlashMsg('Error updating status.', true),
+      onFinish: () => {
+        statusProcessing.value = false;
+        showStatusModal.value = false;
+        statusProduct.value = null;
+        statusAction.value = '';
+      }
     }
   );
 }
+
+
 
 </script>
 

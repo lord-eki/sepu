@@ -39,7 +39,7 @@
       class="flex justify-between items-center bg-[#0B2B40] text-white m-4 p-5 rounded-xl mb-6"
     >
       <div>
-        <h1 class="text-2xl font-semibold">Create Loan Product</h1>
+        <h1 class="text-xl font-semibold">Create Loan Product</h1>
         <p class="text-sm opacity-90">
           Add a new loan product to your SACCO system
         </p>
@@ -48,7 +48,7 @@
         :href="route('loan-products.index')"
         class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition"
       >
-        ← Back
+        <span class="max-sm:hidden">←</span> Back
       </Link>
     </div>
 

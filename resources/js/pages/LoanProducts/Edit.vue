@@ -39,7 +39,7 @@
       class="flex justify-between m-4 items-center bg-[#0B2B40] text-white p-5 rounded-xl mb-6"
     >
       <div>
-        <h1 class="text-2xl font-semibold">Edit Loan Product</h1>
+        <h1 class="text-xl font-semibold">Edit Loan Product</h1>
         <p class="text-sm opacity-90">
           Update details for <strong>{{ form.name }}</strong>
         </p>
@@ -48,7 +48,7 @@
         :href="route('loan-products.index')"
         class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition"
       >
-        ← Back
+        <span class="max-sm:hidden">←</span> Back
       </Link>
     </div>
 
@@ -120,17 +120,18 @@
           Loan Limits & Rates
         </summary>
         <div class="p-4 grid sm:grid-cols-2 gap-4">
-          <div v-for="(field, key) in limitsAndRates" :key="key">
+          <div v-for="field in limitsAndRates" :key="field.key">
             <label class="label">{{ field.label }}</label>
             <input
-              v-model="field.model"
+              v-model.number="form[field.key]"
               type="number"
               class="input"
-              :class="{ 'border-red-500 bg-red-50': field.error }"
+              :class="{ 'border-red-500 bg-red-50': form.errors[field.key] }"
               step="any"
             />
-            <p v-if="field.error" class="error">{{ field.error }}</p>
+            <p v-if="form.errors[field.key]" class="error">{{ form.errors[field.key] }}</p>
           </div>
+
 
           <div>
             <label class="label">Interest Method</label>
@@ -158,15 +159,16 @@
           Eligibility Criteria
         </summary>
         <div class="p-4 grid sm:grid-cols-2 gap-4">
-          <div v-for="(field, key) in eligibilityFields" :key="key">
+          <div v-for="field in eligibilityFields" :key="field.key">
             <label class="label">{{ field.label }}</label>
             <input
-              v-model="field.model"
+              v-model.number="form.eligibility_criteria[field.key]"
               type="number"
               step="any"
               class="input"
             />
           </div>
+
 
           <div>
             <label class="label">Clean Credit History</label>
@@ -282,6 +284,29 @@ const form = useForm({
 });
 
 const limitsAndRates = [
+  { label: "Minimum Amount", key: "min_amount" },
+  { label: "Maximum Amount", key: "max_amount" },
+  { label: "Interest Rate (%)", key: "interest_rate" },
+  { label: "Min Term (Months)", key: "min_term_months" },
+  { label: "Max Term (Months)", key: "max_term_months" },
+  { label: "Processing Fee Rate (%)", key: "processing_fee_rate" },
+  { label: "Insurance Rate (%)", key: "insurance_rate" },
+  { label: "Grace Period (Days)", key: "grace_period_days" },
+  { label: "Penalty Rate (%)", key: "penalty_rate" },
+];
+
+const eligibilityFields = [
+  { label: "Min Membership (Months)", key: "minimum_membership_months" },
+  { label: "Min Shares Balance (Ksh)", key: "minimum_shares_balance" },
+  { label: "Max Loan:Shares Ratio", key: "maximum_loan_to_shares_ratio" },
+  { label: "Max Salary Deduction Ratio", key: "maximum_salary_deduction_ratio" },
+];
+
+
+
+
+
+const limitsAndRates1 = [
   {
     label: "Minimum Amount",
     model: form.min_amount,
@@ -329,7 +354,7 @@ const limitsAndRates = [
   },
 ];
 
-const eligibilityFields = [
+const eligibilityFields1 = [
   {
     label: "Min Membership (Months)",
     model: form.eligibility_criteria.minimum_membership_months,
