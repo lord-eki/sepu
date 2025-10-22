@@ -184,6 +184,7 @@ class BudgetController extends Controller
             'utilization' => $utilization,
             'recent_vouchers' => $recentVouchers,
             'can_approve' => $this->canApproveBudget($budget),
+            'can_close' => $this->canCloseBudget($budget),
             'can_activate' => $this->canActivateBudget($budget),
             'can_edit' => $this->canEditBudget($budget),
         ]);
@@ -590,6 +591,30 @@ class BudgetController extends Controller
             return response()->json(['error' => 'Failed to delete budget item: ' . $e->getMessage()], 500);
         }
     }
+
+
+
+    public function updateUtilization(Request $request, BudgetItem $budgetItem)
+{
+    $validated = $request->validate([
+        'amount' => 'required|numeric|min:0',
+        'description' => 'nullable|string|max:255',
+    ]);
+
+    $budgetItem->spent_amount += $validated['amount'];
+    $budgetItem->save();
+
+    // Optional: Log utilization in a separate table (history)
+    // BudgetUtilization::create([
+    //     'budget_item_id' => $budgetItem->id,
+    //     'amount' => $validated['amount'],
+    //     'description' => $validated['description'],
+    // ]);
+
+    return redirect()->back()->with('success', 'Utilization updated successfully!');
+}
+
+
 
     /**
      * Display budget variance analysis.

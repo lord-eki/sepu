@@ -70,7 +70,7 @@
               <Link
                 v-if="can_edit"
                 :href="route('budgets.edit', budget.id)"
-                class="action-btn border-gray-300 text-gray-700 hover:bg-gray-100"
+                class="action-btn border border-gray-300 text-gray-700 hover:bg-gray-100"
               >
                 ✏️ Edit Budget
               </Link>
@@ -78,7 +78,8 @@
               <button
                 v-if="can_approve && budget.status === 'draft'"
                 @click="approveBudget"
-                class="action-btn bg-green-600 text-white hover:bg-green-700"
+                :disabled="processing"
+                class="action-btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ✅ Approve Budget
               </button>
@@ -86,15 +87,17 @@
               <button
                 v-if="can_activate && budget.status === 'approved'"
                 @click="activateBudget"
-                class="action-btn bg-blue-600 text-white hover:bg-blue-700"
+                :disabled="processing"
+                class="action-btn bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ⚡ Activate Budget
               </button>
 
               <button
-                v-if="budget.status === 'active'"
+                v-if="can_close && budget.status === 'active'"
                 @click="closeBudget"
-                class="action-btn bg-red-600 text-white hover:bg-red-700"
+                :disabled="processing"
+                class="action-btn bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 🔒 Close Budget
               </button>
@@ -178,7 +181,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { DollarSign, TrendingUp, TrendingDown, PieChart } from 'lucide-vue-next'
 
@@ -188,8 +191,11 @@ const props = defineProps({
   recent_vouchers: Array,
   can_approve: Boolean,
   can_activate: Boolean,
+  can_close: Boolean,
   can_edit: Boolean
 })
+
+const processing = ref(false)
 
 const formatCurrency = (amount) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount || 0)
@@ -207,6 +213,45 @@ const getStatusLabel = (status) => ({
   active: 'Active',
   closed: 'Closed'
 }[status] || 'Unknown')
+
+const approveBudget = () => {
+  if (processing.value) return
+  
+  if (confirm('Are you sure you want to approve this budget?')) {
+    processing.value = true
+    router.post(route('budgets.approve', props.budget.id), {}, {
+      onFinish: () => {
+        processing.value = false
+      }
+    })
+  }
+}
+
+const activateBudget = () => {
+  if (processing.value) return
+  
+  if (confirm('Are you sure you want to activate this budget? This will deactivate any other active budgets for the same year.')) {
+    processing.value = true
+    router.post(route('budgets.activate', props.budget.id), {}, {
+      onFinish: () => {
+        processing.value = false
+      }
+    })
+  }
+}
+
+const closeBudget = () => {
+  if (processing.value) return
+  
+  if (confirm('Are you sure you want to close this budget? This action cannot be undone.')) {
+    processing.value = true
+    router.post(route('budgets.close', props.budget.id), {}, {
+      onFinish: () => {
+        processing.value = false
+      }
+    })
+  }
+}
 
 const overviewCards = [
   { label: 'Total Budget', value: formatCurrency(props.budget.total_budget), color: 'bg-blue-500', icon: DollarSign },
@@ -237,13 +282,12 @@ const viewLinks = [
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  gap: 0.5rem; /* gap-2 */
-  padding: 0.5rem 1rem; /* py-2 px-4 */
-  border-radius: 0.375rem; /* rounded-md */
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* font-medium */
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm */
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   transition: all 0.2s ease-in-out;
 }
 </style>
-

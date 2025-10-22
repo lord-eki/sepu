@@ -43,25 +43,42 @@
       </transition>
 
       <!-- Import Errors -->
-      <div v-if="importErrors && importErrors.length > 0" class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+      <div v-if="importErrors && importErrors.length > 0" class="bg-yellow-50 border-l-4 border-yellow-400 rounded-md p-4 mb-4 shadow-sm">
         <div class="flex items-start">
-          <AlertCircle class="h-5 w-5 text-yellow-600 mt-0.5" />
+          <AlertCircle class="h-6 w-6 text-yellow-600 mt-0.5 flex-shrink-0" />
           <div class="ml-3 flex-1">
-            <h3 class="text-sm font-medium text-yellow-800">Import Errors ({{ importErrors.length }} rows failed)</h3>
-            <div class="mt-2 text-sm text-yellow-700">
-              <button @click="showErrors = !showErrors" class="underline hover:text-yellow-900">
+            <h3 class="text-base font-bold text-yellow-900">Import Errors - {{ importErrors.length }} row(s) failed</h3>
+            <p class="mt-1 text-sm text-yellow-700">Please review and fix the following errors, then re-import the file.</p>
+            <div class="mt-3">
+              <button 
+                @click="showErrors = !showErrors" 
+                class="inline-flex items-center px-3 py-1.5 border border-yellow-300 rounded-md text-sm font-medium text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500">
                 {{ showErrors ? 'Hide' : 'Show' }} error details
               </button>
             </div>
-            <div v-if="showErrors" class="mt-3 max-h-96 overflow-y-auto">
-              <ul class="space-y-2">
-                <li v-for="(error, index) in importErrors" :key="index" class="bg-white p-3 rounded border border-yellow-300">
-                  <p class="font-medium text-gray-900">Row {{ error.row }}: {{ error.name }}</p>
-                  <ul class="mt-1 ml-4 list-disc list-inside text-sm">
-                    <li v-for="(msg, idx) in error.errors" :key="idx">{{ msg }}</li>
-                  </ul>
-                </li>
-              </ul>
+            <div v-if="showErrors" class="mt-4 max-h-96 overflow-y-auto">
+              <div class="space-y-3">
+                <div v-for="(error, index) in importErrors" :key="index" 
+                  class="bg-white p-4 rounded-md border-l-4 border-red-400 shadow-sm">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <p class="text-sm font-bold text-gray-900">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mr-2">
+                          Row {{ error.row }}
+                        </span>
+                        {{ error.name || 'Unknown Member' }}
+                      </p>
+                      <div class="mt-2 space-y-1">
+                        <div v-for="(msg, idx) in error.errors" :key="idx" 
+                          class="flex items-start text-sm text-red-700">
+                          <span class="text-red-500 mr-2">•</span>
+                          <span>{{ msg }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
