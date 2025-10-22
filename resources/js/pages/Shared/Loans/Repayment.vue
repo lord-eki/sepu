@@ -203,13 +203,13 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
                       <input v-model="selfRepayment.amount" type="number" required
-                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100" />
+                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100" />
                     </div>
 
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</label>
                       <select v-model="selfRepayment.method" required
-                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100">
+                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100">
                         <option disabled value="">Select method</option>
                         <option value="mpesa">M-Pesa</option>
                         <option value="bank">Bank Transfer</option>
@@ -221,7 +221,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Reference Number
                         (optional)</label>
                       <input v-model="selfRepayment.reference" type="text"
-                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100" />
+                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100" />
                     </div>
                   </div>
 
@@ -289,14 +289,14 @@
                           Amount *</label>
                         <input v-model="paymentForm.amount" type="number" step="0.01" id="amount" required min="0.01"
                           :max="selectedRepayment?.outstanding_amount"
-                          class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]" />
+                          class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316]" />
                       </div>
 
                       <div>
                         <label for="payment_method"
                           class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method *</label>
                         <select v-model="paymentForm.payment_method" id="payment_method" required
-                          class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]">
+                          class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316]">
                           <option value="">Select method...</option>
                           <option value="cash">Cash</option>
                           <option value="mobile_money">Mobile Money</option>
@@ -310,14 +310,14 @@
                           class="block text-sm font-medium text-gray-700 dark:text-gray-300">Reference Number</label>
                         <input v-model="paymentForm.reference_number" type="text" id="reference_number"
                           placeholder="Receipt number, transaction ID, etc."
-                          class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]" />
+                          class="mt-1 block w-full rounded-md p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316]" />
                       </div>
 
                       <div>
                         <label for="payment_date"
                           class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Date *</label>
                         <input v-model="paymentForm.payment_date" type="date" id="payment_date" required :max="today"
-                          class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]" />
+                          class="mt-1 block w-full rounded-md p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316]" />
                       </div>
 
                       <div>
@@ -325,7 +325,7 @@
                           class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
                         <textarea v-model="paymentForm.notes" id="notes" rows="2"
                           placeholder="Additional notes about this payment..."
-                          class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]"></textarea>
+                          class="mt-1 block w-full p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316]"></textarea>
                       </div>
                     </div>
 
