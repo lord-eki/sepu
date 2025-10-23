@@ -21,6 +21,13 @@
             letter-spacing: 1px;
         }
 
+        h3 {
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         .summary {
             margin-bottom: 25px;
             border: 1px solid #dfe6ef;
@@ -84,15 +91,24 @@
             font-size: 10px;
             color: #888;
         }
+        .div1 {
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 1.25rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="flex justify-center text-xl"><img src="{{ asset('apple-touch-icon1.png') }}" alt="Logo" class="w-20 md:w-28 mx-auto lg:mx-0" />
-</div>
+    <div class="div1"><img src="{{ asset('apple-touch-icon1.png') }}" alt="Logo" class="w-20 md:w-28 mx-auto lg:mx-0" />
+    <h3>SEPU SACCO</h3>
+    </div>
     <h2>Account Statement</h2>
 
     <div class="summary">
         <p><strong>Name:</strong> {{ $account->member->first_name }} {{ $account->member->last_name }}</p>
+        <p><strong>Account Type:</strong> {{ $account->account_type }}</p>
         <p><strong>Account No:</strong> {{ $account->account_number }}</p>
         <p><strong>Balance:</strong> KES {{ number_format($account->balance) }}</p>
         <p><strong>Period:</strong> {{ $period['from'] }} - {{ $period['to'] }}</p>

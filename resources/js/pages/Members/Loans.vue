@@ -127,9 +127,16 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
         >
           <div class="flex-1">
             <p class="font-semibold">{{ alertMessage }}</p>
+
+            <!-- Show reasons if not eligible -->
             <ul v-if="!isEligible && reasons.length" class="list-disc list-inside text-sm mt-2 text-red-600">
               <li v-for="reason in reasons" :key="reason">{{ reason }}</li>
             </ul>
+
+            <!-- Show note if eligible -->
+            <p v-else-if="isEligible" class="text-sm mt-2 text-gray-600 italic">
+              NB: Only applicable if you have no active unpaid loans.
+            </p>
           </div>
         </div>
       </transition>
@@ -138,6 +145,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
         <span class="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin"></span>
         Checking eligibility...
       </div>
+
 
       <!-- SUMMARY CARDS -->
       <section class="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -149,7 +157,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
             </div>
           </CardHeader>
           <CardContent>
-            <p class="text-2xl font-bold text-[#0B2B40]">{{ activeLoans.length }}</p>
+            <p class="text-xl font-bold text-[#0B2B40]">{{ activeLoans.length }}</p>
           </CardContent>
         </Card>
 
@@ -161,7 +169,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
             </div>
           </CardHeader>
           <CardContent>
-            <p class="text-2xl font-bold text-[#0B2B40]">KES {{ formattedTotalAmount }}</p>
+            <p class="text-xl font-bold text-[#0B2B40]">KES {{ formattedTotalAmount }}</p>
           </CardContent>
         </Card>
 
