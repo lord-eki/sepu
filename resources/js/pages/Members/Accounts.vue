@@ -144,7 +144,7 @@ const memberName = computed(() => {
 
           <div class="flex gap-2 sm:gap-3 flex-wrap">
             <!-- Deposit -->
-            <Link v-if="account.account_type === 'savings'"
+            <Link v-if="account.account_type === 'savings' || account.account_type === 'deposits'"
               :href="route('members.accounts.deposit.show', { member: account.member_id, account: account.id })">
             <Button
               class="bg-blue-800 hover:bg-blue-900 hover:cursor-pointer font-normal text-white max-sm:text-xs shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition">

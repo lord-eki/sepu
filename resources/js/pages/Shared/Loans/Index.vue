@@ -1,13 +1,13 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/loans' }]">
+
     <Head title="Loan Management" />
 
     <div class="loan-page pt-4 pb-8">
       <!-- Gradient header -->
       <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
         <div
-          class="rounded-2xl overflow-hidden shadow-md border border-transparent transform-gpu transition-all duration-300"
-        >
+          class="rounded-2xl overflow-hidden shadow-md border border-transparent transform-gpu transition-all duration-300">
           <div class="bg-gradient-to-r from-[#06203a] to-[#0a2342] px-6 py-6 sm:py-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div class="flex items-center gap-4">
@@ -21,25 +21,28 @@
 
                 <div>
                   <h1 class="text-white font-semibold text-xl sm:text-2xl tracking-tight">Loan Management</h1>
-                  <p class="text-orange-200 max-sm:text-xs text-sm mt-0.5">Manage loan applications, approvals and disbursements</p>
+                  <p class="text-orange-200 max-sm:text-xs text-sm mt-0.5">Manage loan applications, approvals and
+                    disbursements</p>
                 </div>
               </div>
 
               <div class="flex max-sm:flex-col w-fit gap-2">
+                <!-- New Loan Application -->
                 <Link :href="route('loans.create')"
                   class="inline-flex items-center gap-2 rounded-lg bg-white text-[#0a2342] px-4 py-2 text-sm font-medium shadow hover:scale-[1.01] transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  New Loan Application
+                New Loan Application
                 </Link>
 
+                <!-- Check Eligibility -->
+                <button @click="openModal = true"
+                  class="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white hover:cursor-pointer px-4 py-2 text-sm font-medium shadow hover:bg-blue-700 transition">
+                  Check Eligibility
+                </button>
+
+                <!-- Loan Calculator -->
                 <Link :href="route('loan-calculator.index')"
                   class="inline-flex items-center gap-2 rounded-lg bg-orange-500 text-white px-4 py-2 text-sm font-medium shadow hover:opacity-95 transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h4l3-7 4 14 3-7h4" />
-                  </svg>
-                  Loan Calculator
+                Loan Calculator
                 </Link>
               </div>
             </div>
@@ -47,13 +50,40 @@
         </div>
       </header>
 
+
+      <!-- Member Selection Modal -->
+      <div v-if="openModal" class="fixed inset-0 bg-black/50 flex justify-center items-center z-9999">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-sm:w-[90%] w-96">
+          <h2 class="text-lg font-semibold mb-4 text-gray-700">Select Member</h2>
+
+          <select v-model="selectedMember"
+            class="w-full border border-gray-300 rounded-md p-2 mb-4 focus:ring focus:ring-blue-200">
+            <option disabled value="">-- Choose a member --</option>
+            <option v-for="member in members" :key="member.id" :value="member.id">
+              {{ member.name }}
+            </option>
+          </select>
+
+          <div class="flex justify-end gap-2">
+            <button @click="openModal = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
+              Cancel
+            </button>
+            <button @click="checkEligibility" :disabled="!selectedMember"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+
+
       <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <!-- Summary cards -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <transition-group name="fade" tag="div" class="contents">
             <div v-for="card in cards" :key="card.label" class="card-glass p-4 rounded-2xl shadow-lg border">
               <div class="flex items-center gap-4">
-                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', card.bg]" >
+                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', card.bg]">
                   <svg class="w-5  h-5  text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" :d="card.icon" />
                   </svg>
@@ -108,8 +138,11 @@
 
             <div class="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2 justify-start mt-2">
               <button type="submit"
-                class="inline-flex items-center hover:cursor-pointer gap-2 bg-[#0a2342] text-white px-4 py-2 rounded-lg shadow hover:scale-[1.01] transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                class="inline-flex items-center hover:cursor-pointer gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:scale-[1.01] transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 <span>Apply&nbsp;<span class="max-sm:hidden">Filters</span></span>
               </button>
 
@@ -118,8 +151,11 @@
                 Clear
               </button>
 
-              <button type="button" @click="openQuickExport" class="ml-auto inline-flex items-center hover:cursor-pointer gap-2 bg-orange-100 text-[#0a2342] px-4 py-2 rounded-lg hover:bg-orange-200 transition">
-                <svg class="w-4 h-4 max-sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" /></svg>
+              <button type="button" @click="openQuickExport"
+                class="ml-auto inline-flex items-center hover:cursor-pointer gap-2 bg-orange-100 text-[#0a2342] px-4 py-2 rounded-lg hover:bg-orange-200 transition">
+                <svg class="w-4 h-4 max-sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                </svg>
                 Export
               </button>
             </div>
@@ -157,21 +193,28 @@
                   <td class="px-4 py-3">{{ loan.loan_product.name }}</td>
                   <td class="px-4 py-3">
                     <div class="font-medium">KES {{ formatCurrency(loan.applied_amount) }}</div>
-                    <div v-if="loan.approved_amount" class="text-xs text-green-600">Approved: KES {{ formatCurrency(loan.approved_amount) }}</div>
+                    <div v-if="loan.approved_amount" class="text-xs text-green-600">Approved: KES {{
+    formatCurrency(loan.approved_amount) }}</div>
                   </td>
                   <td class="px-4 py-3">
-                    <span :class="getStatusBadgeClass(loan.status) + ' inline-flex px-2 py-1 text-xs font-semibold rounded-full'">
+                    <span
+                      :class="getStatusBadgeClass(loan.status) + ' inline-flex px-2 py-1 text-xs font-semibold rounded-full'">
                       {{ formatStatus(loan.status) }}
                     </span>
                   </td>
                   <td class="px-4 py-3 text-gray-500">{{ formatDate(loan.application_date) }}</td>
                   <td class="px-4 py-3">
                     <div class="flex flex-wrap gap-2">
-                      <Link :href="route('loans.show', loan.id)" class="text-indigo-600 hover:text-indigo-900">View</Link>
-                      <Link v-if="canEdit(loan)" :href="route('loans.edit', loan.id)" class="text-[#0a2342] hover:text-[#0a2342]">Edit</Link>
-                      <button v-if="canApprove(loan)" @click="showApprovalModal(loan)" class="text-green-600 hover:text-green-900">Approve</button>
-                      <button v-if="canReject(loan)" @click="showRejectionModal(loan)" class="text-red-600 hover:text-red-900">Reject</button>
-                      <button v-if="canDisburse(loan)" @click="showDisbursementModal(loan)" class="text-purple-600 hover:text-purple-900">Disburse</button>
+                      <Link :href="route('loans.show', loan.id)" class="text-indigo-600 hover:text-indigo-900">View
+                      </Link>
+                      <Link v-if="canEdit(loan)" :href="route('loans.edit', loan.id)"
+                        class="text-[#0a2342] hover:text-[#0a2342]">Edit</Link>
+                      <button v-if="canApprove(loan)" @click="showApprovalModal(loan)"
+                        class="text-green-600 hover:text-green-900">Approve</button>
+                      <button v-if="canReject(loan)" @click="showRejectionModal(loan)"
+                        class="text-red-600 hover:text-red-900">Reject</button>
+                      <button v-if="canDisburse(loan)" @click="showDisbursementModal(loan)"
+                        class="text-purple-600 hover:text-purple-900">Disburse</button>
                     </div>
                   </td>
                 </tr>
@@ -200,27 +243,33 @@
               </div>
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">Approve Loan Application</h3>
-                <p class="text-sm text-gray-500">Approve loan {{ selectedLoan?.loan_number }} for {{ selectedLoan?.member?.first_name }} {{ selectedLoan?.member?.last_name }}</p>
+                <p class="text-sm text-gray-500">Approve loan {{ selectedLoan?.loan_number }} for {{
+    selectedLoan?.member?.first_name }} {{ selectedLoan?.member?.last_name }}</p>
               </div>
             </div>
 
             <div class="mt-4">
               <label class="block text-sm font-medium text-gray-700">Approved Amount</label>
-              <input v-model="approvalForm.approved_amount" type="number" step="0.01" required :max="selectedLoan?.applied_amount"
+              <input v-model="approvalForm.approved_amount" type="number" step="0.01" required
+                :max="selectedLoan?.applied_amount"
                 class="mt-1 block w-full rounded-md border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-green-100" />
-              <p class="text-xs text-gray-500 mt-1">Applied Amount: KES {{ formatCurrency(selectedLoan?.applied_amount) }}</p>
+              <p class="text-xs text-gray-500 mt-1">Applied Amount: KES {{ formatCurrency(selectedLoan?.applied_amount)
+                }}</p>
             </div>
 
             <div class="mt-4">
               <label class="block text-sm font-medium text-gray-700">Approval Notes</label>
-              <textarea v-model="approvalForm.approval_notes" rows="3" class="mt-1 block w-full rounded-md border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-green-100"></textarea>
+              <textarea v-model="approvalForm.approval_notes" rows="3"
+                class="mt-1 block w-full rounded-md border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-green-100"></textarea>
             </div>
 
             <div class="mt-6 flex gap-3">
-              <button type="submit" class="ml-auto inline-flex items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500">
+              <button type="submit"
+                class="ml-auto inline-flex items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500">
                 Approve Loan
               </button>
-              <button type="button" @click="closeApprovalModal" class="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold border">
+              <button type="button" @click="closeApprovalModal"
+                class="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold border">
                 Cancel
               </button>
             </div>
@@ -243,20 +292,25 @@
               </div>
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">Reject Loan Application</h3>
-                <p class="text-sm text-gray-500">Reject loan {{ selectedLoan?.loan_number }} for {{ selectedLoan?.member?.first_name }} {{ selectedLoan?.member?.last_name }}</p>
+                <p class="text-sm text-gray-500">Reject loan {{ selectedLoan?.loan_number }} for {{
+    selectedLoan?.member?.first_name }} {{ selectedLoan?.member?.last_name }}</p>
               </div>
             </div>
 
             <div class="mt-4">
               <label class="block text-sm font-medium text-gray-700">Rejection Reason</label>
-              <textarea v-model="rejectionForm.rejection_reason" rows="4" required placeholder="Please provide a detailed reason for rejection..." class="mt-1 block w-full rounded-md border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-red-100"></textarea>
+              <textarea v-model="rejectionForm.rejection_reason" rows="4" required
+                placeholder="Please provide a detailed reason for rejection..."
+                class="mt-1 block w-full rounded-md border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-red-100"></textarea>
             </div>
 
             <div class="mt-6 flex gap-3">
-              <button type="submit" class="ml-auto inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
+              <button type="submit"
+                class="ml-auto inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
                 Reject Loan
               </button>
-              <button type="button" @click="closeRejectionModal" class="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold border">
+              <button type="button" @click="closeRejectionModal"
+                class="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold border">
                 Cancel
               </button>
             </div>
@@ -427,16 +481,40 @@ const cards = computed(() => ([
   { label: 'Overdue', value: props.summary?.overdue_loans ?? 0, bg: 'bg-red-500', icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
 ]))
 
+
+const openModal = ref(false)
+const selectedMember = ref('')
+
+
+import axios from 'axios'
+import { onMounted } from 'vue'
+
+const members = ref([])
+
+onMounted(async () => {
+  const response = await axios.get('/api/search/members')
+  members.value = response.data
+})
+
+
+const checkEligibility = () => {
+  if (selectedMember.value) {
+    openModal.value = false
+    router.visit(route('members.members.loan-eligibility', selectedMember.value))
+  }
+}
+
 </script>
 
 <style scoped>
 /* card glass effect */
 .card-glass {
-  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.82));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.82));
   backdrop-filter: blur(6px);
   border: 1px solid rgba(10, 35, 66, 0.06);
   transition: transform .18s ease, box-shadow .18s ease;
 }
+
 .card-glass:hover {
   transform: translateY(-6px);
   box-shadow: 0 12px 30px rgba(10, 35, 66, 0.08);
@@ -444,42 +522,61 @@ const cards = computed(() => ([
 
 /* small modal scale animation */
 .scale-in {
-  animation: scaleIn .18s cubic-bezier(.2,.8,.2,1) both;
+  animation: scaleIn .18s cubic-bezier(.2, .8, .2, 1) both;
 }
+
 @keyframes scaleIn {
-  from { transform: translateY(6px) scale(.98); opacity: 0; }
-  to { transform: translateY(0) scale(1); opacity: 1; }
+  from {
+    transform: translateY(6px) scale(.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 /* fade group */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: all .25s ease;
 }
-.fade-enter-from, .fade-leave-to {
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
   transform: translateY(6px);
 }
-.fade-enter-to, .fade-leave-from {
+
+.fade-enter-to,
+.fade-leave-from {
   opacity: 1;
   transform: translateY(0);
 }
 
 /* modal transition */
-.modal-enter-active, .modal-leave-active {
+.modal-enter-active,
+.modal-leave-active {
   transition: opacity .18s ease, transform .18s ease;
 }
-.modal-enter-from, .modal-leave-to {
+
+.modal-enter-from,
+.modal-leave-to {
   opacity: 0;
   transform: translateY(8px) scale(.99);
 }
-.modal-enter-to, .modal-leave-from {
+
+.modal-enter-to,
+.modal-leave-from {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
 
 /* page bg */
 .loan-page {
-  background-color: #f6f8fb; /* subtle light background for depth */
+  background-color: #f6f8fb;
+  /* subtle light background for depth */
   min-height: 100vh;
   padding-bottom: 3rem;
 }

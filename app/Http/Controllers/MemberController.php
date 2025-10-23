@@ -299,7 +299,6 @@ class MemberController extends Controller
             if ($request->hasFile('documents')) {
                 $existingDocuments = json_decode($member->documents, true) ?? [];
                 $newDocuments = [];
-
                 foreach ($request->file('documents') as $file) {
                     $path = $file->store('members/documents', 'public');
                     $newDocuments[] = [
@@ -693,7 +692,6 @@ class MemberController extends Controller
         if ($request->hasFile('documents')) {
             $existingDocuments = json_decode($member->documents, true) ?? [];
             $newDocuments = [];
-
             foreach ($request->file('documents') as $file) {
                 $path = $file->store('members/documents', 'public');
                 $newDocuments[] = [
@@ -797,7 +795,6 @@ class MemberController extends Controller
     public function validateMemberId(Request $request)
     {
         $exists = Member::where('membership_id', $request->membership_id)->exists();
-
         return response()->json(['exists' => $exists]);
     }
 

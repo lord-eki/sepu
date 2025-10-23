@@ -34,7 +34,6 @@ Route::get('/email/verify', function (Request $request) {
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
-
     return redirect('/dashboard');
 })->middleware(['auth', 'signed'])->name('verification.verify');
 
@@ -179,7 +178,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{loan}/edit', [LoanController::class, 'edit'])->name('edit');
         Route::put('/{loan}', [LoanController::class, 'update'])->name('update');
         Route::delete('/{loan}', [LoanController::class, 'destroy'])->name('destroy');
-
         // Loan application workflow
         Route::post('/{loan}/submit', [LoanController::class, 'submit'])->name('submit');
         Route::post('/{loan}/review', [LoanController::class, 'review'])->name('review');
@@ -228,18 +226,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{dividend}/edit', [DividendController::class, 'edit'])->name('edit');
         Route::put('/{dividend}', [DividendController::class, 'update'])->name('update');
         Route::delete('/{dividend}', [DividendController::class, 'destroy'])->name('destroy');
-
         // Dividend calculation and distribution
         Route::post('/calculate/{year}', [DividendController::class, 'calculate'])->name('calculate');
         Route::post('/{dividend}/approve', [DividendController::class, 'approve'])->name('approve');
         Route::post('/{dividend}/distribute', [DividendController::class, 'distribute'])->name('distribute');
         Route::post('/{dividend}/reverse', [DividendController::class, 'reverse'])->name('reverse');
-
         // Member dividend details
         Route::get('/{dividend}/members', [DividendController::class, 'members'])->name('members');
         Route::get('/{dividend}/members/{member}', [DividendController::class, 'memberDetails'])->name('member-details');
         Route::post('/{dividend}/members/{member}/pay', [DividendController::class, 'payMemberDividend'])->name('pay-member');
-
         // Dividend reports
         Route::get('/{dividend}/report', [DividendController::class, 'report'])->name('report');
         Route::get('/analytics/history', [DividendController::class, 'history'])->name('analytics.history');
@@ -255,18 +250,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{budget}/edit', [BudgetController::class, 'edit'])->name('edit');
         Route::put('/{budget}', [BudgetController::class, 'update'])->name('update');
         Route::delete('/{budget}', [BudgetController::class, 'destroy'])->name('destroy');
-
         // Budget approval
         Route::post('/{budget}/approve', [BudgetController::class, 'approve'])->name('approve');
         Route::post('/{budget}/activate', [BudgetController::class, 'activate'])->name('activate');
         Route::post('/{budget}/close', [BudgetController::class, 'close'])->name('close');
-
         // Budget items
         Route::get('/{budget}/items', [BudgetController::class, 'items'])->name('items');
         Route::post('/{budget}/items', [BudgetController::class, 'storeItem'])->name('store-item');
         Route::put('/{budget}/items/{item}', [BudgetController::class, 'updateItem'])->name('update-item');
         Route::delete('/{budget}/items/{item}', [BudgetController::class, 'destroyItem'])->name('destroy-item');
-
         // Budget monitoring
         Route::get('/{budget}/variance', [BudgetController::class, 'variance'])->name('variance');
         Route::get('/{budget}/utilization', [BudgetController::class, 'utilization'])->name('utilization');
@@ -281,7 +273,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{voucher}/edit', [PaymentVoucherController::class, 'edit'])->name('edit');
         Route::put('/{voucher}', [PaymentVoucherController::class, 'update'])->name('update');
         Route::delete('/{voucher}', [PaymentVoucherController::class, 'destroy'])->name('destroy');
-
         // Voucher workflow
         Route::post('/{voucher}/submit', [PaymentVoucherController::class, 'submit'])->name('submit');
         Route::post('/{voucher}/approve', [PaymentVoucherController::class, 'approve'])->name('approve');
@@ -307,19 +298,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/financial/income-statement', [ReportController::class, 'incomeStatement'])->name('financial.income-statement');
         Route::get('/financial/cash-flow', [ReportController::class, 'cashFlow'])->name('financial.cash-flow');
         Route::get('/financial/trial-balance', [ReportController::class, 'trialBalance'])->name('financial.trial-balance');
-
         // Member reports
         Route::get('/members/register', [ReportController::class, 'memberRegister'])->name('members.register');
         Route::get('/members/shares', [ReportController::class, 'memberShares'])->name('members.shares');
         Route::get('/members/savings', [ReportController::class, 'memberSavings'])->name('members.savings');
         Route::get('/members/loans', [ReportController::class, 'memberLoans'])->name('members.loans');
-
         // Loan reports
         Route::get('/loans/portfolio', [ReportController::class, 'loanPortfolio'])->name('loans.portfolio');
         Route::get('/loans/arrears', [ReportController::class, 'loanArrears'])->name('loans.arrears');
         Route::get('/loans/disbursement', [ReportController::class, 'loanDisbursement'])->name('loans.disbursement');
         Route::get('/loans/collection', [ReportController::class, 'loanCollection'])->name('loans.collection');
-
         // Transaction reports
         Route::get('/transactions/daily', [ReportController::class, 'dailyTransactions'])->name('transactions.daily');
         Route::get('/transactions/monthly', [ReportController::class, 'monthlyTransactions'])->name('transactions.monthly');
@@ -380,13 +368,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/search/members', [MemberController::class, 'searchMembers'])->name('search.members');
         Route::get('/search/accounts', [AccountController::class, 'searchAccounts'])->name('search.accounts');
         Route::get('/search/loans', [LoanController::class, 'searchLoans'])->name('search.loans');
-
         // Quick stats
         Route::get('/stats/dashboard', [ReportController::class, 'dashboardStats'])->name('stats.dashboard');
         Route::get('/stats/members', [MemberController::class, 'memberStats'])->name('stats.members');
         Route::get('/stats/loans', [LoanController::class, 'loanStats'])->name('stats.loans');
         Route::get('/stats/transactions', [TransactionController::class, 'transactionStats'])->name('stats.transactions');
-
         // Validation endpoints
         Route::post('/validate/member-id', [MemberController::class, 'validateMemberId'])->name('validate.member-id');
         Route::post('/validate/account-number', [AccountController::class, 'validateAccountNumber'])->name('validate.account-number');
@@ -492,7 +478,7 @@ Route::get('/terms', fn () => Inertia::render('Terms'))->name('terms');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile/show', [ProfileController::class, 'show'])->name('member.profile');
-    Route::put('/profile/show', [ProfileController::class, 'updateProfile'])->name('member.updateProfile');
+    Route::put('/profile/update', [ProfileController::class, 'updateProfile'])->name('member.updateProfile');
 });
 
 Route::post('/member/profile/photo', [ProfileController::class, 'updatePhoto'])
