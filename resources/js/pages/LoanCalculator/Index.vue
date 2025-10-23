@@ -2,7 +2,7 @@
   <AppLayout :breadcrumbs="[{ title: 'Loan Calculator' }]">
     <div class="loan-calculator max-sm:px-3">
       <!-- Page Header -->
-      <div class="bg-blue-900 shadow-md mx-6 rounded-xl px-4 py-5 sm:px-6">
+      <div class="bg-blue-900 shadow-md sm:mx-6 rounded-xl px-4 py-5 sm:px-6">
         <div class="md:flex md:items-center md:justify-between">
           <div class="min-w-0 flex-1">
             <h2 class="text-xl sm:text-2xl font-bold leading-7 text-white">

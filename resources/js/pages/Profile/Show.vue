@@ -186,7 +186,7 @@ function submit() {
 
             <!-- Upload -->
             <label
-              class="mt-4 px-3 py-1.5 bg-orange-100 text-blue-900 text-sm rounded-lg shadow-sm hover:bg-orange-200 cursor-pointer">
+              class="mt-4 px-3 py-1.5 text-blue-900 text-sm rounded-lg shadow-sm hover:bg-orange-200 cursor-pointer">
               Edit Photo
               <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
             </label>

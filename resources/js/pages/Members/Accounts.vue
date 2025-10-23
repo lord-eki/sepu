@@ -48,7 +48,7 @@ const memberName = computed(() => {
         <div class="flex items-center justify-between">
           <!-- Accounts -->
           <div>
-            <h1 class="text-lg md:text-xl font-semibold">
+            <h1 class="text-2xl font-semibold">
               Accounts
             </h1>
             <p class="text-sm max-sm:w-[90%] opacity-90 mt-1">

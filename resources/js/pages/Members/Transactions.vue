@@ -64,17 +64,6 @@ function downloadStatement() {
             and download your statement for record-keeping.
           </p>
         </div>
-        <!-- Download Button -->
-        <div class="flex">
-        <button
-            @click="downloadStatement"
-            class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg 
-                  bg-orange-500 text-white hover:cursor-pointer shadow transition hover:bg-orange-600 focus:opacity-100"
-          >
-            <Download class="h-4 w-4" />
-            Download
-          </button>
-        </div>
       </div>
 
       <!-- Summary Cards -->
