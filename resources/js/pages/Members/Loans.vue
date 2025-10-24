@@ -84,6 +84,38 @@ const activeLoans = computed(() =>
 
 const formattedTotalAmount = computed(() => Number(totalAmount.value).toLocaleString())
 const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l => ['completed', 'rejected'].includes(l.status)))
+
+// Determine most recent or relevant loan status
+const currentLoanStatus = computed(() => {
+  if (!props.loans.length) return null
+  // Prioritize the most recent loan (by created_at or id)
+  const latestLoan = [...props.loans].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+  return latestLoan.status
+})
+
+const currentLoanMessage = computed(() => {
+  switch (currentLoanStatus.value) {
+    case 'pending':
+      return 'Pending Loan'
+    case 'approved':
+      return 'Loan approved'
+    case 'disbursed':
+      return 'Loan disbursed'
+    case 'active':
+      return 'Active loan'
+    case 'completed':
+      return 'Loan repaid'
+    case 'rejected':
+      return 'Loan rejected'
+    case 'defaulted':
+      return 'Loan defaulted'
+    case 'under_review':
+      return 'in process'
+    default:
+      return 'No active loan'
+  }
+})
+
 </script>
 
 <template>
@@ -165,7 +197,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
           <CardHeader class="pb-2 flex items-center justify-between">
             <CardTitle class="text-gray-800 text-base font-semibold">Total Balance Due</CardTitle>
             <div class="p-2 bg-blue-50 text-[#0B2B40] rounded-xl">
-              <span class="font-bold">Ksh</span>
+              <span class="font-semibold">Ksh</span>
             </div>
           </CardHeader>
           <CardContent>
@@ -181,9 +213,20 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
             </div>
           </CardHeader>
           <CardContent>
-            <p class="text-base font-medium" :class="canApplyLoan ? 'text-green-700' : 'text-orange-600'">
-              {{ canApplyLoan ? "No active loan" : "Loan in progress" }}
+            <p
+              class="text-base font-medium capitalize"
+              :class="{
+                'text-green-700': currentLoanStatus === 'completed' || currentLoanStatus === 'approved',
+                'text-orange-600': currentLoanStatus === 'active',
+                'text-blue-600': currentLoanStatus === 'disbursed',
+                'text-yellow-600': currentLoanStatus === 'pending' || currentLoanStatus === 'under_review',
+                'text-red-600': currentLoanStatus === 'rejected' || currentLoanStatus === 'defaulted',
+                'text-slate-500': !currentLoanStatus
+              }"
+            >
+              {{ currentLoanMessage }}
             </p>
+
           </CardContent>
         </Card>
       </section>
@@ -227,6 +270,7 @@ const canApplyLoan = computed(() => !props.loans.length || props.loans.every(l =
                       'text-yellow-700 bg-yellow-100': loan.status === 'pending',
                       'text-red-700 bg-red-100': loan.status === 'rejected',
                       'text-gray-700 bg-gray-100': loan.status === 'defaulted',
+                      'text-orange-700 bg-orange-100': loan.status === 'under_review',
                       'text-blue-700 bg-blue-100': loan.status === 'disbursed'
                     }"
                   >

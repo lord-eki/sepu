@@ -58,7 +58,7 @@ const memberName = computed(() => {
 
           <!-- Account Holder -->
           <div class="text-right self-start">
-            <p class="text-sm opacity-75">Account Name</p>
+            <p class="text-sm font-bold text-blue-900 opacity-75">Name</p>
             <h2 class="text-base sm:text-lg font-medium text-white">
               {{ memberName }}
             </h2>
@@ -125,7 +125,7 @@ const memberName = computed(() => {
 
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
           <div>
-            <h2 class="text-base sm:text-lg font-medium text-gray-800">
+            <h2 class="text-base sm:text-lg font-medium text-blue-900">
               <span class="font-normal">Acc. No:</span> {{ account.account_number }} - {{ account.account_type }}
             </h2>
             <p class="text-sm sm:text-base text-gray-500 flex items-center gap-3">
