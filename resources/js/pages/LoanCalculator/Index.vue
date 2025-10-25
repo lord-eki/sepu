@@ -2,10 +2,10 @@
   <AppLayout :breadcrumbs="[{ title: 'Loan Calculator' }]">
     <div class="loan-calculator max-sm:px-3">
       <!-- Page Header -->
-      <div class="bg-blue-900 shadow-md mx-6 rounded-xl px-4 py-5 sm:px-6">
+      <div class="bg-gradient-to-r from-[#0B2B40] to-[#123A5A] shadow-md mt-2 sm:mx-6 rounded-xl px-6 py-5 sm:px-6">
         <div class="md:flex md:items-center md:justify-between">
           <div class="min-w-0 flex-1">
-            <h2 class="text-xl sm:text-2xl font-bold leading-7 text-white">
+            <h2 class="text-2xl font-bold leading-7 text-white">
               Loan Calculator
             </h2>
             <p class="mt-1 text-sm text-orange-300">
@@ -215,7 +215,7 @@
 
                     <!-- Calculate Button -->
                     <button type="submit" :disabled="loading || !isFormValid"
-                      class="w-full bg-blue-800 hover:bg-blue-900 hover:cursor-pointer disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200 flex items-center justify-center">
+                      class="w-full bg-blue-900 hover:bg-blue-800 hover:cursor-pointer disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200 flex items-center justify-center">
                       <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

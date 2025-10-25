@@ -11,6 +11,10 @@ import {
   Clock,
   Database,
   AlertTriangle,
+  Settings,
+  ShieldCheck,
+  BarChart3,
+  Handshake,
 } from 'lucide-vue-next'
 
 interface Stats {
@@ -32,22 +36,28 @@ defineProps<{
   <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }]">
     <Head title="Admin Dashboard" />
 
-    <div class="min-h-screen bg-[#f9fafb] p-6 space-y-10">
+    <div class="min-h-screen bg-[#f5f7fb] p-6 space-y-10">
+
       <!-- Header -->
       <header
-        class="bg-gradient-to-r from-[#0a2342] to-[#102a54] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden"
+        class="bg-gradient-to-r from-[#0a2342] to-[#133263] rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between"
       >
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 class="text-xl sm:text-2xl font-semibold">Admin Dashboard</h1>
-            <p class="text-sm text-blue-100">System overview and monitoring</p>
-          </div>
-          <div class="mt-4 sm:mt-0 h-1 w-24 bg-orange-500 rounded-full animate-pulse"></div>
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
+            SEPU <span class="text-orange-500">SACCO</span>
+          </h1>
+          <p class="text-sm text-blue-100 mt-1">
+            Welcome to SEPU SACCO Admin Dashboard — Comprehensive System Overview & Insights
+          </p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex flex-col items-center gap-2">
+          <Handshake class="w-6 h-6 text-orange-400" />
+          <div class="h-1.5 w-24 bg-orange-500 rounded-full animate-pulse"></div>
         </div>
       </header>
 
-      <!-- Stats Grid -->
-      <section class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Quick Stats -->
+      <section class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <Card
           v-for="stat in [
             { title: 'Total Members', value: stats.members.total, sub: `Active: ${stats.members.active}`, icon: Users, color: 'bg-blue-900/10 text-blue-900' },
@@ -71,72 +81,58 @@ defineProps<{
         </Card>
       </section>
 
-      <!-- Recent Activities -->
-      <section>
-        <h2 class="text-lg font-semibold mb-3 text-[#0a2342]">Recent Activities</h2>
-        <div class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md divide-y">
-          <div
-            v-for="(item, i) in recentActivities"
-            :key="i"
-            class="flex items-center justify-between p-4 hover:bg-orange-50 transition"
-          >
-            <div class="flex items-start gap-3">
-              <ArrowRightCircle class="h-5 w-5 text-orange-500 mt-0.5" />
-              <div>
-                <p class="text-sm font-medium text-gray-800">{{ item.description }}</p>
-                <p class="text-xs text-gray-500">{{ new Date(item.time).toLocaleString() }}</p>
+      <!-- Activities & System Info -->
+      <section class="grid gap-6 lg:grid-cols-3">
+        <!-- Recent Activities -->
+        <div class="lg:col-span-2">
+          <h2 class="text-lg font-semibold mb-3 text-[#0a2342]">Recent Activities</h2>
+          <div class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md h-[350px] overflow-y-auto custom-scroll divide-y">
+            <div
+              v-for="(item, i) in recentActivities"
+              :key="i"
+              class="flex items-center justify-between p-4 hover:bg-orange-50 transition"
+            >
+              <div class="flex items-start gap-3">
+                <ArrowRightCircle class="h-5 w-5 text-orange-500 mt-0.5" />
+                <div>
+                  <p class="text-sm font-medium text-gray-800 leading-tight">{{ item.description }}</p>
+                  <p class="text-xs text-gray-500">{{ new Date(item.time).toLocaleString() }}</p>
+                </div>
               </div>
+              <span class="text-sm font-semibold text-[#0a2342]">Ksh. {{ item.amount }}</span>
             </div>
-            <span class="text-sm font-medium text-[#0a2342]">Ksh. {{ item.amount }}</span>
           </div>
         </div>
-      </section>
 
-      <!-- Pending Approvals & System Health -->
-      <section class="grid gap-6 md:grid-cols-2">
-        <!-- Pending Approvals -->
-        <Card class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md">
+        <!-- Combined Approvals + System Health -->
+        <Card class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md flex flex-col">
           <CardHeader>
             <CardTitle class="text-base font-semibold text-[#0a2342] flex items-center gap-2">
               <Clock class="h-4 w-4 text-orange-500" /> Pending Approvals
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul class="space-y-3 text-sm">
+          <CardContent class="pb-0">
+            <ul class="space-y-2 text-sm mb-4">
               <li class="flex justify-between items-center">
                 Loans
-                <span
-                  class="px-2 py-0.5 rounded-lg bg-orange-100 text-orange-700 font-semibold"
-                  >{{ pendingApprovals.loans }}</span
-                >
+                <span class="px-2 pb-0.5 rounded-lg bg-orange-100 text-orange-700 font-semibold">{{ pendingApprovals.loans }}</span>
               </li>
               <li class="flex justify-between items-center">
                 Vouchers
-                <span
-                  class="px-2 py-0.5 rounded-lg bg-blue-900/10 text-blue-900 font-semibold"
-                  >{{ pendingApprovals.vouchers }}</span
-                >
+                <span class="px-2 py-0.5 rounded-lg bg-blue-900/10 text-blue-900 font-semibold">{{ pendingApprovals.vouchers }}</span>
               </li>
               <li class="flex justify-between items-center">
                 Members
-                <span
-                  class="px-2 py-0.5 rounded-lg bg-green-100 text-green-700 font-semibold"
-                  >{{ pendingApprovals.member_applications }}</span
-                >
+                <span class="px-2 py-0.5 rounded-lg bg-green-100 text-green-700 font-semibold">{{ pendingApprovals.member_applications }}</span>
               </li>
             </ul>
-          </CardContent>
-        </Card>
 
-        <!-- System Health -->
-        <Card class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md">
-          <CardHeader>
+            <hr class="border-gray-200 mb-4" />
+
             <CardTitle class="text-base font-semibold text-[#0a2342] flex items-center gap-2">
               <Database class="h-4 w-4 text-blue-800" /> System Health
             </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul class="space-y-3 text-sm">
+            <ul class="space-y-3 text-sm mt-5">
               <li class="flex items-center gap-2">
                 <Database class="h-4 w-4 text-green-600" /> Status:
                 <span class="font-medium text-green-700">{{ systemHealth.database_status }}</span>
@@ -157,6 +153,54 @@ defineProps<{
           </CardContent>
         </Card>
       </section>
+
+      <!-- System Setup -->
+      <section>
+        <h2 class="text-lg font-semibold mb-4 text-[#0a2342] flex items-center gap-2">
+          <Settings class="h-5 w-5 text-orange-500" /> System Setup & Configuration
+        </h2>
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <Card
+            v-for="setup in [
+              { title: 'Loan Rates', desc: 'Define loan interest and limits', icon: BarChart3, color: 'bg-orange-100 text-orange-600', link: '/admin/setup/loan-rates' },
+              { title: 'Repayment Periods', desc: 'Set repayment durations', icon: Clock, color: 'bg-blue-900/10 text-blue-900', link: '/admin/setup/repayment-periods' },
+              { title: 'System Users', desc: 'Manage user roles and permissions', icon: Users, color: 'bg-green-100 text-green-700', link: '/admin/setup/users' },
+              { title: 'System Approvals', desc: 'Define approval workflows', icon: ShieldCheck, color: 'bg-blue-100 text-blue-800', link: '/admin/setup/approvals' },
+            ]"
+            :key="setup.title"
+            class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+            @click="$inertia.visit(setup.link)"
+          >
+            <CardHeader class="flex items-center justify-between pb-2">
+              <CardTitle class="text-sm font-medium text-gray-700">{{ setup.title }}</CardTitle>
+              <div class="p-2 rounded-xl" :class="setup.color">
+                <component :is="setup.icon" class="h-5 w-5" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p class="text-xs text-gray-500">{{ setup.desc }}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="text-center text-xs text-gray-500 pt-8 pb-4">
+        © {{ new Date().getFullYear() }} <span class="font-semibold text-[#0a2342]">SEPU SACCO</span>. All Rights Reserved.
+      </footer>
     </div>
   </AppLayout>
 </template>
+
+<style scoped>
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background-color: #f97316;
+  border-radius: 9999px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background-color: #f5f7fb;
+}
+</style>
