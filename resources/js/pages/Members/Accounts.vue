@@ -3,8 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, ArrowDownCircle, Eye, EyeOff } from 'lucide-vue-next'
 import { Button } from "@/components/ui/button"
 import { Link } from "@inertiajs/vue3"
-import { computed, reactive } from "vue"
+import { computed, onMounted, reactive } from "vue"
 import AppLayout from '@/layouts/AppLayout.vue'
+
+onMounted(() => {
+  const flash = page.props.flash
+  if (flash?.success) {
+    showMessage('success', flash.success)
+  } else if (flash?.error) {
+    showMessage('error', flash.error)
+  }
+})
 
 
 const props = defineProps<{

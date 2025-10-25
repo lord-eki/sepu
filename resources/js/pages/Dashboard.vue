@@ -87,7 +87,7 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
           <p class="text-sm text-gray-500">Here’s your financial snapshot</p>
         </div>
         <div class="flex items-center gap-3 mt-3 sm:mt-0">
-          <Button size="sm" variant="outline" class="border-[#0a2342] hover:cursor-pointer text-[#0a2342]" @click="toggleBalances">
+          <Button size="sm" variant="outline" class="border-[#0a2342] hover:text-blue-900 hover:cursor-pointer text-[#0a2342]" @click="toggleBalances">
             {{ showBalances ? 'Hide Balances' : 'Show Balances' }}
           </Button>
 
