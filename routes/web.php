@@ -14,6 +14,7 @@ use App\Http\Controllers\PaymentVoucherController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SystemUserController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
@@ -107,6 +108,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/bulk-export', [MemberController::class, 'bulkExport'])->name('bulk-export');
 
+    });
+
+    // SYSTEM USERS ROUTES (Admin only)
+    Route::middleware('role:admin')->prefix('system-users')->name('system-users.')->group(function () {
+        // Main CRUD routes
+        Route::get('/', [SystemUserController::class, 'index'])->name('index');
+        Route::get('/create', [SystemUserController::class, 'create'])->name('create');
+        Route::post('/', [SystemUserController::class, 'store'])->name('store');
+        Route::get('/{systemUser}', [SystemUserController::class, 'show'])->name('show');
+        Route::get('/{systemUser}/edit', [SystemUserController::class, 'edit'])->name('edit');
+        Route::put('/{systemUser}', [SystemUserController::class, 'update'])->name('update');
+        Route::delete('/{systemUser}', [SystemUserController::class, 'destroy'])->name('destroy');
+        
+        // Additional actions
+        Route::patch('/{systemUser}/toggle-status', [SystemUserController::class, 'toggleStatus'])->name('toggle-status');
+        Route::patch('/{systemUser}/update-password', [SystemUserController::class, 'updatePassword'])->name('update-password');
+        
+        // Roles and permissions
+        Route::get('/roles/manage', [SystemUserController::class, 'roles'])->name('roles');
+        
+        // Bulk actions
+        Route::post('/bulk-action', [SystemUserController::class, 'bulkAction'])->name('bulk-action');
     });
 
     // ACCOUNTS & SHARES ROUTES

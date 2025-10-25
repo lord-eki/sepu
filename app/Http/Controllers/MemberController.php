@@ -835,7 +835,7 @@ class MemberController extends Controller
             DB::beginTransaction();
 
             foreach ($rows as $index => $row) {
-                $rowNumber = $index + 2; // +2 because we removed header and Excel rows start at 1
+                $rowNumber = $index + 2; 
 
                 // Skip empty rows
                 if (empty(array_filter($row))) {
