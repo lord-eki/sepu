@@ -145,9 +145,8 @@ const selectedMember = computed(() => {
 
 const getAccountTypeDescription = (type) => {
   const descriptions = {
-    savings: 'A savings account allows members to save money and earn interest on their deposits.',
-    shares: 'A shares account represents ownership in the cooperative and entitles members to dividends.',
-    deposits: 'A deposits account offers higher interest rates for fixed-term investments.'
+    share_capital: 'Share Capital account - Paid once on registration and when purchasing shares from exiting members. Represents your ownership stake in the SACCO.',
+    share_deposits: 'Share Deposits account - For monthly share deposits. SEPU staff contributions are automatically deducted from payroll. Non-staff members can make deposits manually using the deposit button.'
   }
   return descriptions[type] || ''
 }
