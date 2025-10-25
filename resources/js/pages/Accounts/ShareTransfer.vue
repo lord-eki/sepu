@@ -81,7 +81,7 @@
                         </div>
 
                         <!-- Share Transfer Info -->
-                        <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                         <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
                             <div class="flex">
                                 <div class="flex-shrink-0">
                                     <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -92,14 +92,16 @@
                                 </div>
                                 <div class="ml-3">
                                     <h3 class="text-sm font-medium text-blue-800">
-                                        Share Transfer Information
+                                        Share Capital Transfer Information
                                     </h3>
                                     <div class="mt-2 text-sm text-blue-700">
                                         <p>
-                                            Share transfers allow you to transfer ownership of your cooperative shares
-                                            to another member.
-                                            The receiving member will gain dividend rights and voting power
-                                            corresponding to the transferred shares.
+                                            Share capital transfers allow exiting members to transfer their ownership stake to other active members.
+                                            This is typically done when a member is leaving the SACCO. The receiving member will pay for these shares
+                                            and gain the associated ownership rights, voting power, and dividend entitlements.
+                                        </p>
+                                        <p class="mt-2 font-medium">
+                                            Note: This is for Share Capital accounts only. Share Deposits cannot be transferred.
                                         </p>
                                     </div>
                                 </div>
