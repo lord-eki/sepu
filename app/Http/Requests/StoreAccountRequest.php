@@ -23,7 +23,7 @@ class StoreAccountRequest extends FormRequest
     {
         return [
             "account_number" => "required|string|max:20|unique:accounts,account_number",
-            "account_type" => "required|string|in:savings,current",
+            "account_type" => "required|string|in:share_capital,share_deposits",
             "balance" => "required|numeric|min:0",
             "available_balance" => "required|numeric|min:0",
             "is_active" => "boolean",

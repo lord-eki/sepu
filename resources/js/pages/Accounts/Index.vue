@@ -293,7 +293,8 @@ const cards = [
   { label: 'Total Accounts', value: props.stats?.total_accounts ?? 0, gradient: 'bg-gradient-to-tr from-[#0a2342] to-[#133b56]', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16h14zm-8-4h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z' },
   { label: 'Active Accounts', value: props.stats?.active_accounts ?? 0, gradient: 'bg-green-500', icon: 'M5 13l4 4L19 7' },
   { label: 'Total Balance', value: `KES ${formatCurrency(props.stats?.total_balance ?? 0)}`, gradient: 'bg-gradient-to-tr from-[#f97316] to-[#f59e0b]', icon: 'M12 8c-1.657 0-3 1.343-3 3v1H8a1 1 0 000 2h1v1a3 3 0 006 0h1a1 1 0 000-2h-1v-1c0-1.657-1.343-3-3-3z' },
-  { label: 'Shares Balance', value: `KES ${formatCurrency(props.stats?.shares_balance ?? 0)}`, gradient: 'bg-indigo-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }
+  { label: 'Share Capital', value: `KES ${formatCurrency(props.stats?.share_capital_balance ?? 0)}`, gradient: 'bg-purple-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+  { label: 'Share Deposits', value: `KES ${formatCurrency(props.stats?.share_deposits_balance ?? 0)}`, gradient: 'bg-blue-600', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z' }
 ]
 </script>
 

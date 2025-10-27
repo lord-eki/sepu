@@ -62,14 +62,12 @@ class AccountController extends Controller
                 'total_accounts' => Account::count(),
                 'active_accounts' => Account::where('is_active', true)->count(),
                 'total_balance' => Account::where('is_active', true)->sum('balance'),
-                'savings_balance' => Account::where('account_type', 'savings')->sum('balance'),
-                'shares_balance' => Account::where('account_type', 'shares')->sum('balance'),
-                'deposits_balance' => Account::where('account_type', 'deposits')->sum('balance'),
+                'share_capital_balance' => Account::where('account_type', 'share_capital')->sum('balance'),
+                'share_deposits_balance' => Account::where('account_type', 'share_deposits')->sum('balance'),
             ],
             'accountTypes' => [
-                'savings' => 'Savings',
-                'shares' => 'Shares',
-                'deposits' => 'Deposits'
+                'share_capital' => 'Share Capital',
+                'share_deposits' => 'Share Deposits'
             ]
         ]);
     }
@@ -92,9 +90,8 @@ class AccountController extends Controller
                     ];
                 }),
             'accountTypes' => [
-                'savings' => 'Savings Account',
-                'shares' => 'Shares Account',
-                'deposits' => 'Deposits Account'
+                'share_capital' => 'Share Capital',
+                'share_deposits' => 'Share Deposits'
             ]
         ]);
     }
@@ -106,6 +103,15 @@ class AccountController extends Controller
     {
         try {
             DB::beginTransaction();
+
+            // Check if member already has this account type
+            $existingAccount = Account::where('member_id', $request->member_id)
+                ->where('account_type', $request->account_type)
+                ->first();
+
+            if ($existingAccount) {
+                return back()->withErrors(['account_type' => 'Member already has this account type']);
+            }
 
             $account = Account::create([
                 'member_id' => $request->member_id,
@@ -159,11 +165,11 @@ class AccountController extends Controller
             'recentTransactions' => $account->transactions,
             'stats' => [
                 'total_deposits' => $account->transactions()
-                    ->whereIn('transaction_type', ['deposit', 'share_purchase'])
+                    ->whereIn('transaction_type', ['deposit', 'share_purchase', 'share_transfer_in'])
                     ->where('status', 'completed')
                     ->sum('amount'),
                 'total_withdrawals' => $account->transactions()
-                    ->whereIn('transaction_type', ['withdrawal', 'share_sale'])
+                    ->whereIn('transaction_type', ['withdrawal', 'share_sale', 'share_transfer_out'])
                     ->where('status', 'completed')
                     ->sum('amount'),
                 'transaction_count' => $account->transactions()->count(),
@@ -182,9 +188,8 @@ class AccountController extends Controller
         return Inertia::render('Accounts/Edit', [
             'account' => $account,
             'accountTypes' => [
-                'savings' => 'Savings Account',
-                'shares' => 'Shares Account',
-                'deposits' => 'Deposits Account'
+                'share_capital' => 'Share Capital',
+                'share_deposits' => 'Share Deposits'
             ]
         ]);
     }
@@ -274,6 +279,11 @@ class AccountController extends Controller
     public function deposit(DepositRequest $request, Account $account): RedirectResponse
     {
         try {
+            // Only allow deposits to share_deposits account
+            if ($account->account_type !== 'share_deposits') {
+                return back()->withErrors(['error' => 'Deposits can only be made to Share Deposits account']);
+            }
+
             DB::beginTransaction();
 
             $amount = $request->amount;
@@ -285,11 +295,11 @@ class AccountController extends Controller
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $account->id,
                 'member_id' => $account->member_id,
-                'transaction_type' => $account->account_type === 'shares' ? 'share_purchase' : 'deposit',
+                'transaction_type' => 'deposit',
                 'amount' => $amount,
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
-                'description' => $request->description ?? "Deposit to {$account->account_type} account",
+                'description' => $request->description ?? "Monthly share deposit",
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference,
                 'status' => 'completed',
@@ -349,12 +359,15 @@ class AccountController extends Controller
 
             $balanceAfter = $balanceBefore - $amount;
 
+            // Determine transaction type based on account type
+            $transactionType = $account->account_type === 'share_capital' ? 'share_sale' : 'withdrawal';
+
             // Create transaction
             $transaction = Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $account->id,
                 'member_id' => $account->member_id,
-                'transaction_type' => $account->account_type === 'shares' ? 'share_sale' : 'withdrawal',
+                'transaction_type' => $transactionType,
                 'amount' => $amount,
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
@@ -385,13 +398,13 @@ class AccountController extends Controller
     }
 
     /**
-     * Show share transfer form
+     * Show share transfer form (for share capital only)
      */
     public function showShareTransfer(Account $account): Response
     {
-        if ($account->account_type !== 'shares') {
+        if ($account->account_type !== 'share_capital') {
             return redirect()->route('accounts.show', $account)
-                ->with('error', 'Share transfer is only available for shares accounts');
+                ->with('error', 'Share transfer is only available for Share Capital accounts');
         }
 
         return Inertia::render('Accounts/ShareTransfer', [
@@ -408,6 +421,102 @@ class AccountController extends Controller
                     ];
                 })
         ]);
+    }
+
+    /**
+     * Process share transfer (for exiting members)
+     */
+    public function shareTransfer(ShareTransferRequest $request, Account $account): RedirectResponse
+    {
+        try {
+            if ($account->account_type !== 'share_capital') {
+                return back()->withErrors(['error' => 'Share transfer is only available for Share Capital accounts']);
+            }
+
+            DB::beginTransaction();
+
+            $amount = $request->amount;
+            $recipientMember = Member::findOrFail($request->recipient_member_id);
+
+            // Check if sufficient balance
+            if ($account->balance < $amount) {
+                return back()->withErrors(['amount' => 'Insufficient balance']);
+            }
+
+            // Find or create recipient's share capital account
+            $recipientAccount = Account::firstOrCreate([
+                'member_id' => $recipientMember->id,
+                'account_type' => 'share_capital',
+            ], [
+                'account_number' => $this->generateAccountNumber('share_capital'),
+                'balance' => 0,
+                'available_balance' => 0,
+                'is_active' => true,
+            ]);
+
+            // Process sender's transaction
+            $senderBalanceBefore = $account->balance;
+            $senderBalanceAfter = $senderBalanceBefore - $amount;
+
+            Transaction::create([
+                'transaction_id' => $this->generateTransactionId(),
+                'account_id' => $account->id,
+                'member_id' => $account->member_id,
+                'transaction_type' => 'share_transfer_out',
+                'amount' => $amount,
+                'balance_before' => $senderBalanceBefore,
+                'balance_after' => $senderBalanceAfter,
+                'description' => "Share capital transfer to {$recipientMember->first_name} {$recipientMember->last_name} - Member exiting",
+                'payment_method' => 'system_transfer',
+                'payment_reference' => "TRANSFER-{$recipientMember->membership_id}",
+                'status' => 'completed',
+                'processed_by' => Auth::id(),
+                'processed_at' => now(),
+            ]);
+
+            // Update sender's account
+            $account->update([
+                'balance' => $senderBalanceAfter,
+                'available_balance' => $senderBalanceAfter,
+                'last_transaction_at' => now(),
+            ]);
+
+            // Process recipient's transaction
+            $recipientBalanceBefore = $recipientAccount->balance;
+            $recipientBalanceAfter = $recipientBalanceBefore + $amount;
+
+            Transaction::create([
+                'transaction_id' => $this->generateTransactionId(),
+                'account_id' => $recipientAccount->id,
+                'member_id' => $recipientMember->id,
+                'transaction_type' => 'share_purchase',
+                'amount' => $amount,
+                'balance_before' => $recipientBalanceBefore,
+                'balance_after' => $recipientBalanceAfter,
+                'description' => "Share capital purchase from exiting member {$account->member->first_name} {$account->member->last_name}",
+                'payment_method' => 'system_transfer',
+                'payment_reference' => "TRANSFER-{$account->member->membership_id}",
+                'status' => 'completed',
+                'processed_by' => Auth::id(),
+                'processed_at' => now(),
+            ]);
+
+            // Update recipient's account
+            $recipientAccount->update([
+                'balance' => $recipientBalanceAfter,
+                'available_balance' => $recipientBalanceAfter,
+                'last_transaction_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('accounts.show', $account)
+                ->with('success', 'Share capital transfer completed successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to process share transfer: ' . $e->getMessage()]);
+        }
     }
 
     // Account's statement
@@ -454,7 +563,6 @@ class AccountController extends Controller
         ]);
     }
 
-
     public function statementPdf(Request $request, $accountId)
     {
         $request->validate([
@@ -487,103 +595,7 @@ class AccountController extends Controller
         ])->setPaper('A4', 'portrait')
         ->setOption('isHtml5ParserEnabled', true);
 
-        // Stream PDF to browser
         return $pdf->stream("statement-{$account->account_number}.pdf");
-    }
-
-
-
-
-    /**
-     * Process share transfer
-     */
-    public function shareTransfer(ShareTransferRequest $request, Account $account): RedirectResponse
-    {
-        try {
-            DB::beginTransaction();
-
-            $amount = $request->amount;
-            $recipientMember = Member::findOrFail($request->recipient_member_id);
-
-            // Check if sufficient balance
-            if ($account->balance < $amount) {
-                return back()->withErrors(['amount' => 'Insufficient balance']);
-            }
-
-            // Find or create recipient's shares account
-            $recipientAccount = Account::firstOrCreate([
-                'member_id' => $recipientMember->id,
-                'account_type' => 'shares',
-            ], [
-                'account_number' => $this->generateAccountNumber('shares'),
-                'balance' => 0,
-                'available_balance' => 0,
-                'is_active' => true,
-            ]);
-
-            // Process sender's transaction
-            $senderBalanceBefore = $account->balance;
-            $senderBalanceAfter = $senderBalanceBefore - $amount;
-
-            Transaction::create([
-                'transaction_id' => $this->generateTransactionId(),
-                'account_id' => $account->id,
-                'member_id' => $account->member_id,
-                'transaction_type' => 'share_transfer_out',
-                'amount' => $amount,
-                'balance_before' => $senderBalanceBefore,
-                'balance_after' => $senderBalanceAfter,
-                'description' => "Share transfer to {$recipientMember->first_name} {$recipientMember->last_name}",
-                'payment_method' => 'system_transfer',
-                'payment_reference' => "TRANSFER-{$recipientMember->membership_id}",
-                'status' => 'completed',
-                'processed_by' => Auth::id(),
-                'processed_at' => now(),
-            ]);
-
-            // Update sender's account
-            $account->update([
-                'balance' => $senderBalanceAfter,
-                'available_balance' => $senderBalanceAfter,
-                'last_transaction_at' => now(),
-            ]);
-
-            // Process recipient's transaction
-            $recipientBalanceBefore = $recipientAccount->balance;
-            $recipientBalanceAfter = $recipientBalanceBefore + $amount;
-
-            Transaction::create([
-                'transaction_id' => $this->generateTransactionId(),
-                'account_id' => $recipientAccount->id,
-                'member_id' => $recipientMember->id,
-                'transaction_type' => 'share_transfer_in',
-                'amount' => $amount,
-                'balance_before' => $recipientBalanceBefore,
-                'balance_after' => $recipientBalanceAfter,
-                'description' => "Share transfer from {$account->member->first_name} {$account->member->last_name}",
-                'payment_method' => 'system_transfer',
-                'payment_reference' => "TRANSFER-{$account->member->membership_id}",
-                'status' => 'completed',
-                'processed_by' => Auth::id(),
-                'processed_at' => now(),
-            ]);
-
-            // Update recipient's account
-            $recipientAccount->update([
-                'balance' => $recipientBalanceAfter,
-                'available_balance' => $recipientBalanceAfter,
-                'last_transaction_at' => now(),
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('accounts.show', $account)
-                ->with('success', 'Share transfer completed successfully');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to process share transfer: ' . $e->getMessage()]);
-        }
     }
 
     /**
@@ -641,9 +653,8 @@ class AccountController extends Controller
     private function generateAccountNumber(string $accountType): string
     {
         $prefix = match ($accountType) {
-            'savings' => 'SAV',
-            'shares' => 'SHR',
-            'deposits' => 'DEP',
+            'share_capital' => 'SHC',
+            'share_deposits' => 'SHD',
             default => 'ACC'
         };
 

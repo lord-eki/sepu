@@ -50,8 +50,49 @@
       </Link>
     </div>
 
-    <!-- Main Form -->
-    <div class="py-10 px-[5%] bg-[#F9FAFB]">
+    <!-- Restriction Notice for Share Capital -->
+    <div v-if="account.account_type === 'share_capital'" class="py-10 px-[5%] bg-[#F9FAFB]">
+      <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-lg font-semibold text-yellow-800">Deposits Not Available</h3>
+              <div class="mt-2 text-sm text-yellow-700">
+                <p class="mb-3">
+                  <strong>Share Capital</strong> accounts do not accept regular deposits. Share capital is paid:
+                </p>
+                <ul class="list-disc list-inside space-y-1 ml-2">
+                  <li>Once during member registration</li>
+                  <li>When purchasing shares from exiting members (share transfer)</li>
+                </ul>
+                <p class="mt-4">
+                  For monthly share contributions, please use your <strong>Share Deposits</strong> account.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 flex justify-center">
+          <Link
+            :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
+            class="bg-[#0B2B40] hover:bg-[#0a2436] text-white font-semibold px-6 py-2 rounded-lg shadow"
+          >
+            Back to Accounts
+          </Link>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Form (Only for Share Deposits) -->
+    <div v-else class="py-10 px-[5%] bg-[#F9FAFB]">
       <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-8">
         <!-- Account Summary -->
         <div class="border-l-4 border-orange-500 bg-blue-50 rounded-md p-4 mb-6">
@@ -85,6 +126,29 @@
           </div>
         </div>
 
+        <!-- Info Note for Share Deposits -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-blue-800">Share Deposits Information</h3>
+              <div class="mt-2 text-sm text-blue-700">
+                <p>This is your <strong>Share Deposits</strong> account for monthly contributions.</p>
+                <ul class="list-disc list-inside mt-2 space-y-1 ml-2">
+                  <li><strong>SEPU Staff:</strong> Contributions are automatically deducted from payroll</li>
+                  <li><strong>Non-Staff Members:</strong> Use this form to make manual deposits</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Deposit Form -->
         <form @submit.prevent="submit" class="space-y-6">
           <!-- Amount -->
@@ -93,11 +157,12 @@
             <input
               v-model.number="form.amount"
               type="number"
-              min="5000"
-              placeholder="Enter amount (min 5000)"
+              min="100"
+              placeholder="Enter amount (min 100)"
               class="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"
               required
             />
+            <p class="mt-1 text-xs text-gray-500">Minimum deposit: KES 100</p>
           </div>
 
           <!-- Payment Method -->
@@ -137,7 +202,7 @@
                 <li><strong>Paybill:</strong> 400200</li>
                 <li><strong>Account No:</strong> 01120040146200</li>
                 <li><strong>Account Name:</strong> SEPU SACCO SOCIETY LIMITED</li>
-                <li><strong>Minimum Deposit:</strong> Kshs. 5,000</li>
+                <li><strong>Minimum Deposit:</strong> Kshs. 100</li>
               </ul>
             </template>
 
@@ -154,9 +219,9 @@
                 <h4 class="text-sm font-semibold text-[#0B2B40] mb-2">Steps to Complete Bank Transfer:</h4>
                 <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
                   <li>Log in to your online or mobile banking app.</li>
-                  <li>Select <strong>“Bank Transfer”</strong> or <strong>“Send Money to Account”</strong>.</li>
+                  <li>Select <strong>"Bank Transfer"</strong> or <strong>"Send Money to Account"</strong>.</li>
                   <li>Enter the above SACCO account details carefully.</li>
-                  <li>Enter your desired deposit amount (minimum Ksh 5,000).</li>
+                  <li>Enter your desired deposit amount (minimum Ksh 100).</li>
                   <li>Confirm details and complete the transaction.</li>
                   <li>Copy or note down the <strong>Bank Transaction Reference Number</strong>.</li>
                 </ol>
@@ -201,34 +266,13 @@
             </div>
           </div>
 
-
-
-          <!-- STK Push Section -->
-          <!-- <div v-if="form.payment_method === 'mobile_money'">
-            <h3 class="text-base font-semibold text-blue-800">Deposit via M-Pesa Express (STK Push)</h3>
-            <input
-              v-model="form.stk_phone"
-              type="tel"
-              placeholder="2547XXXXXXXX"
-              class="mt-2 w-full border p-2 rounded-md"
-            />
-            <button
-              type="button"
-              class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-              @click="initiateStkPush"
-            >
-              Initiate Payment
-            </button>
-          </div>
-          -->
-
           <!-- Description -->
           <div>
             <label class="block text-sm font-medium text-gray-700">Description</label>
             <textarea
               v-model="form.description"
               rows="3"
-              placeholder="Optional note for this deposit"
+              placeholder="Optional note for this deposit (e.g., Monthly share deposit for January 2025)"
               class="mt-1 w-full border border-gray-300 rounded-md p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"
             ></textarea>
           </div>
@@ -246,7 +290,7 @@
               :disabled="
                 form.processing ||
                 !form.amount ||
-                form.amount < 5000 ||
+                form.amount < 100 ||
                 (
                   ['mobile_money', 'bank_transfer', 'cheque'].includes(form.payment_method) &&
                   !form.payment_reference
@@ -256,7 +300,6 @@
             >
               {{ form.processing ? 'Processing...' : 'Process Deposit' }}
             </button>
-
           </div>
         </form>
       </div>
@@ -302,7 +345,6 @@ const form = useForm({
   payment_method: '',
   payment_reference: '',
   description: '',
-  stk_phone: '',
 })
 
 const paymentMethods = {
@@ -316,9 +358,8 @@ const formatCurrency = (amount) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount || 0)
 
 const getAccountTypeLabel = (type) => ({
-  savings: 'Savings Account',
-  shares: 'Shares Account',
-  deposits: 'Deposits Account',
+  share_capital: 'Share Capital',
+  share_deposits: 'Share Deposits',
 }[type] || type)
 
 const submit = () => {

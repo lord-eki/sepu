@@ -22,6 +22,8 @@ import {
     Bell,
     Settings,
     Package,
+    UserCog,
+    Shield,
 } from 'lucide-vue-next';
 import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
@@ -190,6 +192,26 @@ const adminNavItems: NavItem[] = [
     icon: FileText,
   },
   {
+    title: 'System Users',
+    href: '',
+    routeName: 'system-users.index',
+    icon: UserCog,
+    children: [
+      {
+        title: 'All Users',
+        href: '',
+        routeName: '',
+        icon: Users,
+      },
+      {
+        title: 'Roles & Permissions',
+        href: '',
+        routeName: '',
+        icon: Shield,
+      },
+    ],
+  },
+  {
     title: 'Notifications',
     href: '/na',
     routeName: '#',
@@ -211,16 +233,7 @@ const userRole = page.props.auth.user.role;
 const isAdmin = userRole === 'admin';
 
 const footerNavItems: NavItem[] = [
-    {
-        title: 'Terms of Service',
-        href: '/terms',
-        icon: Folder,
-    },
-    {
-        title: 'About Us',
-        href: '/about',
-        icon: BookOpen,
-    },
+   
 ];
 </script>
 

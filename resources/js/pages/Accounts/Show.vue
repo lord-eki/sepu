@@ -58,7 +58,9 @@
             </p>
           </div>
           <div class="flex space-x-3">
+            <!-- Only show Deposit button for Share Deposits account -->
             <Link
+              v-if="account.account_type === 'share_deposits'"
               :href="route('accounts.deposit.show', account.id)"
               class="inline-flex items-center px-4 py-2 bg-blue-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-blue-900 transition"
             >
@@ -154,6 +156,9 @@
                   >
                     {{ getAccountTypeLabel(account.account_type) }}
                   </span>
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{ getAccountTypeDescription(account.account_type) }}
+                  </p>
                 </dd>
               </div>
               <div class="py-3 grid grid-cols-3 gap-4">
@@ -268,10 +273,13 @@
           </div>
         </div>
 
-        <!-- Additional Actions -->
-        <div v-if="account.account_type === 'shares'" class="bg-white shadow-lg rounded-xl overflow-hidden">
+        <!-- Additional Actions (Only for Share Capital) -->
+        <div v-if="account.account_type === 'share_capital'" class="bg-white shadow-lg rounded-xl overflow-hidden">
           <div class="p-6">
-            <h3 class="text-lg font-semibold text-blue-900 mb-4">Share Operations</h3>
+            <h3 class="text-lg font-semibold text-blue-900 mb-4">Share Capital Operations</h3>
+            <p class="text-sm text-gray-600 mb-4">
+              Share capital can be transferred to other members when exiting the SACCO.
+            </p>
             <div class="flex space-x-4">
               <Link
                 :href="route('accounts.share-transfer.show', account.id)"
@@ -345,18 +353,24 @@ const formatDate = (date) => {
 
 const getAccountTypeLabel = (type) => {
   const labels = {
-    'savings': 'Savings Account',
-    'shares': 'Shares Account',
-    'deposits': 'Deposits Account'
+    'share_capital': 'Share Capital',
+    'share_deposits': 'Share Deposits'
   }
   return labels[type] || type
 }
 
+const getAccountTypeDescription = (type) => {
+  const descriptions = {
+    'share_capital': 'Paid once on registration and when purchasing shares from exiting members',
+    'share_deposits': 'Monthly share deposits - Auto-deducted for staff, manual for non-staff'
+  }
+  return descriptions[type] || ''
+}
+
 const getAccountTypeBadgeClass = (type) => {
   const classes = {
-    'savings': 'bg-blue-100 text-blue-800',
-    'shares': 'bg-purple-100 text-purple-800',
-    'deposits': 'bg-green-100 text-green-800'
+    'share_capital': 'bg-purple-100 text-purple-800',
+    'share_deposits': 'bg-blue-100 text-blue-800'
   }
   return classes[type] || 'bg-gray-100 text-gray-800'
 }
