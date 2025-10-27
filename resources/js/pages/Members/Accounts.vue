@@ -2,9 +2,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, ArrowDownCircle, Eye, EyeOff } from 'lucide-vue-next'
 import { Button } from "@/components/ui/button"
-import { Link } from "@inertiajs/vue3"
+import { Link, usePage } from "@inertiajs/vue3"
 import { computed, onMounted, reactive } from "vue"
 import AppLayout from '@/layouts/AppLayout.vue'
+const page = usePage()
 
 onMounted(() => {
   const flash = page.props.flash
