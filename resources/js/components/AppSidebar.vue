@@ -5,33 +5,33 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    BookOpen,
-    Folder,
-    LayoutGrid,
-    HandCoins,
-    ClipboardList,
-    Ticket,
-    BriefcaseConveyorBelt,
-    Users,
-    NotebookTabs,
-    FileText,
-    User,
-    ArrowRightLeft,
-    Calculator,
-    FileSignature,
-    Bell,
-    Settings,
-    Package,
-    UserCog,
-    Shield,
+  BookOpen,
+  Folder,
+  LayoutGrid,
+  HandCoins,
+  ClipboardList,
+  Ticket,
+  BriefcaseConveyorBelt,
+  Users,
+  NotebookTabs,
+  FileText,
+  User,
+  ArrowRightLeft,
+  Calculator,
+  FileSignature,
+  Bell,
+  Settings,
+  Package,
+  UserCog,
+  Shield,
 } from 'lucide-vue-next';
 import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import type { AppPageProps } from '@/types';
 
 const page = usePage<AppPageProps>()
-const user = page.props.auth.user
-const member = page.props.auth?.member ?? null
+const user = page.props?.auth?.user ?? null
+const member = page.props?.auth?.member ?? null
 
 
 
@@ -40,11 +40,11 @@ const member = page.props.auth?.member ?? null
  * ---- Types ----
  */
 export interface NavItem {
-    title: string;
-    href?: string;
-    icon?: LucideIcon;
-    isActive?: boolean;
-    children?: NavItem[];
+  title: string;
+  href?: string;
+  icon?: LucideIcon;
+  isActive?: boolean;
+  children?: NavItem[];
 }
 
 /**
@@ -80,7 +80,7 @@ const memberNavItems: NavItem[] = [
         href: route('loan-calculator.index'),
         routeName: 'loan-calculator.index',
         icon: Calculator,
-        },
+      },
 
       {
         title: 'Loan Application',
@@ -229,36 +229,36 @@ const adminNavItems: NavItem[] = [
  * ---- Role detection ----
  */
 
-const userRole = page.props.auth.user.role;
-const isAdmin = userRole === 'admin';
+const userRole = user?.role ?? null
+const isAdmin = userRole === 'admin'
 
 const footerNavItems: NavItem[] = [
-   
+
 ];
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
-                        <Link :href="route('dashboard')">
-                        <AppLogo />
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarHeader>
+  <Sidebar collapsible="icon" variant="inset">
+    <SidebarHeader>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" as-child>
+            <Link :href="route('dashboard')">
+            <AppLogo />
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarHeader>
 
-        <SidebarContent>
-            <NavMain :items="isAdmin ? adminNavItems : memberNavItems" />
-        </SidebarContent>
+    <SidebarContent>
+      <NavMain :items="isAdmin ? adminNavItems : memberNavItems" />
+    </SidebarContent>
 
-        <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
-            <NavUser />
-        </SidebarFooter>
-    </Sidebar>
-    <slot />
+    <SidebarFooter>
+      <NavFooter :items="footerNavItems" />
+      <NavUser />
+    </SidebarFooter>
+  </Sidebar>
+  <slot />
 </template>
