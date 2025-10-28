@@ -126,7 +126,7 @@ const currentLoanMessage = computed(() => {
       <header class="bg-gradient-to-r from-[#0B2B40] to-[#123A5A] text-white p-6 rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
           <h1 class="text-2xl font-bold tracking-tight">My Loans</h1>
-          <p class="text-sm text-blue-100">Track, manage, and apply for SEPU SACCO loans</p>
+          <p class="text-sm text-orange-500">Track, manage, and apply for SEPU SACCO loans</p>
         </div>
 
         <div v-if="canApplyLoan && (!isMemberRole || isEligible)" class="mt-4 sm:mt-0">

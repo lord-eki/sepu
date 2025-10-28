@@ -193,20 +193,18 @@ const adminNavItems: NavItem[] = [
   },
   {
     title: 'System Users',
-    href: '',
-    routeName: 'system-users.index',
     icon: UserCog,
     children: [
       {
         title: 'All Users',
-        href: '',
-        routeName: '',
+        href: route('system-users.index'),
+        routeName: 'system-users.index',
         icon: Users,
       },
       {
         title: 'Roles & Permissions',
-        href: '',
-        routeName: '',
+        href: route('system-users.roles'),
+        routeName: 'system-users.roles',
         icon: Shield,
       },
     ],

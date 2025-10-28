@@ -1,135 +1,128 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
+import PublicLayout from '@/layouts/PublicLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import { Users, CreditCard, Shield, RefreshCcw, FileWarning, Phone } from 'lucide-vue-next'
+
+// Terms data
+const sections = [
+  {
+    title: '1. Membership Eligibility',
+    icon: Users,
+    intro:
+      'Membership is open to individuals who meet the SACCO’s eligibility criteria. All members must:',
+    points: [
+      'Provide accurate personal and financial details during registration.',
+      'Maintain only one active membership account.',
+      'Promptly update any changes in their personal information.',
+    ],
+  },
+  {
+    title: '2. Savings and Loan Policies',
+    icon: CreditCard,
+    intro:
+      'Members agree to comply with SACCO policies regarding savings contributions and loan management. This includes:',
+    points: [
+      'Making regular contributions as per agreed schedules.',
+      'Submitting truthful loan applications.',
+      'Repaying loans on time to avoid penalties or suspension.',
+      'Accepting SACCO’s right to recover overdue loans through guarantors or other means.',
+    ],
+  },
+  {
+    title: '3. Data Privacy & Security',
+    icon: Shield,
+    intro: 'SEPU SACCO values your privacy. We commit to:',
+    points: [
+      'Safeguarding your personal and financial information.',
+      'Not sharing data with third parties without your consent, except where required by law.',
+      'Using secure systems to protect against unauthorized access.',
+    ],
+  },
+  {
+    title: '4. Amendments to Terms',
+    icon: RefreshCcw,
+    intro:
+      'We may revise these terms to reflect policy changes, legal requirements, or service improvements. Continued use constitutes acceptance of new terms.',
+  },
+  {
+    title: '5. Termination & Disputes',
+    icon: FileWarning,
+    intro:
+      'SEPU SACCO reserves the right to suspend or terminate membership in cases of:',
+    points: [
+      'Fraudulent activities or misrepresentation.',
+      'Persistent default on loan obligations.',
+      'Violation of SACCO’s by-laws and policies.',
+      'Disputes will first be resolved internally; unresolved cases may be referred to the relevant cooperative tribunal.',
+    ],
+  },
+]
 </script>
 
 <template>
-  <Head title="Terms of Service" />
+  <PublicLayout>
+    <Head title="Terms of Service" />
 
-  <AppLayout :breadcrumbs="[{ title: 'Terms of Service', href: '/terms' }]">
-    <div class="max-w-5xl mx-auto px-6 py-10 space-y-10">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 py-5 sm:py-10 space-y-10">
 
       <!-- Header -->
-      <div class="bg-[#081642]/90 p-6 rounded-xl shadow-md text-center">
-        <h1 class="text-2xl sm:text-3xl font-bold text-white">
-          Terms of Service
-        </h1>
-        <p class="text-sm text-gray-200 mt-2 max-w-2xl mx-auto">
-          These terms govern the use of SEPU SACCO services. Please review them carefully
-          to understand your rights and responsibilities as a member.
+      <div class="text-center bg-gradient-to-r from-blue-900 to-blue-800 p-8 rounded-3xl shadow-lg text-white">
+        <h1 class="text-3xl sm:text-4xl font-extrabold mb-2">Terms of Service</h1>
+        <p class="text-sm sm:text-base text-gray-200 max-w-3xl mx-auto">
+          These terms govern your use of SEPU SACCO’s services. Please review them carefully
+          to understand your rights and obligations as a member.
         </p>
       </div>
 
       <!-- Introduction -->
-      <div class="bg-white shadow rounded-xl p-6 border border-gray-200">
-        <p class="text-sm md:text-base text-gray-700 leading-relaxed">
+      <section class="bg-white border border-gray-100 shadow-md rounded-2xl p-8 leading-relaxed text-gray-700">
+        <p class="text-base sm:text-lg">
           By joining SEPU SACCO and using our services, you agree to abide by the following
-          terms and conditions. These terms are designed to protect both our members and
-          the SACCO as a whole. If you do not agree, you may choose not to use our services.
+          terms and conditions. These are designed to protect both our members and the SACCO as a whole.
+          If you do not agree, you may choose not to use our services.
         </p>
-      </div>
+      </section>
 
       <!-- Terms Sections -->
-      <div class="space-y-8">
-        <section class="space-y-3">
-          <h2 class="flex items-center gap-2 text-lg sm:text-xl font-semibold text-blue-900">
-            <Users class="w-5 h-5 text-orange-500" /> 1. Membership Eligibility
-          </h2>
-          <p class="text-sm md:text-base text-gray-600">
-            Membership is open to individuals who meet the SACCO’s eligibility criteria.
-            All members must:
-          </p>
-          <ul class="list-disc ml-6 space-y-1 text-sm md:text-base text-gray-600">
-            <li>Provide accurate personal and financial details during registration.</li>
-            <li>Maintain only one active membership account.</li>
-            <li>Promptly update any changes in their personal information.</li>
+      <div class="space-y-10">
+        <section v-for="(item, index) in sections" :key="index" class="bg-white shadow-md rounded-2xl p-8 border border-gray-100">
+          <div class="flex items-center gap-3 mb-4">
+            <component :is="item.icon" class="w-6 h-6 text-orange-500" />
+            <h2 class="text-xl font-semibold text-blue-900">{{ item.title }}</h2>
+          </div>
+          <p class="text-gray-700 text-sm sm:text-base leading-relaxed mb-3">{{ item.intro }}</p>
+          <ul v-if="item.points" class="list-disc ml-6 space-y-1 text-gray-600 text-sm sm:text-base">
+            <li v-for="(point, i) in item.points" :key="i">{{ point }}</li>
           </ul>
-        </section>
-
-        <section class="space-y-3">
-          <h2 class="flex items-center gap-2 text-lg sm:text-xl font-semibold text-blue-900">
-            <CreditCard class="w-5 h-5 text-orange-500" /> 2. Savings and Loan Policies
-          </h2>
-          <p class="text-sm md:text-base text-gray-600">
-            Members agree to comply with SACCO policies regarding savings contributions
-            and loan management. This includes:
-          </p>
-          <ul class="list-disc ml-6 space-y-1 text-sm md:text-base text-gray-600">
-            <li>Making regular contributions as per agreed schedules.</li>
-            <li>Submitting truthful loan applications.</li>
-            <li>Repaying loans on time to avoid penalties or suspension.</li>
-            <li>Accepting SACCO’s right to recover overdue loans through guarantors or other means.</li>
-          </ul>
-        </section>
-
-        <section class="space-y-3">
-          <h2 class="flex items-center gap-2 text-lg sm:text-xl font-semibold text-blue-900">
-            <Shield class="w-5 h-5 text-orange-500" /> 3. Data Privacy & Security
-          </h2>
-          <p class="text-sm md:text-base text-gray-600">
-            SEPU SACCO values your privacy. We commit to:
-          </p>
-          <ul class="list-disc ml-6 space-y-1 text-sm md:text-base text-gray-600">
-            <li>Safeguarding your personal and financial information.</li>
-            <li>Not sharing data with third parties without your consent, except where required by law.</li>
-            <li>Using secure systems to protect against unauthorized access.</li>
-          </ul>
-        </section>
-
-        <section class="space-y-3">
-          <h2 class="flex items-center gap-2 text-lg sm:text-xl font-semibold text-blue-900">
-            <RefreshCcw class="w-5 h-5 text-orange-500" /> 4. Amendments to Terms
-          </h2>
-          <p class="text-sm md:text-base text-gray-600">
-            We may revise these terms to reflect policy changes, legal requirements, or
-            improvements to our services. Updated terms will be communicated through official
-            SACCO channels, and continued use constitutes acceptance of the new terms.
-          </p>
-        </section>
-
-        <section class="space-y-3">
-          <h2 class="flex items-center gap-2 text-lg sm:text-xl font-semibold text-blue-900">
-            <FileWarning class="w-5 h-5 text-orange-500" /> 5. Termination & Disputes
-          </h2>
-          <p class="text-sm md:text-base text-gray-600">
-            SEPU SACCO reserves the right to suspend or terminate membership in cases of:
-          </p>
-          <ul class="list-disc ml-6 space-y-1 text-sm md:text-base text-gray-600">
-            <li>Fraudulent activities or misrepresentation.</li>
-            <li>Persistent default on loan obligations.</li>
-            <li>Violation of SACCO’s by-laws and policies.</li>
-          </ul>
-          <p class="text-sm md:text-base text-gray-600">
-            Disputes will first be resolved internally through mediation. If unresolved,
-            they may be referred to the relevant cooperative tribunal or legal body.
-          </p>
         </section>
       </div>
 
-      <!-- Contact -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-md p-6 space-y-3">
-        <h2 class="flex items-center gap-2 text-lg font-semibold text-blue-900">
-          <Phone class="w-5 h-5 text-orange-500" /> Contact Information
-        </h2>
-        <p class="text-sm md:text-base text-gray-600">
-          For any questions or clarifications about these terms, please reach out:
+      <!-- Contact Section -->
+      <section class="bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-3xl shadow-lg p-10 space-y-4">
+        <div class="flex items-center justify-center gap-2">
+          <Phone class="w-6 h-6 text-orange-400" />
+          <h2 class="text-2xl font-bold">Contact Information</h2>
+        </div>
+        <p class="max-w-2xl mx-auto text-base text-gray-200">
+          For any questions or clarifications regarding these terms, please reach out to us:
         </p>
-        <ul class="ml-6 space-y-1 text-sm md:text-base text-gray-600">
-          <li>Email: 
-            <a href="mailto:support@sepusacco.org" class="text-blue-700 underline">
+        <ul class="text-sm sm:text-base space-y-2">
+          <li>
+            Email:
+            <a href="mailto:support@sepusacco.org" class="underline text-orange-400 hover:text-orange-300">
               support@sepusacco.org
             </a>
           </li>
           <li>Phone: +254 712 345 678</li>
           <li>Office: SEPU SACCO HQ, Nairobi, Kenya</li>
         </ul>
-      </div>
+      </section>
 
-      <!-- Last Updated -->
-      <p class="text-xs text-gray-500 italic text-center">
+      <!-- Footer Note -->
+      <p class="text-xs text-center text-gray-500 italic mt-6">
         Last updated: July 2025
       </p>
+
     </div>
-  </AppLayout>
+  </PublicLayout>
 </template>

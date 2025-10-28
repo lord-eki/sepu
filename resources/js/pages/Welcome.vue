@@ -1,84 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
+import PublicLayout from '@/layouts/PublicLayout.vue'
 const menuOpen = ref(false)
 </script>
 
 <template>
-
+  <PublicLayout>
   <Head title="Welcome" />
-
-  <div
-    class="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-
-    <!-- Navbar -->
-    <header class="w-full py-4 px-6 bg-white/80 dark:bg-gray-900/70 backdrop-blur-md shadow-sm fixed top-0 left-0 z-50">
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <!-- Logo -->
-        <div class="flex items-center gap-3">
-          <img src="/apple-touch-icon1.png" alt="SEPU SACCO Logo" class="w-20 sm:w-24 rounded-sm" />
-        </div>
-
-        <!-- Desktop Navigation -->
-        <nav class="hidden md:flex items-center gap-6 font-medium">
-          <Link class="text-blue-900 dark:text-gray-200 hover:text-orange-500 transition">Home</Link>
-          <Link :href="route('about')" class="text-blue-900 dark:text-gray-200 hover:text-orange-500 transition">About
-          Us</Link>
-          <Link :href="route('terms')" class="text-blue-900 dark:text-gray-200 hover:text-orange-500 transition">Terms
-          </Link>
-          <Link class="text-blue-900 dark:text-gray-200 hover:text-orange-500 transition">Contact</Link>
-        </nav>
-
-        <!-- Desktop Auth Buttons -->
-        <div class="hidden md:flex items-center gap-4">
-          <Link :href="route('login')"
-            class="px-5 py-2 rounded-full text-white bg-blue-900 hover:bg-blue-800 transition">
-          Log In
-          </Link>
-          <Link :href="route('register')"
-            class="px-5 py-2 rounded-full border border-blue-900 text-blue-900 hover:bg-blue-50 dark:border-white dark:text-white dark:hover:bg-gray-800 transition">
-          Sign Up
-          </Link>
-        </div>
-
-        <!-- Mobile Menu Button -->
-        <button @click="menuOpen = !menuOpen" class="md:hidden text-blue-900 dark:text-gray-200 focus:outline-none">
-          <svg v-if="!menuOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            class="w-8 h-8">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            class="w-8 h-8">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Mobile Dropdown Menu -->
-      <div v-if="menuOpen" class="md:hidden mt-3 bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 space-y-4">
-        <Link class="block text-blue-900 dark:text-gray-200 hover:text-orange-500 transition">Home</Link>
-        <Link :href="route('about')" class="block text-blue-900 dark:text-gray-200 hover:text-orange-500 transition">
-        About Us</Link>
-        <Link :href="route('terms')" class="block text-blue-900 dark:text-gray-200 hover:text-orange-500 transition">
-        Terms</Link>
-        <Link class="block text-blue-900 dark:text-gray-200 hover:text-orange-500 transition">Contact</Link>
-
-        <div class="flex flex-col gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <Link :href="route('login')"
-            class="px-5 py-2 rounded-full text-white bg-blue-900 hover:bg-blue-800 transition text-center">
-          Log In
-          </Link>
-          <Link :href="route('register')"
-            class="px-5 py-2 rounded-full border border-blue-900 text-blue-900 hover:bg-blue-50 dark:border-white dark:text-white dark:hover:bg-gray-800 transition text-center">
-          Sign Up
-          </Link>
-        </div>
-      </div>
-    </header>
-
-
     <!-- Hero Section -->
-    <main class="flex-grow flex items-center justify-center px-6 py-24 mt-20">
+    <main class="flex-grow flex items-center justify-center px-3 sm:px-6 py-5 sm:py-10">
       <div class="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
         <!-- Text Content -->
@@ -121,20 +52,5 @@ const menuOpen = ref(false)
         </div>
       </div>
     </main>
-
-    <!-- Footer -->
-    <footer
-      class="bg-white/80 dark:bg-gray-900/70 backdrop-blur-md py-6 text-center border-t border-gray-200 dark:border-gray-700">
-      <div
-        class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-        <p>© {{ new Date().getFullYear() }} SEPU SACCO — All Rights Reserved.</p>
-        <div class="flex gap-4">
-          <Link :href="route('about')" class="hover:text-orange-500">About</Link>
-          <Link :href="route('terms')" class="hover:text-orange-500">Terms</Link>
-          <Link class="hover:text-orange-500">Contact</Link>
-        </div>
-      </div>
-    </footer>
-
-  </div>
+  </PublicLayout>
 </template>

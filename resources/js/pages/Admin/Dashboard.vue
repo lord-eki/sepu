@@ -61,7 +61,7 @@ defineProps<{
         <Card
           v-for="stat in [
             { title: 'Total Members', value: stats.members.total, sub: `Active: ${stats.members.active}`, icon: Users, color: 'bg-blue-900/10 text-blue-900' },
-            { title: 'Total Savings', value: stats.financial.total_savings.toLocaleString(), sub: `Shares: ${stats.financial.total_shares}`, icon: Banknote, color: 'bg-orange-100 text-orange-600' },
+            { title: 'Total Share Deposits', value: stats.financial.total_share_deposits.toLocaleString(), sub: `Share Capital: ${stats.financial.total_share_capital.toLocaleString()}`, icon: Banknote, color: 'bg-orange-100 text-orange-600' },
             { title: 'Active Loans', value: stats.loans.active_loans, sub: `Pending: ${stats.loans.pending_applications}`, icon: Activity, color: 'bg-blue-900/10 text-blue-900' },
             { title: 'Transactions Today', value: stats.transactions.today, sub: `This Month: ${stats.transactions.this_month}`, icon: FileWarning, color: 'bg-orange-100 text-orange-600' },
           ]"

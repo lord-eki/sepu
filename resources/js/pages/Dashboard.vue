@@ -9,16 +9,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import {
-  Bell, Wallet, Handshake, PiggyBank, BadgeDollarSign, Landmark, TrendingUp,
+  Bell, Wallet, Handshake, BadgeDollarSign, Landmark, TrendingUp,
   ArrowUpRight, ArrowDownRight, Clock, Receipt, FileText, Info
 } from 'lucide-vue-next'
 
 interface Member { id: number; first_name: string; last_name: string }
 interface Stats {
-  accounts: { savings_balance: number; shares_balance: number; deposits_balance: number }
+  accounts: { share_deposits_balance: number; share_capital_balance: number }
   loans: { active_loans: number; total_outstanding: number; next_payment_due: string | null }
 }
-interface Account { id: number; account_type: 'savings' | 'shares' | 'deposits'; balance: number }
+interface Account { id: number; account_type: 'share_deposits' | 'share_capital'; balance: number }
 interface RecentTransaction { id: number; transaction_type: string; amount: number; created_at: string; account?: Account }
 interface LoanProduct { id: number; name: string }
 interface Loan { id: number; status: string; outstanding_balance: number; disbursed_amount?: number; first_repayment_date?: string | null; loanProduct?: LoanProduct }
@@ -38,10 +38,9 @@ const fmtMoney = (v: number) =>
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : '—')
 const fullName = computed(() => `${props.member.first_name} ${props.member.last_name}`)
 const totals = computed(() => {
-  const s = Number(props.stats.accounts.savings_balance) || 0
-  const sh = Number(props.stats.accounts.shares_balance) || 0
-  const d = Number(props.stats.accounts.deposits_balance) || 0
-  return { balances: s + sh + d }
+  const sd = Number(props.stats.accounts.share_deposits_balance) || 0
+  const sc = Number(props.stats.accounts.share_capital_balance) || 0
+  return { balances: sd + sc }
 })
 
 const txFilter = ref('')
@@ -59,6 +58,7 @@ const toggleBalances = () => (showBalances.value = !showBalances.value)
 const showNotifications = ref(false)
 const toggleNotifications = () => (showNotifications.value = !showNotifications.value)
 </script>
+
 
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }]">
@@ -132,12 +132,11 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
       </header>
 
       <!-- Account Stats -->
-      <section class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <section class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         <Card
           v-for="stat in [
-            { title: 'Savings Balance', value: fmtMoney(stats.accounts.savings_balance), icon: PiggyBank },
-            { title: 'Shares Balance', value: fmtMoney(stats.accounts.shares_balance), icon: BadgeDollarSign },
-            { title: 'Deposits Balance', value: fmtMoney(stats.accounts.deposits_balance), icon: Wallet },
+            { title: 'Share Deposits Balance', value: fmtMoney(stats.accounts.share_deposits_balance), icon: Wallet },
+            { title: 'Share Capital Balance', value: fmtMoney(stats.accounts.share_capital_balance), icon: BadgeDollarSign },
             { title: 'Active Loans', value: stats.loans.active_loans, icon: TrendingUp }
           ]"
           :key="stat.title"
@@ -157,6 +156,7 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
           </CardContent>
         </Card>
       </section>
+
 
       <!-- Loans & Transactions Tabs -->
       <section>
