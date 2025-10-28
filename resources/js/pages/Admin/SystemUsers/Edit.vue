@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head, Link, useForm } from '@inertiajs/vue3'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { User, ShieldCheck, Save } from 'lucide-vue-next'
@@ -11,7 +11,7 @@ const props = defineProps({
   roles: Object,
 })
 
-// ✅ Inertia form setup
+//  Inertia form setup
 const form = useForm({
   name: props.user.name || '',
   email: props.user.email || '',
@@ -32,20 +32,30 @@ const submit = () => {
 </script>
 
 <template>
-  <AppLayout>
+  <AppLayout :breadcrumbs="[
+    { title: 'System Users', href: route('system-users.index') },
+    { title: 'Edit User' }
+  ]">
     <Head title="Edit System User" />
+     <div class="pt-4 pl-4">
+        <Link
+          :href="route('system-users.index')"
+          class="px-4 py-2 bg-[#0B1F3A] hover:bg-blue-900 text-white rounded-lg transition"
+        >
+          Back
+        </Link>
+      </div>
 
-    <div class="max-w-4xl mx-auto py-10 px-6 space-y-8 animate-fadeIn">
+    <div class="max-w-4xl mx-auto px-6 space-y-8 animate-fadeIn">
+     
       <!-- Header -->
-      <header class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-semibold text-gray-900 dark:text-white tracking-tight">
-            Edit System User
-          </h1>
-          <p class="text-gray-500 dark:text-gray-400">
-            Update account details and system permissions.
-          </p>
-        </div>
+      <header class="text-center">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight">
+          Edit System User
+        </h1>
+        <p class="text-gray-500 dark:text-gray-400">
+          Update account details and system permissions.
+        </p>
       </header>
 
       <!-- Edit Form Card -->
@@ -57,7 +67,7 @@ const submit = () => {
         </CardHeader>
 
         <CardContent>
-          <form @submit.prevent="submit" class="space-y-6">
+          <form @submit.prevent="submit" class="space-y-6 role-form1">
             <!-- Name -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
@@ -99,7 +109,7 @@ const submit = () => {
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
               <select
                 v-model="form.role"
-                class="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                class="mt-1 w-full rounded-lg p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
               >
                 <option v-for="(label, key) in roles" :key="key" :value="key">
                   {{ label }}
@@ -125,7 +135,7 @@ const submit = () => {
             <div class="pt-4 flex justify-end">
               <Button
                 type="submit"
-                class="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 shadow-md transition-all duration-200"
+                class="bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 shadow-md transition-all duration-200"
                 :disabled="saving"
               >
                 <Save class="h-4 w-4" />
@@ -139,6 +149,7 @@ const submit = () => {
   </AppLayout>
 </template>
 
+
 <style scoped>
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -146,5 +157,10 @@ const submit = () => {
 }
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-in-out;
+}
+.role-form1 input,
+.role-form select {
+  border: 1px solid gray;
+  padding: 10px;
 }
 </style>

@@ -26,11 +26,11 @@
 
 
     <!-- Title -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 mx-6 mt-4">
       <h1 class="text-2xl font-bold text-[#0B1F3A] dark:text-white">Add System User</h1>
       <Link
         :href="route('system-users.index')"
-        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition"
+        class="px-4 py-2 bg-[#0B1F3A] hover:bg-blue-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white dark:text-white rounded-lg transition"
       >
         Back
       </Link>
@@ -38,7 +38,7 @@
 
     <!-- Form Card -->
     <div class="bg-white dark:bg-[#0B1F3A] rounded-2xl shadow p-6 border border-gray-100 dark:border-gray-700 max-w-3xl mx-auto">
-      <form @submit.prevent="submit" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form @submit.prevent="submit" class="grid grid-cols-1 md:grid-cols-2 gap-6 role-form">
 
         <!-- Name -->
         <div>
@@ -155,3 +155,12 @@ const submit = () => {
   form.post(route('system-users.store'))
 }
 </script>
+
+<style scoped>
+.role-form input,
+.role-form select {
+  border: 1px solid gray;
+  padding: 10px;
+}
+</style>
+

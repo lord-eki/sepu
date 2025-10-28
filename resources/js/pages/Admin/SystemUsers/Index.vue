@@ -31,8 +31,8 @@
 
 
     <!-- Page Title -->
-    <div class="flex items-center justify-between mb-6 p-6">
-      <h1 class="text-2xl font-bold text-[#0B1F3A] dark:text-white">System Users</h1>
+    <div class="flex items-center justify-between p-4 m-2 bg-gradient-to-r from-[#0B2B40] to-[#133263] rounded-2xl">
+      <h1 class="text-2xl font-semibold text-white dark:text-white">System Users</h1>
       <Link
         :href="route('system-users.create')"
         class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
@@ -69,7 +69,7 @@
             v-model="filters.role"
             class="w-full rounded-lg p-2 border border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
           >
-            <option value="all">All</option>
+            <option selected value="all">All</option>
             <option value="admin">Admin</option>
             <option value="loan_officer">Loan Officer</option>
             <option value="accountant">Accountant</option>
@@ -83,7 +83,7 @@
             v-model="filters.status"
             class="w-full rounded-lg p-2 border border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
           >
-            <option value="">All</option>
+            <option selected value="">All</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
@@ -116,7 +116,7 @@
           Apply
         </button>
       </div>
-      <p class="text-sm text-gray-600 dark:text-gray-300">{{ users.data.length }} users displayed</p>
+      <p class="text-sm text-gray-600 dark:text-gray-300">{{ users.data.length }} users displayed others have a member role</p>
     </div>
 
     <!-- Users Table -->

@@ -11,14 +11,17 @@ const props = defineProps({
 </script>
 
 <template>
-  <AppLayout>
+  <AppLayout :breadcrumbs="[
+    { title: 'System Users', href: route('system-users.index') },
+    { title: 'User Roles' }
+  ]">
     <Head title="System Roles & Permissions" />
 
-    <div class="max-w-6xl mx-auto py-10 px-6 space-y-10 animate-fadeIn">
+    <div class="max-w-6xl mx-auto py-8 px-6 space-y-10 animate-fadeIn">
       <!-- Header Section -->
       <header class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-semibold text-gray-900 dark:text-white tracking-tight">
+          <h1 class="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight">
             System Roles & Permissions
           </h1>
           <p class="text-gray-500 dark:text-gray-400 mt-1">
@@ -35,7 +38,7 @@ const props = defineProps({
             <CardTitle>Total System Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-3xl font-bold">{{ stats.total_system_users }}</p>
+            <p class="text-2xl font-bold">{{ stats.total_system_users }}</p>
           </CardContent>
         </Card>
 
@@ -45,7 +48,7 @@ const props = defineProps({
             <CardTitle>Active Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-3xl font-bold">{{ stats.active_users }}</p>
+            <p class="text-2xl font-bold">{{ stats.active_users }}</p>
           </CardContent>
         </Card>
 
@@ -55,7 +58,7 @@ const props = defineProps({
             <CardTitle>Roles Available</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-3xl font-bold">{{ roles.length }}</p>
+            <p class="text-2xl font-bold">{{ roles.length }}</p>
           </CardContent>
         </Card>
 
@@ -65,7 +68,7 @@ const props = defineProps({
             <CardTitle>Access Control</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-3xl font-bold">Secure</p>
+            <p class="text-2xl font-bold">Secure</p>
           </CardContent>
         </Card>
       </div>

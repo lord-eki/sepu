@@ -84,7 +84,10 @@ const fmtCurrency = (v) => {
 </script>
 
 <template>
-  <AppLayout>
+  <AppLayout :breadcrumbs="[
+    { title: 'System Users', href: route('system-users.index') },
+    { title: 'View' }
+  ]">
     <Head title="System User" />
 
     <div class="max-w-6xl mx-auto p-6 space-y-6 animate-fadeIn">
