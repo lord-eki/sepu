@@ -76,7 +76,7 @@
                     <span
                       :class="[
                         'px-2 py-1 rounded-full text-xs font-semibold border',
-                        tx.status === 'successful'
+                        tx.status === 'completed'
                           ? 'border-blue-900 text-blue-900 bg-blue-50'
                           : tx.status === 'pending'
                           ? 'border-gray-400 text-gray-600 bg-gray-100'

@@ -498,6 +498,7 @@ Route::get('/awaiting-activation', function () {
 
 Route::get('/about', fn () => Inertia::render('AboutUs'))->name('about');
 Route::get('/terms', fn () => Inertia::render('Terms'))->name('terms');
+Route::get('/contact', fn () => Inertia::render('Contact'))->name('contact');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile/show', [ProfileController::class, 'show'])->name('member.profile');

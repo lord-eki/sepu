@@ -123,4 +123,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Dividend::class, 'approved_by');
     }
+    public function loans()
+    {
+        return $this->hasMany(Loan::class, 'member_id');
+    }
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'member_id');
+    }
+
+
+
 }

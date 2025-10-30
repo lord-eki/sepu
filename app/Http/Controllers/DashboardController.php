@@ -39,9 +39,8 @@ class DashboardController extends Controller
                 'new_this_month' => Member::whereMonth('created_at', now()->month)->count(),
             ],
             'financial' => [
-                'total_savings' => Account::where('account_type', 'savings')->sum('balance'),
-                'total_shares' => Account::where('account_type', 'shares')->sum('balance'),
-                'total_deposits' => Account::where('account_type', 'deposits')->sum('balance'),
+                'total_share_deposits' => Account::where('account_type', 'share_deposits')->sum('balance'),
+                'total_share_capital' => Account::where('account_type', 'share_capital')->sum('balance'),
             ],
             'loans' => [
                 'total_portfolio' => Loan::whereIn('status', ['disbursed', 'active'])->sum('outstanding_balance'),
@@ -114,9 +113,8 @@ class DashboardController extends Controller
     {
         $stats = [
             'accounts' => [
-                'total_savings' => Account::where('account_type', 'savings')->sum('balance'),
-                'total_shares' => Account::where('account_type', 'shares')->sum('balance'),
-                'total_deposits' => Account::where('account_type', 'deposits')->sum('balance'),
+                'total_share_deposits' => Account::where('account_type', 'share_deposits')->sum('balance'),
+                'total_share_capital' => Account::where('account_type', 'share_capital')->sum('balance'),
             ],
             'transactions' => [
                 'pending' => Transaction::where('status', 'pending')->count(),
@@ -227,9 +225,8 @@ class DashboardController extends Controller
 
         $stats = [
             'accounts' => [
-                'savings_balance' => $accounts->get('savings')?->balance ?? 0,
-                'shares_balance' => $accounts->get('shares')?->balance ?? 0,
-                'deposits_balance' => $accounts->get('deposits')?->balance ?? 0,
+                'share_deposits_balance' => $accounts->get('share_deposits')?->balance ?? 0,
+                'share_capital_balance' => $accounts->get('share_capital')?->balance ?? 0,
             ],
             'loans' => [
                 'active_loans' => Loan::where('member_id', $member->id)

@@ -15,7 +15,7 @@
       <div
         v-if="successMessage || errorMessages"
         class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md shadow-lg rounded-xl overflow-hidden"
-        :class="successMessage ? 'bg-green-600 text-white' : 'bg-red-600 text-white'"
+        :class="successMessage ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'"
       >
         <div class="flex items-center justify-between px-4 py-3">
           <div>
@@ -27,7 +27,7 @@
               </li>
             </ul>
           </div>
-          <button @click="() => { successMessage = null; errorMessages = null }" class="ml-3 text-white hover:text-gray-200">
+          <button @click="() => { successMessage = null; errorMessages = null }" class="ml-3 text-gray-400 hover:text-gray-300">
             ✕
           </button>
         </div>
@@ -110,7 +110,7 @@
             </div>
             <div>
               <span class="font-medium text-gray-700">Available Balance:</span>
-              <p class="mt-1 text-lg font-semibold text-green-700">
+              <p class="mt-1 text-lg font-semibold text-blue-900">
                 {{ formatCurrency(account.available_balance) }}
               </p>
             </div>
@@ -239,8 +239,8 @@
 
             <!-- Payment Reference Input -->
             <div>
-              <label for="payment_reference" class="block text-sm font-medium text-[#0B2B40]">
-                {{
+              <label for="payment_reference" class="block                                                                              text-sm font-medium text-[#0B2B40]">
+                Enter {{
                   form.payment_method === 'mobile_money'
                     ? 'M-Pesa Transaction ID'
                     : form.payment_method === 'cheque'
@@ -260,7 +260,7 @@
                     ? 'e.g., CHQ-784562'
                     : 'e.g., BNK-202410-98765'
                 "
-                class="mt-1 w-full border border-gray-300 rounded-md p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"
+                class="mt-1 w-full bg-white border border-gray-300 rounded-md p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"
                 required
               />
             </div>
@@ -371,7 +371,11 @@ const submit = () => {
         })
       : route('accounts.deposit', props.account.id),
     {
-      onSuccess: () => showMessage('success', 'Deposit successful!'),
+      onSuccess: () => {
+          const flash = page.props.flash
+          if (flash?.success) showMessage('success', flash.success)
+        },
+
       onError: (errors) => showMessage('error', 'Deposit failed', errors),
     }
   )
