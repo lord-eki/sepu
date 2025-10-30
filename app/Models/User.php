@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 
@@ -20,7 +21,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name','role',
+        'name','role','username',
         'email','phone',
         'password','is_active',
     ];
@@ -48,6 +49,24 @@ class User extends Authenticatable
             'is_active' => 'boolean',
         ];
     }
+
+    // Generate a unique username from a name
+
+    public static function generateUsername(string $name): string
+    {
+        $username =  Str::slug(Str::lower($name),'');
+
+        $originalUsername = $username;
+        $counter = 1;
+        while (self::where('username', $username)->exists()) {
+            $username = $originalUsername . $counter;
+            $counter++;
+    }
+
+    return $username;
+}
+
+   
 
      // Relationships
     public function member()

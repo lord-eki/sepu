@@ -15,20 +15,28 @@ defineProps<{
 }>();
 
 const form = useForm({
-    email: '',
+    login: '', 
     password: '',
     remember: false,
 });
 
 const submit = () => {
     form.post(route('login'), {
-        onFinish: () => form.reset('password'),
+        onFinish: () => {
+            form.reset('password');
+        },
+        onError: (errors) => {
+            console.log('Login errors:', errors);
+        },
+        onSuccess: () => {
+            console.log('Login successful');
+        },
     });
 };
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
+    <AuthBase title="Log in to your account" description="Enter your username/email and password below to log in">
 
         <Head title="Log in" />
 
@@ -36,13 +44,18 @@ const submit = () => {
             {{ status }}
         </div>
 
+        <!-- General error message -->
+        <div v-if="form.errors.login" class="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            {{ form.errors.login }}
+        </div>
+
         <form @submit.prevent="submit" class="flex flex-col gap-6 logform">
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
-                    <Input id="email" type="email" required autofocus :tabindex="1" autocomplete="email"
-                        v-model="form.email" placeholder="email@example.com" />
-                    <InputError :message="form.errors.email" />
+                    <Label for="login">Username or Email</Label>
+                    <Input id="login" type="text" required autofocus :tabindex="1" autocomplete="username"
+                        v-model="form.login" placeholder="username or email@example.com" />
+                    <InputError :message="form.errors.login" />
                 </div>
 
                 <div class="grid gap-2">
@@ -65,7 +78,7 @@ const submit = () => {
                     </Label>
                 </div>
 
-                <Button type="submit" class="hover:cursor-pointer  mt-4 w-full" :tabindex="4"
+                <Button type="submit" class="hover:cursor-pointer mt-4 w-full" :tabindex="4"
                     :disabled="form.processing">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
                     Log in

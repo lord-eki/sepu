@@ -8,58 +8,101 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class LoginRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
     }
 
-    /**
-     * Attempt to authenticate the request's credentials.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
+    public function messages(): array
+    {
+        return [
+            'login.required' => 'Please enter your username or email.',
+            'password.required' => 'Please enter your password.',
+        ];
+    }
+
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $login = $this->input('login');
+        $password = $this->input('password');
+
+        // DEBUG: Log the login attempt
+        Log::info('Login attempt', [
+            'login' => $login,
+            'ip' => $this->ip(),
+        ]);
+
+        // Determine if login is email or username
+        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        // DEBUG: Log the field type
+        Log::info('Login field type determined', [
+            'field_type' => $fieldType,
+            'login_value' => $login,
+        ]);
+
+        // Attempt authentication
+        $credentials = [$fieldType => $login, 'password' => $password];
+        
+        Log::info('Attempting authentication with', [
+            'credentials_keys' => array_keys($credentials),
+            $fieldType => $login,
+        ]);
+
+        if (!Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            Log::warning('Login failed', [
+                'login' => $login,
+                'field_type' => $fieldType,
+            ]);
+
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'login' => 'These credentials do not match our records.',
+            ]);
+        }
+
+        // Check if user is active
+        $user = Auth::user();
+        
+        Log::info('Login successful', [
+            'user_id' => $user->id,
+            'username' => $user->username ?? 'N/A',
+            'role' => $user->role,
+        ]);
+
+        if (!$user->is_active) {
+            Auth::logout();
+            
+            Log::warning('Inactive user attempted login', [
+                'user_id' => $user->id,
+            ]);
+
+            throw ValidationException::withMessages([
+                'login' => 'Your account has been deactivated. Please contact support.',
             ]);
         }
 
         RateLimiter::clear($this->throttleKey());
     }
 
-    /**
-     * Ensure the login request is not rate limited.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -68,18 +111,15 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'login' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
         ]);
     }
 
-    /**
-     * Get the rate limiting throttle key for the request.
-     */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->input('login')) . '|' . $this->ip());
     }
 }

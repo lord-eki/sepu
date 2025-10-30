@@ -42,11 +42,14 @@ class RegisteredUserController extends Controller
         $phone = ltrim($request->phone, '0');
         $fullPhone = $request->country_code . $phone;
 
+        $username = User::generateUsername($request->name);
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $fullPhone,
             'password' => Hash::make($request->password),
+            'role' => 'member'
         ]);
 
         event(new Registered($user));
