@@ -7,9 +7,10 @@ const menuOpen = ref(false)
 
 <template>
   <PublicLayout>
-  <Head title="Welcome" />
+
+    <Head title="Welcome" />
     <!-- Hero Section -->
-    <main class="flex-grow flex items-center justify-center px-3 sm:px-6 py-5 sm:py-10">
+    <main class="flex-grow flex items-center justify-center mt-5 sm:mt-10 px-3 sm:px-6 py-5 sm:py-10">
       <div class="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
         <!-- Text Content -->

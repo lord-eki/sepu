@@ -13,7 +13,9 @@ const menuOpen = ref(false)
     <header class="w-full py-4 px-6 bg-white/80 dark:bg-gray-900/70 backdrop-blur-md shadow-sm fixed top-0 left-0 z-50">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <img src="/apple-touch-icon1.png" alt="SEPU SACCO Logo" class="w-16 sm:w-20 rounded-sm" />
+          <Link href="/">
+            <img src="/apple-touch-icon1.png" alt="SEPU SACCO Logo" class="w-16 sm:w-20 rounded-sm" />
+          </Link>
         </div>
 
         <!-- Desktop Navigation -->

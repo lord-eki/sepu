@@ -424,7 +424,7 @@
 
               <div v-if="selectedPaymentMethod === 'bank'" class="mt-4 bg-blue-50 p-3 rounded-md text-sm">
                 <p><strong>Bank Name:</strong> Co-operative Bank</p>
-                <p><strong>Account No:</strong> 001234567890</p>
+                <p><strong>Account No:</strong> 01120040146200</p>
               </div>
 
               <div class="mt-6 flex justify-end gap-3">
