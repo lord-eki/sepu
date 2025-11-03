@@ -26,25 +26,21 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class MemberController extends Controller
 {
-
-
     /**
      * Show the import form
      */
-
     public function showImportForm()
     {
-        return  Inertia::render('Admin/Members/Import',[
+        return Inertia::render('Admin/Members/Import', [
             'sampleHeaders' => [
-            'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender',
+                'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender',
                 'marital_status', 'email', 'phone', 'physical_address', 'postal_address',
                 'city', 'county', 'id_type', 'id_number', 'occupation', 'employer',
                 'monthly_income', 'emergency_contact_name', 'emergency_contact_phone',
-                'emergency_contact_relationship'
-            ]
-            ]);
+                'emergency_contact_relationship',
+            ],
+        ]);
     }
-
 
     /**
      * Display a listing of members
@@ -117,80 +113,87 @@ class MemberController extends Controller
     /**
      * Store a newly created member
      */
-    public function store(StoreMemberRequest $request): RedirectResponse
-    {
-        try {
-            DB::beginTransaction();
 
-            // Create user account
-            $user = User::create([
-                'name' => $request->first_name.' '.$request->last_name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'password' => Hash::make($request->password ?? Str::random(12)),
-                'role' => 'member',
-                'is_active' => true,
-            ]);
+public function store(StoreMemberRequest $request): RedirectResponse
+{
+    try {
+        DB::beginTransaction();
 
-            // Create member profile
-            $memberData = $request->validated();
-            $memberData['user_id'] = $user->id;
-            $memberData['membership_id'] = $this->generateMembershipId();
-            $memberData['membership_date'] = now();
-            $memberData['membership_status'] = 'active';
+        // Create user account
+        $user = User::create([
+            'name' => $request->first_name.' '.$request->last_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password ?? Str::random(12)),
+            'role' => 'member',
+            'is_active' => true,
+        ]);
 
-            // Handle profile photo upload
-            if ($request->hasFile('profile_photo')) {
-                $memberData['profile_photo'] = $request->file('profile_photo')
-                    ->store('members/photos', 'public');
-            }
+        // Create member profile
+        $memberData = $request->validated();
+        $memberData['user_id'] = $user->id;
+        $memberData['membership_id'] = $this->generateMembershipId();
+        $memberData['membership_date'] = now();
+        $memberData['membership_status'] = 'active';
 
-            // Handle documents upload
-            if ($request->hasFile('documents')) {
-                $documents = [];
-                foreach ($request->file('documents') as $file) {
-                    $path = $file->store('members/documents', 'public');
-                    $documents[] = [
-                        'name' => $file->getClientOriginalName(),
-                        'path' => $path,
-                        'size' => $file->getSize(),
-                        'type' => $file->getClientMimeType(),
-                        'uploaded_at' => now(),
-                    ];
-                }
-                $memberData['documents'] = json_encode($documents);
-            }
-
-            $member = Member::create($memberData);
-
-            // Create default accounts (savings and shares)
-            $member->accounts()->create([
-                'account_number' => $this->generateAccountNumber('SAV'),
-                'account_type' => 'savings',
-                'balance' => 0,
-                'available_balance' => 0,
-                'is_active' => true,
-            ]);
-
-            $member->accounts()->create([
-                'account_number' => $this->generateAccountNumber('SHR'),
-                'account_type' => 'shares',
-                'balance' => 0,
-                'available_balance' => 0,
-                'is_active' => true,
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('members.index', $member)
-                ->with('success', 'Member created successfully');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return back()->withErrors(['error' => 'Failed to create member: '.$e->getMessage()]);
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+            $memberData['profile_photo'] = $request->file('profile_photo')
+                ->store('members/photos', 'public');
         }
+
+        // Handle documents upload
+        if ($request->hasFile('documents')) {
+            $documents = [];
+            foreach ($request->file('documents') as $file) {
+                $path = $file->store('members/documents', 'public');
+                $documents[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'size' => $file->getSize(),
+                    'type' => $file->getClientMimeType(),
+                    'uploaded_at' => now(),
+                ];
+            }
+            $memberData['documents'] = json_encode($documents);
+        }
+
+        $member = Member::create($memberData);
+
+        // Create default accounts (share_capital and share_deposits)
+        DB::table('accounts')->insert([
+            'account_number' => $this->generateAccountNumber('SEPU', 'S'),
+            'account_type' => 'share_capital',
+            'balance' => 0,
+            'available_balance' => 0,
+            'is_active' => true,
+            'member_id' => $member->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('accounts')->insert([
+            'account_number' => $this->generateAccountNumber('SEPU', 'D'),
+            'account_type' => 'share_deposits',
+            'balance' => 0,
+            'available_balance' => 0,
+            'is_active' => true,
+            'member_id' => $member->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::commit();
+
+        return redirect()->route('members.show', $member)
+            ->with('success', 'Member created successfully');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return back()->withErrors(['error' => 'Failed to create member: '.$e->getMessage()]);
     }
+}
 
     /**
      * Display the specified member
@@ -795,6 +798,7 @@ class MemberController extends Controller
     public function validateMemberId(Request $request)
     {
         $exists = Member::where('membership_id', $request->membership_id)->exists();
+
         return response()->json(['exists' => $exists]);
     }
 
@@ -807,155 +811,355 @@ class MemberController extends Controller
         return response()->json(['message' => 'Export functionality to be implemented']);
     }
 
-    /**
-     * Bulk import members
-     */
     public function bulkImport(Request $request): RedirectResponse
-    {
-            $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx,xls|max:5120',
-        ]);
+{
+    $request->validate([
+        'file' => 'required|file|mimes:csv,xlsx,xls|max:5120',
+    ]);
 
-        try {
-            $file = $request->file('file');
-            $spreadsheet = IOFactory::load($file->getRealPath());
-            $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray();
+    try {
+        // Increase execution time and memory limit for large imports
+        set_time_limit(300); // 5 minutes
+        ini_set('memory_limit', '512M');
 
-            // Get headers from first row
-            $headers = array_map('trim', array_map('strtolower', $rows[0]));
-            
-            // Remove header row
-            array_shift($rows);
+        $file = $request->file('file');
 
-            $successCount = 0;
-            $errorCount = 0;
-            $errors = [];
+        $spreadsheet = IOFactory::load($file->getRealPath());
+        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = $worksheet->toArray();
 
+        // Get headers from first row and normalize them
+        $headers = array_map(function ($header) {
+            return trim(strtolower(str_replace(' ', '_', $header)));
+        }, $rows[0]);
+
+        // Remove header row
+        array_shift($rows);
+
+        $successCount = 0;
+        $errorCount = 0;
+        $skippedCount = 0;
+        $errors = [];
+
+        // Process in chunks to avoid memory issues
+        $chunks = array_chunk($rows, 50);
+
+        foreach ($chunks as $chunkIndex => $chunk) {
             DB::beginTransaction();
 
-            foreach ($rows as $index => $row) {
-                $rowNumber = $index + 2; 
+            try {
+                foreach ($chunk as $index => $row) {
+                    $rowNumber = ($chunkIndex * 50) + $index + 2;
 
-                // Skip empty rows
-                if (empty(array_filter($row))) {
-                    continue;
+                    // Skip empty rows
+                    if (empty(array_filter($row))) {
+                        $skippedCount++;
+                        continue;
+                    }
+
+                    try {
+                        // Map row data to headers
+                        $data = array_combine($headers, $row);
+
+                        // Clean and prepare data
+                        $preparedData = $this->prepareImportData($data);
+
+                        if (empty($preparedData['first_name'])) {
+                            throw new \Exception('First name is required');
+                        }
+                        if (empty($preparedData['last_name'])) {
+                            throw new \Exception('Last name is required');
+                        }
+
+                        // Generate ID number if not provided
+                        if (empty($preparedData['id_number'])) {
+                            $preparedData['id_number'] = $this->generateIdNumber();
+                        }
+
+                        // Validate row data
+                        $validator = Validator::make($preparedData, [
+                            'first_name' => 'required|string|max:255',
+                            'last_name' => 'required|string|max:255',
+                            'middle_name' => 'nullable|string|max:255',
+                            'date_of_birth' => 'nullable|date',
+                            'gender' => 'nullable|in:male,female,other',
+                            'marital_status' => 'nullable|in:single,married,divorced,widowed',
+                            'email' => 'nullable|email|unique:users,email',
+                            'phone' => 'nullable|string|max:20|unique:users,phone',
+                            'physical_address' => 'nullable|string',
+                            'postal_address' => 'nullable|string',
+                            'city' => 'nullable|string|max:255',
+                            'county' => 'nullable|string|max:255',
+                            'id_type' => 'required|in:national_id,passport,driving_license',
+                            'id_number' => 'required|string|unique:members,id_number',
+                            'occupation' => 'nullable|string|max:255',
+                            'employer' => 'nullable|string|max:255',
+                            'monthly_income' => 'nullable|numeric|min:0',
+                            'emergency_contact_name' => 'nullable|string|max:255',
+                            'emergency_contact_phone' => 'nullable|string|max:20',
+                            'emergency_contact_relationship' => 'nullable|string|max:255',
+                        ]);
+
+                        if ($validator->fails()) {
+                            $validationErrors = $validator->errors()->all();
+                            $errorCount++;
+                            $errors[] = [
+                                'row' => $rowNumber,
+                                'name' => trim(($preparedData['first_name'] ?? '').' '.($preparedData['last_name'] ?? '')),
+                                'errors' => $validationErrors,
+                            ];
+                            continue;
+                        }
+
+                        // Generate email if not provided
+                        $email = $preparedData['email'] ?: $this->generateEmail(
+                            $preparedData['first_name'],
+                            $preparedData['last_name']
+                        );
+
+                        // Generate phone if not provided
+                        $phone = $preparedData['phone'] ?: $this->generatePhone();
+
+                        // Generate username from name
+                        $fullName = trim($preparedData['first_name'].' '.$preparedData['last_name']);
+                        $username = User::generateUsername($fullName);
+
+                        // Create user account with username
+                        $user = User::create([
+                            'name' => $fullName,
+                            'username' => $username,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'password' => Hash::make('password123'), 
+                            'role' => 'member',
+                            'is_active' => true,
+                        ]);
+
+                        // Generate membership ID
+                        $membershipId = $this->generateMembershipId();
+
+                        // Create member profile
+                        $member = Member::create([
+                            'user_id' => $user->id,
+                            'membership_id' => $membershipId,
+                            'first_name' => trim($preparedData['first_name']),
+                            'last_name' => trim($preparedData['last_name']),
+                            'middle_name' => $preparedData['middle_name'] ?: null,
+                            'date_of_birth' => $preparedData['date_of_birth'] ?: '1990-01-01',
+                            'gender' => $preparedData['gender'] ?: 'male',
+                            'marital_status' => $preparedData['marital_status'] ?: 'single',
+                            'physical_address' => $preparedData['physical_address'] ?: 'Not provided',
+                            'postal_address' => $preparedData['postal_address'] ?: 'Not provided',
+                            'city' => $preparedData['city'] ?: 'Not provided',
+                            'county' => $preparedData['county'] ?: 'Nairobi',
+                            'country' => 'Kenya',
+                            'id_type' => $preparedData['id_type'],
+                            'id_number' => trim($preparedData['id_number']),
+                            'occupation' => $preparedData['occupation'] ?: null,
+                            'employer' => $preparedData['employer'] ?: null,
+                            'monthly_income' => $preparedData['monthly_income'] ?: null,
+                            'emergency_contact_name' => $preparedData['emergency_contact_name'] ?: 'Not provided',
+                            'emergency_contact_phone' => $preparedData['emergency_contact_phone'] ?: 'Not provided',
+                            'emergency_contact_relationship' => $preparedData['emergency_contact_relationship'] ?: 'Not specified',
+                            'membership_date' => now(),
+                            'membership_status' => 'active',
+                        ]);
+
+                        // Create accounts
+                        $shareCapitalAccountNumber = $this->generateAccountNumber('SEPU', 'S');
+                        DB::table('accounts')->insert([
+                            'account_number' => $shareCapitalAccountNumber,
+                            'account_type' => 'share_capital',
+                            'balance' => 0,
+                            'available_balance' => 0,
+                            'is_active' => true,
+                            'member_id' => $member->id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                        $shareDepositsAccountNumber = $this->generateAccountNumber('SEPU', 'D');
+                        DB::table('accounts')->insert([
+                            'account_number' => $shareDepositsAccountNumber,
+                            'account_type' => 'share_deposits',
+                            'balance' => 0,
+                            'available_balance' => 0,
+                            'is_active' => true,
+                            'member_id' => $member->id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                        $successCount++;
+
+                    } catch (\Exception $e) {
+                        $errorCount++;
+                        $errors[] = [
+                            'row' => $rowNumber,
+                            'name' => trim(($preparedData['first_name'] ?? '').' '.($preparedData['last_name'] ?? '')),
+                            'errors' => [$e->getMessage()],
+                        ];
+                    }
                 }
 
-                // Map row data to headers
-                $data = array_combine($headers, $row);
+                DB::commit();
 
-                // Validate row data
-                $validator = Validator::make($data, [
-                    'first_name' => 'required|string|max:255',
-                    'last_name' => 'required|string|max:255',
-                    'middle_name' => 'nullable|string|max:255',
-                    'date_of_birth' => 'required|date',
-                    'gender' => 'required|in:male,female,other',
-                    'marital_status' => 'required|in:single,married,divorced,widowed',
-                    'email' => 'required|email|unique:users,email',
-                    'phone' => 'required|string|max:20',
-                    'physical_address' => 'required|string',
-                    'postal_address' => 'required|string',
-                    'city' => 'nullable|string|max:255',
-                    'county' => 'required|string|max:255',
-                    'id_type' => 'required|in:national_id,passport,driving_license',
-                    'id_number' => 'required|string|unique:members,id_number',
-                    'occupation' => 'nullable|string|max:255',
-                    'employer' => 'nullable|string|max:255',
-                    'monthly_income' => 'nullable|numeric|min:0',
-                    'emergency_contact_name' => 'required|string|max:255',
-                    'emergency_contact_phone' => 'required|string|max:20',
-                    'emergency_contact_relationship' => 'required|string|max:255',
-                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error('Import chunk failed: ' . $e->getMessage());
+            }
+        }
 
-                if ($validator->fails()) {
-                    $errorCount++;
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'name' => ($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''),
-                        'errors' => $validator->errors()->all()
-                    ];
-                    continue;
-                }
+        $message = "Import completed: {$successCount} members imported successfully";
+        if ($errorCount > 0) {
+            $message .= ", {$errorCount} failed";
+        }
+        if ($skippedCount > 0) {
+            $message .= ", {$skippedCount} skipped (empty rows)";
+        }
 
-                try {
-                    // Create user account
-                    $user = User::create([
-                        'name' => trim($data['first_name'] . ' ' . $data['last_name']),
-                        'email' => trim($data['email']),
-                        'phone' => trim($data['phone']),
-                        'password' => Hash::make(Str::random(12)), // Random password
-                        'role' => 'member',
-                        'is_active' => true,
-                    ]);
+        return redirect()->route('members.import.form')
+            ->with('success', $message)
+            ->with('import_errors', $errors);
 
-                    // Create member profile
-                    $member = Member::create([
-                        'user_id' => $user->id,
-                        'membership_id' => $this->generateMembershipId(),
-                        'first_name' => trim($data['first_name']),
-                        'last_name' => trim($data['last_name']),
-                        'middle_name' => isset($data['middle_name']) ? trim($data['middle_name']) : null,
-                        'date_of_birth' => $data['date_of_birth'],
-                        'gender' => $data['gender'],
-                        'marital_status' => $data['marital_status'],
-                        'physical_address' => trim($data['physical_address']),
-                        'postal_address' => trim($data['postal_address']),
-                        'city' => isset($data['city']) ? trim($data['city']) : null,
-                        'county' => trim($data['county']),
-                        'id_type' => $data['id_type'],
-                        'id_number' => trim($data['id_number']),
-                        'occupation' => isset($data['occupation']) ? trim($data['occupation']) : null,
-                        'employer' => isset($data['employer']) ? trim($data['employer']) : null,
-                        'monthly_income' => isset($data['monthly_income']) ? $data['monthly_income'] : null,
-                        'emergency_contact_name' => trim($data['emergency_contact_name']),
-                        'emergency_contact_phone' => trim($data['emergency_contact_phone']),
-                        'emergency_contact_relationship' => trim($data['emergency_contact_relationship']),
-                        'membership_date' => now(),
-                        'membership_status' => 'active',
-                    ]);
+    } catch (\Exception $e) {
+        return back()->withErrors(['error' => 'Failed to process import: '.$e->getMessage()]);
+    }
+}
 
-                    // Create default accounts
-                    $member->accounts()->create([
-                        'account_number' => $this->generateAccountNumber('SAV'),
-                        'account_type' => 'savings',
-                        'balance' => 0,
-                        'available_balance' => 0,
-                        'is_active' => true,
-                    ]);
+    /**
+     * Prepare and clean import data
+     */
+    private function prepareImportData(array $data): array
+    {
+        // Map possible header variations
+        $firstName = $data['first_name'] ?? $data['firstname'] ?? '';
+        $lastName = $data['last_name'] ?? $data['lastname'] ?? '';
+        $middleName = $data['middle_name'] ?? $data['middlename'] ?? '';
 
-                    $member->accounts()->create([
-                        'account_number' => $this->generateAccountNumber('SHR'),
-                        'account_type' => 'shares',
-                        'balance' => 0,
-                        'available_balance' => 0,
-                        'is_active' => true,
-                    ]);
+        return [
+            'first_name' => trim($firstName),
+            'last_name' => trim($lastName),
+            'middle_name' => trim($middleName),
+            'date_of_birth' => $this->parseDate($data['date_of_birth'] ?? $data['dob'] ?? null),
+            'gender' => strtolower(trim($data['gender'] ?? '')),
+            'marital_status' => strtolower(trim($data['marital_status'] ?? $data['maritalstatus'] ?? '')),
+            'email' => trim($data['email'] ?? ''),
+            'phone' => $this->cleanPhone($data['phone'] ?? $data['phone_number'] ?? ''),
+            'physical_address' => trim($data['physical_address'] ?? $data['address'] ?? ''),
+            'postal_address' => trim($data['postal_address'] ?? ''),
+            'city' => trim($data['city'] ?? ''),
+            'county' => trim($data['county'] ?? ''),
+            'id_type' => strtolower(trim($data['id_type'] ?? $data['idtype'] ?? 'national_id')),
+            'id_number' => trim($data['id_number'] ?? $data['idnumber'] ?? ''),
+            'occupation' => trim($data['occupation'] ?? ''),
+            'employer' => trim($data['employer'] ?? ''),
+            'monthly_income' => $this->parseNumeric($data['monthly_income'] ?? $data['income'] ?? null),
+            'emergency_contact_name' => trim($data['emergency_contact_name'] ?? ''),
+            'emergency_contact_phone' => $this->cleanPhone($data['emergency_contact_phone'] ?? ''),
+            'emergency_contact_relationship' => strtolower(trim($data['emergency_contact_relationship'] ?? '')),
+        ];
+    }
 
-                    $successCount++;
+    /**
+     * Parse date from various formats
+     */
+    private function parseDate($date): ?string
+    {
+        if (empty($date)) {
+            return null;
+        }
 
-                } catch (\Exception $e) {
-                    $errorCount++;
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'name' => ($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''),
-                        'errors' => [$e->getMessage()]
-                    ];
-                }
+        try {
+            // Handle Excel numeric dates
+            if (is_numeric($date)) {
+                $unixDate = ($date - 25569) * 86400;
+
+                return date('Y-m-d', $unixDate);
             }
 
-            DB::commit();
+            // Try to parse string dates
+            $timestamp = strtotime($date);
+            if ($timestamp !== false) {
+                return date('Y-m-d', $timestamp);
+            }
 
-            return redirect()->route('members.index')->with('success', 
-                "Import completed: {$successCount} members imported successfully" . 
-                ($errorCount > 0 ? ", {$errorCount} failed." : ".")
-            )->with('import_errors', $errors);
-
+            return null;
         } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to process import: ' . $e->getMessage()]);
+
+            return null;
         }
+    }
+
+    /**
+     * Clean phone number
+     */
+    private function cleanPhone(?string $phone): string
+    {
+        if (empty($phone)) {
+            return '';
+        }
+
+        // Remove all non-numeric characters except +
+        $phone = preg_replace('/[^0-9+]/', '', $phone);
+
+        return $phone;
+    }
+
+    /**
+     * Parse numeric value
+     */
+    private function parseNumeric($value): ?float
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        // Remove any non-numeric characters except decimal point
+        $cleaned = preg_replace('/[^0-9.]/', '', $value);
+
+        return $cleaned ? (float) $cleaned : null;
+    }
+
+    /**
+     * Generate email if not provided
+     */
+    private function generateEmail(string $firstName, string $lastName): string
+    {
+        $baseEmail = strtolower(Str::slug($firstName.'.'.$lastName)).'@sepu.sacco.ke';
+        $email = $baseEmail;
+        $counter = 1;
+
+        while (User::where('email', $email)->exists()) {
+            $email = strtolower(Str::slug($firstName.'.'.$lastName)).$counter.'@sepu.sacco.ke';
+            $counter++;
+        }
+
+        return $email;
+    }
+
+    /**
+     * Generate unique phone number if not provided
+     */
+    private function generatePhone(): string
+    {
+        do {
+            $phone = '+2547'.str_pad(rand(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+        } while (User::where('phone', $phone)->exists());
+
+        return $phone;
+    }
+
+    /**
+     * Generate unique ID number if not provided
+     */
+    private function generateIdNumber(): string
+    {
+        do {
+            $idNumber = 'GEN'.str_pad(rand(1000000, 9999999), 7, '0', STR_PAD_LEFT);
+        } while (Member::where('id_number', $idNumber)->exists());
+
+        return $idNumber;
     }
 
     /**
@@ -968,7 +1172,7 @@ class MemberController extends Controller
             'marital_status', 'email', 'phone', 'physical_address', 'postal_address',
             'city', 'county', 'id_type', 'id_number', 'occupation', 'employer',
             'monthly_income', 'emergency_contact_name', 'emergency_contact_phone',
-            'emergency_contact_relationship'
+            'emergency_contact_relationship',
         ];
 
         $sampleData = [
@@ -977,16 +1181,16 @@ class MemberController extends Controller
                 'married', 'john.doe@example.com', '+254712345678', '123 Main St',
                 'P.O. Box 123', 'Nairobi', 'Nairobi', 'national_id', '12345678',
                 'Teacher', 'ABC School', '50000', 'Jane Doe', '+254712345679',
-                'Spouse'
-            ]
+                'Spouse',
+            ],
         ];
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Set headers
         $sheet->fromArray($headers, null, 'A1');
-        
+
         // Add sample data
         $sheet->fromArray($sampleData, null, 'A2');
 
@@ -995,9 +1199,9 @@ class MemberController extends Controller
             'font' => ['bold' => true],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '0A2342']
+                'startColor' => ['rgb' => '0A2342'],
             ],
-            'font' => ['color' => ['rgb' => 'FFFFFF']]
+            'font' => ['color' => ['rgb' => 'FFFFFF']],
         ];
         $sheet->getStyle('A1:T1')->applyFromArray($headerStyle);
 
@@ -1007,10 +1211,10 @@ class MemberController extends Controller
         }
 
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        
-        $fileName = 'members_import_template_' . date('Y-m-d') . '.xlsx';
+
+        $fileName = 'members_import_template_'.date('Y-m-d').'.xlsx';
         $temp_file = tempnam(sys_get_temp_dir(), $fileName);
-        
+
         $writer->save($temp_file);
 
         return response()->download($temp_file, $fileName)->deleteFileAfterSend(true);
@@ -1046,12 +1250,26 @@ class MemberController extends Controller
     /**
      * Generate unique account number
      */
-    private function generateAccountNumber(string $prefix): string
+    private function generateAccountNumber(string $prefix = 'SEPU', string $suffix = 'S'): string
     {
         do {
-            $number = $prefix.str_pad(random_int(1, 9999999), 7, '0', STR_PAD_LEFT);
-        } while (DB::table('accounts')->where('account_number', $number)->exists());
+            // Get the last account for this type
+            $lastAccount = DB::table('accounts')
+                ->where('account_number', 'like', $prefix.'%'.$suffix)
+                ->orderBy('id', 'desc')
+                ->first();
 
-        return $number;
+            if ($lastAccount) {
+                // Extract the number from the last account (e.g., SEPU0001S -> 0001)
+                preg_match('/'.$prefix.'(\d+)'.$suffix.'/', $lastAccount->account_number, $matches);
+                $number = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
+            } else {
+                $number = 1;
+            }
+
+            $accountNumber = $prefix.str_pad($number, 4, '0', STR_PAD_LEFT).$suffix;
+        } while (DB::table('accounts')->where('account_number', $accountNumber)->exists());
+
+        return $accountNumber;
     }
 }
