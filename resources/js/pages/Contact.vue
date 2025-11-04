@@ -33,8 +33,8 @@ import { Phone, Mail, MapPin, Clock } from 'lucide-vue-next'
           <Mail class="w-8 h-8 text-orange-600 mx-auto mb-3" />
           <h3 class="font-semibold text-blue-900 text-lg">Email</h3>
           <p class="text-gray-600 text-sm mt-1">
-            <a href="mailto:support@sepusacco.org" class="text-blue-700 underline">
-              support@sepusacco.org
+            <a href="mailto:support@sepusacco.co.ke" class="text-blue-700 underline">
+              support@sepusacco.co.ke
             </a>
           </p>
         </div>

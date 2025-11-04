@@ -110,7 +110,7 @@ const sections = [
           <li>
             Email:
             <a href="mailto:support@sepusacco.org" class="underline text-orange-400 hover:text-orange-300">
-              support@sepusacco.org
+              support@sepusacco.co.ke
             </a>
           </li>
           <li>Phone: +254 712 345 678</li>

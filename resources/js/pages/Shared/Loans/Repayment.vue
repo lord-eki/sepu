@@ -203,13 +203,13 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
                       <input v-model="selfRepayment.amount" type="number" required
-                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100" />
+                        class="w-full mt-1 rounded-lg shadow-sm p-2 border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100" />
                     </div>
 
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</label>
                       <select v-model="selfRepayment.method" required
-                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100">
+                        class="w-full mt-1 rounded-lg shadow-sm p-2 border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100">
                         <option disabled value="">Select method</option>
                         <option value="mpesa">M-Pesa</option>
                         <option value="bank">Bank Transfer</option>
@@ -221,7 +221,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Reference Number
                         (optional)</label>
                       <input v-model="selfRepayment.reference" type="text"
-                        class="w-full mt-1 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100" />
+                        class="w-full mt-1 rounded-lg shadow-sm p-2 border border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[#F97316] focus:border-[#F97316] dark:bg-gray-900 dark:text-gray-100" />
                     </div>
                   </div>
 

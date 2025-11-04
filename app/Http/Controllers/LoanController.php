@@ -439,6 +439,31 @@ class LoanController extends Controller
     }
 
     /**
+     * Loan Schedule
+     */
+
+    public function schedule($id)
+    {
+        $loan = Loan::with(['member', 'loanProduct', 'repayments'])->findOrFail($id);
+
+        // If no repayments yet, you can generate or just show message
+        if ($loan->repayments->isEmpty()) {
+            return Inertia::render('Shared/Loans/Schedule', [
+                'loan' => $loan,
+                'repayments' => [],
+                'message' => 'No repayment schedule generated for this loan yet.'
+            ]);
+        }
+
+        return Inertia::render('Shared/Loans/Schedule', [
+            'loan' => $loan,
+            'repayments' => $loan->repayments,
+        ]);
+    }
+
+
+
+    /**
      * Approve a loan application
      */
     public function approve(Request $request, $id)
