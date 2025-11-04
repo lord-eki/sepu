@@ -16,11 +16,17 @@
           </div>
 
           <div>
+            <Link :href="route('members.deposits.import.form')"
+              class="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-xl bg-[#f97316] w-fit px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 mr-2">
+            <Upload class="w-4 h-4 mr-2" />
+            Import Deposits
+            </Link>
             <Link :href="route('members.import.form')"
               class="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-xl bg-[#f97316] w-fit px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 mr-2">
             <Upload class="w-4 h-4 mr-2" />
             Import Members
             </Link>
+
             <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
               class="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-xl bg-[#f97316] w-fit px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200">
             <PlusCircle class="w-4 h-4" />

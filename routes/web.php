@@ -106,6 +106,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/members/import/template', [MemberController::class, 'downloadTemplate'])
             ->name('import.template');
 
+        Route::get('/members/deposits/import', [MemberController::class, 'showDepositsImportForm'])
+        ->name('deposits.import.form');
+        Route::post('/members/deposits/import', [MemberController::class, 'importDeposits'])
+        ->name('deposits.import');
+        Route::get('/members/deposits/import/template', [MemberController::class, 'downloadDepositsTemplate'])
+        ->name('deposits.import.template');
+
         Route::post('/bulk-export', [MemberController::class, 'bulkExport'])->name('bulk-export');
 
     });
