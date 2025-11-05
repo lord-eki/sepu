@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useForm, Head } from '@inertiajs/vue3'
-import AppLayout from '@layouts/AppLayout.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const breadcrumbs = [{ title: 'Settings' }, { title: 'Backup Settings' }]
 
