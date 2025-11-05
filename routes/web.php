@@ -369,9 +369,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/bulk/send', [NotificationController::class, 'sendBulk'])->name('bulk.send');
     });
 
-    // SETTINGS ROUTES
-    Route::prefix('settings')->name('settings.')->group(function () {
+   // ADMIN SYSTEM SETTINGS ROUTES
+    Route::prefix('admin/settings')->name('admin.settings.')->middleware('role:admin')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
+        
         Route::get('/general', [SettingsController::class, 'general'])->name('general');
         Route::post('/general', [SettingsController::class, 'updateGeneral'])->name('update-general');
 
@@ -391,6 +392,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/backup/create', [SettingsController::class, 'createBackup'])->name('create-backup');
         Route::post('/backup/restore', [SettingsController::class, 'restoreBackup'])->name('restore-backup');
     });
+
 
     // API ROUTES (for AJAX requests)
     Route::prefix('api')->name('api.')->group(function () {
@@ -431,11 +433,11 @@ Route::prefix('profile')->name('profile.')->middleware('role:member')->group(fun
         return redirect()->route('members.show', $member);
     })->name('index');
 
-    Route::get('/edit', function () {
-        $member = auth()->user()->member;
+    // Route::get('/edit', function () {
+    //     $member = auth()->user()->member;
 
-        return redirect()->route('members.edit', $member);
-    })->name('edit');
+    //     return redirect()->route('members.edit', $member);
+    // })->name('edit');
 });
 
 // Member loan access
@@ -516,3 +518,7 @@ Route::post('/member/profile/photo', [ProfileController::class, 'updatePhoto'])
     ->name('member.updatePhoto');
 
 Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+// Profile routes
+Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

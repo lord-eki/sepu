@@ -72,7 +72,7 @@ const closeModal = () => {
 
                         <DialogFooter class="gap-2">
                             <DialogClose as-child>
-                                <Button variant="secondary" @click="closeModal"> Cancel </Button>
+                                <Button variant="secondary" class="text-white" @click="closeModal"> Cancel </Button>
                             </DialogClose>
 
                             <Button type="submit" variant="destructive" :disabled="form.processing"> Delete account </Button>

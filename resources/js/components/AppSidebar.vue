@@ -211,16 +211,17 @@ const adminNavItems: NavItem[] = [
   },
   {
     title: 'Notifications',
-    href: '/na',
-    routeName: '#',
+    href: route('notifications.index'),
+    routeName: 'notifications.index',
     icon: Bell,
   },
   {
-    title: 'Settings',
-    href: '/na',
-    routeName: '#',
+    title: 'System Settings',
+    href: route('admin.settings.index'),
+    routeName: 'admin.settings.index',
     icon: Settings,
   },
+
 ];
 
 /**

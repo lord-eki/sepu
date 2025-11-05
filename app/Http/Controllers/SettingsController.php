@@ -19,7 +19,7 @@ class SettingsController extends Controller
     {
         $settings = $this->getSettingsGrouped();
         
-        return Inertia::render('Settings/Index', [
+        return Inertia::render('Admin/Settings/Index', [
             'settings' => $settings,
             'lastBackup' => $this->getLastBackupInfo(),
             'systemInfo' => $this->getSystemInfo(),
@@ -37,7 +37,7 @@ class SettingsController extends Controller
             ->get()
             ->keyBy('key');
 
-        return Inertia::render('Settings/General', [
+        return Inertia::render('Admin/Settings/General', [
             'settings' => $settings,
             'currencies' => $this->getCurrencies(),
             'timezones' => $this->getTimezones(),
@@ -107,7 +107,7 @@ class SettingsController extends Controller
             ->get()
             ->keyBy('key');
 
-        return Inertia::render('Settings/Financial', [
+        return Inertia::render('Admin/Settings/Financial', [
             'settings' => $settings,
             'accountTypes' => $this->getAccountTypes(),
             'interestCalculationMethods' => $this->getInterestCalculationMethods()
@@ -182,7 +182,7 @@ class SettingsController extends Controller
             ->get()
             ->keyBy('key');
 
-        return Inertia::render('Settings/Loan', [
+        return Inertia::render('Admin/Settings/Loan', [
             'settings' => $settings,
             'loanStatuses' => $this->getLoanStatuses(),
             'repaymentFrequencies' => $this->getRepaymentFrequencies()
@@ -238,7 +238,7 @@ class SettingsController extends Controller
             ->get()
             ->keyBy('key');
 
-        return Inertia::render('Settings/Notification', [
+        return Inertia::render('Admin/Settings/Notification', [
             'settings' => $settings,
             'notificationChannels' => $this->getNotificationChannels(),
             'notificationTypes' => $this->getNotificationTypes()
@@ -315,7 +315,7 @@ class SettingsController extends Controller
             ->get()
             ->keyBy('key');
 
-        return Inertia::render('Settings/Security', [
+        return Inertia::render('Admin/Settings/Security', [
             'settings' => $settings,
             'sessionLifetime' => config('session.lifetime'),
             'recentSessions' => $this->getRecentSessions(),
@@ -392,7 +392,7 @@ class SettingsController extends Controller
             ->get()
             ->keyBy('key');
 
-        return Inertia::render('Settings/Backup', [
+        return Inertia::render('Admin/Settings/Backup', [
             'settings' => $settings,
             'backups' => $backups,
             'diskSpace' => $this->getDiskSpace(),
