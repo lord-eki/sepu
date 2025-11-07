@@ -101,10 +101,9 @@ import { Phone, Mail, MapPin, Clock } from 'lucide-vue-next'
           class="w-full h-80"
           frameborder="0"
           allowfullscreen
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1994.9720129857338!2d36.82194641591565!3d-1.2920651990605285!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f10f8164c37d9%3A0x6a2b05a9832f39d!2sNairobi%20City%2C%20Kenya!5e0!3m2!1sen!2ske!4v1697658322187"
-        ></iframe>
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.857688611686!2d36.7596649!3d-1.2996543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f1a68dc564e65%3A0x5b2831f1a654bf2b!2sSchool%20Equipment%20Production%20Unit!5e0!3m2!1sen!2ske!4v1730995200000!5m2!1sen!2ske">
+        </iframe>
       </section>
-
     </div>
   </PublicLayout>
 </template>

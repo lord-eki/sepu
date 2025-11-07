@@ -37,27 +37,30 @@ const setActiveParents = () => {
   }
 }
 
-// Run when page changes
+// Watch page URL for changes
 watch(() => page.url, setActiveParents, { immediate: true })
-
-// Ensure it runs once on mount (useful for refresh)
 onMounted(setActiveParents)
 </script>
 
 <template>
   <SidebarGroup class="px-2 py-0">
-    <SidebarGroupLabel>Platform</SidebarGroupLabel>
+    <SidebarGroupLabel class="text-gray-700 dark:text-gray-300">
+      Platform
+    </SidebarGroupLabel>
+
     <SidebarMenu>
       <SidebarMenuItem v-for="item in props.items" :key="item.title">
         <!-- Parent with children -->
         <template v-if="item.children && item.children.length">
-          <!-- Parent Button -->
           <SidebarMenuButton
             as-child
             :tooltip="item.title"
             @click.stop="toggleMenu(item.title)"
+            class="w-full"
           >
-            <div class="flex items-center justify-between w-full cursor-pointer select-none">
+            <div
+              class="flex items-center justify-between w-full cursor-pointer select-none text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400"
+            >
               <div class="flex items-center gap-2">
                 <component :is="item.icon" class="h-4 w-4" />
                 <span>{{ item.title }}</span>
@@ -81,14 +84,15 @@ onMounted(setActiveParents)
                   :tooltip="child.title"
                   :class="[
                     route().current(child.routeName)
-                      ? 'bg-orange-100 text-orange-600 font-semibold rounded-md'
-                      : 'hover:bg-orange-50',
+                      ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 font-semibold rounded-md'
+                      : 'hover:bg-orange-50 dark:hover:bg-gray-800/60 text-gray-700 dark:text-gray-300 rounded-md',
                   ]"
                 >
                   <Link
                     :href="child.href || '#'"
                     preserve-scroll
                     preserve-state
+                    class="flex items-center gap-2"
                   >
                     <component :is="child.icon" class="h-4 w-4" />
                     <span>{{ child.title }}</span>
@@ -99,19 +103,24 @@ onMounted(setActiveParents)
           </transition>
         </template>
 
-        <!-- Normal single link -->
+        <!-- Single link -->
         <template v-else>
           <SidebarMenuButton
             as-child
             :tooltip="item.title"
             :class="[
               route().current(item.routeName)
-                ? 'bg-orange-100 text-orange-600 font-semibold rounded-md'
-                : 'hover:bg-orange-50',
+                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 font-semibold rounded-md'
+                : 'hover:bg-orange-50 dark:hover:bg-gray-800/60 text-gray-700 dark:text-gray-300 rounded-md',
             ]"
           >
-            <Link :href="item.href">
-              <component :is="item.icon" />
+            <Link
+              :href="item.href"
+              preserve-scroll
+              preserve-state
+              class="flex items-center gap-2"
+            >
+              <component :is="item.icon" class="h-4 w-4" />
               <span>{{ item.title }}</span>
             </Link>
           </SidebarMenuButton>
@@ -120,3 +129,15 @@ onMounted(setActiveParents)
     </SidebarMenu>
   </SidebarGroup>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-3px);
+}
+</style>
