@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const breadcrumbs = [
   { title: 'Notifications', href: route('notifications.index') },

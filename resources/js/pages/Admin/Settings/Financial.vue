@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const form = useForm({
   fiscal_year_start: '2025-01-01',

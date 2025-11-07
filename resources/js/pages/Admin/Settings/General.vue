@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 // Reactive form state
 const form = useForm({
