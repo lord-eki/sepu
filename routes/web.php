@@ -41,7 +41,9 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
 Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.send');
+    
 
+    
 // Loan Calculator
 Route::get('/loan-calculator', [LoanCalculatorController::class, 'index'])->name('loan-calculator.index');
 Route::post('/loan-calculator/calculate', [LoanCalculatorController::class, 'calculate'])->name('loan-calculator.calculate');
@@ -522,3 +524,25 @@ Route::get('/transactions', [TransactionController::class, 'index'])->name('tran
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+
+Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function() {
+    Route::get('pending-members', [MemberController::class, 'pendingMembers']);
+    Route::post('members/{member}/activate', [MemberController::class, 'activateMember']);
+    Route::post('members/{member}/reject', [MemberController::class, 'rejectMember']);
+});
+
+Route::post('/switch-role', function (Request $request) {
+    $request->validate([
+        'role' => 'required|string|in:admin,member',
+    ]);
+
+    session(['current_role' => $request->role]);
+
+    // You can redirect back or return a JSON response
+    if ($request->expectsJson()) {
+        return response()->json(['success' => true]);
+    }
+
+    return redirect()->back();
+})->name('switch-role')->middleware('auth');

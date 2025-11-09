@@ -40,28 +40,13 @@ class LoginRequest extends FormRequest
         $login = $this->input('login');
         $password = $this->input('password');
 
-        // DEBUG: Log the login attempt
         Log::info('Login attempt', [
             'login' => $login,
             'ip' => $this->ip(),
         ]);
 
-        // Determine if login is email or username
         $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-        // DEBUG: Log the field type
-        Log::info('Login field type determined', [
-            'field_type' => $fieldType,
-            'login_value' => $login,
-        ]);
-
-        // Attempt authentication
         $credentials = [$fieldType => $login, 'password' => $password];
-        
-        Log::info('Attempting authentication with', [
-            'credentials_keys' => array_keys($credentials),
-            $fieldType => $login,
-        ]);
 
         if (!Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
@@ -76,29 +61,53 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Check if user is active
         $user = Auth::user();
-        
+        $member = $user->member ?? null;
+
         Log::info('Login successful', [
             'user_id' => $user->id,
             'username' => $user->username ?? 'N/A',
             'role' => $user->role,
         ]);
 
+        /**
+         * Ensure profile completion first
+         */
+        if (!$member) {
+            // Auth::logout();
+            throw ValidationException::withMessages([
+                'login' => 'Please complete your membership profile before logging in.',
+            ]);
+        }
+
+        /**
+         * Check membership status next
+         */
+        if ($member->membership_status === 'inactive') {
+            // Auth::logout();
+            throw ValidationException::withMessages([
+                'login' => 'Your account is still awaiting activation by the admin.',
+            ]);
+        }
+
+        /**
+         * Now check if account is inactive or banned
+         */
         if (!$user->is_active) {
             Auth::logout();
-            
-            Log::warning('Inactive user attempted login', [
+
+            Log::warning('Inactive or banned user attempted login', [
                 'user_id' => $user->id,
             ]);
 
             throw ValidationException::withMessages([
-                'login' => 'Your account has been deactivated. Please contact support.',
+                'login' => 'Your account is inactive. Please contact support.',
             ]);
         }
 
         RateLimiter::clear($this->throttleKey());
     }
+
 
     public function ensureIsNotRateLimited(): void
     {
