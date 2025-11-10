@@ -121,9 +121,12 @@ defineProps<{
                 Vouchers
                 <span class="px-2 py-0.5 rounded-lg bg-blue-900/10 text-blue-900 font-semibold">{{ pendingApprovals.vouchers }}</span>
               </li>
-              <li class="flex justify-between items-center">
+              <li class="flex justify-between items-center cursor-pointer hover:text-orange-600"
+                  @click="$inertia.visit('/admin/pending-members')">
                 Members
-                <span class="px-2 py-0.5 rounded-lg bg-green-100 text-green-700 font-semibold">{{ pendingApprovals.member_applications }}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-green-100 text-green-700 font-semibold">
+                  {{ pendingApprovals.member_applications }}
+                </span>
               </li>
             </ul>
 

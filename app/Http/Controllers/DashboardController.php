@@ -68,52 +68,30 @@ class DashboardController extends Controller
     }
 
 
+   
     // Get pending members
     public function pendingMembers()
     {
         try {
-            // Adjust column names according to your DB
-            $members = Member::where('status', 'pending')
-                ->get(['id', 'first_name', 'last_name', 'email']);
+            $pendingMembers = Member::with(['user'])
+                ->where('membership_status', 'pending')
+                ->select('id', 'user_id', 'first_name', 'last_name', 'created_at')
+                ->latest()
+                ->get();
 
-            return response()->json($members);
+            return response()->json($pendingMembers);
         } catch (\Exception $e) {
-            // Log the error for debugging
             \Log::error('Error fetching pending members: ' . $e->getMessage());
-
-            return response()->json([
-                'error' => 'Failed to fetch pending members'
-            ], 500);
+            return response()->json(['error' => 'Error fetching pending members'], 500);
         }
     }
 
-    // Activate member
-    public function activateMember(Member $member)
+
+    public function pendingMembersPage()
     {
-        try {
-            $member->status = 'active';
-            $member->save();
-
-            return response()->json(['message' => 'Member activated successfully']);
-        } catch (\Exception $e) {
-            \Log::error('Error activating member: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to activate member'], 500);
-        }
+        return Inertia::render('Admin/PendingMembers');
     }
 
-    // Reject member
-    public function rejectMember(Member $member)
-    {
-        try {
-            $member->status = 'rejected';
-            $member->save();
-
-            return response()->json(['message' => 'Member rejected successfully']);
-        } catch (\Exception $e) {
-            \Log::error('Error rejecting member: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to reject member'], 500);
-        }
-    }
 
     /**
      * Management Dashboard - Strategic overview

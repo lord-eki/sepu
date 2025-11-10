@@ -527,7 +527,8 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.
 
 
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function() {
-    Route::get('pending-members', [MemberController::class, 'pendingMembers']);
+    Route::get('pending-members', [DashboardController::class, 'pendingMembersPage'])->name('admin.pending-members');
+    Route::get('pending-members/list', [DashboardController::class, 'pendingMembers']);
     Route::post('members/{member}/activate', [MemberController::class, 'activateMember']);
     Route::post('members/{member}/reject', [MemberController::class, 'rejectMember']);
 });
