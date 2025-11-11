@@ -26,22 +26,19 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $member = $user ? Member::where('user_id', $user->id)->first() : null;
 
-        // Default roles for dropdown: user DB role + member
+        // Default available roles
         $roles = [];
         if ($user) {
-            $roles[] = $user->role; // user's actual DB role
+            $roles[] = $user->role; // the permanent DB role
             if ($user->role !== 'member') {
-                $roles[] = 'member'; // always allow switching to personal member mode
+                $roles[] = 'member'; // always allow switching to "member" view
             }
         }
 
-        // Current role comes from session or DB
-        $currentRole = session('current_role', $user?->role ?? 'member');
+        // Use active_role if set, otherwise fall back to their actual role
+        $currentRole = $user?->active_role ?? $user?->role ?? 'member';
 
-        // Override user role for current request
-        if ($user) {
-            $user->role = $currentRole;
-        }
+
 
         return [
             ...parent::share($request),

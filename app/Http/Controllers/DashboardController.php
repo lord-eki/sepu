@@ -309,6 +309,7 @@ class DashboardController extends Controller
                     'amount' => $t->amount,
                     'time' => $t->created_at,
                 ]),
+
             Loan::with('member')
                 ->where('status', 'pending')
                 ->latest()
@@ -319,9 +320,22 @@ class DashboardController extends Controller
                     'description' => "{$l->member->first_name} {$l->member->last_name} - Loan Application",
                     'amount' => $l->applied_amount,
                     'time' => $l->created_at,
-                ])
+                ]),
+
+            Member::where('membership_status', 'pending')
+            ->latest()
+            ->take(3)
+            ->get()
+            ->map(fn($m) => [
+                'type' => 'new_member',
+                'description' => "{$m->first_name} {$m->last_name} - New Member Joined",
+                'amount' => null,
+                'time' => $m->created_at,
+            ]),
+
         ])->flatten(1)->sortByDesc('time')->take(10)->values();
     }
+
 
     private function getPendingApprovals()
     {

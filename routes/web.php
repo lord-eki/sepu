@@ -535,15 +535,28 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function() {
 
 Route::post('/switch-role', function (Request $request) {
     $request->validate([
-        'role' => 'required|string|in:admin,member',
+        'role' => 'required|string|in:admin,loan_officer,accountant,management,member',
     ]);
 
-    session(['current_role' => $request->role]);
+    $user = Auth::user();
 
-    // You can redirect back or return a JSON response
+    // Verify that user is allowed to switch to this role
+    $allowedRoles = [$user->role];
+    if ($user->role !== 'member') {
+        $allowedRoles[] = 'member';
+    }
+
+    if (!in_array($request->role, $allowedRoles)) {
+        return response()->json(['error' => 'Unauthorized role switch.'], 403);
+    }
+
+    // Update active role in DB
+    $user->active_role = $request->role;
+    $user->save();
+
     if ($request->expectsJson()) {
         return response()->json(['success' => true]);
     }
 
-    return redirect()->back();
-})->name('switch-role')->middleware('auth');
+    return back();
+})->middleware('auth')->name('switch-role');

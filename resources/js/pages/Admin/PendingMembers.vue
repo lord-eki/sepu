@@ -84,7 +84,7 @@ const formatDate = (date: string) => new Date(date).toLocaleDateString()
 
               <!-- Actions -->
               <td class="px-6 py-4 text-right">
-                <Link :href="`/admin/members/${member.id}`" class="text-indigo-600 hover:text-indigo-900">View</Link>
+                <Link :href="route('members.show', member.id)" class="text-indigo-600 hover:underline">View</Link>
               </td>
             </tr>
           </tbody>

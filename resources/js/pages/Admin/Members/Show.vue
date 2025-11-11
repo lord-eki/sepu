@@ -463,8 +463,21 @@
           </div>
         </div>
       </div>
-
     </div>
+    <!-- Global Loader Overlay -->
+    <div v-if="isLoading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center space-y-3">
+        <svg class="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10"
+            stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <p class="text-gray-700 text-sm font-medium">Processing, please wait...</p>
+      </div>
+    </div>
+
   </AppLayout>
 </template>
 
@@ -480,6 +493,8 @@ const flash = computed(() => page.props.flash || {});
 const flashMessage = ref(null);
 const flashType = ref("success");
 const flashBox = ref(null);
+const isLoading = ref(false)
+
 
 watch(
   flash,
@@ -580,12 +595,16 @@ const openConfirm = (action) => {
 }
 
 const updateStatus = () => {
+  isLoading.value = true
   router.post(route(`members.${actionType.value}`, memberId), {}, {
     preserveScroll: true,
+    onFinish: () => {
+      isLoading.value = false
+    },
     onSuccess: () => {
       showDropdown.value = false
       showConfirmModal.value = false
-    }
+    },
   })
 }
 
@@ -593,26 +612,31 @@ const handleDocumentUpload = (event) => {
   const files = Array.from(event.target.files)
   if (files.length > 0) {
     const formData = new FormData()
-    files.forEach(file => {
-      formData.append('documents[]', file)
-    })
+    files.forEach(file => formData.append('documents[]', file))
 
+    isLoading.value = true
     router.post(route('members.upload-documents', props.member.id), formData, {
       preserveScroll: true,
-      onSuccess: () => {
+      onFinish: () => {
+        isLoading.value = false
         event.target.value = ''
-      }
+      },
     })
   }
 }
 
 const deleteDocument = (index) => {
   if (confirm('Are you sure you want to delete this document?')) {
+    isLoading.value = true
     router.delete(route('members.delete-document', [props.member.id, index]), {
-      preserveScroll: true
+      preserveScroll: true,
+      onFinish: () => {
+        isLoading.value = false
+      },
     })
   }
 }
+
 
 const handleClickOutside = (event) => {
   if (dropdown.value && !dropdown.value.contains(event.target)) {
