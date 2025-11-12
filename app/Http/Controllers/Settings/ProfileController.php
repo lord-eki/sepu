@@ -106,7 +106,6 @@ class ProfileController extends Controller
             'genders' => [
                 'male' => 'Male',
                 'female' => 'Female',
-                'other' => 'Other',
             ],
             'maritalStatuses' => [
                 'single' => 'Single',
@@ -167,7 +166,7 @@ class ProfileController extends Controller
                 $member = Member::create(array_merge($validated, [
                     'user_id'           => Auth::id(),
                     'membership_id'     => $this->generateMembershipId(),
-                    'membership_status' => 'inactive',
+                    'membership_status' => 'pending',
                     'membership_date'   => now(),
                 ]));
 

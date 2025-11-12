@@ -387,6 +387,29 @@ class MemberController extends Controller
         return back()->with('success', 'Member deactivated successfully');
     }
 
+
+     /**
+     * Deactivate member
+     */
+        public function approve(Member $member): RedirectResponse
+        {
+            $member->update(['membership_status' => 'approved']);
+            $member->user->update(['is_active' => true]);
+
+            return back()->with('success', 'Member approved successfully');
+        }
+
+    /**
+     * Reject member
+     */
+    public function reject(Member $member): RedirectResponse
+    {
+        $member->update(['membership_status' => 'rejected']);
+        $member->user->update(['is_active' => false]);
+
+        return back()->with('success', 'Member rejected successfully');
+    }
+
     /**
      * Suspend member
      */

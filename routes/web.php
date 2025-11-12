@@ -73,6 +73,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Member-specific actions
         Route::post('/{member}/activate', [MemberController::class, 'activate'])->name('activate');
         Route::post('/{member}/deactivate', [MemberController::class, 'deactivate'])->name('deactivate');
+        Route::post('/{member}/approve', [MemberController::class, 'approve'])->name('approve');
+        Route::post('/{member}/reject', [MemberController::class, 'reject'])->name('reject');
         Route::post('/{member}/suspend', [MemberController::class, 'suspend'])->name('suspend');
         Route::get('/{member}/accounts', [MemberController::class, 'accounts'])->name('accounts');
         Route::get('/{member}/transactions', [MemberController::class, 'transactions'])->name('transactions');
@@ -506,6 +508,9 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/awaiting-activation', function () {
     return Inertia::render('Profile/AwaitingActivation');
 })->name('awaiting-activation');
+Route::get('/awaiting-payment', function () {
+    return Inertia::render('Profile/AwaitingPayment');
+})->name('awaiting-payment');
 
 Route::get('/about', fn () => Inertia::render('AboutUs'))->name('about');
 Route::get('/terms', fn () => Inertia::render('Terms'))->name('terms');
@@ -529,8 +534,6 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function() {
     Route::get('pending-members', [DashboardController::class, 'pendingMembersPage'])->name('admin.pending-members');
     Route::get('pending-members/list', [DashboardController::class, 'pendingMembers']);
-    Route::post('members/{member}/activate', [MemberController::class, 'activateMember']);
-    Route::post('members/{member}/reject', [MemberController::class, 'rejectMember']);
 });
 
 Route::post('/switch-role', function (Request $request) {

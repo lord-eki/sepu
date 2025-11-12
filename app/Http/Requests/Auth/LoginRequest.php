@@ -6,9 +6,10 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class LoginRequest extends FormRequest
 {
@@ -46,9 +47,68 @@ class LoginRequest extends FormRequest
         ]);
 
         $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        $credentials = [$fieldType => $login, 'password' => $password];
+        $user = User::where($fieldType, $login)->first();
 
-        if (!Auth::attempt($credentials, $this->boolean('remember'))) {
+        if (!$user) {
+            RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'login' => 'No account found with these credentials.',
+            ]);
+        }
+
+        /**
+         *  Membership status checks (before login)
+         */
+        if ($user->role === 'member') {
+            $member = $user->member;
+
+            if (!$member) {
+                throw ValidationException::withMessages([
+                    'login' => 'Please complete your membership profile before logging in.',
+                ]);
+            }
+
+            switch ($member->membership_status) {
+                case 'pending':
+                    throw ValidationException::withMessages([
+                        'login' => 'Your membership is pending approval by the admin.',
+                    ]);
+
+                case 'inactive':
+                    throw ValidationException::withMessages([
+                        'login' => 'Your membership is inactive. Please contact support.',
+                    ]);
+
+                case 'suspended':
+                    throw ValidationException::withMessages([
+                        'login' => 'Your membership has been suspended. Please contact support for more information.',
+                    ]);
+
+                case 'rejected':
+                    throw ValidationException::withMessages([
+                        'login' => 'Your membership application was rejected. You cannot log in.',
+                    ]);
+
+                case 'terminated':
+                    throw ValidationException::withMessages([
+                        'login' => 'Your membership has been terminated. Access is no longer allowed.',
+                    ]);
+            }
+        }
+
+        /**
+         *  Account-level check
+         */
+        if (!$user->is_active) {
+            throw ValidationException::withMessages([
+                'login' => 'Your account has been deactivated. Please contact support.',
+            ]);
+        }
+
+        /**
+         *  Finally attempt authentication
+         */
+        if (!Auth::attempt([$fieldType => $login, 'password' => $password], $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             Log::warning('Login failed', [
@@ -57,12 +117,14 @@ class LoginRequest extends FormRequest
             ]);
 
             throw ValidationException::withMessages([
-                'login' => 'These credentials do not match our records.',
+                'login' => 'Invalid credentials. Please try again.',
             ]);
         }
 
+        /**
+         *  Login successful
+         */
         $user = Auth::user();
-        $member = $user->member ?? null;
 
         Log::info('Login successful', [
             'user_id' => $user->id,
@@ -70,44 +132,8 @@ class LoginRequest extends FormRequest
             'role' => $user->role,
         ]);
 
-        /**
-         * Ensure profile completion first
-         */
-        if (!$member) {
-            // Auth::logout();
-            throw ValidationException::withMessages([
-                'login' => 'Please complete your membership profile before logging in.',
-            ]);
-        }
-
-        /**
-         * Check membership status next
-         */
-        if ($member->membership_status === 'inactive') {
-            // Auth::logout();
-            throw ValidationException::withMessages([
-                'login' => 'Your account is still awaiting activation by the admin.',
-            ]);
-        }
-
-        /**
-         * Now check if account is inactive or banned
-         */
-        if (!$user->is_active) {
-            Auth::logout();
-
-            Log::warning('Inactive or banned user attempted login', [
-                'user_id' => $user->id,
-            ]);
-
-            throw ValidationException::withMessages([
-                'login' => 'Your account is inactive. Please contact support.',
-            ]);
-        }
-
         RateLimiter::clear($this->throttleKey());
     }
-
 
     public function ensureIsNotRateLimited(): void
     {

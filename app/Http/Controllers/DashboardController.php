@@ -58,12 +58,15 @@ class DashboardController extends Controller
         $recentActivities = $this->getRecentActivities();
         $pendingApprovals = $this->getPendingApprovals();
         $systemHealth = $this->getSystemHealth();
+        $pendingPayments = Member::where('membership_status', 'approved')
+                       ->count();
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'recentActivities' => $recentActivities,
             'pendingApprovals' => $pendingApprovals,
             'systemHealth' => $systemHealth,
+            'awaiting_payments' => $pendingPayments,
         ]);
     }
 
@@ -214,6 +217,7 @@ class DashboardController extends Controller
             ->get();
 
         $loanPerformanceMetrics = $this->getLoanPerformanceMetrics();
+        
 
         return Inertia::render('Officer/Dashboard', [
             'stats' => $stats,
@@ -236,14 +240,34 @@ class DashboardController extends Controller
         }
 
         // Check membership status
-        if ($member->membership_status === 'inactive') {
-            return redirect()->route('awaiting-activation');
+        switch ($member->membership_status) {
+            case 'pending':
+                return redirect()->route('awaiting-activation');
+
+            case 'approved':
+                return redirect()->route('awaiting-payment');
+
+            case 'inactive':
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your membership is inactive. Please contact support.');
+
+            case 'suspended':
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your membership has been suspended. Contact the SACCO administration for assistance.');
+
+            case 'rejected':
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your membership application was rejected. Please reach out to support for clarification.');
+
+            case 'active':
+                // proceed as normal
+                break;
+
+            default:
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your membership status is invalid. Please contact support.');
         }
 
-        if ($member->membership_status !== 'active') {
-            auth()->logout();
-            return redirect()->route('login')->with('error', 'Your account status does not allow access.');
-        }
 
         $accounts = Account::where('member_id', $member->id)
             ->get()
