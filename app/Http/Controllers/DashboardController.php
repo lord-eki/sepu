@@ -58,36 +58,55 @@ class DashboardController extends Controller
         $recentActivities = $this->getRecentActivities();
         $pendingApprovals = $this->getPendingApprovals();
         $systemHealth = $this->getSystemHealth();
-        $pendingPayments = Member::where('membership_status', 'approved')
-                       ->count();
+       
+       
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'recentActivities' => $recentActivities,
             'pendingApprovals' => $pendingApprovals,
             'systemHealth' => $systemHealth,
-            'awaiting_payments' => $pendingPayments,
         ]);
     }
 
 
    
-    // Get pending members
+  // Get pending members + approved members awaiting activation
     public function pendingMembers()
     {
         try {
-            $pendingMembers = Member::with(['user'])
+            // Pending members
+            $pendingMembers = Member::with('user')
                 ->where('membership_status', 'pending')
-                ->select('id', 'user_id', 'first_name', 'last_name', 'created_at')
+                ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'membership_date')
                 ->latest()
                 ->get();
 
-            return response()->json($pendingMembers);
+            // Approved members awaiting activation (have not completed required payment)
+            $approvedAwaitingActivation = Member::with(['user', 'accounts'])
+            ->where('membership_status', 'approved')
+            ->whereDoesntHave('accounts', function ($q) {
+                $q->where('account_type', 'share_deposits')->where('balance', '>=', 7500);
+            })
+            ->orWhereDoesntHave('accounts', function ($q) {
+                $q->where('account_type', 'share_capital')->where('balance', '>=', 5000);
+            })
+            ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
+            ->latest()
+            ->get();
+
+
+            return response()->json([
+                'pending' => $pendingMembers,
+                'approvedAwaitingActivation' => $approvedAwaitingActivation,
+            ]);
         } catch (\Exception $e) {
-            \Log::error('Error fetching pending members: ' . $e->getMessage());
-            return response()->json(['error' => 'Error fetching pending members'], 500);
+            \Log::error('Error fetching members: ' . $e->getMessage());
+            return response()->json(['error' => 'Error fetching members'], 500);
         }
     }
+
+
 
 
     public function pendingMembersPage()
@@ -367,6 +386,17 @@ class DashboardController extends Controller
             'loans' => Loan::where('status', 'pending')->count(),
             'vouchers' => PaymentVoucher::where('status', 'pending')->count(),
             'member_applications' => Member::where('membership_status', 'pending')->count(),
+            'pending_activation' => Member::where('membership_status', 'approved')
+            ->whereDoesntHave('accounts', function ($query) {
+                $query->where(function ($q) {
+                    $q->where('account_type', 'share_deposits')
+                        ->where('balance', '>=', 7500);
+                })->orWhere(function ($q) {
+                    $q->where('account_type', 'share_capital')
+                        ->where('balance', '>=', 5000);
+                });
+            })
+            ->count(),
         ];
     }
 
@@ -472,4 +502,5 @@ class DashboardController extends Controller
 
         return $totalProcessed > 0 ? round(($approved / $totalProcessed) * 100, 2) : 0;
     }
+
 }

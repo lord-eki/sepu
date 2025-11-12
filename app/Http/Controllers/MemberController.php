@@ -80,6 +80,9 @@ class MemberController extends Controller
                 'active' => Member::where('membership_status', 'active')->count(),
                 'inactive' => Member::where('membership_status', 'inactive')->count(),
                 'suspended' => Member::where('membership_status', 'suspended')->count(),
+                'pending' => Member::where('membership_status', 'pending')->count(),
+                'approved' => Member::where('membership_status', 'approved')->count(),
+                'rejected' => Member::where('membership_status', 'rejected')->count(),
             ],
         ]);
     }
@@ -365,61 +368,76 @@ class MemberController extends Controller
         }
     }
 
-    /**
-     * Activate member
-     */
-    public function activate(Member $member): RedirectResponse
+  public function activate(Member $member): RedirectResponse
     {
-        $member->update(['membership_status' => 'active']);
-        $member->user->update(['is_active' => true]);
+        // Eager load accounts
+        $member->load('accounts');
 
-        return back()->with('success', 'Member activated successfully');
+        if ($member->membership_status !== 'approved') {
+            return back()->with('error', 'Only approved members can be activated.');
+        }
+
+        $hasPaid = $member->accounts->some(function ($account) {
+            return ($account->account_type === 'share_deposits' && $account->balance >= 7500)
+                || ($account->account_type === 'share_capital' && $account->balance >= 5000);
+        });
+
+        if (! $hasPaid) {
+            return back()->with('error', 'Member has not completed the required payment for activation.');
+        }
+
+        $member->update(['membership_status' => 'active']);
+        $member->user?->update(['is_active' => true]);
+
+        return back()->with('success', 'Member activated successfully.');
     }
 
+
     /**
-     * Deactivate member
+     * Deactivate an active member
      */
     public function deactivate(Member $member): RedirectResponse
     {
-        $member->update(['membership_status' => 'inactive']);
-        $member->user->update(['is_active' => false]);
-
-        return back()->with('success', 'Member deactivated successfully');
-    }
-
-
-     /**
-     * Deactivate member
-     */
-        public function approve(Member $member): RedirectResponse
-        {
-            $member->update(['membership_status' => 'approved']);
-            $member->user->update(['is_active' => true]);
-
-            return back()->with('success', 'Member approved successfully');
+        if ($member->membership_status !== 'active') {
+            return back()->with('error', 'Only active members can be deactivated.');
         }
 
+        $member->update(['membership_status' => 'inactive']);
+        $member->user?->update(['is_active' => false]);
+
+        return back()->with('success', 'Member deactivated successfully.');
+    }
+
     /**
-     * Reject member
+     * Reject a pending member
      */
     public function reject(Member $member): RedirectResponse
     {
-        $member->update(['membership_status' => 'rejected']);
-        $member->user->update(['is_active' => false]);
+        if ($member->membership_status !== 'pending') {
+            return back()->with('error', 'Only pending members can be rejected.');
+        }
 
-        return back()->with('success', 'Member rejected successfully');
+        $member->update(['membership_status' => 'rejected']);
+        $member->user?->update(['is_active' => false]);
+
+        return back()->with('success', 'Member rejected successfully.');
     }
 
     /**
-     * Suspend member
+     * Suspend an active member
      */
     public function suspend(Member $member): RedirectResponse
     {
-        $member->update(['membership_status' => 'suspended']);
-        $member->user->update(['is_active' => false]);
+        if ($member->membership_status !== 'active') {
+            return back()->with('error', 'Only active members can be suspended.');
+        }
 
-        return back()->with('success', 'Member suspended successfully');
+        $member->update(['membership_status' => 'suspended']);
+        $member->user?->update(['is_active' => false]);
+
+        return back()->with('success', 'Member suspended successfully.');
     }
+
 
     /**
      * Get member accounts

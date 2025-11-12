@@ -127,12 +127,11 @@ defineProps<{
               </li>
               <li class="flex justify-between items-center cursor-pointer hover:text-orange-600"
                 @click="$inertia.visit('/admin/pending-members')">
-                Awaiting Payments
+                Pending Activation
                 <span class="px-2 py-0.5 rounded-lg bg-yellow-100 text-yellow-700 font-semibold">
-                  {{ pendingApprovals.awaiting_payments }}
+                  {{ pendingApprovals.pending_activation }}
                 </span>
               </li>
-
             </ul>
 
             <hr class="border-gray-200 mb-4" />

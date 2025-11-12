@@ -630,8 +630,6 @@ const updateStatus = () => {
     onSuccess: (page) => {
       showDropdown.value = false
       showConfirmModal.value = false
-      flashMessage.value = "Action completed successfully"
-      flashType.value = "success"
     },
     onError: (errors) => {
       // Show backend error message
@@ -654,10 +652,6 @@ const handleDocumentUpload = (event) => {
     isLoading.value = true
     router.post(route('members.upload-documents', props.member.id), formData, {
       preserveScroll: true,
-      onSuccess: () => {
-        flashMessage.value = "Documents uploaded successfully"
-        flashType.value = "success"
-      },
       onError: (errors) => {
         flashMessage.value = errors?.message || "Failed to upload documents"
         flashType.value = "error"
@@ -677,10 +671,6 @@ const deleteDocument = (index) => {
   isLoading.value = true
   router.delete(route('members.delete-document', [props.member.id, index]), {
     preserveScroll: true,
-    onSuccess: () => {
-      flashMessage.value = "Document deleted successfully"
-      flashType.value = "success"
-    },
     onError: (errors) => {
       flashMessage.value = errors?.message || "Failed to delete document"
       flashType.value = "error"

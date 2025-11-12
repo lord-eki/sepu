@@ -60,13 +60,21 @@
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div v-for="card in [
-            { label: 'Total Members', value: stats.total, icon: Users, color: 'text-blue-600 bg-blue-50' },
-            { label: 'Active', value: stats.active, icon: CheckCircle, color: 'text-green-600 bg-green-50' },
-            { label: 'Inactive', value: stats.inactive, icon: CircleX, color: 'text-red-600 bg-red-50' },
-            { label: 'Suspended', value: stats.suspended, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50' }
-          ]" :key="card.label"
-            class="p-5 rounded-2xl bg-white/90 shadow-sm border border-gray-100 backdrop-blur-sm hover:shadow-md transition">
+          <div
+            v-for="card in [
+              { label: 'Total Members', value: stats.total, icon: Users, color: 'text-blue-600 bg-blue-50' },
+              { label: 'Active', value: stats.active, icon: CheckCircle, color: 'text-green-600 bg-green-50' },
+              { label: 'Inactive', value: stats.inactive, icon: CircleX, color: 'text-red-600 bg-red-50' },
+              { label: 'Suspended', value: stats.suspended, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50' },
+              { label: 'Pending Approvals', value: stats.pending, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50', link: route('admin.pending-members'), tooltip: 'View pending approvals' },
+              { label: 'Rejected', value: stats.rejected, icon: CircleX, color: 'text-red-600 bg-red-50' },
+              { label: 'Pending Activation', value: stats.approved, icon: CheckCircle, color: 'text-blue-600 bg-blue-50', link: route('admin.pending-members'), tooltip: 'View members awaiting activation' }
+            ]"
+            :key="card.label"
+            :title="card.tooltip || ''"
+            class="p-5 rounded-2xl bg-white/90 shadow-sm border border-gray-100 backdrop-blur-sm hover:shadow-md transition cursor-pointer"
+            @click="card.link ? $inertia.get(card.link) : null"
+          >
             <div class="flex items-center gap-4">
               <div :class="['rounded-xl p-3', card.color]">
                 <component :is="card.icon" class="h-6 w-6" />
@@ -78,6 +86,7 @@
             </div>
           </div>
         </div>
+
 
         <!-- Filters -->
         <div class="rounded-2xl bg-white shadow-sm border border-gray-100 p-6">

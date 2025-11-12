@@ -56,57 +56,9 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        /**
-         *  Membership status checks (before login)
-         */
-        if ($user->role === 'member') {
-            $member = $user->member;
-
-            if (!$member) {
-                throw ValidationException::withMessages([
-                    'login' => 'Please complete your membership profile before logging in.',
-                ]);
-            }
-
-            switch ($member->membership_status) {
-                case 'pending':
-                    throw ValidationException::withMessages([
-                        'login' => 'Your membership is pending approval by the admin.',
-                    ]);
-
-                case 'inactive':
-                    throw ValidationException::withMessages([
-                        'login' => 'Your membership is inactive. Please contact support.',
-                    ]);
-
-                case 'suspended':
-                    throw ValidationException::withMessages([
-                        'login' => 'Your membership has been suspended. Please contact support for more information.',
-                    ]);
-
-                case 'rejected':
-                    throw ValidationException::withMessages([
-                        'login' => 'Your membership application was rejected. You cannot log in.',
-                    ]);
-
-                case 'terminated':
-                    throw ValidationException::withMessages([
-                        'login' => 'Your membership has been terminated. Access is no longer allowed.',
-                    ]);
-            }
-        }
 
         /**
-         *  Account-level check
-         */
-        if (!$user->is_active) {
-            throw ValidationException::withMessages([
-                'login' => 'Your account has been deactivated. Please contact support.',
-            ]);
-        }
-
-        /**
-         *  Finally attempt authentication
+         *  attempt authentication
          */
         if (!Auth::attempt([$fieldType => $login, 'password' => $password], $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
@@ -120,6 +72,53 @@ class LoginRequest extends FormRequest
                 'login' => 'Invalid credentials. Please try again.',
             ]);
         }
+
+        /**
+         *  Membership status checks (before login)
+         */
+        if ($user->role === 'member') {
+            $member = $user->member;
+
+            if ($member) {
+                switch ($member->membership_status) {
+                    case 'pending':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership is pending approval by the admin.',
+                        ]);
+
+                    case 'inactive':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership is inactive. Please contact support.',
+                        ]);
+
+                    case 'suspended':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership has been suspended. Please contact support for more information.',
+                        ]);
+
+                    case 'rejected':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership application was rejected. You cannot log in.',
+                        ]);
+
+                    case 'terminated':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership has been terminated. Access is no longer allowed.',
+                        ]);
+                }
+            }
+        }
+
+        /**
+         *  Account-level check
+         */
+        if (!$user->is_active && $member) {
+            throw ValidationException::withMessages([
+                'login' => 'Your account is not active. Please contact support.',
+            ]);
+        }
+
+    
 
         /**
          *  Login successful
