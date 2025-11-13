@@ -6,36 +6,72 @@
     <!-- Page Wrapper -->
     <div class="min-h-screen bg-[#f9fafb] pb-16">
 
-      <!-- Header Section -->
-      <div class="bg-gradient-to-r from-[#0a2342] via-[#0c2e55] to-[#103a66] rounded-2xl mt-5 px-2 mx-2 shadow-md">
-        <div
-          class="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between text-white">
-          <div>
-            <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Members Management</h1>
-            <p class="text-blue-100 text-xs sm:text-sm mt-1">Manage, view, and organize SACCO members efficiently.</p>
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-[#0a2342] via-[#0c2e55] to-[#103a66] rounded-2xl mt-5 px-2 mx-2 shadow-md">
+      <div class="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between text-white gap-4">
+
+        <!-- Title & Subtitle -->
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Members Management</h1>
+          <p class="text-blue-100 text-xs sm:text-sm mt-1">Manage, view, and organize SACCO members efficiently.</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
+
+          <!-- Generate Usernames Button -->
+          <button
+            @click="generateUsernames"
+            class="bg-[#f97316] text-white px-4 py-2 text-sm rounded-xl hover:bg-orange-600 flex items-center justify-center gap-2"
+            :disabled="isGenerating"
+          >
+            <span v-if="isGenerating">Generating...</span>
+            <span v-else>Generate Usernames</span>
+            <svg v-if="isGenerating" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+          </button>
+
+          <!-- Import Dropdown Wrapper -->
+          <div ref="importWrapper" class="relative">
+            <button @click="openImport = !openImport"
+              class="inline-flex items-center gap-2 rounded-xl bg-[#f97316] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 w-fit">
+              <Upload class="w-4 h-4 mr-1" />
+              Import
+              <svg class="ml-1 -mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <div v-if="openImport"
+              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+              <div class="py-1">
+                <Link :href="route('members.import.form')"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  Import Members
+                </Link>
+                <Link :href="route('members.deposits.import.form')"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  Import Deposits
+                </Link>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <Link :href="route('members.deposits.import.form')"
-              class="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-xl bg-[#f97316] w-fit px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 mr-2">
-            <Upload class="w-4 h-4 mr-2" />
-            Import Deposits
-            </Link>
-            <Link :href="route('members.import.form')"
-              class="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-xl bg-[#f97316] w-fit px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 mr-2">
-            <Upload class="w-4 h-4 mr-2" />
-            Import Members
-            </Link>
 
-            <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
-              class="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-xl bg-[#f97316] w-fit px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200">
+          <!-- Add Member Button -->
+          <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
+            class="inline-flex items-center gap-2 rounded-xl bg-[#f97316] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 w-fit">
             <PlusCircle class="w-4 h-4" />
             Add Member
-            </Link>
-          </div>
+          </Link>
 
         </div>
       </div>
+    </div>
+
 
       <!-- Flash Messages -->
       <div ref="flashBox" class="max-w-3xl mx-auto mt-6 px-4">
@@ -68,7 +104,7 @@
               { label: 'Suspended', value: stats.suspended, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50' },
               { label: 'Pending Approvals', value: stats.pending, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50', link: route('admin.pending-members'), tooltip: 'View pending approvals' },
               { label: 'Rejected', value: stats.rejected, icon: CircleX, color: 'text-red-600 bg-red-50' },
-              { label: 'Pending Activation', value: stats.approved, icon: CheckCircle, color: 'text-blue-600 bg-blue-50', link: route('admin.pending-members'), tooltip: 'View members awaiting activation' }
+              { label: 'Approved', value: stats.approved, icon: CheckCircle, color: 'text-blue-600 bg-blue-50', link: route('admin.pending-members'), tooltip: 'View pending activations' }
             ]"
             :key="card.label"
             :title="card.tooltip || ''"
@@ -111,14 +147,15 @@
             <div>
               <label class="block text-sm font-medium text-gray-700">Status</label>
               <select v-model="form.status"
-                class="mt-1 w-full rounded-lg border border-gray-300 p-2 shadow-sm focus:ring-[#0a2342] focus:border-[#0a2342] sm:text-sm"
-                @change="search">
+                      class="mt-1 w-full rounded-lg border border-gray-300 p-2 shadow-sm focus:ring-[#0a2342] focus:border-[#0a2342] sm:text-sm"
+                      @change="search">
                 <option value="">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
+                <option v-for="status in statuses" :key="status" :value="status">
+                  {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                </option>
               </select>
             </div>
+
 
             <!-- Sort By -->
             <div>
@@ -186,20 +223,27 @@
 
         <!-- Members Table -->
         <div class="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden hidden sm:block">
-          <div class="overflow-x-auto">
+          <div class="rounded-2xl bg-white shadow-sm border border-gray-100 hidden sm:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 text-sm">
               <thead class="bg-[#0a2342]/90 text-white">
                 <tr>
+                  <th class="px-3 py-3 text-left font-medium">
+                    <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" />
+                  </th>
                   <th class="px-6 py-3 text-left font-medium">Member</th>
+                  <th class="px-6 py-3 text-left font-medium">Username</th>
                   <th class="px-6 py-3 text-left font-medium">Contact</th>
                   <th class="px-6 py-3 text-left font-medium">Status</th>
-                  <th class="px-6 py-3 text-left font-medium">Accounts</th>
+                  <th class="px-3 py-3 text-left font-medium">Accounts</th>
                   <th class="px-6 py-3 text-left font-medium">Date Joined</th>
-                  <th class="px-6 py-3 text-right font-medium">Actions</th>
+                  <th class="px-3 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 bg-white">
                 <tr v-for="member in members.data" :key="member.id" class="hover:bg-blue-50 transition duration-150">
+                  <td class="px-3 py-4">
+                    <input type="checkbox" v-model="selectedMembers" :value="member.id" />
+                  </td>
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                       <img v-if="member.profile_photo" :src="`/storage/${member.profile_photo}`"
@@ -213,26 +257,20 @@
                       </div>
                     </div>
                   </td>
-
+                  <td class="px-6 py-4 text-gray-600">{{ member.user.username || 'N/A' }}</td>
                   <td class="px-6 py-4">
                     <p class="text-gray-900">{{ member.user.email }}</p>
                     <p class="text-xs text-gray-500">{{ member.user.phone }}</p>
                   </td>
 
                   <td class="px-6 py-4">
-                    <span :class="{
-                      'px-2 py-1 rounded-full text-xs font-medium': true,
-                      'bg-green-100 text-green-700': member.membership_status === 'active',
-                      'bg-red-100 text-red-700': member.membership_status === 'inactive',
-                      'bg-yellow-100 text-yellow-700': member.membership_status === 'suspended'
-                    }">
-                      {{ member.membership_status }}
+                    <span :class="['px-2 py-1 rounded-full text-xs font-medium', statusColors[member.membership_status]]">
+                      {{ member.membership_status.charAt(0).toUpperCase() + member.membership_status.slice(1) }}
                     </span>
                   </td>
-
-                  <td class="px-6 py-4 text-gray-600">{{ member.accounts.length }} accounts</td>
+                  <td class="px-3 py-4 text-gray-600">{{ member.accounts.length }} accounts</td>
                   <td class="px-6 py-4 text-gray-600">{{ formatDate(member.membership_date) }}</td>
-                  <td class="px-6 py-4 text-right space-x-3">
+                  <td class="px-3 py-4 text-right space-x-3">
                     <Link :href="route('members.show', member.id)" class="text-indigo-600 hover:text-indigo-900">View
                     </Link>
                     <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.edit', member.id)"
@@ -257,7 +295,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
 import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import { debounce } from 'lodash'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -270,6 +308,75 @@ const flash = computed(() => page.props.flash || {})
 const flashMessage = ref(null)
 const flashType = ref('success')
 const flashBox = ref(null)
+
+const openImport = ref(false)
+
+const importWrapper = ref(null)
+
+const handleClickOutside = (event) => {
+  if (importWrapper.value && !importWrapper.value.contains(event.target)) {
+    openImport.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutside)
+})
+
+
+const selectedMembers = ref([])
+const selectAll = ref(false)
+
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedMembers.value = props.members.data.map(m => m.id)
+  } else {
+    selectedMembers.value = []
+  }
+}
+
+const isGenerating = ref(false) // loader state
+
+const generateUsernames = () => {
+  if (!selectedMembers.value.length) {
+  flashMessage.value = 'Please select at least one member'
+  flashType.value = 'error'
+  return
+}
+
+
+  isGenerating.value = true
+
+  router.post(route('members.assignUsernames'), { member_ids: selectedMembers.value }, {
+    onFinish: () => {
+      isGenerating.value = false
+      selectedMembers.value = [] // reset checkboxes
+      selectAll.value = false
+    },
+    onError: () => {
+      flashMessage.value = 'Something went wrong'
+      flashType.value = 'error'
+    }
+  })
+}
+
+
+const statuses = ref(['active', 'inactive', 'suspended', 'pending', 'approved', 'rejected'])
+// Status to color map
+const statusColors = {
+  active: 'bg-green-100 text-green-700',
+  inactive: 'bg-red-100 text-red-700',
+  suspended: 'bg-yellow-100 text-yellow-700',
+  pending: 'bg-yellow-100 text-yellow-700',
+  approved: 'bg-blue-100 text-blue-700',
+  rejected: 'bg-red-100 text-red-700'
+}
+
+
 
 watch(flash, (val) => {
   if (val.success) {
@@ -326,5 +433,8 @@ const formatDate = (date) => new Date(date).toLocaleDateString()
 
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-in-out;
+}
+button:hover {
+  cursor: pointer;
 }
 </style>

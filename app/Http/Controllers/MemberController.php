@@ -236,8 +236,8 @@ class MemberController extends Controller
         return Inertia::render('Admin/Members/Show', [
             'member' => $member,
             'stats' => [
-                'total_savings' => $member->accounts->where('account_type', 'savings')->sum('balance'),
-                'total_shares' => $member->accounts->where('account_type', 'shares')->sum('balance'),
+                'total_savings' => $member->accounts->where('account_type', 'share_deposits')->sum('balance'),
+                'total_shares' => $member->accounts->where('account_type', 'share_capital')->sum('balance'),
                 'total_loans' => $member->loans->where('status', 'active')->sum('outstanding_balance'),
                 'total_dividends' => $member->dividends->sum('dividend_amount'),
             ],
@@ -397,10 +397,16 @@ class MemberController extends Controller
                 return back()->with('error', 'Only approved members can be activated.');
             }
 
-            $hasPaid = $member->accounts->some(function ($account) {
-                return ($account->account_type === 'share_deposits' && $account->balance >= 7500)
-                    || ($account->account_type === 'share_capital' && $account->balance >= 5000);
+            $hasShareDeposits = $member->accounts->contains(function ($account) {
+                return $account->account_type === 'share_deposits' && $account->available_balance >= 7500;
             });
+
+            $hasShareCapital = $member->accounts->contains(function ($account) {
+                return $account->account_type === 'share_capital' && $account->available_balance >= 5000;
+            });
+
+            $hasPaid = $hasShareDeposits && $hasShareCapital;
+
 
             if (! $hasPaid) {
                 return back()->with('error', 'Member has not completed the required payment for activation.');
@@ -594,6 +600,30 @@ class MemberController extends Controller
             abort(403, 'Unauthorized action.');
         }
     }
+
+      /**
+         * Assign usernames to members
+     */
+
+    public function assignUsernames(Request $request)
+    {
+        $request->validate([
+            'member_ids' => 'required|array',
+        ]);
+
+        $members = Member::whereIn('id', $request->member_ids)->get();
+
+        foreach ($members as $member) {
+            // Skip if username already exists
+            if (!$member->user->username) {
+                $username = \App\Models\User::generateUsername($member->first_name . ' ' . $member->last_name);
+                $member->user->update(['username' => $username]);
+            }
+        }
+
+        return back()->with('success', 'Usernames generated successfully.');
+    }
+
 
     /**
      * Get member transactions

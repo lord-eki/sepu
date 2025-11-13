@@ -563,3 +563,7 @@ Route::post('/switch-role', function (Request $request) {
 
     return back();
 })->middleware('auth')->name('switch-role');
+
+
+Route::post('/members/assign-usernames', [MemberController::class, 'assignUsernames'])
+    ->name('members.assignUsernames');

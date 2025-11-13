@@ -67,12 +67,6 @@
               Deposit
             </Link>
             <Link
-              :href="route('accounts.withdrawal.show', account.id)"
-              class="inline-flex items-center px-4 py-2 bg-orange-600 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-orange-700 transition"
-            >
-              Withdraw
-            </Link>
-            <Link
               :href="route('accounts.edit', account.id)"
               class="inline-flex items-center px-4 py-2 bg-gray-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-gray-900 transition"
             >

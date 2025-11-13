@@ -74,40 +74,57 @@ class DashboardController extends Controller
     public function pendingMembers()
     {
         try {
-            // Pending members
+            // Pending members (awaiting approval)
             $pendingMembers = Member::with('user')
                 ->where('membership_status', 'pending')
                 ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'membership_date')
                 ->latest()
                 ->get();
-    
-                $approvedAwaitingActivation = Member::with('accounts')
-                ->where('membership_status', 'approved')
-                ->whereDoesntHave('accounts', function ($query) {
-                    $query->where(function ($q) {
-                        $q->where('account_type', 'share_deposits')
-                          ->where('balance', '>=', 7500)
-                          ->orWhere(function ($q2) {
-                              $q2->where('account_type', 'share_capital')
-                                 ->where('balance', '>=', 5000);
-                          });
-                    });
+
+            // Approved members
+            $approvedAwaitingActivation = Member::with(['user', 'accounts'])
+            ->where('membership_status', 'approved')
+            ->whereHas('accounts', function ($q) {
+                $q->where('account_type', 'share_deposits')
+                    ->where('available_balance', '>=', 7500);
+            })
+            ->whereHas('accounts', function ($q) {
+                $q->where('account_type', 'share_capital')
+                    ->where('available_balance', '>=', 5000);
+            })
+            ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
+            ->latest()
+            ->get();
+
+        $approvedButUnpaid = Member::with(['user', 'accounts'])
+            ->where('membership_status', 'approved')
+            ->where(function ($query) {
+                $query->whereDoesntHave('accounts', function ($q) {
+                    $q->where('account_type', 'share_deposits')
+                        ->where('available_balance', '>=', 7500);
                 })
-                
-                ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
-                ->latest()
-                ->get();
-            
+                ->orWhereDoesntHave('accounts', function ($q) {
+                    $q->where('account_type', 'share_capital')
+                        ->where('available_balance', '>=', 5000);
+                });
+            })
+            ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
+            ->latest()
+            ->get();
+
+
             return response()->json([
                 'pending' => $pendingMembers,
                 'approvedAwaitingActivation' => $approvedAwaitingActivation,
+                'approvedButUnpaid' => $approvedButUnpaid, 
             ]);
+
         } catch (\Exception $e) {
             \Log::error('Error fetching members: ' . $e->getMessage());
             return response()->json(['error' => 'Error fetching members'], 500);
         }
     }
-    
+
 
 
     public function pendingMembersPage()
@@ -388,17 +405,16 @@ class DashboardController extends Controller
             'vouchers' => PaymentVoucher::where('status', 'pending')->count(),
             'member_applications' => Member::where('membership_status', 'pending')->count(),
             'pending_activation' => Member::where('membership_status', 'approved')
-                ->whereDoesntHave('accounts', function ($query) {
-                    $query->where(function ($q) {
-                        $q->where('account_type', 'share_deposits')
-                        ->where('balance', '>=', 7500)
-                        ->orWhere(function ($q2) {
-                            $q2->where('account_type', 'share_capital')
-                                ->where('balance', '>=', 5000);
-                        });
-                    });
+                ->whereHas('accounts', function ($q) {
+                    $q->where('account_type', 'share_deposits')
+                    ->where('available_balance', '>=', 7500);
+                })
+                ->whereHas('accounts', function ($q) {
+                    $q->where('account_type', 'share_capital')
+                    ->where('available_balance', '>=', 5000);
                 })
                 ->count(),
+
         ];
     }
 

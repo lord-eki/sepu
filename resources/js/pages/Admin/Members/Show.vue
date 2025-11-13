@@ -217,6 +217,10 @@
                     <dt class="text-sm font-medium text-gray-500">Marital Status</dt>
                     <dd class="text-sm text-gray-900">{{ capitalize(member.marital_status) }}</dd>
                   </div>
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500">Username</dt>
+                    <dd class="text-sm text-gray-900">{{ capitalize(member.user.username) }}</dd>
+                  </div>
                 </dl>
               </div>
 
