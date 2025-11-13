@@ -368,75 +368,95 @@ class MemberController extends Controller
         }
     }
 
-  public function activate(Member $member): RedirectResponse
-    {
-        // Eager load accounts
-        $member->load('accounts');
-
-        if ($member->membership_status !== 'approved') {
-            return back()->with('error', 'Only approved members can be activated.');
-        }
-
-        $hasPaid = $member->accounts->some(function ($account) {
-            return ($account->account_type === 'share_deposits' && $account->balance >= 7500)
-                || ($account->account_type === 'share_capital' && $account->balance >= 5000);
-        });
-
-        if (! $hasPaid) {
-            return back()->with('error', 'Member has not completed the required payment for activation.');
-        }
-
-        $member->update(['membership_status' => 'active']);
-        $member->user?->update(['is_active' => true]);
-
-        return back()->with('success', 'Member activated successfully.');
-    }
-
-
     /**
-     * Deactivate an active member
+     * Approve a pending member
      */
-    public function deactivate(Member $member): RedirectResponse
-    {
-        if ($member->membership_status !== 'active') {
-            return back()->with('error', 'Only active members can be deactivated.');
-        }
-
-        $member->update(['membership_status' => 'inactive']);
-        $member->user?->update(['is_active' => false]);
-
-        return back()->with('success', 'Member deactivated successfully.');
-    }
-
-    /**
-     * Reject a pending member
-     */
-    public function reject(Member $member): RedirectResponse
+    public function approve(Member $member): RedirectResponse
     {
         if ($member->membership_status !== 'pending') {
-            return back()->with('error', 'Only pending members can be rejected.');
+            return back()->with('error', 'Only pending members can be approved.');
         }
 
-        $member->update(['membership_status' => 'rejected']);
-        $member->user?->update(['is_active' => false]);
+        $member->update(['membership_status' => 'approved']);
+        $member->user?->update(['is_active' => false]); // keep inactive until activation
 
-        return back()->with('success', 'Member rejected successfully.');
+        return back()->with('success', 'Member approved successfully.');
     }
 
-    /**
-     * Suspend an active member
+
+     /**
+     * Activate a member
      */
-    public function suspend(Member $member): RedirectResponse
-    {
-        if ($member->membership_status !== 'active') {
-            return back()->with('error', 'Only active members can be suspended.');
+
+    public function activate(Member $member): RedirectResponse
+        {
+            // Eager load accounts
+            $member->load('accounts');
+
+            if ($member->membership_status !== 'approved') {
+                return back()->with('error', 'Only approved members can be activated.');
+            }
+
+            $hasPaid = $member->accounts->some(function ($account) {
+                return ($account->account_type === 'share_deposits' && $account->balance >= 7500)
+                    || ($account->account_type === 'share_capital' && $account->balance >= 5000);
+            });
+
+            if (! $hasPaid) {
+                return back()->with('error', 'Member has not completed the required payment for activation.');
+            }
+
+            $member->update(['membership_status' => 'active']);
+            $member->user?->update(['is_active' => true]);
+
+            return back()->with('success', 'Member activated successfully.');
         }
 
-        $member->update(['membership_status' => 'suspended']);
-        $member->user?->update(['is_active' => false]);
 
-        return back()->with('success', 'Member suspended successfully.');
-    }
+        /**
+         * Deactivate an active member
+         */
+        public function deactivate(Member $member): RedirectResponse
+        {
+            if ($member->membership_status !== 'active') {
+                return back()->with('error', 'Only active members can be deactivated.');
+            }
+
+            $member->update(['membership_status' => 'inactive']);
+            $member->user?->update(['is_active' => false]);
+
+            return back()->with('success', 'Member deactivated successfully.');
+        }
+
+        /**
+         * Reject a pending member
+         */
+        public function reject(Member $member): RedirectResponse
+        {
+            if ($member->membership_status !== 'pending') {
+                return back()->with('error', 'Only pending members can be rejected.');
+            }
+
+            $member->update(['membership_status' => 'rejected']);
+            $member->user?->update(['is_active' => false]);
+
+            return back()->with('success', 'Member rejected successfully.');
+        }
+
+        /**
+         * Suspend an active member
+         */
+        public function suspend(Member $member): RedirectResponse
+        {
+            if ($member->membership_status !== 'active') {
+                return back()->with('error', 'Only active members can be suspended.');
+            }
+
+            $member->update(['membership_status' => 'suspended']);
+            $member->user?->update(['is_active' => false]);
+
+            return back()->with('success', 'Member suspended successfully.');
+        }
 
 
     /**

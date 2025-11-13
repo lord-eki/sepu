@@ -50,29 +50,18 @@ const submitForm = async (event: Event) => {
         </div>
 
         <!-- Role Switcher -->
-        <div v-if="$page.props.auth.roles.length > 1" class="ml-auto flex items-center space-x-2">
+        <div v-if="$page.props.auth?.roles?.length > 1" class="ml-auto flex items-center space-x-2">
             <span class="mr-2 text-sm">Logged in as:</span>
 
-            <select
-                name="role"
-                class="bg-blue-900 text-white px-2 py-1 rounded disabled:opacity-70"
-                @change="submitForm($event)"
-                :disabled="loading"
-            >
-                <option
-                    v-for="role in $page.props.auth.roles"
-                    :key="role"
-                    :value="role"
-                    :selected="role === $page.props.auth.current_role"
-                >
+            <select name="role" class="bg-blue-900 text-white px-2 py-1 rounded disabled:opacity-70"
+                @change="submitForm($event)" :disabled="loading">
+                <option v-for="role in $page.props.auth.roles" :key="role" :value="role"
+                    :selected="role === $page.props.auth.current_role">
                     {{ role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ') }}
                 </option>
             </select>
 
-            <div
-                v-if="loading"
-                class="ml-2 animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"
-            ></div>
+            <div v-if="loading" class="ml-2 animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
         </div>
     </header>
 </template>

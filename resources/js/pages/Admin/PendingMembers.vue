@@ -36,6 +36,7 @@ const formatDate = (date: string) =>
 
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Pending Members', href: '/admin/pending-members' }]">
+
     <Head title="Pending Member Approvals" />
 
     <div class="p-6 bg-gray-50 min-h-screen space-y-8">
@@ -52,17 +53,11 @@ const formatDate = (date: string) =>
             Pending Approvals
           </h2>
 
-          <div
-            v-if="pendingMembers.length === 0"
-            class="text-gray-500 text-center py-6 border rounded-lg bg-white"
-          >
+          <div v-if="pendingMembers.length === 0" class="text-gray-500 text-center py-6 border rounded-lg bg-white">
             No pending member applications.
           </div>
 
-          <div
-            v-else
-            class="overflow-x-auto bg-white border rounded-lg shadow-sm"
-          >
+          <div v-else class="overflow-x-auto bg-white border rounded-lg shadow-sm">
             <table class="min-w-full divide-y divide-gray-200 text-sm">
               <thead class="bg-blue-100 text-blue-900">
                 <tr>
@@ -74,26 +69,14 @@ const formatDate = (date: string) =>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 bg-white">
-                <tr
-                  v-for="member in pendingMembers"
-                  :key="member.id"
-                  class="hover:bg-blue-50/50 transition duration-150"
-                >
+                <tr v-for="member in pendingMembers" :key="member.id"
+                  class="hover:bg-blue-50/50 transition duration-150">
                   <!-- Member Info -->
                   <td class="px-6 py-4 flex items-center gap-3">
-                    <div
-                      v-if="member.profile_photo"
-                      class="h-10 w-10 rounded-full overflow-hidden"
-                    >
-                      <img
-                        :src="`/storage/${member.profile_photo}`"
-                        class="object-cover w-full h-full"
-                      />
+                    <div v-if="member.profile_photo" class="h-10 w-10 rounded-full overflow-hidden">
+                      <img :src="`/storage/${member.profile_photo}`" class="object-cover w-full h-full" />
                     </div>
-                    <div
-                      v-else
-                      class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center"
-                    >
+                    <div v-else class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                       <User2Icon class="h-6 w-6 text-gray-600" />
                     </div>
                     <div>
@@ -114,9 +97,7 @@ const formatDate = (date: string) =>
 
                   <!-- Status -->
                   <td class="px-6 py-4">
-                    <span
-                      class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700"
-                    >
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
                       Pending
                     </span>
                   </td>
@@ -128,11 +109,8 @@ const formatDate = (date: string) =>
 
                   <!-- Actions -->
                   <td class="px-6 py-4 text-right">
-                    <Link
-                      :href="route('members.show', member.id)"
-                      class="text-indigo-600 hover:underline"
-                    >
-                      View
+                    <Link :href="route('members.show', member.id)" class="text-indigo-600 hover:underline">
+                    View
                     </Link>
                   </td>
                 </tr>
@@ -147,17 +125,11 @@ const formatDate = (date: string) =>
             Pending Activation
           </h2>
 
-          <div
-            v-if="approvedMembers.length === 0"
-            class="text-gray-500 text-center py-6 border rounded-lg bg-white"
-          >
+          <div v-if="approvedMembers.length === 0" class="text-gray-500 text-center py-6 border rounded-lg bg-white">
             No approved members awaiting activation.
           </div>
 
-          <div
-            v-else
-            class="overflow-x-auto bg-white border rounded-lg shadow-sm"
-          >
+          <div v-else class="overflow-x-auto bg-white border rounded-lg shadow-sm">
             <table class="min-w-full divide-y divide-gray-200 text-sm">
               <thead class="bg-orange-100 text-blue-900">
                 <tr>
@@ -169,25 +141,13 @@ const formatDate = (date: string) =>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 bg-white">
-                <tr
-                  v-for="member in approvedMembers"
-                  :key="member.id"
-                  class="hover:bg-orange-50/50 transition duration-150"
-                >
+                <tr v-for="member in approvedMembers" :key="member.id"
+                  class="hover:bg-orange-50/50 transition duration-150">
                   <td class="px-6 py-4 flex items-center gap-3">
-                    <div
-                      v-if="member.profile_photo"
-                      class="h-10 w-10 rounded-full overflow-hidden"
-                    >
-                      <img
-                        :src="`/storage/${member.profile_photo}`"
-                        class="object-cover w-full h-full"
-                      />
+                    <div v-if="member.profile_photo" class="h-10 w-10 rounded-full overflow-hidden">
+                      <img :src="`/storage/${member.profile_photo}`" class="object-cover w-full h-full" />
                     </div>
-                    <div
-                      v-else
-                      class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center"
-                    >
+                    <div v-else class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                       <User2Icon class="h-6 w-6 text-gray-600" />
                     </div>
                     <div>
@@ -206,10 +166,8 @@ const formatDate = (date: string) =>
                   </td>
 
                   <td class="px-6 py-4">
-                    <span
-                      class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
-                    >
-                      Approved
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      {{ member.membership_status }}
                     </span>
                   </td>
 
@@ -218,11 +176,8 @@ const formatDate = (date: string) =>
                   </td>
 
                   <td class="px-6 py-4 text-right">
-                    <Link
-                      :href="route('members.show', member.id)"
-                      class="text-indigo-600 hover:underline"
-                    >
-                      View
+                    <Link :href="route('members.show', member.id)" class="text-indigo-600 hover:underline">
+                    View
                     </Link>
                   </td>
                 </tr>
