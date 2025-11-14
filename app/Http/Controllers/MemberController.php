@@ -621,7 +621,7 @@ class MemberController extends Controller
             }
         }
 
-        return back()->with('success', 'Usernames generated successfully.');
+        return back()->with('success', 'Username generated successfully.');
     }
 
 

@@ -6,71 +6,69 @@
     <!-- Page Wrapper -->
     <div class="min-h-screen bg-[#f9fafb] pb-16">
 
-    <!-- Header Section -->
-    <div class="bg-gradient-to-r from-[#0a2342] via-[#0c2e55] to-[#103a66] rounded-2xl mt-5 px-2 mx-2 shadow-md">
-      <div class="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between text-white gap-4">
+      <!-- Header Section -->
+      <div class="bg-gradient-to-r from-[#0a2342] via-[#0c2e55] to-[#103a66] rounded-2xl mt-5 px-2 mx-2 shadow-md">
+        <div
+          class="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between text-white gap-4">
 
-        <!-- Title & Subtitle -->
-        <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Members Management</h1>
-          <p class="text-blue-100 text-xs sm:text-sm mt-1">Manage, view, and organize SACCO members efficiently.</p>
-        </div>
+          <!-- Title & Subtitle -->
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Members Management</h1>
+            <p class="text-blue-100 text-xs sm:text-sm mt-1">Manage, view, and organize SACCO members efficiently.</p>
+          </div>
 
-        <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
 
-          <!-- Generate Usernames Button -->
-          <button
-            @click="generateUsernames"
-            class="bg-[#f97316] text-white px-4 py-2 text-sm rounded-xl hover:bg-orange-600 flex items-center justify-center gap-2"
-            :disabled="isGenerating"
-          >
-            <span v-if="isGenerating">Generating...</span>
-            <span v-else>Generate Usernames</span>
-            <svg v-if="isGenerating" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
-          </button>
-
-          <!-- Import Dropdown Wrapper -->
-          <div ref="importWrapper" class="relative">
-            <button @click="openImport = !openImport"
+            <!-- Add Member Button -->
+            <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
               class="inline-flex items-center gap-2 rounded-xl bg-[#f97316] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 w-fit">
-              <Upload class="w-4 h-4 mr-1" />
-              Import
-              <svg class="ml-1 -mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            <PlusCircle class="w-4 h-4" />
+            Add Member
+            </Link>
+            <!-- Import Dropdown Wrapper -->
+            <div ref="importWrapper" class="relative">
+              <button @click="openImport = !openImport"
+                class="inline-flex items-center gap-2 rounded-xl bg-[#f97316] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 w-fit">
+                <Upload class="w-4 h-4 mr-1" />
+                Import
+                <svg class="ml-1 -mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <div v-if="openImport"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                <div class="py-1">
+                  <Link :href="route('members.import.form')"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  Import Members
+                  </Link>
+                  <Link :href="route('members.deposits.import.form')"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  Import Deposits
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <!-- Generate Usernames Button -->
+            <button @click="generateUsernames"
+              class="bg-[#f97316] text-white px-4 py-2 text-sm rounded-xl hover:bg-orange-600 flex items-center justify-center gap-2"
+              :disabled="isGenerating">
+              <span v-if="isGenerating">Generating...</span>
+              <span v-else>Generate Username(s)</span>
+              <svg v-if="isGenerating" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
               </svg>
             </button>
 
-            <div v-if="openImport"
-              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-              <div class="py-1">
-                <Link :href="route('members.import.form')"
-                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Import Members
-                </Link>
-                <Link :href="route('members.deposits.import.form')"
-                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Import Deposits
-                </Link>
-              </div>
-            </div>
           </div>
-
-
-          <!-- Add Member Button -->
-          <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
-            class="inline-flex items-center gap-2 rounded-xl bg-[#f97316] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 w-fit">
-            <PlusCircle class="w-4 h-4" />
-            Add Member
-          </Link>
-
         </div>
       </div>
-    </div>
 
 
       <!-- Flash Messages -->
@@ -79,10 +77,10 @@
           enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
           leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
           <div v-if="flashMessage" class="flex gap-3 mb-4 rounded-lg border shadow-sm items-center p-4" :class="[
-            flashType === 'success'
-              ? 'bg-green-50 border-green-200 text-green-700'
-              : 'bg-red-50 border-red-200 text-red-700'
-          ]">
+    flashType === 'success'
+      ? 'bg-green-50 border-green-200 text-green-700'
+      : 'bg-red-50 border-red-200 text-red-700'
+  ]">
             <component :is="flashType === 'success' ? CheckCircle : AlertCircle" class="h-5 w-5"
               :class="flashType === 'success' ? 'text-green-600' : 'text-red-600'" />
             <p class="ml-2 text-sm">{{ flashMessage }}</p>
@@ -96,21 +94,17 @@
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div
-            v-for="card in [
-              { label: 'Total Members', value: stats.total, icon: Users, color: 'text-blue-600 bg-blue-50' },
-              { label: 'Active', value: stats.active, icon: CheckCircle, color: 'text-green-600 bg-green-50' },
-              { label: 'Inactive', value: stats.inactive, icon: CircleX, color: 'text-red-600 bg-red-50' },
-              { label: 'Suspended', value: stats.suspended, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50' },
-              { label: 'Pending Approvals', value: stats.pending, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50', link: route('admin.pending-members'), tooltip: 'View pending approvals' },
-              { label: 'Rejected', value: stats.rejected, icon: CircleX, color: 'text-red-600 bg-red-50' },
-              { label: 'Approved', value: stats.approved, icon: CheckCircle, color: 'text-blue-600 bg-blue-50', link: route('admin.pending-members'), tooltip: 'View pending activations' }
-            ]"
-            :key="card.label"
-            :title="card.tooltip || ''"
+          <div v-for="card in [
+    { label: 'Total Members', value: stats.total, icon: Users, color: 'text-blue-600 bg-blue-50' },
+    { label: 'Active', value: stats.active, icon: CheckCircle, color: 'text-green-600 bg-green-50' },
+    { label: 'Inactive', value: stats.inactive, icon: CircleX, color: 'text-red-600 bg-red-50' },
+    { label: 'Suspended', value: stats.suspended, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50' },
+    { label: 'Pending Approvals', value: stats.pending, icon: TriangleAlert, color: 'text-yellow-600 bg-yellow-50', link: route('admin.pending-members'), tooltip: 'View pending approvals' },
+    { label: 'Rejected', value: stats.rejected, icon: CircleX, color: 'text-red-600 bg-red-50' },
+    { label: 'Approved', value: stats.approved, icon: CheckCircle, color: 'text-blue-600 bg-blue-50', link: route('admin.pending-members'), tooltip: 'View pending activations' }
+  ]" :key="card.label" :title="card.tooltip || ''"
             class="p-5 rounded-2xl bg-white/90 shadow-sm border border-gray-100 backdrop-blur-sm hover:shadow-md transition cursor-pointer"
-            @click="card.link ? $inertia.get(card.link) : null"
-          >
+            @click="card.link ? $inertia.get(card.link) : null">
             <div class="flex items-center gap-4">
               <div :class="['rounded-xl p-3', card.color]">
                 <component :is="card.icon" class="h-6 w-6" />
@@ -147,8 +141,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700">Status</label>
               <select v-model="form.status"
-                      class="mt-1 w-full rounded-lg border border-gray-300 p-2 shadow-sm focus:ring-[#0a2342] focus:border-[#0a2342] sm:text-sm"
-                      @change="search">
+                class="mt-1 w-full rounded-lg border border-gray-300 p-2 shadow-sm focus:ring-[#0a2342] focus:border-[#0a2342] sm:text-sm"
+                @change="search">
                 <option value="">All Statuses</option>
                 <option v-for="status in statuses" :key="status" :value="status">
                   {{ status.charAt(0).toUpperCase() + status.slice(1) }}
@@ -192,10 +186,10 @@
                 <p class="text-xs text-gray-500">{{ member.membership_id }}</p>
               </div>
               <span class="text-xs rounded-full px-2 py-1" :class="{
-                'bg-green-100 text-green-700': member.membership_status === 'active',
-                'bg-red-100 text-red-700': member.membership_status === 'inactive',
-                'bg-yellow-100 text-yellow-700': member.membership_status === 'suspended'
-              }">
+    'bg-green-100 text-green-700': member.membership_status === 'active',
+    'bg-red-100 text-red-700': member.membership_status === 'inactive',
+    'bg-yellow-100 text-yellow-700': member.membership_status === 'suspended'
+  }">
                 {{ member.membership_status }}
               </span>
             </div>
@@ -264,7 +258,8 @@
                   </td>
 
                   <td class="px-6 py-4">
-                    <span :class="['px-2 py-1 rounded-full text-xs font-medium', statusColors[member.membership_status]]">
+                    <span
+                      :class="['px-2 py-1 rounded-full text-xs font-medium', statusColors[member.membership_status]]">
                       {{ member.membership_status.charAt(0).toUpperCase() + member.membership_status.slice(1) }}
                     </span>
                   </td>
@@ -343,10 +338,13 @@ const isGenerating = ref(false) // loader state
 
 const generateUsernames = () => {
   if (!selectedMembers.value.length) {
-  flashMessage.value = 'Please select at least one member'
-  flashType.value = 'error'
-  return
-}
+    flashMessage.value = 'Please select at least one member'
+    flashType.value = 'error'
+    setTimeout(() => {
+      flashMessage.value = null
+    }, 5000);
+    return
+  }
 
 
   isGenerating.value = true
@@ -434,6 +432,7 @@ const formatDate = (date) => new Date(date).toLocaleDateString()
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-in-out;
 }
+
 button:hover {
   cursor: pointer;
 }

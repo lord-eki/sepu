@@ -169,9 +169,21 @@ const adminNavItems: NavItem[] = [
   },
   {
     title: 'Members',
-    href: route('members.index'),
-    routeName: 'members.index',
     icon: Users,
+    children: [
+      {
+        title: 'Members Overview',
+        href: route('members.index'),
+        routeName: 'members.index',
+        icon: FileText,
+      },
+      {
+        title: 'Member Approval',
+        href: route('admin.pending-members'),
+        routeName: 'admin.pending-members',
+        icon: FileText,
+      },
+    ],
   },
   {
     title: 'Accounts',
