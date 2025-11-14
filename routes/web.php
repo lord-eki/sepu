@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\RoleSwitchController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DividendController;
@@ -536,33 +537,8 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function() {
     Route::get('pending-members/list', [DashboardController::class, 'pendingMembers']);
 });
 
-Route::post('/switch-role', function (Request $request) {
-    $request->validate([
-        'role' => 'required|string|in:admin,loan_officer,accountant,management,member',
-    ]);
-
-    $user = Auth::user();
-
-    // Verify that user is allowed to switch to this role
-    $allowedRoles = [$user->role];
-    if ($user->role !== 'member') {
-        $allowedRoles[] = 'member';
-    }
-
-    if (!in_array($request->role, $allowedRoles)) {
-        return response()->json(['error' => 'Unauthorized role switch.'], 403);
-    }
-
-    // Update active role in DB
-    $user->active_role = $request->role;
-    $user->save();
-
-    if ($request->expectsJson()) {
-        return response()->json(['success' => true]);
-    }
-
-    return back();
-})->middleware('auth')->name('switch-role');
+Route::post('/switch-role', [RoleSwitchController::class, 'switch'])->name('role.switch');
+Route::post('/stop-role', [RoleSwitchController::class, 'stop'])->name('role.stop');
 
 
 Route::post('/members/assign-usernames', [MemberController::class, 'assignUsernames'])
