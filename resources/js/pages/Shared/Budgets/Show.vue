@@ -62,10 +62,10 @@
             </div>
             <div class="p-6 flex flex-col gap-3">
               <Link v-if="can_edit" :href="route('budgets.edit', budget.id)"
-                class="action-btn border bg-blue-900 border-gray-300 text-white hover:bg-gray-100">
+                class="action-btn border bg-blue-900 border-gray-300 text-white hover:bg-blue-600">
               ✏️ Edit Budget
               </Link>
-
+          
               <button v-if="can_approve && budget.status === 'draft'" @click="approveBudget" :disabled="processing"
                 class="action-btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
                 ✅ Approve Budget

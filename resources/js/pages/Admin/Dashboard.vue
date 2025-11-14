@@ -168,10 +168,10 @@ defineProps<{
         </h2>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <Card v-for="setup in [
-    { title: 'Loan Rates', desc: 'Define loan interest and limits', icon: BarChart3, color: 'bg-orange-100 text-orange-600', link: '/loan-rates' },
+    { title: 'Loan Rates', desc: 'Define loan interest and limits', icon: BarChart3, color: 'bg-orange-100 text-orange-600', link: '/loan-products' },
     { title: 'Repayment Periods', desc: 'Set repayment durations', icon: Clock, color: 'bg-blue-900/10 text-blue-900', link: '/repayment-periods' },
     { title: 'System Users', desc: 'Manage user roles and permissions', icon: Users, color: 'bg-green-100 text-green-700', link: '/system-users' },
-    { title: 'System Approvals', desc: 'Define approval workflows', icon: ShieldCheck, color: 'bg-blue-100 text-blue-800', link: '/approvals' },
+    { title: 'System Approvals', desc: 'Define approval workflows', icon: ShieldCheck, color: 'bg-blue-100 text-blue-800', link: '/admin/settings' },
   ]" :key="setup.title"
             class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
             @click="$inertia.visit(setup.link)">
