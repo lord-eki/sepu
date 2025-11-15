@@ -80,6 +80,9 @@ class MemberController extends Controller
                 'active' => Member::where('membership_status', 'active')->count(),
                 'inactive' => Member::where('membership_status', 'inactive')->count(),
                 'suspended' => Member::where('membership_status', 'suspended')->count(),
+                'pending' => Member::where('membership_status', 'pending')->count(),
+                'approved' => Member::where('membership_status', 'approved')->count(),
+                'rejected' => Member::where('membership_status', 'rejected')->count(),
             ],
         ]);
     }
@@ -233,8 +236,8 @@ class MemberController extends Controller
         return Inertia::render('Admin/Members/Show', [
             'member' => $member,
             'stats' => [
-                'total_savings' => $member->accounts->where('account_type', 'savings')->sum('balance'),
-                'total_shares' => $member->accounts->where('account_type', 'shares')->sum('balance'),
+                'total_savings' => $member->accounts->where('account_type', 'share_deposits')->sum('balance'),
+                'total_shares' => $member->accounts->where('account_type', 'share_capital')->sum('balance'),
                 'total_loans' => $member->loans->where('status', 'active')->sum('outstanding_balance'),
                 'total_dividends' => $member->dividends->sum('dividend_amount'),
             ],
@@ -366,37 +369,101 @@ class MemberController extends Controller
     }
 
     /**
-     * Activate member
+     * Approve a pending member
      */
+    public function approve(Member $member): RedirectResponse
+    {
+        if ($member->membership_status !== 'pending') {
+            return back()->with('error', 'Only pending members can be approved.');
+        }
+
+        $member->update(['membership_status' => 'approved']);
+        $member->user?->update(['is_active' => false]); // keep inactive until activation
+
+        return back()->with('success', 'Member approved successfully.');
+    }
+
+
+     /**
+     * Activate a member
+     */
+
     public function activate(Member $member): RedirectResponse
-    {
-        $member->update(['membership_status' => 'active']);
-        $member->user->update(['is_active' => true]);
+        {
+            // Eager load accounts
+            $member->load('accounts');
 
-        return back()->with('success', 'Member activated successfully');
-    }
+            if ($member->membership_status !== 'approved') {
+                return back()->with('error', 'Only approved members can be activated.');
+            }
 
-    /**
-     * Deactivate member
-     */
-    public function deactivate(Member $member): RedirectResponse
-    {
-        $member->update(['membership_status' => 'inactive']);
-        $member->user->update(['is_active' => false]);
+            $hasShareDeposits = $member->accounts->contains(function ($account) {
+                return $account->account_type === 'share_deposits' && $account->available_balance >= 7500;
+            });
 
-        return back()->with('success', 'Member deactivated successfully');
-    }
+            $hasShareCapital = $member->accounts->contains(function ($account) {
+                return $account->account_type === 'share_capital' && $account->available_balance >= 5000;
+            });
 
-    /**
-     * Suspend member
-     */
-    public function suspend(Member $member): RedirectResponse
-    {
-        $member->update(['membership_status' => 'suspended']);
-        $member->user->update(['is_active' => false]);
+            $hasPaid = $hasShareDeposits && $hasShareCapital;
 
-        return back()->with('success', 'Member suspended successfully');
-    }
+
+            if (! $hasPaid) {
+                return back()->with('error', 'Member has not completed the required payment for activation.');
+            }
+
+            $member->update(['membership_status' => 'active']);
+            $member->user?->update(['is_active' => true]);
+
+            return back()->with('success', 'Member activated successfully.');
+        }
+
+
+        /**
+         * Deactivate an active member
+         */
+        public function deactivate(Member $member): RedirectResponse
+        {
+            if ($member->membership_status !== 'active') {
+                return back()->with('error', 'Only active members can be deactivated.');
+            }
+
+            $member->update(['membership_status' => 'inactive']);
+            $member->user?->update(['is_active' => false]);
+
+            return back()->with('success', 'Member deactivated successfully.');
+        }
+
+        /**
+         * Reject a pending member
+         */
+        public function reject(Member $member): RedirectResponse
+        {
+            if ($member->membership_status !== 'pending') {
+                return back()->with('error', 'Only pending members can be rejected.');
+            }
+
+            $member->update(['membership_status' => 'rejected']);
+            $member->user?->update(['is_active' => false]);
+
+            return back()->with('success', 'Member rejected successfully.');
+        }
+
+        /**
+         * Suspend an active member
+         */
+        public function suspend(Member $member): RedirectResponse
+        {
+            if ($member->membership_status !== 'active') {
+                return back()->with('error', 'Only active members can be suspended.');
+            }
+
+            $member->update(['membership_status' => 'suspended']);
+            $member->user?->update(['is_active' => false]);
+
+            return back()->with('success', 'Member suspended successfully.');
+        }
+
 
     /**
      * Get member accounts
@@ -533,6 +600,30 @@ class MemberController extends Controller
             abort(403, 'Unauthorized action.');
         }
     }
+
+      /**
+         * Assign usernames to members
+     */
+
+    public function assignUsernames(Request $request)
+    {
+        $request->validate([
+            'member_ids' => 'required|array',
+        ]);
+
+        $members = Member::whereIn('id', $request->member_ids)->get();
+
+        foreach ($members as $member) {
+            // Skip if username already exists
+            if (!$member->user->username) {
+                $username = \App\Models\User::generateUsername($member->first_name . ' ' . $member->last_name);
+                $member->user->update(['username' => $username]);
+            }
+        }
+
+        return back()->with('success', 'Username generated successfully.');
+    }
+
 
     /**
      * Get member transactions

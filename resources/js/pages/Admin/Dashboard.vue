@@ -34,14 +34,14 @@ defineProps<{
 
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }]">
+
     <Head title="Admin Dashboard" />
 
     <div class="min-h-screen bg-[#f5f7fb] p-6 space-y-10">
 
       <!-- Header -->
       <header
-        class="bg-gradient-to-r from-[#0a2342] to-[#133263] rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between"
-      >
+        class="bg-gradient-to-r from-[#0a2342] to-[#133263] rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
             SEPU <span class="text-orange-500">SACCO</span>
@@ -58,16 +58,13 @@ defineProps<{
 
       <!-- Quick Stats -->
       <section class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <Card
-          v-for="stat in [
-            { title: 'Total Members', value: stats.members.total, sub: `Active: ${stats.members.active}`, icon: Users, color: 'bg-blue-900/10 text-blue-900' },
-            { title: 'Total Share Deposits', value: stats.financial.total_share_deposits.toLocaleString(), sub: `Share Capital: ${stats.financial.total_share_capital.toLocaleString()}`, icon: Banknote, color: 'bg-orange-100 text-orange-600' },
-            { title: 'Active Loans', value: stats.loans.active_loans, sub: `Pending: ${stats.loans.pending_applications}`, icon: Activity, color: 'bg-blue-900/10 text-blue-900' },
-            { title: 'Transactions Today', value: stats.transactions.today, sub: `This Month: ${stats.transactions.this_month}`, icon: FileWarning, color: 'bg-orange-100 text-orange-600' },
-          ]"
-          :key="stat.title"
-          class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-        >
+        <Card v-for="stat in [
+    { title: 'Total Members', value: stats.members.total, sub: `Active: ${stats.members.active}`, icon: Users, color: 'bg-blue-900/10 text-blue-900' },
+    { title: 'Total Share Deposits', value: stats.financial.total_share_deposits.toLocaleString(), sub: `Share Capital: ${stats.financial.total_share_capital.toLocaleString()}`, icon: Banknote, color: 'bg-orange-100 text-orange-600' },
+    { title: 'Active Loans', value: stats.loans.active_loans, sub: `Pending: ${stats.loans.pending_applications}`, icon: Activity, color: 'bg-blue-900/10 text-blue-900' },
+    { title: 'Transactions Today', value: stats.transactions.today, sub: `This Month: ${stats.transactions.this_month}`, icon: FileWarning, color: 'bg-orange-100 text-orange-600' },
+  ]" :key="stat.title"
+          class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <CardHeader class="flex items-center justify-between pb-2">
             <CardTitle class="text-sm font-medium text-gray-700">{{ stat.title }}</CardTitle>
             <div class="p-2 rounded-xl" :class="stat.color">
@@ -86,12 +83,10 @@ defineProps<{
         <!-- Recent Activities -->
         <div class="lg:col-span-2">
           <h2 class="text-lg font-semibold mb-3 text-[#0a2342]">Recent Activities</h2>
-          <div class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md h-[350px] overflow-y-auto custom-scroll divide-y">
-            <div
-              v-for="(item, i) in recentActivities"
-              :key="i"
-              class="flex items-center justify-between p-4 hover:bg-orange-50 transition"
-            >
+          <div
+            class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md h-[350px] overflow-y-auto custom-scroll divide-y">
+            <div v-for="(item, i) in recentActivities" :key="i"
+              class="flex items-center justify-between p-4 hover:bg-orange-50 transition">
               <div class="flex items-start gap-3">
                 <ArrowRightCircle class="h-5 w-5 text-orange-500 mt-0.5" />
                 <div>
@@ -115,15 +110,27 @@ defineProps<{
             <ul class="space-y-2 text-sm mb-4">
               <li class="flex justify-between items-center">
                 Loans
-                <span class="px-2 pb-0.5 rounded-lg bg-orange-100 text-orange-700 font-semibold">{{ pendingApprovals.loans }}</span>
+                <span class="px-2 pb-0.5 rounded-lg bg-orange-100 text-orange-700 font-semibold">{{
+    pendingApprovals.loans }}</span>
               </li>
               <li class="flex justify-between items-center">
                 Vouchers
-                <span class="px-2 py-0.5 rounded-lg bg-blue-900/10 text-blue-900 font-semibold">{{ pendingApprovals.vouchers }}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-blue-900/10 text-blue-900 font-semibold">{{
+    pendingApprovals.vouchers }}</span>
               </li>
-              <li class="flex justify-between items-center">
+              <li class="flex justify-between items-center cursor-pointer hover:text-orange-600"
+                @click="$inertia.visit('/admin/pending-members')">
                 Members
-                <span class="px-2 py-0.5 rounded-lg bg-green-100 text-green-700 font-semibold">{{ pendingApprovals.member_applications }}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-green-100 text-green-700 font-semibold">
+                  {{ pendingApprovals.member_applications }}
+                </span>
+              </li>
+              <li class="flex justify-between items-center cursor-pointer hover:text-orange-600"
+                @click="$inertia.visit('/admin/pending-members')">
+                Pending Activation
+                <span class="px-2 py-0.5 rounded-lg bg-yellow-100 text-yellow-700 font-semibold">
+                  {{ pendingApprovals.pending_activation }}
+                </span>
               </li>
             </ul>
 
@@ -160,17 +167,14 @@ defineProps<{
           <Settings class="h-5 w-5 text-orange-500" /> System Setup & Configuration
         </h2>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <Card
-            v-for="setup in [
-              { title: 'Loan Rates', desc: 'Define loan interest and limits', icon: BarChart3, color: 'bg-orange-100 text-orange-600', link: '/loan-rates' },
-              { title: 'Repayment Periods', desc: 'Set repayment durations', icon: Clock, color: 'bg-blue-900/10 text-blue-900', link: '/repayment-periods' },
-              { title: 'System Users', desc: 'Manage user roles and permissions', icon: Users, color: 'bg-green-100 text-green-700', link: '/system-users' },
-              { title: 'System Approvals', desc: 'Define approval workflows', icon: ShieldCheck, color: 'bg-blue-100 text-blue-800', link: '/approvals' },
-            ]"
-            :key="setup.title"
+          <Card v-for="setup in [
+    { title: 'Loan Rates', desc: 'Define loan interest and limits', icon: BarChart3, color: 'bg-orange-100 text-orange-600', link: '/loan-products' },
+    { title: 'Repayment Periods', desc: 'Set repayment durations', icon: Clock, color: 'bg-blue-900/10 text-blue-900', link: '/repayment-periods' },
+    { title: 'System Users', desc: 'Manage user roles and permissions', icon: Users, color: 'bg-green-100 text-green-700', link: '/system-users' },
+    { title: 'System Approvals', desc: 'Define approval workflows', icon: ShieldCheck, color: 'bg-blue-100 text-blue-800', link: '/admin/settings' },
+  ]" :key="setup.title"
             class="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-            @click="$inertia.visit(setup.link)"
-          >
+            @click="$inertia.visit(setup.link)">
             <CardHeader class="flex items-center justify-between pb-2">
               <CardTitle class="text-sm font-medium text-gray-700">{{ setup.title }}</CardTitle>
               <div class="p-2 rounded-xl" :class="setup.color">
@@ -186,7 +190,8 @@ defineProps<{
 
       <!-- Footer -->
       <footer class="text-center text-xs text-gray-500 pt-8 pb-4">
-        © {{ new Date().getFullYear() }} <span class="font-semibold text-[#0a2342]">SEPU SACCO</span>. All Rights Reserved.
+        © {{ new Date().getFullYear() }} <span class="font-semibold text-[#0a2342]">SEPU SACCO</span>. All Rights
+        Reserved.
       </footer>
     </div>
   </AppLayout>
@@ -196,10 +201,12 @@ defineProps<{
 .custom-scroll::-webkit-scrollbar {
   width: 6px;
 }
+
 .custom-scroll::-webkit-scrollbar-thumb {
   background-color: #f97316;
   border-radius: 9999px;
 }
+
 .custom-scroll::-webkit-scrollbar-track {
   background-color: #f5f7fb;
 }

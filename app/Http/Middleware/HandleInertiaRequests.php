@@ -46,11 +46,18 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? array_merge(
+                    $request->user()->toArray(),
+                    [
+                        'active_role' => session('acting_as_role', $request->user()->role),
+                    ]
+                ) : null,
+
                 'member' => $request->user()
-                ? Member::where('user_id', $request->user()->id)->first()
-                : null,
+                    ? Member::where('user_id', $request->user()->id)->first()
+                    : null,
             ],
+
             'status' => fn () => $request->session()->get('status'),
             'ziggy' => [
                 ...(new Ziggy)->toArray(),

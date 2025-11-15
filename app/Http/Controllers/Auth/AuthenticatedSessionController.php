@@ -31,10 +31,26 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $user = Auth::user();
+
+        // Only check email verification here
+        if (!$user->hasVerifiedEmail()) {
+            return redirect()
+                ->route('verification.notice')
+                ->with('status', 'Please verify your email before logging in.');
+        }
+
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        \Log::info('Login successful', [
+            'user_id' => $user->id,
+            'username' => $user->username ?? 'N/A',
+            'role' => $user->role,
+        ]);
+
+        return redirect()->intended(route('dashboard'));
     }
+
 
     /**
      * Destroy an authenticated session.

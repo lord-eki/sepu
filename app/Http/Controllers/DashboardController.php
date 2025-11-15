@@ -58,6 +58,8 @@ class DashboardController extends Controller
         $recentActivities = $this->getRecentActivities();
         $pendingApprovals = $this->getPendingApprovals();
         $systemHealth = $this->getSystemHealth();
+       
+       
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
@@ -66,6 +68,70 @@ class DashboardController extends Controller
             'systemHealth' => $systemHealth,
         ]);
     }
+
+
+
+    public function pendingMembers()
+    {
+        try {
+            // Pending members (awaiting approval)
+            $pendingMembers = Member::with('user')
+                ->where('membership_status', 'pending')
+                ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'membership_date')
+                ->latest()
+                ->get();
+
+            // Approved members
+            $approvedAwaitingActivation = Member::with(['user', 'accounts'])
+            ->where('membership_status', 'approved')
+            ->whereHas('accounts', function ($q) {
+                $q->where('account_type', 'share_deposits')
+                    ->where('available_balance', '>=', 7500);
+            })
+            ->whereHas('accounts', function ($q) {
+                $q->where('account_type', 'share_capital')
+                    ->where('available_balance', '>=', 5000);
+            })
+            ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
+            ->latest()
+            ->get();
+
+        $approvedButUnpaid = Member::with(['user', 'accounts'])
+            ->where('membership_status', 'approved')
+            ->where(function ($query) {
+                $query->whereDoesntHave('accounts', function ($q) {
+                    $q->where('account_type', 'share_deposits')
+                        ->where('available_balance', '>=', 7500);
+                })
+                ->orWhereDoesntHave('accounts', function ($q) {
+                    $q->where('account_type', 'share_capital')
+                        ->where('available_balance', '>=', 5000);
+                });
+            })
+            ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
+            ->latest()
+            ->get();
+
+
+            return response()->json([
+                'pending' => $pendingMembers,
+                'approvedAwaitingActivation' => $approvedAwaitingActivation,
+                'approvedButUnpaid' => $approvedButUnpaid, 
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching members: ' . $e->getMessage());
+            return response()->json(['error' => 'Error fetching members'], 500);
+        }
+    }
+
+
+
+    public function pendingMembersPage()
+    {
+        return Inertia::render('Admin/PendingMembers');
+    }
+
 
     /**
      * Management Dashboard - Strategic overview
@@ -188,6 +254,7 @@ class DashboardController extends Controller
             ->get();
 
         $loanPerformanceMetrics = $this->getLoanPerformanceMetrics();
+        
 
         return Inertia::render('Officer/Dashboard', [
             'stats' => $stats,
@@ -210,14 +277,34 @@ class DashboardController extends Controller
         }
 
         // Check membership status
-        if ($member->membership_status === 'inactive') {
-            return redirect()->route('awaiting-activation');
+        switch ($member->membership_status) {
+            case 'pending':
+                return redirect()->route('awaiting-activation');
+
+            case 'approved':
+                return redirect()->route('awaiting-payment');
+
+            case 'inactive':
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your membership is inactive. Please contact support.');
+
+            case 'suspended':
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your membership has been suspended. Contact the SACCO administration for assistance.');
+
+            case 'rejected':
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your membership application was rejected. Please reach out to support for clarification.');
+
+            case 'active':
+                // proceed as normal
+                break;
+
+            default:
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your membership status is invalid. Please contact support.');
         }
 
-        if ($member->membership_status !== 'active') {
-            auth()->logout();
-            return redirect()->route('login')->with('error', 'Your account status does not allow access.');
-        }
 
         $accounts = Account::where('member_id', $member->id)
             ->get()
@@ -283,6 +370,7 @@ class DashboardController extends Controller
                     'amount' => $t->amount,
                     'time' => $t->created_at,
                 ]),
+
             Loan::with('member')
                 ->where('status', 'pending')
                 ->latest()
@@ -293,9 +381,22 @@ class DashboardController extends Controller
                     'description' => "{$l->member->first_name} {$l->member->last_name} - Loan Application",
                     'amount' => $l->applied_amount,
                     'time' => $l->created_at,
-                ])
+                ]),
+
+            Member::where('membership_status', 'pending')
+            ->latest()
+            ->take(3)
+            ->get()
+            ->map(fn($m) => [
+                'type' => 'new_member',
+                'description' => "{$m->first_name} {$m->last_name} - New Member Joined",
+                'amount' => null,
+                'time' => $m->created_at,
+            ]),
+
         ])->flatten(1)->sortByDesc('time')->take(10)->values();
     }
+
 
     private function getPendingApprovals()
     {
@@ -303,6 +404,17 @@ class DashboardController extends Controller
             'loans' => Loan::where('status', 'pending')->count(),
             'vouchers' => PaymentVoucher::where('status', 'pending')->count(),
             'member_applications' => Member::where('membership_status', 'pending')->count(),
+            'pending_activation' => Member::where('membership_status', 'approved')
+                ->whereHas('accounts', function ($q) {
+                    $q->where('account_type', 'share_deposits')
+                    ->where('available_balance', '>=', 7500);
+                })
+                ->whereHas('accounts', function ($q) {
+                    $q->where('account_type', 'share_capital')
+                    ->where('available_balance', '>=', 5000);
+                })
+                ->count(),
+
         ];
     }
 
@@ -408,4 +520,5 @@ class DashboardController extends Controller
 
         return $totalProcessed > 0 ? round(($approved / $totalProcessed) * 100, 2) : 0;
     }
+
 }

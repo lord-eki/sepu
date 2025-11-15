@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\RoleSwitchController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DividendController;
@@ -41,7 +42,9 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
 Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.send');
+    
 
+    
 // Loan Calculator
 Route::get('/loan-calculator', [LoanCalculatorController::class, 'index'])->name('loan-calculator.index');
 Route::post('/loan-calculator/calculate', [LoanCalculatorController::class, 'calculate'])->name('loan-calculator.calculate');
@@ -71,6 +74,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Member-specific actions
         Route::post('/{member}/activate', [MemberController::class, 'activate'])->name('activate');
         Route::post('/{member}/deactivate', [MemberController::class, 'deactivate'])->name('deactivate');
+        Route::post('/{member}/approve', [MemberController::class, 'approve'])->name('approve');
+        Route::post('/{member}/reject', [MemberController::class, 'reject'])->name('reject');
         Route::post('/{member}/suspend', [MemberController::class, 'suspend'])->name('suspend');
         Route::get('/{member}/accounts', [MemberController::class, 'accounts'])->name('accounts');
         Route::get('/{member}/transactions', [MemberController::class, 'transactions'])->name('transactions');
@@ -504,6 +509,9 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/awaiting-activation', function () {
     return Inertia::render('Profile/AwaitingActivation');
 })->name('awaiting-activation');
+Route::get('/awaiting-payment', function () {
+    return Inertia::render('Profile/AwaitingPayment');
+})->name('awaiting-payment');
 
 Route::get('/about', fn () => Inertia::render('AboutUs'))->name('about');
 Route::get('/terms', fn () => Inertia::render('Terms'))->name('terms');
@@ -522,3 +530,16 @@ Route::get('/transactions', [TransactionController::class, 'index'])->name('tran
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+
+Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function() {
+    Route::get('pending-members', [DashboardController::class, 'pendingMembersPage'])->name('admin.pending-members');
+    Route::get('pending-members/list', [DashboardController::class, 'pendingMembers']);
+});
+
+Route::post('/switch-role', [RoleSwitchController::class, 'switch'])->name('role.switch');
+Route::post('/stop-role', [RoleSwitchController::class, 'stop'])->name('role.stop');
+
+
+Route::post('/members/assign-usernames', [MemberController::class, 'assignUsernames'])
+    ->name('members.assignUsernames');

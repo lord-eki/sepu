@@ -193,7 +193,6 @@
                     <div class="flex gap-3">
                       <Link :href="route('accounts.show', account.id)" class="text-[#0a2342] hover:underline">View</Link>
                       <Link :href="route('accounts.deposit.show', account.id)" class="text-green-600 hover:underline">Deposit</Link>
-                      <Link :href="route('accounts.withdrawal.show', account.id)" class="text-orange-600 hover:underline">Withdraw</Link>
                       <Link :href="route('accounts.edit', account.id)" class="text-gray-600 hover:underline">Edit</Link>
                     </div>
                   </td>

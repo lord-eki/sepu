@@ -30,34 +30,40 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'phone' => 'required|string|max:15', 
-            'country_code' => 'required|string|max:5',              
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
-
-        // Merge country code with phone
+       
         $phone = ltrim($request->phone, '0');
         $fullPhone = $request->country_code . $phone;
 
+        //  Merge normalized phone back into request for validation
+        $request->merge(['phone' => $fullPhone]);
+
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
+            'phone' => 'required|string|max:15|unique:users,phone',
+            'country_code' => 'required|string|max:5',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        // Generate username (if needed)
         $username = User::generateUsername($request->name);
 
+        // Create user
         $user = User::create([
             'name' => $request->name,
+            'username' => $username,
             'email' => $request->email,
             'phone' => $fullPhone,
             'password' => Hash::make($request->password),
-            'role' => 'member'
+            'role' => 'member',
         ]);
 
         event(new Registered($user));
-
         Auth::login($user);
-        
-        return to_route('dashboard');
-        // return redirect()->route('verification.notice');
-    }
 
+        // return to_route('dashboard');
+        return redirect()->route('verification.notice');
+    }
 }
+

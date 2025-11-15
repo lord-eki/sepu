@@ -52,18 +52,34 @@
           </button>
           <div v-if="showDropdown"
             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 z-10 border border-gray-100">
-            <button v-if="member.membership_status !== 'active' && canManageStatus" @click="openConfirm('activate')"
-              class="block w-full text-left px-4 py-2 hover:cursor-pointer text-sm hover:bg-blue-50 text-gray-700">
-              Activate Member
-            </button>
-            <button v-if="member.membership_status === 'active' && canManageStatus" @click="openConfirm('deactivate')"
-              class="block w-full text-left px-4 py-2 hover:cursor-pointer text-sm hover:bg-blue-50 text-gray-700">
-              Deactivate Member
-            </button>
-            <button v-if="member.membership_status !== 'suspended' && canManageStatus" @click="openConfirm('suspend')"
-              class="block w-full text-left px-4 py-2 hover:cursor-pointer  text-sm hover:bg-blue-50 text-gray-700">
-              Suspend Member
-            </button>
+
+            <!-- Pending members: only Approve or Reject -->
+            <template v-if="member.membership_status === 'pending' && canManageStatus">
+              <button @click="openConfirm('approve')"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+                Approve Member
+              </button>
+              <button @click="openConfirm('reject')"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+                Reject Member
+              </button>
+            </template>
+
+            <!-- Active/Inactive/Suspended members: other actions -->
+            <template v-else-if="canManageStatus">
+              <button v-if="member.membership_status !== 'active'" @click="openConfirm('activate')"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+                Activate Member
+              </button>
+              <button v-if="member.membership_status === 'active'" @click="openConfirm('deactivate')"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+                Deactivate Member
+              </button>
+              <button v-if="member.membership_status !== 'suspended'" @click="openConfirm('suspend')"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+                Suspend Member
+              </button>
+            </template>
 
             <!-- Confirmation Modal -->
             <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
@@ -91,6 +107,17 @@
       </div>
     </div>
 
+    <!-- Suspended or Rejected Notice -->
+    <div v-if="['suspended', 'rejected'].includes(member.membership_status)"
+      class="max-w-3xl mx-auto mt-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl shadow-sm flex items-center gap-2">
+      <AlertCircle class="w-5 h-5 text-red-600" />
+      <p class="text-sm">
+        This member has been
+        <strong>{{ member.membership_status }}</strong>.
+        Certain actions are disabled until reinstated.
+      </p>
+    </div>
+
     <!-- Content -->
     <div class="py-10 px-4 sm:px-8 max-w-7xl mx-auto space-y-8">
 
@@ -116,10 +143,14 @@
     'inline-flex px-3 py-1 rounded-full text-xs font-medium',
     member.membership_status === 'active' ? 'bg-green-100 text-green-700' :
       member.membership_status === 'inactive' ? 'bg-red-100 text-red-700' :
-        'bg-yellow-100 text-yellow-700'
+        member.membership_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+          member.membership_status === 'suspended' ? 'bg-orange-100 text-orange-700' :
+            member.membership_status === 'rejected' ? 'bg-gray-100 text-gray-700' :
+              'bg-blue-100 text-blue-700'
   ]">
                 {{ member.membership_status }}
               </span>
+
               <span class="text-sm text-gray-500">Joined {{ formatDate(member.membership_date) }}</span>
             </div>
           </div>
@@ -185,6 +216,10 @@
                   <div>
                     <dt class="text-sm font-medium text-gray-500">Marital Status</dt>
                     <dd class="text-sm text-gray-900">{{ capitalize(member.marital_status) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500">Username</dt>
+                    <dd class="text-sm text-gray-900">{{ capitalize(member.user.username) }}</dd>
                   </div>
                 </dl>
               </div>
@@ -463,8 +498,19 @@
           </div>
         </div>
       </div>
-
     </div>
+    <!-- Global Loader Overlay -->
+    <div v-if="isLoading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center space-y-3">
+        <svg class="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <p class="text-gray-700 text-sm font-medium">Processing, please wait...</p>
+      </div>
+    </div>
+
   </AppLayout>
 </template>
 
@@ -480,6 +526,8 @@ const flash = computed(() => page.props.flash || {});
 const flashMessage = ref(null);
 const flashType = ref("success");
 const flashBox = ref(null);
+const isLoading = ref(false)
+
 
 watch(
   flash,
@@ -580,39 +628,63 @@ const openConfirm = (action) => {
 }
 
 const updateStatus = () => {
+  isLoading.value = true
   router.post(route(`members.${actionType.value}`, memberId), {}, {
     preserveScroll: true,
-    onSuccess: () => {
+    onSuccess: (page) => {
       showDropdown.value = false
       showConfirmModal.value = false
+    },
+    onError: (errors) => {
+      // Show backend error message
+      flashMessage.value = errors?.message || "Something went wrong"
+      flashType.value = "error"
+    },
+    onFinish: () => {
+      isLoading.value = false
     }
   })
 }
+
 
 const handleDocumentUpload = (event) => {
   const files = Array.from(event.target.files)
   if (files.length > 0) {
     const formData = new FormData()
-    files.forEach(file => {
-      formData.append('documents[]', file)
-    })
+    files.forEach(file => formData.append('documents[]', file))
 
+    isLoading.value = true
     router.post(route('members.upload-documents', props.member.id), formData, {
       preserveScroll: true,
-      onSuccess: () => {
+      onError: (errors) => {
+        flashMessage.value = errors?.message || "Failed to upload documents"
+        flashType.value = "error"
+      },
+      onFinish: () => {
+        isLoading.value = false
         event.target.value = ''
       }
     })
   }
 }
 
+
 const deleteDocument = (index) => {
-  if (confirm('Are you sure you want to delete this document?')) {
-    router.delete(route('members.delete-document', [props.member.id, index]), {
-      preserveScroll: true
-    })
-  }
+  if (!confirm('Are you sure you want to delete this document?')) return
+
+  isLoading.value = true
+  router.delete(route('members.delete-document', [props.member.id, index]), {
+    preserveScroll: true,
+    onError: (errors) => {
+      flashMessage.value = errors?.message || "Failed to delete document"
+      flashType.value = "error"
+    },
+    onFinish: () => {
+      isLoading.value = false
+    }
+  })
 }
+
 
 const handleClickOutside = (event) => {
   if (dropdown.value && !dropdown.value.contains(event.target)) {

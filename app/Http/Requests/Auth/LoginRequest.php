@@ -6,9 +6,10 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class LoginRequest extends FormRequest
 {
@@ -40,30 +41,26 @@ class LoginRequest extends FormRequest
         $login = $this->input('login');
         $password = $this->input('password');
 
-        // DEBUG: Log the login attempt
         Log::info('Login attempt', [
             'login' => $login,
             'ip' => $this->ip(),
         ]);
 
-        // Determine if login is email or username
         $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $user = User::where($fieldType, $login)->first();
 
-        // DEBUG: Log the field type
-        Log::info('Login field type determined', [
-            'field_type' => $fieldType,
-            'login_value' => $login,
-        ]);
+        if (!$user) {
+            RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'login' => 'No account found with these credentials.',
+            ]);
+        }
 
-        // Attempt authentication
-        $credentials = [$fieldType => $login, 'password' => $password];
-        
-        Log::info('Attempting authentication with', [
-            'credentials_keys' => array_keys($credentials),
-            $fieldType => $login,
-        ]);
 
-        if (!Auth::attempt($credentials, $this->boolean('remember'))) {
+        /**
+         *  attempt authentication
+         */
+        if (!Auth::attempt([$fieldType => $login, 'password' => $password], $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             Log::warning('Login failed', [
@@ -72,30 +69,67 @@ class LoginRequest extends FormRequest
             ]);
 
             throw ValidationException::withMessages([
-                'login' => 'These credentials do not match our records.',
+                'login' => 'Invalid credentials. Please try again.',
             ]);
         }
 
-        // Check if user is active
+        /**
+         *  Membership status checks (before login)
+         */
+        if ($user->role === 'member') {
+            $member = $user->member;
+
+            if ($member) {
+                switch ($member->membership_status) {
+                    case 'pending':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership is pending approval by the admin.',
+                        ]);
+
+                    case 'inactive':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership is inactive. Please contact support.',
+                        ]);
+
+                    case 'suspended':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership has been suspended. Please contact support for more information.',
+                        ]);
+
+                    case 'rejected':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership application was rejected. You cannot log in.',
+                        ]);
+
+                    case 'terminated':
+                        throw ValidationException::withMessages([
+                            'login' => 'Your membership has been terminated. Access is no longer allowed.',
+                        ]);
+                }
+            }
+        }
+
+        /**
+         *  Account-level check
+         */
+        if (!$user->is_active && $member) {
+            throw ValidationException::withMessages([
+                'login' => 'Your account is not active. Please contact support.',
+            ]);
+        }
+
+    
+
+        /**
+         *  Login successful
+         */
         $user = Auth::user();
-        
+
         Log::info('Login successful', [
             'user_id' => $user->id,
             'username' => $user->username ?? 'N/A',
             'role' => $user->role,
         ]);
-
-        if (!$user->is_active) {
-            Auth::logout();
-            
-            Log::warning('Inactive user attempted login', [
-                'user_id' => $user->id,
-            ]);
-
-            throw ValidationException::withMessages([
-                'login' => 'Your account has been deactivated. Please contact support.',
-            ]);
-        }
 
         RateLimiter::clear($this->throttleKey());
     }

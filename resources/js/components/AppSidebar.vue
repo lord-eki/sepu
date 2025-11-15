@@ -13,6 +13,8 @@ import {
   Ticket,
   BriefcaseConveyorBelt,
   Users,
+  ContactRound,
+  UserCheck,
   NotebookTabs,
   FileText,
   User,
@@ -169,9 +171,21 @@ const adminNavItems: NavItem[] = [
   },
   {
     title: 'Members',
-    href: route('members.index'),
-    routeName: 'members.index',
     icon: Users,
+    children: [
+      {
+        title: 'Members Overview',
+        href: route('members.index'),
+        routeName: 'members.index',
+        icon: ContactRound,
+      },
+      {
+        title: 'Member Approval',
+        href: route('admin.pending-members'),
+        routeName: 'admin.pending-members',
+        icon: UserCheck,
+      },
+    ],
   },
   {
     title: 'Accounts',

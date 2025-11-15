@@ -106,7 +106,6 @@ class ProfileController extends Controller
             'genders' => [
                 'male' => 'Male',
                 'female' => 'Female',
-                'other' => 'Other',
             ],
             'maritalStatuses' => [
                 'single' => 'Single',
@@ -167,25 +166,27 @@ class ProfileController extends Controller
                 $member = Member::create(array_merge($validated, [
                     'user_id'           => Auth::id(),
                     'membership_id'     => $this->generateMembershipId(),
-                    'membership_status' => 'inactive',
+                    'membership_status' => 'pending',
                     'membership_date'   => now(),
                 ]));
 
+                // Create accounts with proper types and number prefixes
                 $member->accounts()->create([
-                    'account_number' => $this->generateAccountNumber('SAV'),
-                    'account_type'   => 'savings',
-                    'balance'        => 0,
+                    'account_number'    => $this->generateAccountNumber('share_deposits'),
+                    'account_type'      => 'share_deposits',
+                    'balance'           => 0,
                     'available_balance' => 0,
-                    'is_active'      => true,
+                    'is_active'         => true,
                 ]);
 
                 $member->accounts()->create([
-                    'account_number' => $this->generateAccountNumber('SHR'),
-                    'account_type'   => 'shares',
-                    'balance'        => 0,
+                    'account_number'    => $this->generateAccountNumber('share_capital'),
+                    'account_type'      => 'share_capital',
+                    'balance'           => 0,
                     'available_balance' => 0,
-                    'is_active'      => true,
+                    'is_active'         => true,
                 ]);
+
 
                 DB::commit();
 

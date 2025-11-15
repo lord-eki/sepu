@@ -1,25 +1,22 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: `Budget - ${budget.title}` }]">
     <!-- Header -->
-    <div class="flex items-start sm:items-center justify-between gap-3 max-sm:mx-2 p-4 bg-gradient-to-r from-[#0a2342] to-[#0e2e5c] rounded-2xl shadow-md text-white">
+    <div
+      class="flex items-start sm:items-center justify-between gap-3 max-sm:mx-2 p-4 bg-gradient-to-r from-[#0a2342] to-[#0e2e5c] rounded-2xl shadow-md text-white">
       <div class="flex items-center gap-3">
-        <Link
-          :href="route('budgets.index')"
-          class="flex items-center justify-center w-10 h-10 bg-white/10 rounded-full hover:bg-white/20 transition"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
+        <Link :href="route('budgets.index')"
+          class="flex items-center justify-center w-10 h-10 bg-white/10 rounded-full hover:bg-white/20 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
         </Link>
         <div>
           <h2 class="text-xl sm:text-2xl font-semibold">{{ budget.title }}</h2>
           <p class="text-sm text-gray-200">{{ budget.description }}</p>
         </div>
       </div>
-      <span
-        :class="getStatusClass(budget.status)"
-        class="inline-flex px-4 py-1.5 text-sm font-semibold rounded-full bg-white/70"
-      >
+      <span :class="getStatusClass(budget.status)"
+        class="inline-flex px-4 py-1.5 text-sm font-semibold rounded-full bg-white/70">
         {{ getStatusLabel(budget.status) }}
       </span>
     </div>
@@ -27,11 +24,8 @@
     <div class="py-8 px-4 sm:px-6 lg:px-8 space-y-6">
       <!-- Budget Overview -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div
-          v-for="card in overviewCards"
-          :key="card.label"
-          class="bg-white shadow-md rounded-xl px-4 py-6 hover:shadow-lg transition"
-        >
+        <div v-for="card in overviewCards" :key="card.label"
+          class="bg-white shadow-md rounded-xl px-4 py-6 hover:shadow-lg transition">
           <div class="flex items-center gap-4">
             <div :class="`p-3 rounded-full ${card.color}`">
               <component :is="card.icon" class="w-5 h-5 text-white" />
@@ -67,49 +61,30 @@
               <h3 class="text-lg font-semibold text-gray-900">Actions</h3>
             </div>
             <div class="p-6 flex flex-col gap-3">
-              <Link
-                v-if="can_edit"
-                :href="route('budgets.edit', budget.id)"
-                class="action-btn border border-gray-300 text-gray-700 hover:bg-gray-100"
-              >
-                ✏️ Edit Budget
+              <Link v-if="can_edit" :href="route('budgets.edit', budget.id)"
+                class="action-btn border bg-blue-900 border-gray-300 text-white hover:bg-blue-600">
+              ✏️ Edit Budget
               </Link>
-
-              <button
-                v-if="can_approve && budget.status === 'draft'"
-                @click="approveBudget"
-                :disabled="processing"
-                class="action-btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+          
+              <button v-if="can_approve && budget.status === 'draft'" @click="approveBudget" :disabled="processing"
+                class="action-btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
                 ✅ Approve Budget
               </button>
 
-              <button
-                v-if="can_activate && budget.status === 'approved'"
-                @click="activateBudget"
-                :disabled="processing"
-                class="action-btn bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button v-if="can_activate && budget.status === 'approved'" @click="activateBudget" :disabled="processing"
+                class="action-btn bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
                 ⚡ Activate Budget
               </button>
 
-              <button
-                v-if="can_close && budget.status === 'active'"
-                @click="closeBudget"
-                :disabled="processing"
-                class="action-btn bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button v-if="can_close && budget.status === 'active'" @click="closeBudget" :disabled="processing"
+                class="action-btn bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
                 🔒 Close Budget
               </button>
 
               <div class="border-t border-gray-200 pt-3 space-y-2">
-                <Link
-                  v-for="(link, i) in viewLinks"
-                  :key="i"
-                  :href="link.href"
-                  class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-2"
-                >
-                  <component :is="link.icon" class="w-4 h-4" /> {{ link.label }}
+                <Link v-for="(link, i) in viewLinks" :key="i" :href="link.href"
+                  class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-2">
+                <component :is="link.icon" class="w-4 h-4" /> {{ link.label }}
                 </Link>
               </div>
             </div>
@@ -121,18 +96,16 @@
             <div class="relative">
               <div class="flex justify-between mb-1">
                 <span class="text-xs text-gray-600 font-medium">Progress</span>
-                <span class="text-xs text-green-700 font-semibold">{{ utilization.utilization_percentage.toFixed(1) }}%</span>
+                <span class="text-xs text-green-700 font-semibold">{{ utilization.utilization_percentage.toFixed(1)
+                  }}%</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  class="h-2 rounded-full transition-all"
-                  :style="`width:${Math.min(utilization.utilization_percentage, 100)}%`"
-                  :class="{
-                    'bg-green-600': utilization.utilization_percentage <= 75,
-                    'bg-yellow-500': utilization.utilization_percentage > 75 && utilization.utilization_percentage <= 90,
-                    'bg-red-500': utilization.utilization_percentage > 90
-                  }"
-                ></div>
+                <div class="h-2 rounded-full transition-all"
+                  :style="`width:${Math.min(utilization.utilization_percentage, 100)}%`" :class="{
+    'bg-green-600': utilization.utilization_percentage <= 75,
+    'bg-yellow-500': utilization.utilization_percentage > 75 && utilization.utilization_percentage <= 90,
+    'bg-red-500': utilization.utilization_percentage > 90
+  }"></div>
               </div>
             </div>
           </div>
@@ -143,23 +116,21 @@
       <div class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-wrap gap-2">
           <h3 class="text-lg font-semibold text-gray-900">Budget Items</h3>
-          <Link :href="route('budgets.items', budget.id)" class="text-sm text-indigo-600 hover:text-indigo-800">View All →</Link>
+          <Link :href="route('budgets.items', budget.id)" class="text-sm text-indigo-600 hover:text-indigo-800">View All
+          →</Link>
         </div>
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead class="bg-gray-50">
               <tr>
-                <th v-for="header in ['Category', 'Item', 'Budgeted', 'Spent', 'Remaining']" :key="header" class="px-6 py-3 text-left font-medium text-gray-600">
+                <th v-for="header in ['Category', 'Item', 'Budgeted', 'Spent', 'Remaining']" :key="header"
+                  class="px-6 py-3 text-left font-medium text-gray-600">
                   {{ header }}
                 </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr
-                v-for="item in budget.budget_items.slice(0, 5)"
-                :key="item.id"
-                class="hover:bg-gray-50 transition"
-              >
+              <tr v-for="item in budget.budget_items.slice(0, 5)" :key="item.id" class="hover:bg-gray-50 transition">
                 <td class="px-6 py-3 text-gray-800">{{ item.category }}</td>
                 <td class="px-6 py-3 text-gray-800">
                   <div class="font-semibold">{{ item.item_name }}</div>
@@ -167,7 +138,8 @@
                 </td>
                 <td class="px-6 py-3 text-right">{{ formatCurrency(item.budgeted_amount) }}</td>
                 <td class="px-6 py-3 text-right">{{ formatCurrency(item.spent_amount) }}</td>
-                <td class="px-6 py-3 text-right font-semibold" :class="item.remaining_amount < 0 ? 'text-red-600' : 'text-green-600'">
+                <td class="px-6 py-3 text-right font-semibold"
+                  :class="item.remaining_amount < 0 ? 'text-red-600' : 'text-green-600'">
                   {{ formatCurrency(item.remaining_amount) }}
                 </td>
               </tr>
@@ -181,9 +153,10 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { DollarSign, TrendingUp, TrendingDown, PieChart } from 'lucide-vue-next'
+const page = usePage()
 
 const props = defineProps({
   budget: Object,
@@ -194,6 +167,7 @@ const props = defineProps({
   can_close: Boolean,
   can_edit: Boolean
 })
+
 
 const processing = ref(false)
 
@@ -216,7 +190,7 @@ const getStatusLabel = (status) => ({
 
 const approveBudget = () => {
   if (processing.value) return
-  
+
   if (confirm('Are you sure you want to approve this budget?')) {
     processing.value = true
     router.post(route('budgets.approve', props.budget.id), {}, {
@@ -229,7 +203,7 @@ const approveBudget = () => {
 
 const activateBudget = () => {
   if (processing.value) return
-  
+
   if (confirm('Are you sure you want to activate this budget? This will deactivate any other active budgets for the same year.')) {
     processing.value = true
     router.post(route('budgets.activate', props.budget.id), {}, {
@@ -242,7 +216,7 @@ const activateBudget = () => {
 
 const closeBudget = () => {
   if (processing.value) return
-  
+
   if (confirm('Are you sure you want to close this budget? This action cannot be undone.')) {
     processing.value = true
     router.post(route('budgets.close', props.budget.id), {}, {

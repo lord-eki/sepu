@@ -9,6 +9,7 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, Eye, EyeOff } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { watch } from 'vue';
 
 defineProps<{
     status?: string;
@@ -20,6 +21,16 @@ const form = useForm({
     password: '',
     remember: false,
 });
+
+
+watch(() => form.login, () => {
+    if (form.errors.login) form.clearErrors('login');
+});
+
+watch(() => form.password, () => {
+    if (form.errors.password) form.clearErrors('password');
+});
+
 
 const showPassword = ref(false);
 
@@ -42,10 +53,6 @@ const submit = () => {
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
             {{ status }}
-        </div>
-
-        <div v-if="form.errors.login" class="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-            {{ form.errors.login }}
         </div>
 
         <form @submit.prevent="submit" class="flex flex-col gap-6 logform">
