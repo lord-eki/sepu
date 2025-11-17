@@ -1,123 +1,83 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/loans' }]">
-
     <Head title="Loan Management" />
 
-    <div class="loan-page pt-4 pb-8">
-      <!-- Gradient header -->
-      <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-        <div
-          class="rounded-2xl overflow-hidden shadow-md border border-transparent transform-gpu transition-all duration-300">
-          <div class="bg-gradient-to-r from-[#06203a] to-[#0a2342] px-6 py-6 sm:py-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div class="flex items-center gap-4">
-                <div class="rounded-lg p-3 bg-white/6 shadow md:shadow-lg">
-                  <!-- icon -->
-                  <svg class="w-6 sm:w-7 h-6 sm:h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+    <!-- Page Header -->
+    <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+      <div class="rounded-2xl overflow-hidden shadow-lg border border-transparent transform-gpu transition-all duration-300">
+        <div class="bg-gradient-to-r from-[#06203a] to-[#0a2342] px-6 py-6 sm:py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="rounded-lg p-3 bg-white/10 shadow-md">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                       d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-
-                <div>
-                  <h1 class="text-white font-semibold text-xl sm:text-2xl tracking-tight">Loan Management</h1>
-                  <p class="text-orange-200 max-sm:text-xs text-sm mt-0.5">Manage loan applications, approvals and
-                    disbursements</p>
-                </div>
-              </div>
-
-              <div class="flex max-sm:flex-col w-fit gap-2">
-                <!-- New Loan Application -->
-                <Link :href="route('loans.create')"
-                  class="inline-flex items-center gap-2 rounded-lg bg-white text-[#0a2342] px-4 py-2 text-sm font-medium shadow hover:scale-[1.01] transition">
-                New Loan Application
-                </Link>
-
-                <!-- Check Eligibility -->
-                <button @click="openModal = true"
-                  class="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white hover:cursor-pointer px-4 py-2 text-sm font-medium shadow hover:bg-blue-700 transition">
-                  Check Eligibility
-                </button>
-
-                <!-- Loan Calculator -->
-                <Link :href="route('loan-calculator.index')"
-                  class="inline-flex items-center gap-2 rounded-lg bg-orange-500 text-white px-4 py-2 text-sm font-medium shadow hover:opacity-95 transition">
-                Loan Calculator
-                </Link>
-              </div>
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-white font-semibold text-xl sm:text-2xl tracking-tight">Loan Management</h1>
+              <p class="text-orange-200 text-sm mt-1">Manage loan applications, approvals and disbursements</p>
             </div>
           </div>
-        </div>
-      </header>
 
-
-      <!-- Member Selection Modal -->
-      <div v-if="openModal" class="fixed inset-0 bg-black/50 flex justify-center items-center z-9999">
-        <div class="bg-white p-6 rounded-lg shadow-lg max-sm:w-[90%] w-96">
-          <h2 class="text-lg font-semibold mb-4 text-gray-700">Select Member</h2>
-
-          <select v-model="selectedMember"
-            class="w-full border border-gray-300 rounded-md p-2 mb-4 focus:ring focus:ring-blue-200">
-            <option disabled value="">-- Choose a member --</option>
-            <option v-for="member in members" :key="member.id" :value="member.id">
-              {{ member.name }}
-            </option>
-          </select>
-
-          <div class="flex justify-end gap-2">
-            <button @click="openModal = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
-              Cancel
+          <div class="flex max-sm:flex-col gap-2 w-fit">
+            <Link :href="route('loans.create')"
+                  class="inline-flex items-center gap-2 rounded-lg bg-white text-[#0a2342] px-4 py-2 text-sm font-medium shadow hover:scale-[1.01] transition">
+              New Loan Application
+            </Link>
+            <button @click="openModal = true"
+                    class="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium shadow hover:bg-blue-700 transition">
+              Check Eligibility
             </button>
-            <button @click="checkEligibility" :disabled="!selectedMember"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
-              Continue
-            </button>
+            <Link :href="route('loan-calculator.index')"
+                  class="inline-flex items-center gap-2 rounded-lg bg-orange-500 text-white px-4 py-2 text-sm font-medium shadow hover:opacity-95 transition">
+              Loan Calculator
+            </Link>
           </div>
         </div>
       </div>
+    </header>
 
-
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <!-- Summary cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <transition-group name="fade" tag="div" class="contents">
-            <div v-for="card in cards" :key="card.label" class="card-glass p-4 rounded-2xl shadow-lg border">
-              <div class="flex items-center gap-4">
-                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', card.bg]">
-                  <svg class="w-5  h-5  text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" :d="card.icon" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm text-gray-500">{{ card.label }}</p>
-                  <p class="text-xl font-bold text-gray-900">{{ card.value }}</p>
-                </div>
+    <!-- Summary Cards -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <transition-group name="fade" tag="div" class="contents">
+          <div v-for="card in cards" :key="card.label"
+               class="card-glass p-4 rounded-2xl shadow-lg border dark:border-gray-700 hover:scale-[1.03] transition-transform">
+            <div class="flex items-center gap-4">
+              <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', card.bg]">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" :d="card.icon" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ card.label }}</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white">{{ card.value }}</p>
               </div>
             </div>
-          </transition-group>
-        </section>
-
-        <!-- Filters -->
-        <section class="bg-white rounded-2xl p-6 shadow-sm border">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Filters</h3>
-            <div class="text-sm text-gray-500">Refine loan list</div>
           </div>
+        </transition-group>
+      </section>
 
-          <form @submit.prevent="applyFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select v-model="filters.status" id="status"
-                class="mt-1 block w-full rounded-lg border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-orange-200">
-                <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="disbursed">Disbursed</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
+      <!-- Filters -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border dark:border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filters</h3>
+          <div class="text-sm text-gray-500 dark:text-gray-300">Refine loan list</div>
+        </div>
 
+        <form @submit.prevent="applyFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+            <select v-model="filters.status" id="status"
+                    class="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="disbursed">Disbursed</option>
+              <option value="completed">Completed</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
             <div>
               <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
               <input v-model="filters.search" id="search" type="text" placeholder="Loan number, member name..."

@@ -6,7 +6,7 @@ import { usePage, router } from '@inertiajs/vue3';
 const page = usePage();
 const user = page.props.auth.user;
 
-// Current active role
+// Current active role (shortened wording)
 const activeRole = computed(() => user?.active_role ?? user?.role);
 
 // Real role (from DB)
@@ -30,76 +30,57 @@ const allowedRoles = computed(() => {
 const switchRole = (role: string) => {
     router.post('/switch-role', { role }, {
         preserveScroll: true,
-        onSuccess: () => {
-            router.reload(); 
-        },
+        onSuccess: () => router.reload(),
     });
 };
 
 const stopSwitch = () => {
     router.post('/switch-role/stop', {}, {
         preserveScroll: true,
-        onSuccess: () => {
-            router.reload(); 
-        },
+        onSuccess: () => router.reload(),
     });
 };
-
 </script>
 
 <template>
     <!-- Hide completely if user is a normal member -->
-    <div v-if="allowedRoles.length > 0" class="flex items-center gap-2">
+    <div v-if="allowedRoles.length > 0" class="flex max:flex-col items-center gap-2">
 
-        <!-- Current visible role -->
+        <!-- Current visible role label  -->
         <div
-            class="px-3 py-1 text-sm rounded-lg bg-gray-100 border shadow-sm"
+            class="px-3 py-1 text-sm rounded-lg text-blue-900 bg-gray-100 dark:bg-gray-800 dark:text-gray dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm"
             v-if="activeRole !== realRole"
         >
-            Acting as:
-            <span class="font-semibold text-blue-600">{{ activeRole }}</span>
+            Active:
+            <span class="font-semibold text-blue-900 dark:text-gray-200">{{ activeRole }}</span>
         </div>
 
         <div
-            class="px-3 py-1 text-sm rounded-lg bg-gray-100 border shadow-sm"
+            class="px-3 py-1 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm"
             v-else
         >
-            Role:
-            <span class="font-semibold text-gray-700">{{ activeRole }}</span>
+            {{ activeRole }}
         </div>
 
-        <!-- Dropdown -->
+        <!-- Dropdown (shortened wording, removed 'Role') -->
         <select
             v-if="allowedRoles.length > 1"
-            class="px-2 py-1 border rounded-md text-sm"
+            class="px-2 py-1 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             @change="switchRole($event.target.value)"
         >
-            <option disabled selected>Switch Role</option>
-            <option
-                v-for="r in allowedRoles"
-                :key="r"
-                :value="r"
-            >
+            <option disabled selected>Switch</option>
+            <option v-for="r in allowedRoles" :key="r" :value="r">
                 {{ r }}
             </option>
         </select>
 
-        <!-- If only one possible switch target (e.g., accountant → member) -->
+        <!-- Single target switch button -->
         <button
             v-else
             class="px-3 py-1 text-sm bg-blue-600 text-white rounded-md"
             @click="switchRole(allowedRoles[0])"
         >
             Switch to {{ allowedRoles[0] }}
-        </button>
-
-        <!-- Stop Switch -->
-        <button
-            v-if="activeRole !== realRole"
-            class="px-3 py-1 text-sm bg-red-600 text-white rounded-md"
-            @click="stopSwitch"
-        >
-            Stop
         </button>
     </div>
 </template>

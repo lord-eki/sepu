@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import SwitchRole from '@/components/SwitchRole.vue';   // ✅ ADDED THIS
+import SwitchRole from '@/components/SwitchRole.vue';  
 import type { BreadcrumbItemType } from '@/types';
 
 withDefaults(
