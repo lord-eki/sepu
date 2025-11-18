@@ -1,5 +1,22 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: `Budget - ${budget.title}` }]">
+    <!-- Flash Message -->
+    <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+      <div v-if="flashMessage" :class="[
+    flashType === 'success'
+      ? 'bg-green-50 border border-green-200 text-green-800'
+      : 'bg-red-50 border border-red-200 text-red-800',
+    'max-w-3xl mx-auto px-6 py-3 rounded-xl flex items-center shadow-sm mb-8 backdrop-blur-sm',
+  ]">
+        <span class="flex-1 font-medium">{{ flashMessage }}</span>
+        <button type="button" class="ml-3 text-gray-500 hover:text-gray-700" @click="flashMessage = null">
+          ✕
+        </button>
+      </div>
+    </transition>
+
     <!-- Header -->
     <div
       class="flex items-start sm:items-center justify-between gap-3 max-sm:mx-2 p-4 bg-gradient-to-r from-[#0a2342] to-[#0e2e5c] rounded-2xl shadow-md text-white">
@@ -65,7 +82,7 @@
                 class="action-btn border bg-blue-900 border-gray-300 text-white hover:bg-blue-600">
               ✏️ Edit Budget
               </Link>
-          
+
               <button v-if="can_approve && budget.status === 'draft'" @click="approveBudget" :disabled="processing"
                 class="action-btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
                 ✅ Approve Budget
@@ -168,6 +185,28 @@ const props = defineProps({
   can_edit: Boolean
 })
 
+
+
+const flashMessage = ref(page.props.flash.success || page.props.flash.error);
+const flashType = ref(page.props.flash.success ? 'success' : 'error');
+
+watch(
+  () => page.props.flash,
+  (flash) => {
+    if (flash?.success) {
+      flashMessage.value = flash.success
+      flashType.value = 'success'
+    } else if (flash?.error) {
+      flashMessage.value = flash.error
+      flashType.value = 'error'
+    }
+
+    if (flashMessage.value) {
+      setTimeout(() => (flashMessage.value = null), 5000)
+    }
+  },
+  { immediate: true, deep: true }
+)
 
 const processing = ref(false)
 

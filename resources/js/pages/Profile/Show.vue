@@ -64,11 +64,11 @@ interface PageProps extends InertiaPageProps {
   }
 }
 
-// ✅ usePage with type
+// usePage with type
 const page = usePage<PageProps>()
 
 
-// ✅ Flash messages
+// Flash messages
 const flashMessage = ref<string | null>(null)
 const flashType = ref<'success' | 'error'>('success')
 
@@ -90,7 +90,7 @@ watch(
   { immediate: true, deep: true }
 )
 
-// ✅ Computed props
+//  Computed props
 const member = computed(() => page.props.member)
 const user = computed(() => page.props.user)
 
