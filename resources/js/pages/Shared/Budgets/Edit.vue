@@ -123,19 +123,23 @@
 
           <!-- Budget Items card -->
           <section class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
               <div>
                 <h2 class="text-lg font-semibold text-[#0a2342]">Budget Items</h2>
                 <div class="text-sm text-gray-500">Add or remove items for this budget</div>
               </div>
 
-              <button type="button" @click="addBudgetItem"
-                class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f97316] text-white text-sm font-medium hover:bg-[#e86b11] transition-shadow shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Add Item
-              </button>
+              <div class="shrink-0 flex items-center gap-3">
+                <button type="button" @click="addBudgetItem"
+                  class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f97316] text-white text-sm font-medium hover:bg-[#e86b11] shadow-sm">
+                  Add Item
+                </button>
+
+                <button type="submit" :disabled="processing"
+                  class="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-[#f97316] text-white text-sm font-semibold hover:bg-[#e86b11] disabled:opacity-60">
+                  {{ processing ? 'Updating...' : 'Update Budget' }}
+                </button>
+              </div>
             </div>
 
             <div class="p-6">
@@ -156,9 +160,13 @@
 
               <!-- Item list -->
               <div v-else class="space-y-4">
-                <div v-for="(item, index) in filteredItems" :key="index"
-                  :ref="index === form.budget_items.length - 1 ? 'lastItemRef' : null"
-                  class="border border-gray-100 rounded-lg p-4 bg-white shadow-sm">
+                <div
+                    v-for="(item, index) in filteredItems"
+                    :key="index"
+                    :ref="index === form.budget_items.length - 1 ? 'lastItemRef' : null"
+                    :class="[ 'border border-gray-100 rounded-lg p-4 bg-white shadow-sm',
+                              item._highlight ? 'animate-highlight' : '' ]"
+                  >
                   <div class="flex justify-between items-start mb-4">
                     <h4 class="text-sm font-medium text-[#0a2342]">Budget Item #{{ index + 1 }}</h4>
                     <div class="flex items-center gap-2">
@@ -191,10 +199,16 @@
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-gray-700">Item Name</label>
-                      <input v-model="item.item_name" type="text"
-                        class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]/40 focus:border-[#f97316]"
-                        required />
+                      <label class="block text-sm font-medium text-gray-700 ">Item Name</label>
+                      <input
+                          v-model="item.item_name"
+                          type="text"
+                          :ref="el => itemRefs[index] = el"
+                          class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 shadow-sm
+                                focus:outline-none focus:ring-2 focus:ring-[#f97316]/40 focus:border-[#f97316]"
+                          required
+                        />
+
                       <div v-if="errors[`budget_items.${index}.item_name`]" class="mt-1 text-sm text-red-600">
                         {{ errors[`budget_items.${index}.item_name`] }}
                       </div>
@@ -346,12 +360,40 @@
 import { ref, watch, computed, onMounted } from 'vue'
 import { Link, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+
+
 const search = ref("")
 
 const page = usePage();
 
 const flashMessage = ref(page.props.flash.success || page.props.flash.error);
 const flashType = ref(page.props.flash.success ? 'success' : 'error');
+
+import { nextTick } from 'vue'
+
+const itemRefs = ref([]);
+
+const addBudgetItem = async () => {
+  form.budget_items.push({
+    category: '',
+    item_name: '',
+    description: '',
+    budgeted_amount: '',
+    _highlight: true
+  });
+
+  setTimeout(() => {
+    form.budget_items[form.budget_items.length - 1]._highlight = false;
+  }, 3000);
+
+  await nextTick();
+
+  const lastIndex = form.budget_items.length - 1;
+  itemRefs.value[lastIndex]?.focus();
+
+  scrollToBottom();
+};
+
 
 watch(
   () => page.props.flash,
@@ -370,8 +412,6 @@ watch(
   },
   { immediate: true, deep: true }
 )
-
-
 
 
 const props = defineProps({
@@ -427,24 +467,6 @@ const filteredItems = computed(() => {
   )
 })
 
-
-
-
-const lastItemRef = ref(null)
-
-const addBudgetItem = () => {
-  form.budget_items.push({
-    category: '',
-    item_name: '',
-    description: '',
-    budgeted_amount: 0
-  })
-  calculateTotalBudget()
-
-  nextTick(() => {
-    lastItemRef.value?.scrollIntoView({ behavior: "smooth" })
-  })
-}
 
 
 const confirmDelete = (index) => {
@@ -518,4 +540,14 @@ const getStatusLabel = (status) => {
 button:hover {
   cursor: pointer;
 }
+
+@keyframes highlightFlash {
+  0%   { background-color: #ca9252ff; }
+  100% { background-color: white; }
+}
+
+.animate-highlight {
+  animation: highlightFlash 1.5s ease-out;
+}
+
 </style>

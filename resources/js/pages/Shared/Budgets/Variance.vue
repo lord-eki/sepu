@@ -1,22 +1,30 @@
 <template>
-  <AppLayout :title="`Budget Variance - ${budget.title}`">
-    <template #header>
-      <div class="flex items-center space-x-4">
-        <Link :href="route('budgets.show', budget.id)" class="text-gray-500 hover:text-gray-700">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-        </Link>
-        <div>
-          <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Budget Variance Analysis - {{ budget.title }}
-          </h2>
-          <p class="text-sm text-gray-600">{{ budget.budget_year }} Budget</p>
-        </div>
-      </div>
-    </template>
+  <AppLayout :breadcrumbs="[{ title: `Budget - ${budget.title}` }]">
+   <div class="flex items-center gap-4 mt-4 mb-6">
+      <!-- Back Button -->
+      <Link
+        :href="route('budgets.show', budget.id)"
+        class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm 
+              hover:bg-gray-50 border border-gray-200 transition"
+      >
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </Link>
 
-    <div class="py-12">
+      <!-- Title + Subtitle -->
+      <div>
+        <h2 class="text-2xl font-semibold text-gray-800">
+          Budget Variance Analysis - {{ budget.title }}
+        </h2>
+        <p class="text-sm text-gray-500 mt-0.5">
+          {{ budget.budget_year }} Budget
+        </p>
+      </div>
+    </div>
+
+
+    <div class="pt-5 pb-10">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
         
         <!-- Summary Cards -->

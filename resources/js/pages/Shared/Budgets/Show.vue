@@ -165,11 +165,86 @@
         </div>
       </div>
     </div>
+    <!-- GLOBAL LOADING OVERLAY -->
+<transition
+  enter-active-class="duration-200 ease-out"
+  leave-active-class="duration-150 ease-in"
+>
+  <div
+    v-if="showOverlay"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center"
+  >
+    <div class="bg-white/90 px-6 py-4 rounded-xl shadow-xl flex flex-col items-center gap-3">
+      <svg
+        class="animate-spin h-8 w-8 text-blue-600"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none" viewBox="0 0 24 24"
+      >
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+        </path>
+      </svg>
+
+      <p class="text-gray-700 text-sm font-medium">Processing...</p>
+    </div>
+  </div>
+</transition>
+
   </AppLayout>
+  <!-- Modern Confirmation Modal -->
+<transition
+  enter-active-class="duration-200 ease-out"
+  enter-from-class="opacity-0"
+  enter-to-class="opacity-100"
+  leave-active-class="duration-150 ease-in"
+  leave-from-class="opacity-100"
+  leave-to-class="opacity-0"
+>
+  <div
+    v-if="confirmDialog.visible"
+    class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+  >
+    <div
+      class="bg-white max-w-md w-full rounded-2xl shadow-xl p-6 animate-fadeIn"
+    >
+      <div class="flex items-start gap-4">
+        <div class="p-3 bg-blue-100 text-blue-600 rounded-xl">
+          ⚠️
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">
+            {{ confirmDialog.title }}
+          </h3>
+          <p class="text-gray-600 mt-1">
+            {{ confirmDialog.message }}
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button
+          @click="confirmDialog.visible = false"
+          class="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+
+        <button
+          @click="confirmDialog.confirm"
+          class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+</transition>
+
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { DollarSign, TrendingUp, TrendingDown, PieChart } from 'lucide-vue-next'
@@ -202,11 +277,18 @@ watch(
     }
 
     if (flashMessage.value) {
+      // Scroll to top instantly
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+
       setTimeout(() => (flashMessage.value = null), 5000)
     }
   },
   { immediate: true, deep: true }
 )
+
 
 const processing = ref(false)
 
@@ -227,44 +309,89 @@ const getStatusLabel = (status) => ({
   closed: 'Closed'
 }[status] || 'Unknown')
 
+const confirmDialog = ref({
+  visible: false,
+  title: '',
+  message: '',
+  confirm: null
+})
+
+function openConfirm({ title, message, onConfirm }) {
+  confirmDialog.value = {
+    visible: true,
+    title,
+    message,
+    confirm: () => {
+      confirmDialog.value.visible = false
+      onConfirm()
+    }
+  }
+}
+
+const showOverlay = ref(false)
+
 const approveBudget = () => {
   if (processing.value) return
 
-  if (confirm('Are you sure you want to approve this budget?')) {
-    processing.value = true
-    router.post(route('budgets.approve', props.budget.id), {}, {
-      onFinish: () => {
-        processing.value = false
-      }
-    })
-  }
+  openConfirm({
+    title: "Approve Budget?",
+    message: "Are you sure you want to approve this budget?",
+    onConfirm: () => {
+      processing.value = true
+      showOverlay.value = true
+
+      router.post(route('budgets.approve', props.budget.id), {}, {
+        onFinish: () => {
+          processing.value = false
+          showOverlay.value = false
+        }
+      })
+    }
+  })
 }
+
 
 const activateBudget = () => {
   if (processing.value) return
 
-  if (confirm('Are you sure you want to activate this budget? This will deactivate any other active budgets for the same year.')) {
-    processing.value = true
-    router.post(route('budgets.activate', props.budget.id), {}, {
-      onFinish: () => {
-        processing.value = false
-      }
-    })
-  }
+  openConfirm({
+    title: "Activate Budget?",
+    message: "Activating this budget will deactivate any other active budgets for this year.",
+    onConfirm: () => {
+      processing.value = true
+      showOverlay.value = true
+
+      router.post(route('budgets.activate', props.budget.id), {}, {
+        onFinish: () => {
+          processing.value = false
+          showOverlay.value = false
+        }
+      })
+    }
+  })
 }
+
 
 const closeBudget = () => {
   if (processing.value) return
 
-  if (confirm('Are you sure you want to close this budget? This action cannot be undone.')) {
-    processing.value = true
-    router.post(route('budgets.close', props.budget.id), {}, {
-      onFinish: () => {
-        processing.value = false
-      }
-    })
-  }
+  openConfirm({
+    title: "Close Budget?",
+    message: "Closing a budget cannot be undone. Continue?",
+    onConfirm: () => {
+      processing.value = true
+      showOverlay.value = true
+
+      router.post(route('budgets.close', props.budget.id), {}, {
+        onFinish: () => {
+          processing.value = false
+          showOverlay.value = false
+        }
+      })
+    }
+  })
 }
+
 
 const overviewCards = [
   { label: 'Total Budget', value: formatCurrency(props.budget.total_budget), color: 'bg-blue-500', icon: DollarSign },
@@ -302,5 +429,13 @@ const viewLinks = [
   font-weight: 500;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   transition: all 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.15s ease-out;
 }
 </style>
