@@ -1,8 +1,8 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: `Budget Items - ${budget.title}` }]">
 
-     <!-- Flash Message -->
-     <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+    <!-- Flash Message -->
+    <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
       enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
       leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
       <div v-if="flashMessage" :class="[
@@ -329,9 +329,17 @@
             Cancel
           </button>
 
-          <button @click="confirmDelete" class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-            Delete
+          <button @click="confirmDelete"
+            class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center"
+            :disabled="deletingItem">
+            <svg v-if="deletingItem" class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>{{ deletingItem ? 'Deleting...' : 'Delete' }}</span>
           </button>
+
 
         </div>
       </div>
@@ -426,6 +434,8 @@ const editItemForm = ref({
 
 const showDeleteModal = ref(false)
 const deleteItemTarget = ref(null)
+const deletingItem = ref(false)
+
 
 const openDeleteModal = (item) => {
   if (item.spent_amount > 0) {
@@ -533,8 +543,8 @@ const addNewItem = async () => {
       ...newItemForm.value
     })
 
-    // ✅ Use backend flash
-    flashMessage.value = response.data.flash?.success || 'Item added successfully'
+
+    flashMessage.value = response.data.message || 'Item added successfully'
     flashType.value = 'success'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setTimeout(() => (flashMessage.value = null), 5000)
@@ -542,7 +552,7 @@ const addNewItem = async () => {
     showAddForm.value = false
     resetNewItemForm()
   } catch (error) {
-    flashMessage.value = error.response?.data?.error || 'Failed to add item'
+    flashMessage.value = error.response?.data?.message || 'Failed to add item'
     flashType.value = 'error'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setTimeout(() => (flashMessage.value = null), 5000)
@@ -578,14 +588,14 @@ const updateItem = async () => {
 
     closeEditModal()
 
-    // ✅ Use backend flash
-    flashMessage.value = response.data.flash?.success || 'Item updated successfully'
+
+    flashMessage.value = response.data.message || 'Item updated successfully'
     flashType.value = 'success'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setTimeout(() => (flashMessage.value = null), 5000)
 
   } catch (error) {
-    flashMessage.value = error.response?.data?.error || 'Failed to update item'
+    flashMessage.value = error.response?.data?.message || 'Failed to update item'
     flashType.value = 'error'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setTimeout(() => (flashMessage.value = null), 5000)
@@ -597,6 +607,7 @@ const updateItem = async () => {
 
 const confirmDelete = async () => {
   if (!deleteItemTarget.value) return
+  deletingItem.value = true
 
   try {
     const response = await axios.delete(route('budgets.destroy-item', [props.budget.id, deleteItemTarget.value.id]))
@@ -608,17 +619,18 @@ const confirmDelete = async () => {
 
     closeDeleteModal()
 
-    // ✅ Use backend flash
-    flashMessage.value = response.data.flash?.success || 'Item deleted successfully'
+    flashMessage.value = response.data.message || 'Item deleted successfully'
     flashType.value = 'success'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setTimeout(() => (flashMessage.value = null), 5000)
 
   } catch (error) {
-    flashMessage.value = error.response?.data?.error || 'Failed to delete item'
+    flashMessage.value = error.response?.data?.message || 'Failed to delete item'
     flashType.value = 'error'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setTimeout(() => (flashMessage.value = null), 5000)
+  } finally {
+    deletingItem.value = false
   }
 }
 
@@ -652,5 +664,4 @@ const formatCurrency = (amount) => {
 button:hover {
   cursor: pointer;
 }
-
 </style>
