@@ -1,16 +1,14 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: `Budget Utilization - ${budget.title}` }]">
+
     <Head :title="`Budget Utilization - ${budget.title}`" />
 
     <!-- Header -->
     <div class="flex items-center space-x-4 mt-2 p-2 mb-4">
-      <Link
-        :href="route('budgets.show', budget.id)"
-        class="text-slate-500 hover:text-[#f97316] transition"
-      >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
+      <Link :href="route('budgets.show', budget.id)" class="text-slate-500 hover:text-[#f97316] transition">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
       </Link>
       <div>
         <h2 class="text-xl sm:text-2xl font-semibold text-[#102a54]">
@@ -22,26 +20,22 @@
 
     <div class="py-6 px-4">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        
+
         <!-- Quick Actions -->
         <div class="flex justify-end gap-3">
-          <Link 
-            :href="route('budgets.show', budget.id)"
-            class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg font-medium text-sm text-gray-700 hover:bg-gray-200 transition"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-            Back to Budget
+          <Link :href="route('budgets.show', budget.id)"
+            class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg font-medium text-sm text-gray-700 hover:bg-gray-200 transition">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back to Budget
           </Link>
-          <Link 
-            :href="route('budgets.variance', budget.id)"
-            class="inline-flex items-center px-4 py-2 bg-blue-900 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-blue-800 transition"
-          >
-            View Variance Analysis
-            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
+          <Link :href="route('budgets.variance', budget.id)"
+            class="inline-flex items-center px-4 py-2 bg-blue-900 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-blue-800 transition">
+          View Variance Analysis
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
           </Link>
         </div>
 
@@ -52,7 +46,8 @@
               <div class="flex-shrink-0">
                 <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
                   <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                    <path
+                      d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
                   </svg>
                 </div>
               </div>
@@ -68,7 +63,9 @@
               <div class="flex-shrink-0">
                 <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
                   <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd"
+                      d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                      clip-rule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -84,7 +81,9 @@
               <div class="flex-shrink-0">
                 <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
                   <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                      clip-rule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -100,7 +99,9 @@
               <div class="flex-shrink-0">
                 <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
                   <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd"
+                      d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -116,11 +117,9 @@
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
           <h3 class="text-lg font-semibold text-gray-900 mb-4">Overall Budget Utilization</h3>
           <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
-            <div 
-              class="h-4 rounded-full transition-all duration-500"
+            <div class="h-4 rounded-full transition-all duration-500"
               :class="getUtilizationColorClass(utilization.utilization_percentage)"
-              :style="{ width: Math.min(utilization.utilization_percentage, 100) + '%' }"
-            ></div>
+              :style="{ width: Math.min(utilization.utilization_percentage, 100) + '%' }"></div>
           </div>
           <div class="flex justify-between text-sm text-gray-600">
             <span>0%</span>
@@ -129,15 +128,42 @@
           </div>
         </div>
 
+        <!-- Search / Filter Bar -->
+        <div
+          class="bg-white shadow-sm border border-gray-100 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+
+          <!-- Search -->
+          <div class="relative w-full sm:w-1/2">
+            <input v-model="searchQuery" type="text" placeholder="Search category..."
+              class="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
+            </svg>
+          </div>
+
+          <!-- Filter: Utilization Level -->
+          <div class="w-full sm:w-1/3">
+            <select v-model="selectedLevel"
+              class="w-full rounded-xl border border-gray-300 py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500">
+              <option value="">All Utilization Levels</option>
+              <option value="low">0% - 50% (On Track)</option>
+              <option value="mid">51% - 75% (Good Progress)</option>
+              <option value="high">76% - 90% (High Utilization)</option>
+              <option value="full">91% - 100% (Fully Utilized)</option>
+              <option value="over">Over Budget</option>
+            </select>
+          </div>
+
+        </div>
+
         <!-- Category Utilization -->
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
           <h3 class="text-lg font-semibold text-gray-900 mb-6">Category-wise Utilization</h3>
           <div class="space-y-6">
-            <div 
-              v-for="category in category_utilization" 
-              :key="category.category"
-              class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition"
-            >
+            <div v-for="category in filteredCategories" :key="category.category"
+              class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition">
               <div class="flex justify-between items-center mb-3">
                 <div>
                   <h4 class="text-base font-semibold text-gray-900">{{ category.category }}</h4>
@@ -154,19 +180,14 @@
               </div>
 
               <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
-                <div 
-                  class="h-3 rounded-full transition-all duration-500"
+                <div class="h-3 rounded-full transition-all duration-500"
                   :class="getUtilizationColorClass(category.utilization_percentage)"
-                  :style="{ width: Math.min(category.utilization_percentage, 100) + '%' }"
-                ></div>
+                  :style="{ width: Math.min(category.utilization_percentage, 100) + '%' }"></div>
               </div>
 
               <div class="flex justify-between text-xs text-gray-500">
                 <span>Remaining: {{ formatCurrency(category.remaining) }}</span>
-                <span 
-                  :class="getUtilizationTextColorClass(category.utilization_percentage)"
-                  class="font-medium"
-                >
+                <span :class="getUtilizationTextColorClass(category.utilization_percentage)" class="font-medium">
                   {{ getUtilizationStatus(category.utilization_percentage) }}
                 </span>
               </div>
@@ -175,10 +196,8 @@
         </div>
 
         <!-- Spending Trends Chart -->
-        <div 
-          v-if="spending_trends && spending_trends.length > 0"
-          class="bg-white rounded-2xl shadow-md border border-gray-100 p-6"
-        >
+        <div v-if="spending_trends && spending_trends.length > 0"
+          class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
           <h3 class="text-lg font-semibold text-gray-900 mb-6">Monthly Spending Trends</h3>
           <div class="h-64">
             <canvas ref="spendingChart"></canvas>
@@ -208,7 +227,9 @@
               <div class="flex-shrink-0">
                 <div class="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center">
                   <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd"
+                      d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                      clip-rule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -224,7 +245,9 @@
               <div class="flex-shrink-0">
                 <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
                   <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd"
+                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                      clip-rule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -242,7 +265,7 @@
 
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const props = defineProps({
@@ -253,6 +276,29 @@ const props = defineProps({
 })
 
 const spendingChart = ref(null)
+
+const searchQuery = ref("")
+const selectedLevel = ref("")
+
+const filteredCategories = computed(() => {
+  return props.category_utilization.filter(cat => {
+    const matchesSearch =
+      cat.category.toLowerCase().includes(searchQuery.value.toLowerCase())
+
+    let matchesLevel = true
+
+    const p = cat.utilization_percentage
+
+    if (selectedLevel.value === "low") matchesLevel = p <= 50
+    if (selectedLevel.value === "mid") matchesLevel = p > 50 && p <= 75
+    if (selectedLevel.value === "high") matchesLevel = p > 75 && p <= 90
+    if (selectedLevel.value === "full") matchesLevel = p > 90 && p <= 100
+    if (selectedLevel.value === "over") matchesLevel = p > 100
+
+    return matchesSearch && matchesLevel
+  })
+})
+
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-KE', {
@@ -333,7 +379,7 @@ const initializeSpendingChart = async () => {
           },
           tooltip: {
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 return 'KES ' + context.parsed.y.toLocaleString()
               }
             }
