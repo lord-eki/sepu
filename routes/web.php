@@ -525,7 +525,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::post('/member/profile/photo', [ProfileController::class, 'updatePhoto'])
     ->name('member.updatePhoto');
 
-Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+// Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+
+
+// Standard resource routes (index, create, store, show, edit, update, destroy)
+Route::resource('transactions', TransactionController::class);
+
+// Custom actions for transactions
+Route::post('/transactions/{id}/approve', [TransactionController::class, 'approve'])
+    ->name('transactions.approve');
+
+Route::post('/transactions/{id}/reject', [TransactionController::class, 'reject'])
+    ->name('transactions.reject');
+
+Route::post('/transactions/{id}/reverse', [TransactionController::class, 'reverse'])
+    ->name('transactions.reverse');
+
+// Member-specific transactions
+Route::get('/members/{id}/transactions', [TransactionController::class, 'memberTransactions'])
+    ->name('members.transactions');
+
+// Account-specific transactions
+Route::get('/accounts/{id}/transactions', [TransactionController::class, 'accountTransactions'])
+    ->name('accounts.transactions');
+
+// Transaction statistics
+Route::get('/stats/transactions', [TransactionController::class, 'statistics'])
+    ->name('stats.transactions');
+
+
 // Profile routes
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
