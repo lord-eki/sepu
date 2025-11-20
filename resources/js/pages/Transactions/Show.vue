@@ -112,8 +112,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
-import DetailRow from '@/Components/DetailRow.vue'; // small presentational component you might have; fallback below
+import AppLayout from '@/layouts/AppLayout.vue';
+// import DetailRow from '@/components/DetailRow.vue';
 import { useRoute } from 'vue-router';
 
 // fallback detail row if you don't have one

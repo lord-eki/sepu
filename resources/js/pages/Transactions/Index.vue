@@ -282,9 +282,9 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue';
-import { Head, router, Link } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
-import { usePage } from '@inertiajs/vue3';
+import { Head, router, Link, usePage } from '@inertiajs/vue3';
+import AppLayout from '@/layouts/AppLayout.vue';
+
 import axios from 'axios';
 
 // Props from Inertia
