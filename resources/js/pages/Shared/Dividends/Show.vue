@@ -1,56 +1,66 @@
 <template>
   <AppLayout :title="`Dividend ${dividend.dividend_year}`">
-    <template #header>
       <div class="flex justify-between items-center">
         <div>
           <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             Dividend {{ dividend.dividend_year }}
           </h2>
           <p class="mt-1 text-sm text-gray-600">
-            Status: <span :class="getStatusClass(dividend.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+            Status: <span :class="getStatusClass(dividend.status)"
+              class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
               {{ formatStatus(dividend.status) }}
             </span>
           </p>
         </div>
-        
+
         <div class="flex space-x-3">
-          <Link :href="route('dividends.index')" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"/>
-            </svg>
-            Back to Dividends
+          <Link :href="route('dividends.index')"
+            class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" />
+          </svg>
+          Back to Dividends
           </Link>
-          
-          <Link v-if="dividend.status === 'calculated'" :href="route('dividends.edit', dividend.id)" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-            </svg>
-            Edit
+
+          <Link v-if="dividend.status === 'calculated'" :href="route('dividends.edit', dividend.id)"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+          Edit
           </Link>
-          
-          <button v-if="canApprove" @click="showApproveModal = true" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
+
+          <button v-if="canApprove" @click="showApproveModal = true"
+            class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+              <path fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
             </svg>
             Approve
           </button>
-          
-          <button v-if="canDistribute" @click="showDistributeModal = true" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700">
+
+          <button v-if="canDistribute" @click="showDistributeModal = true"
+            class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700">
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 011-1h1a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h6a1 1 0 011 1v3a1 1 0 01-1 1H9a1 1 0 01-1-1V4z"/>
+              <path
+                d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 011-1h1a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h6a1 1 0 011 1v3a1 1 0 01-1 1H9a1 1 0 01-1-1V4z" />
             </svg>
             Distribute
           </button>
 
-          <button v-if="dividend.status === 'distributed'" @click="showReverseModal = true" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">
+          <button v-if="dividend.status === 'distributed'" @click="showReverseModal = true"
+            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+              <path fill-rule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
             </svg>
             Reverse Distribution
           </button>
         </div>
       </div>
-    </template>
+
 
     <div class="py-6">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -63,17 +73,17 @@
                 <div class="text-sm font-medium text-blue-800">Total Profit</div>
                 <div class="text-2xl font-bold text-blue-900">KSh {{ formatCurrency(dividend.total_profit) }}</div>
               </div>
-              
+
               <div class="bg-green-50 p-4 rounded-lg">
                 <div class="text-sm font-medium text-green-800">Dividend Rate</div>
                 <div class="text-2xl font-bold text-green-900">{{ dividend.dividend_rate }}%</div>
               </div>
-              
+
               <div class="bg-purple-50 p-4 rounded-lg">
                 <div class="text-sm font-medium text-purple-800">Total Dividends</div>
                 <div class="text-2xl font-bold text-purple-900">KSh {{ formatCurrency(dividend.total_dividends) }}</div>
               </div>
-              
+
               <div class="bg-yellow-50 p-4 rounded-lg">
                 <div class="text-sm font-medium text-yellow-800">Profit Utilization</div>
                 <div class="text-2xl font-bold text-yellow-900">{{ profitUtilization }}%</div>
@@ -130,10 +140,8 @@
                   </div>
                   <div class="mt-2">
                     <div class="bg-gray-200 rounded-full h-2">
-                      <div 
-                        class="bg-green-500 h-2 rounded-full transition-all duration-300"
-                        :style="{ width: distributionProgress + '%' }"
-                      ></div>
+                      <div class="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        :style="{ width: distributionProgress + '%' }"></div>
                     </div>
                   </div>
                 </div>
@@ -150,12 +158,15 @@
               <ul class="-mb-8">
                 <li>
                   <div class="relative pb-8">
-                    <div v-if="dividend.approval_date" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></div>
+                    <div v-if="dividend.approval_date" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200">
+                    </div>
                     <div class="relative flex space-x-3">
                       <div>
-                        <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                        <span
+                          class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
                           <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/>
+                            <path fill-rule="evenodd"
+                              d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" />
                           </svg>
                         </span>
                       </div>
@@ -175,12 +186,16 @@
 
                 <li v-if="dividend.approval_date">
                   <div class="relative pb-8">
-                    <div v-if="dividend.distribution_date" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></div>
+                    <div v-if="dividend.distribution_date"
+                      class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200">
+                    </div>
                     <div class="relative flex space-x-3">
                       <div>
-                        <span class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
+                        <span
+                          class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
                           <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                            <path fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
                           </svg>
                         </span>
                       </div>
@@ -203,12 +218,15 @@
 
                 <li v-if="dividend.distribution_date">
                   <div class="relative pb-8">
-                    <div v-if="dividend.reversed_at" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></div>
+                    <div v-if="dividend.reversed_at" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200">
+                    </div>
                     <div class="relative flex space-x-3">
                       <div>
-                        <span class="h-8 w-8 rounded-full bg-purple-500 flex items-center justify-center ring-8 ring-white">
+                        <span
+                          class="h-8 w-8 rounded-full bg-purple-500 flex items-center justify-center ring-8 ring-white">
                           <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 011-1h1a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"/>
+                            <path
+                              d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 011-1h1a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" />
                           </svg>
                         </span>
                       </div>
@@ -227,9 +245,11 @@
                   <div class="relative">
                     <div class="relative flex space-x-3">
                       <div>
-                        <span class="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center ring-8 ring-white">
+                        <span
+                          class="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center ring-8 ring-white">
                           <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                            <path fill-rule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
                           </svg>
                         </span>
                       </div>
@@ -265,12 +285,14 @@
             <div class="flex justify-between items-center">
               <h3 class="text-lg font-medium text-gray-900">Member Dividends</h3>
               <div class="flex space-x-2">
-                <Link :href="route('dividends.members', dividend.id)" class="text-sm text-indigo-600 hover:text-indigo-900">
-                  View All Members
+                <Link :href="route('dividends.members', dividend.id)"
+                  class="text-sm text-indigo-600 hover:text-indigo-900">
+                View All Members
                 </Link>
                 <span class="text-gray-300">|</span>
-                <Link :href="route('dividends.report', dividend.id)" class="text-sm text-indigo-600 hover:text-indigo-900">
-                  Generate Report
+                <Link :href="route('dividends.report', dividend.id)"
+                  class="text-sm text-indigo-600 hover:text-indigo-900">
+                Generate Report
                 </Link>
               </div>
             </div>
@@ -281,11 +303,18 @@
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shares Balance</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dividend Amount</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shares
+                    Balance
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dividend
+                    Amount
+                  </th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Date</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment
+                    Date
+                  </th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
+                  </th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
@@ -300,36 +329,35 @@
                       </div>
                     </div>
                   </td>
-                  
+
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     KSh {{ formatCurrency(memberDividend.shares_balance) }}
                   </td>
-                  
+
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     KSh {{ formatCurrency(memberDividend.dividend_amount) }}
                   </td>
-                  
+
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span :class="getPaymentStatusClass(memberDividend.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                    <span :class="getPaymentStatusClass(memberDividend.status)"
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
                       {{ formatStatus(memberDividend.status) }}
                     </span>
                   </td>
-                  
+
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {{ memberDividend.payment_date ? formatDate(memberDividend.payment_date) : 'Not paid' }}
                   </td>
-                  
+
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div class="flex justify-end space-x-2">
-                      <Link :href="route('dividends.member-details', [dividend.id, memberDividend.member.id])" class="text-indigo-600 hover:text-indigo-900">
-                        View
+                      <Link :href="route('dividends.member-details', [dividend.id, memberDividend.member.id])"
+                        class="text-indigo-600 hover:text-indigo-900">
+                      View
                       </Link>
-                      
-                      <button 
-                        v-if="memberDividend.status === 'pending' && dividend.status === 'approved'" 
-                        @click="payMember(memberDividend)"
-                        class="text-green-600 hover:text-green-900"
-                      >
+
+                      <button v-if="memberDividend.status === 'pending' && dividend.status === 'approved'"
+                        @click="payMember(memberDividend)" class="text-green-600 hover:text-green-900">
                         Pay
                       </button>
                     </div>
@@ -341,7 +369,8 @@
 
           <!-- Pagination -->
           <div v-if="memberDividends.links" class="px-6 py-3 border-t border-gray-200">
-            <Pagination :links="memberDividends.links" />
+            <Pagination :data="memberDividends" />
+
           </div>
         </div>
       </div>
@@ -356,18 +385,14 @@
         </div>
         <div class="mb-4">
           <InputLabel for="approval_notes" value="Approval Notes (Optional)" />
-          <TextArea
-            id="approval_notes"
-            v-model="approvalForm.approval_notes"
-            class="mt-1 block w-full"
-            rows="3"
-            placeholder="Enter any approval notes..."
-          />
+          <TextArea id="approval_notes" v-model="approvalForm.approval_notes" class="mt-1 block w-full" rows="3"
+            placeholder="Enter any approval notes..." />
         </div>
       </template>
       <template #footer>
         <SecondaryButton @click="showApproveModal = false">Cancel</SecondaryButton>
-        <PrimaryButton class="ml-3" @click="submitApproval" :class="{ 'opacity-25': processing }" :disabled="processing">
+        <PrimaryButton class="ml-3" @click="submitApproval" :class="{ 'opacity-25': processing }"
+          :disabled="processing">
           Approve
         </PrimaryButton>
       </template>
@@ -384,12 +409,14 @@
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+                <path fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" />
               </svg>
             </div>
             <div class="ml-3">
               <p class="text-sm text-yellow-700">
-                This will transfer KSh {{ formatCurrency(dividend.total_dividends) }} to {{ stats.total_members }} member accounts. This action cannot be easily undone.
+                This will transfer KSh {{ formatCurrency(dividend.total_dividends) }} to {{ stats.total_members }}
+                member accounts. This action cannot be easily undone.
               </p>
             </div>
           </div>
@@ -397,7 +424,8 @@
       </template>
       <template #footer>
         <SecondaryButton @click="showDistributeModal = false">Cancel</SecondaryButton>
-        <PrimaryButton class="ml-3" @click="submitDistribution" :class="{ 'opacity-25': processing }" :disabled="processing">
+        <PrimaryButton class="ml-3" @click="submitDistribution" :class="{ 'opacity-25': processing }"
+          :disabled="processing">
           Distribute Dividends
         </PrimaryButton>
       </template>
@@ -412,26 +440,22 @@
         </div>
         <div class="mb-4">
           <InputLabel for="reversal_reason" value="Reason for Reversal" class="required" />
-          <TextArea
-            id="reversal_reason"
-            v-model="reversalForm.reason"
-            class="mt-1 block w-full"
-            rows="3"
-            placeholder="Please provide a reason for reversing the distribution..."
-            required
-          />
+          <TextArea id="reversal_reason" v-model="reversalForm.reason" class="mt-1 block w-full" rows="3"
+            placeholder="Please provide a reason for reversing the distribution..." required />
           <InputError :message="reversalForm.errors.reason" class="mt-2" />
         </div>
         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+                <path fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" />
               </svg>
             </div>
             <div class="ml-3">
               <p class="text-sm text-red-700">
-                This will reverse all dividend payments and return funds to the system. This action should only be performed in exceptional circumstances.
+                This will reverse all dividend payments and return funds to the system. This action should only be
+                performed in exceptional circumstances.
               </p>
             </div>
           </div>

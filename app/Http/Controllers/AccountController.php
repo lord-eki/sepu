@@ -279,51 +279,41 @@ class AccountController extends Controller
     public function deposit(DepositRequest $request, Account $account): RedirectResponse
     {
         try {
-            // Only allow deposits to share_deposits account
             if ($account->account_type !== 'share_deposits') {
                 return back()->withErrors(['error' => 'Deposits can only be made to Share Deposits account']);
             }
 
             DB::beginTransaction();
 
-            $amount = $request->amount;
-            $balanceBefore = $account->balance;
-            $balanceAfter = $balanceBefore + $amount;
-
-            // Create transaction
+            // Create a pending transaction
             $transaction = Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $account->id,
                 'member_id' => $account->member_id,
                 'transaction_type' => 'deposit',
-                'amount' => $amount,
-                'balance_before' => $balanceBefore,
-                'balance_after' => $balanceAfter,
+                'amount' => $request->amount,
+                'balance_before' => $account->balance,
+                'balance_after' => $account->balance, // will update after approval
                 'description' => $request->description ?? "Monthly share deposit",
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference,
-                'status' => 'completed',
-                'processed_by' => Auth::id(),
-                'processed_at' => now(),
-            ]);
-
-            // Update account balance
-            $account->update([
-                'balance' => $balanceAfter,
-                'available_balance' => $balanceAfter,
-                'last_transaction_at' => now(),
+                'status' => 'pending', // <--- IMPORTANT
+                'processed_by' => null,
+                'processed_at' => null,
             ]);
 
             DB::commit();
 
             return redirect()->route('accounts.show', $account)
-                ->with('success', 'Deposit processed successfully');
+                ->with('success', 'Deposit submitted and is awaiting verification');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to process deposit: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to submit deposit: ' . $e->getMessage()]);
         }
     }
+
+
 
     /**
      * Show withdrawal form
@@ -340,6 +330,7 @@ class AccountController extends Controller
             ]
         ]);
     }
+
 
     /**
      * Process withdrawal

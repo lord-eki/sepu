@@ -1,36 +1,22 @@
 <template>
-<AppLayout 
-    :breadcrumbs="[
-      { title: 'Accounts', href: route('accounts.index') },
-      { title: `${account.account_number}` }
-    ]"
-  >
+  <AppLayout :breadcrumbs="[
+    { title: 'Accounts', href: route('accounts.index') },
+    { title: `${account.account_number}` }
+  ]">
 
     <!-- Flash messages -->
     <div class="max-w-2xl mx-auto mt-4 sm:mt-6 px-4">
-      <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-2"
-      >
-        <div
-          v-if="flashMessage"
-          :class="[
-            flashType === 'success'
-              ? 'bg-blue-50 text-blue-900 border border-blue-300'
-              : 'bg-orange-50 text-orange-900 border border-orange-300',
-            'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-lg'
-          ]"
-        >
+      <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+        <div v-if="flashMessage" :class="[
+    flashType === 'success'
+      ? 'bg-green-50 text-green-800 border border-green-300'
+      : 'bg-red-50 text-red-800 border border-red-300',
+    'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-lg'
+  ]">
           <span class="flex-1 font-medium">{{ flashMessage }}</span>
-          <button
-            type="button"
-            class="ml-3 text-gray-500 hover:text-gray-800"
-            @click="flashMessage = null"
-          >
+          <button type="button" class="ml-3 text-gray-500 hover:text-gray-800" @click="flashMessage = null">
             ✕
           </button>
         </div>
@@ -43,34 +29,26 @@
         <!-- Header -->
         <div class="flex flex-col sm:flex-row max-sm:gap-3 justify-between max-sm:pl-5 sm:items-center">
           <div>
-          <div class="flex sm:flex-col max-sm:gap-4">
-          <Link 
-              :href="route('accounts.index')" 
-              class="inline-flex items-center text-blue-800 hover:text-blue-800"
-            >
+            <div class="flex sm:flex-col max-sm:gap-4">
+              <Link :href="route('accounts.index')" class="inline-flex items-center text-blue-800 hover:text-blue-800">
               <ArrowLeft class="w-5 h-5 mr-1" />
               Back
-            </Link>
-            <h2 class="font-bold text-lg sm:text-xl text-blue-900">Account Details</h2>
-          </div>
+              </Link>
+              <h2 class="font-bold text-lg sm:text-xl text-blue-900">Account Details</h2>
+            </div>
             <p class="self-center text-sm text-gray-600 mt-1">
               {{ account.account_number }} - {{ account.member.first_name }} {{ account.member.last_name }}
             </p>
           </div>
           <div class="flex space-x-3">
             <!-- Only show Deposit button for Share Deposits account -->
-            <Link
-              v-if="account.account_type === 'share_deposits'"
-              :href="route('accounts.deposit.show', account.id)"
-              class="inline-flex items-center px-4 py-2 bg-blue-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-blue-900 transition"
-            >
-              Deposit
+            <Link v-if="account.account_type === 'share_deposits'" :href="route('accounts.deposit.show', account.id)"
+              class="inline-flex items-center px-4 py-2 bg-blue-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-blue-900 transition">
+            Deposit
             </Link>
-            <Link
-              :href="route('accounts.edit', account.id)"
-              class="inline-flex items-center px-4 py-2 bg-gray-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-gray-900 transition"
-            >
-              Edit
+            <Link :href="route('accounts.edit', account.id)"
+              class="inline-flex items-center px-4 py-2 bg-gray-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-gray-900 transition">
+            Edit
             </Link>
           </div>
         </div>
@@ -144,10 +122,8 @@
               <div class="py-3 grid grid-cols-3 gap-4">
                 <dt class="text-sm font-medium text-gray-500">Account Type</dt>
                 <dd class="col-span-2">
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    :class="getAccountTypeBadgeClass(account.account_type)"
-                  >
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    :class="getAccountTypeBadgeClass(account.account_type)">
                     {{ getAccountTypeLabel(account.account_type) }}
                   </span>
                   <p class="text-xs text-gray-500 mt-1">
@@ -158,21 +134,16 @@
               <div class="py-3 grid grid-cols-3 gap-4">
                 <dt class="text-sm font-medium text-gray-500">Member</dt>
                 <dd class="col-span-2">
-                  <Link
-                    :href="route('members.show', account.member.id)"
-                    class="text-blue-700 hover:underline"
-                  >
-                    {{ account.member.first_name }} {{ account.member.last_name }}
+                  <Link :href="route('members.show', account.member.id)" class="text-blue-700 hover:underline">
+                  {{ account.member.first_name }} {{ account.member.last_name }}
                   </Link>
                 </dd>
               </div>
               <div class="py-3 grid grid-cols-3 gap-4">
                 <dt class="text-sm font-medium text-gray-500">Status</dt>
                 <dd class="col-span-2">
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    :class="account.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                  >
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    :class="account.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                     {{ account.is_active ? 'Active' : 'Inactive' }}
                   </span>
                 </dd>
@@ -199,11 +170,9 @@
         <div class="bg-white shadow-lg rounded-xl overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h3 class="text-lg font-semibold text-blue-900">Recent Transactions</h3>
-            <Link
-              :href="route('accounts.transactions', account.id)"
-              class="text-sm font-medium text-blue-700 hover:underline"
-            >
-              View All
+            <Link :href="route('accounts.transactions', account.id)"
+              class="text-sm font-medium text-blue-700 hover:underline">
+            View All
             </Link>
           </div>
           <div class="divide-y divide-gray-200">
@@ -211,21 +180,16 @@
               No transactions found.
             </div>
             <div v-else>
-              <div
-                v-for="transaction in recentTransactions"
-                :key="transaction.id"
-                class="px-6 py-4 hover:bg-gray-50 transition"
-              >
+              <div v-for="transaction in recentTransactions" :key="transaction.id"
+                class="px-6 py-4 hover:bg-gray-50 transition">
                 <div class="flex justify-between items-center">
                   <div class="flex items-center">
                     <div class="h-8 w-8 rounded-full flex items-center justify-center"
                       :class="getTransactionIconClass(transaction.transaction_type)">
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path v-if="isDebitTransaction(transaction.transaction_type)"
-                          stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        <path v-else
-                          stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        <path v-if="isDebitTransaction(transaction.transaction_type)" stroke-linecap="round"
+                          stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                       </svg>
                     </div>
@@ -242,11 +206,10 @@
                     </div>
                   </div>
                   <div class="text-right">
-                    <div
-                      class="text-sm font-semibold"
-                      :class="isDebitTransaction(transaction.transaction_type) ? 'text-orange-600' : 'text-green-600'"
-                    >
-                      {{ isDebitTransaction(transaction.transaction_type) ? '-' : '+' }}{{ formatCurrency(transaction.amount) }}
+                    <div class="text-sm font-semibold"
+                      :class="isDebitTransaction(transaction.transaction_type) ? 'text-orange-600' : 'text-green-600'">
+                      {{ isDebitTransaction(transaction.transaction_type) ? '-' : '+' }}{{
+    formatCurrency(transaction.amount) }}
                     </div>
                     <div class="text-xs text-gray-500">
                       Balance: {{ formatCurrency(transaction.balance_after) }}
@@ -254,10 +217,8 @@
                   </div>
                 </div>
                 <div class="mt-2 flex justify-between items-center">
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    :class="getTransactionStatusClass(transaction.status)"
-                  >
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    :class="getTransactionStatusClass(transaction.status)">
                     {{ transaction.status }}
                   </span>
                   <span class="text-xs text-gray-500">ID: {{ transaction.transaction_id }}</span>
@@ -275,11 +236,9 @@
               Share capital can be transferred to other members when exiting the SACCO.
             </p>
             <div class="flex space-x-4">
-              <Link
-                :href="route('accounts.share-transfer.show', account.id)"
-                class="inline-flex items-center px-4 py-2 bg-blue-700 rounded-lg font-semibold text-xs text-white uppercase tracking-wider hover:bg-blue-800 transition"
-              >
-                Transfer Shares
+              <Link :href="route('accounts.share-transfer.show', account.id)"
+                class="inline-flex items-center px-4 py-2 bg-blue-700 rounded-lg font-semibold text-xs text-white uppercase tracking-wider hover:bg-blue-800 transition">
+              Transfer Shares
               </Link>
             </div>
           </div>

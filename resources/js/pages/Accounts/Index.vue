@@ -1,4 +1,5 @@
 <template>
+
   <Head title="Accounts" />
   <AppLayout :breadcrumbs="[{ title: 'Accounts', href: '/accounts' }]">
     <div class="accounts-page min-h-screen pb-10">
@@ -8,28 +9,37 @@
 
         <!-- Header: gradient banner -->
         <header class="rounded-2xl overflow-hidden shadow-md border border-transparent">
-          <div class="bg-gradient-to-r from-[#06203a] to-[#0a2342] p-6 sm:p-8 rounded-2xl text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div
+            class="bg-gradient-to-r from-[#06203a] to-[#0a2342] p-6 sm:p-8 rounded-2xl text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m4 4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M13 16h-1v-4h-1m4 4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
                 </svg>
               </div>
               <div>
                 <h1 class="text-xl sm:text-2xl font-semibold leading-tight">Accounts Management</h1>
-                <p class="text-orange-200 text-xs sm:text-sm mt-0.5">View and manage member accounts, balances and transactions</p>
+                <p class="text-orange-200 text-xs sm:text-sm mt-0.5">View and manage member accounts, balances and
+                  transactions</p>
               </div>
             </div>
 
             <div class="flex gap-2 items-center text-sm sm:text-base">
-              <button @click="openQuickExport" class="inline-flex items-center gap-2 bg-orange-100 text-[#0a2342] px-4 py-2 rounded-lg hover:bg-orange-200 transition shadow-sm">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" /></svg>
+              <button @click="openQuickExport"
+                class="inline-flex items-center gap-2 bg-orange-100 text-[#0a2342] px-4 py-2 rounded-lg hover:bg-orange-200 transition shadow-sm">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                </svg>
                 Export
               </button>
 
-              <Link :href="route('accounts.create')" class="inline-flex items-center gap-2 bg-white text-[#0a2342] px-4 py-2 rounded-lg hover:scale-[1.02] transition shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                New Account
+              <Link :href="route('accounts.create')"
+                class="inline-flex items-center gap-2 bg-white text-[#0a2342] px-4 py-2 rounded-lg hover:scale-[1.02] transition shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              New Account
               </Link>
             </div>
           </div>
@@ -40,7 +50,7 @@
           <transition-group name="stat-fade" tag="div" class="contents">
             <div v-for="card in cards" :key="card.label" class="stat-card rounded-2xl p-4 shadow-lg border">
               <div class="flex items-center gap-4">
-                <div :class="['w-10 h-10 rounded-lg flex items-center justify-center', card.gradient]" >
+                <div :class="['w-10 h-10 rounded-lg flex items-center justify-center', card.gradient]">
                   <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path :d="card.icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"></path>
                   </svg>
@@ -68,8 +78,10 @@
               <div class="relative">
                 <input v-model="filters.search" @input="debouncedSearch" type="text" placeholder="Search accounts..."
                   class="w-full rounded-lg border border-gray-200 p-2 pl-10 focus:outline-none focus:ring-2 focus:ring-orange-50" />
-                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"></path>
+                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"></path>
                 </svg>
               </div>
             </div>
@@ -97,15 +109,18 @@
 
             <!-- Actions -->
             <div class="flex items-end gap-3">
-              <button type="button" @click="clearFilters" class="bg-gray-100 text-[#0a2342] px-4 py-2 rounded-lg hover:bg-gray-200 transition">Clear</button>
-              <button type="submit" class="ml-auto bg-[#0a2342] text-white px-4 py-2 rounded-lg hover:shadow-[0_6px_20px_rgba(249,115,22,0.12)] transition">Apply</button>
+              <button type="button" @click="clearFilters"
+                class="bg-gray-100 text-[#0a2342] px-4 py-2 rounded-lg hover:bg-gray-200 transition">Clear</button>
+              <button type="submit"
+                class="ml-auto bg-[#0a2342] text-white px-4 py-2 rounded-lg hover:shadow-[0_6px_20px_rgba(249,115,22,0.12)] transition">Apply</button>
             </div>
           </form>
         </section>
 
         <!-- Mobile List (visible on small screens) -->
         <section class="sm:hidden space-y-4">
-          <div v-for="account in accounts.data" :key="account.id" class="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+          <div v-for="account in accounts.data" :key="account.id"
+            class="bg-white p-4 rounded-xl shadow-md border border-gray-100">
             <div class="flex justify-between items-start gap-3">
               <div>
                 <p class="font-semibold text-[#0a2342]">{{ account.account_number }} • {{ account.account_type }}</p>
@@ -114,7 +129,8 @@
                 <p class="text-xs text-gray-400">{{ account.member.membership_id }}</p>
               </div>
               <div class="text-right">
-                <div :class="account.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold">
+                <div :class="account.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold">
                   {{ account.is_active ? 'Active' : 'Inactive' }}
                 </div>
                 <div class="text-lg font-semibold text-[#0a2342] mt-4">KES {{ formatCurrency(account.balance) }}</div>
@@ -123,8 +139,10 @@
 
             <div class="mt-3 flex flex-wrap gap-3">
               <Link :href="route('accounts.show', account.id)" class="text-[#0a2342] hover:underline">View</Link>
-              <Link :href="route('accounts.deposit.show', account.id)" class="text-green-600 hover:underline">Deposit</Link>
-              <Link :href="route('accounts.withdrawal.show', account.id)" class="text-orange-600 hover:underline">Withdraw</Link>
+              <Link :href="route('accounts.deposit.show', account.id)" class="text-green-600 hover:underline">Deposit
+              </Link>
+              <Link :href="route('accounts.withdrawal.show', account.id)" class="text-orange-600 hover:underline">
+              Withdraw</Link>
               <Link :href="route('accounts.edit', account.id)" class="text-gray-600 hover:underline">Edit</Link>
             </div>
           </div>
@@ -156,43 +174,53 @@
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                       <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-                        <span class="text-sm font-medium text-orange-600">{{ getInitials(account.member.first_name + ' ' + account.member.last_name) }}</span>
+                        <span class="text-sm font-medium text-orange-600">{{ getInitials(account.member.first_name + ' '
+    + account.member.last_name) }}</span>
                       </div>
                       <div>
-                        <div class="text-sm font-semibold text-[#0a2342]">{{ account.member.first_name }} {{ account.member.last_name }}</div>
+                        <div class="text-sm font-semibold text-[#0a2342]">{{ account.member.first_name }} {{
+    account.member.last_name }}</div>
                         <div class="text-xs text-gray-500">{{ account.member.membership_id }}</div>
                       </div>
                     </div>
                   </td>
 
                   <td class="px-6 py-4">
-                    <span :class="getAccountTypeClass(account.account_type) + ' inline-flex px-2 py-1 text-xs font-semibold rounded-full'">
+                    <span
+                      :class="getAccountTypeClass(account.account_type) + ' inline-flex px-2 py-1 text-xs font-semibold rounded-full'">
                       {{ accountTypes[account.account_type] || account.account_type }}
                     </span>
                   </td>
 
-                  <td class="px-6 py-4 text-sm font-semibold text-[#0a2342]">KES {{ formatCurrency(account.balance) }}</td>
+                  <td class="px-6 py-4 text-sm font-semibold text-[#0a2342]">KES {{ formatCurrency(account.balance) }}
+                  </td>
 
                   <td class="px-6 py-4">
-                    <span :class="account.is_active ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                    <span
+                      :class="account.is_active ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'"
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
                       {{ account.is_active ? 'Active' : 'Inactive' }}
                     </span>
                   </td>
 
                   <td class="px-6 py-4 text-sm text-gray-600">
                     <div v-if="account.transactions?.length">
-                      <div v-for="t in account.transactions.slice(0,2)" :key="t.id" class="text-xs">
-                        <span class="font-medium text-[#0a2342]">{{ t.transaction_type.replace('_',' ') }}</span> - KES {{ formatCurrency(t.amount) }}
+                      <div v-for="t in account.transactions.slice(0, 2)" :key="t.id" class="text-xs">
+                        <span class="font-medium text-[#0a2342]">{{ t.transaction_type.replace('_', ' ') }}</span> - KES
+                        {{ formatCurrency(t.amount) }}
                       </div>
-                      <div v-if="account.transactions.length > 2" class="text-xs text-gray-400">+{{ account.transactions.length - 2 }} more</div>
+                      <div v-if="account.transactions.length > 2" class="text-xs text-gray-400">+{{
+    account.transactions.length - 2 }} more</div>
                     </div>
                     <div v-else class="text-xs text-gray-400">No transactions</div>
                   </td>
 
                   <td class="px-6 py-4 text-sm">
                     <div class="flex gap-3">
-                      <Link :href="route('accounts.show', account.id)" class="text-[#0a2342] hover:underline">View</Link>
-                      <Link :href="route('accounts.deposit.show', account.id)" class="text-green-600 hover:underline">Deposit</Link>
+                      <Link :href="route('accounts.show', account.id)" class="text-[#0a2342] hover:underline">View
+                      </Link>
+                      <Link :href="route('accounts.deposit.show', account.id)" class="text-green-600 hover:underline">
+                      Deposit</Link>
                       <Link :href="route('accounts.edit', account.id)" class="text-gray-600 hover:underline">Edit</Link>
                     </div>
                   </td>
@@ -269,7 +297,7 @@ const formatDate = (date) => {
 
 const getInitials = (name) => {
   if (!name) return ''
-  return name.split(' ').map(n => n[0] || '').join('').slice(0,2).toUpperCase()
+  return name.split(' ').map(n => n[0] || '').join('').slice(0, 2).toUpperCase()
 }
 
 const getAccountTypeClass = (type) => {
@@ -283,8 +311,8 @@ const getAccountTypeClass = (type) => {
 
 // Placeholder export action
 const openQuickExport = () => {
-  // Hook this to your server export endpoint, or implement client CSV generation
-  alert('Export: implement export endpoint or client CSV here.')
+  // waiting endpoint linking
+  alert('Export: failed to export!')
 }
 
 // Cards derived from stats prop
@@ -305,21 +333,40 @@ const cards = [
 
 /* stat card glass effect */
 .stat-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.92));
-  border: 1px solid rgba(10,35,66,0.06);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.92));
+  border: 1px solid rgba(10, 35, 66, 0.06);
   transition: transform .18s ease, box-shadow .18s ease;
 }
+
 .stat-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 12px 30px rgba(10, 35, 66, 0.08);
 }
 
 /* small animations */
-.stat-fade-enter-active, .stat-fade-leave-active { transition: all .25s ease; }
-.stat-fade-enter-from, .stat-fade-leave-to { opacity: 0; transform: translateY(6px); }
-.stat-fade-enter-to, .stat-fade-leave-from { opacity: 1; transform: translateY(0); }
+.stat-fade-enter-active,
+.stat-fade-leave-active {
+  transition: all .25s ease;
+}
+
+.stat-fade-enter-from,
+.stat-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.stat-fade-enter-to,
+.stat-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 /* table rounding fix */
-table thead tr th:first-child { border-top-left-radius: 0.5rem; }
-table thead tr th:last-child { border-top-right-radius: 0.5rem; }
+table thead tr th:first-child {
+  border-top-left-radius: 0.5rem;
+}
+
+table thead tr th:last-child {
+  border-top-right-radius: 0.5rem;
+}
 </style>

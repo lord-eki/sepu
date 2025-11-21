@@ -4,19 +4,12 @@
     { title: 'Deposit' }
   ]">
     <!-- Flash Messages -->
-    <transition
-      enter-active-class="transition ease-out duration-300"
-      enter-from-class="opacity-0 -translate-y-2"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition ease-in duration-200"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-2"
-    >
-      <div
-        v-if="successMessage || errorMessages"
+    <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+      <div v-if="successMessage || errorMessages"
         class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md shadow-lg rounded-xl overflow-hidden"
-        :class="successMessage ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'"
-      >
+        :class="successMessage ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'">
         <div class="flex items-center justify-between px-4 py-3">
           <div>
             <p v-if="successMessage" class="font-semibold">{{ successMessage }}</p>
@@ -27,7 +20,8 @@
               </li>
             </ul>
           </div>
-          <button @click="() => { successMessage = null; errorMessages = null }" class="ml-3 text-gray-400 hover:text-gray-300">
+          <button @click="() => { successMessage = null; errorMessages = null }"
+            class="ml-3 text-gray-400 hover:text-gray-300">
             ✕
           </button>
         </div>
@@ -42,11 +36,9 @@
           {{ account.account_number }} - {{ account.member.first_name }} {{ account.member.last_name }}
         </p>
       </div>
-      <Link
-        :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
-        class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
-      >
-        Back to Account
+      <Link :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
+        class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold shadow transition">
+      Back to Account
       </Link>
     </div>
 
@@ -79,13 +71,11 @@
             </div>
           </div>
         </div>
-        
+
         <div class="mt-6 flex justify-center">
-          <Link
-            :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
-            class="bg-[#0B2B40] hover:bg-[#0a2436] text-white font-semibold px-6 py-2 rounded-lg shadow"
-          >
-            Back to Accounts
+          <Link :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
+            class="bg-[#0B2B40] hover:bg-[#0a2436] text-white font-semibold px-6 py-2 rounded-lg shadow">
+          Back to Accounts
           </Link>
         </div>
       </div>
@@ -116,10 +106,8 @@
             </div>
             <div>
               <span class="font-medium text-gray-700">Status:</span>
-              <span
-                class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold"
-                :class="account.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-              >
+              <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold"
+                :class="account.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
                 {{ account.is_active ? 'Active' : 'Inactive' }}
               </span>
             </div>
@@ -154,46 +142,37 @@
           <!-- Amount -->
           <div>
             <label class="block text-sm font-medium text-gray-700">Deposit Amount (KES) *</label>
-            <input
-              v-model.number="form.amount"
-              type="number"
-              min="100"
-              placeholder="Enter amount (min 100)"
+            <input v-model.number="form.amount" type="number" min="100" placeholder="Enter amount (min 100)"
               class="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"
-              required
-            />
+              required />
             <p class="mt-1 text-xs text-gray-500">Minimum deposit: KES 100</p>
           </div>
 
           <!-- Payment Method -->
           <div>
             <label class="block text-sm font-medium text-gray-700">Payment Method *</label>
-            <select
-              v-model="form.payment_method"
+            <select v-model="form.payment_method"
               class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"
-              required
-            >
+              required>
               <option value="">Select payment method</option>
-              <option v-for="(label, value) in paymentMethods" :key="value" :value="value">
+              <option v-for="(label, value) in props.paymentMethods" :key="value" :value="value">
                 {{ label }}
               </option>
             </select>
           </div>
 
           <!-- Conditional Payment Instructions -->
-          <div
-            v-if="['mobile_money', 'bank_transfer', 'cheque'].includes(form.payment_method)"
-            class="bg-blue-50 border border-blue-200 rounded-lg p-5 space-y-4 mt-4"
-          >
+          <div v-if="['mobile_money', 'bank_transfer', 'cheque'].includes(form.payment_method)"
+            class="bg-blue-50 border border-blue-200 rounded-lg p-5 space-y-4 mt-4">
             <!-- Header Title -->
             <h3 class="text-lg font-semibold text-[#0B2B40]">
               {{
-                form.payment_method === 'mobile_money'
-                  ? 'Deposit via Paybill'
-                  : form.payment_method === 'bank_transfer'
-                  ? 'Deposit via Bank Transfer'
-                  : 'Deposit via Cheque'
-              }}
+    form.payment_method === 'mobile_money'
+      ? 'Deposit via Paybill'
+      : form.payment_method === 'bank_transfer'
+        ? 'Deposit via Bank Transfer'
+        : 'Deposit via Cheque'
+  }}
             </h3>
 
             <!-- M-Pesa Instructions -->
@@ -239,65 +218,51 @@
 
             <!-- Payment Reference Input -->
             <div>
-              <label for="payment_reference" class="block                                                                              text-sm font-medium text-[#0B2B40]">
+              <label for="payment_reference"
+                class="block                                                                              text-sm font-medium text-[#0B2B40]">
                 Enter {{
-                  form.payment_method === 'mobile_money'
-                    ? 'M-Pesa Transaction ID'
-                    : form.payment_method === 'cheque'
-                    ? 'Cheque Number'
-                    : 'Bank Transaction Reference Number'
-                }}
+    form.payment_method === 'mobile_money'
+      ? 'M-Pesa Transaction ID'
+      : form.payment_method === 'cheque'
+        ? 'Cheque Number'
+        : 'Bank Transaction Reference Number'
+  }}
                 *
               </label>
-              <input
-                id="payment_reference"
-                v-model="form.payment_reference"
-                type="text"
-                :placeholder="
-                  form.payment_method === 'mobile_money'
-                    ? 'e.g., MP240315ABC123'
-                    : form.payment_method === 'cheque'
-                    ? 'e.g., CHQ-784562'
-                    : 'e.g., BNK-202410-98765'
-                "
+              <input id="payment_reference" v-model="form.payment_reference" type="text" :placeholder="form.payment_method === 'mobile_money'
+      ? 'e.g., MP240315ABC123'
+      : form.payment_method === 'cheque'
+        ? 'e.g., CHQ-784562'
+        : 'e.g., BNK-202410-98765'
+    "
                 class="mt-1 w-full bg-white border border-gray-300 rounded-md p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"
-                required
-              />
+                required />
             </div>
           </div>
 
           <!-- Description -->
           <div>
             <label class="block text-sm font-medium text-gray-700">Description</label>
-            <textarea
-              v-model="form.description"
-              rows="3"
+            <textarea v-model="form.description" rows="3"
               placeholder="Optional note for this deposit (e.g., Monthly share deposit for January 2025)"
-              class="mt-1 w-full border border-gray-300 rounded-md p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"
-            ></textarea>
+              class="mt-1 w-full border border-gray-300 rounded-md p-2 focus:border-[#0B2B40] focus:ring-[#0B2B40]"></textarea>
           </div>
 
           <!-- Submit -->
           <div class="pt-6 flex justify-between border-t border-gray-200">
-            <Link
-              :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
-              class="text-gray-600 hover:text-gray-800"
-            >
-              Cancel
+            <Link :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
+              class="text-gray-600 hover:text-gray-800">
+            Cancel
             </Link>
-            <button
-              type="submit"
-              :disabled="
-                form.processing ||
-                !form.amount ||
-                form.amount < 100 ||
-                (
-                  ['mobile_money', 'bank_transfer', 'cheque'].includes(form.payment_method) &&
-                  !form.payment_reference
-                )
-              "
-              class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg shadow disabled:opacity-50"
-            >
+            <button type="submit" :disabled="form.processing ||
+    !form.amount ||
+    form.amount < 100 ||
+    (
+      ['mobile_money', 'bank_transfer', 'cheque'].includes(form.payment_method) &&
+      !form.payment_reference
+    )
+    "
+              class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg shadow disabled:opacity-50">
               {{ form.processing ? 'Processing...' : 'Process Deposit' }}
             </button>
           </div>
@@ -347,12 +312,6 @@ const form = useForm({
   description: '',
 })
 
-const paymentMethods = {
-  mobile_money: 'M-Pesa (Paybill)',
-  bank_transfer: 'Bank Transfer',
-  cheque: 'Cheque',
-  cash: 'Cash Deposit'
-}
 
 const formatCurrency = (amount) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount || 0)
@@ -366,15 +325,15 @@ const submit = () => {
   form.post(
     props.authUser?.role?.includes('member')
       ? route('members.accounts.deposit', {
-          member: props.account.member.id,
-          account: props.account.id,
-        })
+        member: props.account.member.id,
+        account: props.account.id,
+      })
       : route('accounts.deposit', props.account.id),
     {
       onSuccess: () => {
-          const flash = page.props.flash
-          if (flash?.success) showMessage('success', flash.success)
-        },
+        const flash = page.props.flash
+        if (flash?.success) showMessage('success', flash.success)
+      },
 
       onError: (errors) => showMessage('error', 'Deposit failed', errors),
     }

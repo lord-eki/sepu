@@ -386,7 +386,8 @@ const isAdmin = computed(() => {
 })
 console.log("role", page.props.auth.user)
 // tabs
-const activeTab = ref(isAdmin.value ? 'setup' : 'calculator')
+const activeTab = ref(isAdmin.value ? 'calculator' : 'calculator')
+
 
 // original reactive state (kept intact)
 const form = ref({
