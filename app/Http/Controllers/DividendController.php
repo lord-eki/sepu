@@ -374,7 +374,7 @@ class DividendController extends Controller
                 try {
                     // Find member's shares account
                     $sharesAccount = Account::where('member_id', $memberDividend->member_id)
-                        ->where('account_type', 'shares')
+                        ->where('account_type', 'share_deposits')
                         ->where('is_active', true)
                         ->first();
 
@@ -576,7 +576,7 @@ class DividendController extends Controller
         $shareTransactions = Transaction::with('account')
             ->where('member_id', $member->id)
             ->whereHas('account', function ($query) {
-                $query->where('account_type', 'shares');
+                $query->where('account_type', 'share_deposits');
             })
             ->whereYear('created_at', $dividend->dividend_year)
             ->orderBy('created_at', 'desc')
@@ -611,7 +611,7 @@ class DividendController extends Controller
 
             // Find member's shares account
             $sharesAccount = Account::where('member_id', $member->id)
-                ->where('account_type', 'shares')
+                ->where('account_type', 'share_deposits')
                 ->where('is_active', true)
                 ->first();
 
@@ -817,7 +817,7 @@ class DividendController extends Controller
      */
     private function getTotalShares($year)
     {
-        return Account::where('account_type', 'shares')
+        return Account::where('account_type', 'share_deposits')
             ->where('is_active', true)
             ->whereHas('member', function ($query) {
                 $query->where('membership_status', 'active');
@@ -852,12 +852,12 @@ class DividendController extends Controller
         $memberDividends = [];
 
         $membersWithShares = Member::with(['accounts' => function ($query) {
-            $query->where('account_type', 'shares')
+            $query->where('account_type', 'share_deposits')
                   ->where('is_active', true);
         }])
         ->where('membership_status', 'active')
         ->whereHas('accounts', function ($query) {
-            $query->where('account_type', 'shares')
+            $query->where('account_type', 'share_deposits')
                   ->where('is_active', true)
                   ->where('balance', '>', 0);
         })
