@@ -447,6 +447,10 @@
             <div v-else class="text-center py-8">
               <p class="text-gray-500">No next of kin information available</p>
             </div>
+             <Link :href="route('members.next-of-kin', member.id)"
+                class="text-indigo-600 hover:text-indigo-500 text-sm">
+                Manage Next of Kin
+              </Link>
           </div>
 
           <!-- Documents Tab -->

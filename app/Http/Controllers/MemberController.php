@@ -748,10 +748,14 @@ class MemberController extends Controller
      */
     public function storeNextOfKin(StoreNextOfKinRequest $request, Member $member): RedirectResponse
     {
-        $member->nextOfKin()->create($request->validated());
-
-        return back()->with('success', 'Next of kin added successfully');
+        try {
+            $member->nextOfKin()->create($request->validated());
+            return back()->with('success', 'Next of kin added successfully');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to add next of kin');
+        }
     }
+
 
     /**
      * Update next of kin
@@ -918,10 +922,8 @@ class MemberController extends Controller
             $worksheet = $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
 
-            // Get headers from first row and normalize them
-            $headers = array_map(function ($header) {
-                return trim(strtolower(str_replace(' ', '_', $header)));
-            }, $rows[0]);
+            // Normalize headers
+            $headers = array_map(fn($header) => trim(strtolower(str_replace(' ', '_', $header))), $rows[0]);
 
             // Remove header row
             array_shift($rows);
@@ -931,7 +933,7 @@ class MemberController extends Controller
             $skippedCount = 0;
             $errors = [];
 
-            // Process in chunks to avoid memory issues
+            // Process in chunks
             $chunks = array_chunk($rows, 50);
 
             foreach ($chunks as $chunkIndex => $chunk) {
@@ -944,30 +946,33 @@ class MemberController extends Controller
                         // Skip empty rows
                         if (empty(array_filter($row))) {
                             $skippedCount++;
-
                             continue;
                         }
 
                         try {
                             // Map row data to headers
                             $data = array_combine($headers, $row);
-
-                            // Clean and prepare data
                             $preparedData = $this->prepareImportData($data);
 
+                            // Required fields
                             if (empty($preparedData['first_name'])) {
                                 throw new \Exception('First name is required');
                             }
                             if (empty($preparedData['last_name'])) {
                                 throw new \Exception('Last name is required');
                             }
-
-                            // Generate ID number if not provided
-                            if (empty($preparedData['id_number'])) {
-                                $preparedData['id_number'] = $this->generateIdNumber();
+                            if (empty($preparedData['id_type'])) {
+                                throw new \Exception('ID type is required');
                             }
 
-                            // Validate row data
+                            // Generate missing fields
+                            $preparedData['id_number'] ??= $this->generateIdNumber();
+                            $email = $preparedData['email'] ?? $this->generateEmail($preparedData['first_name'], $preparedData['last_name']);
+                            $phone = $preparedData['phone'] ?? $this->generatePhone();
+                            $fullName = trim($preparedData['first_name'].' '.$preparedData['last_name']);
+                            $username = User::generateUsername($fullName);
+
+                            // Validate row
                             $validator = Validator::make($preparedData, [
                                 'first_name' => 'required|string|max:255',
                                 'last_name' => 'required|string|max:255',
@@ -977,46 +982,21 @@ class MemberController extends Controller
                                 'marital_status' => 'nullable|in:single,married,divorced,widowed',
                                 'email' => 'nullable|email|unique:users,email',
                                 'phone' => 'nullable|string|max:20|unique:users,phone',
-                                'physical_address' => 'nullable|string',
-                                'postal_address' => 'nullable|string',
-                                'city' => 'nullable|string|max:255',
-                                'county' => 'nullable|string|max:255',
                                 'id_type' => 'required|in:national_id,passport,driving_license',
                                 'id_number' => 'required|string|unique:members,id_number',
-                                'occupation' => 'nullable|string|max:255',
-                                'employer' => 'nullable|string|max:255',
-                                'monthly_income' => 'nullable|numeric|min:0',
-                                'emergency_contact_name' => 'nullable|string|max:255',
-                                'emergency_contact_phone' => 'nullable|string|max:20',
-                                'emergency_contact_relationship' => 'nullable|string|max:255',
                             ]);
 
                             if ($validator->fails()) {
-                                $validationErrors = $validator->errors()->all();
                                 $errorCount++;
                                 $errors[] = [
                                     'row' => $rowNumber,
-                                    'name' => trim(($preparedData['first_name'] ?? '').' '.($preparedData['last_name'] ?? '')),
-                                    'errors' => $validationErrors,
+                                    'name' => $fullName ?: 'Unknown Member',
+                                    'errors' => $validator->errors()->all(),
                                 ];
-
                                 continue;
                             }
 
-                            // Generate email if not provided
-                            $email = $preparedData['email'] ?: $this->generateEmail(
-                                $preparedData['first_name'],
-                                $preparedData['last_name']
-                            );
-
-                            // Generate phone if not provided
-                            $phone = $preparedData['phone'] ?: $this->generatePhone();
-
-                            // Generate username from name
-                            $fullName = trim($preparedData['first_name'].' '.$preparedData['last_name']);
-                            $username = User::generateUsername($fullName);
-
-                            // Create user account with username
+                            // Create user
                             $user = User::create([
                                 'name' => $fullName,
                                 'username' => $username,
@@ -1027,59 +1007,55 @@ class MemberController extends Controller
                                 'is_active' => true,
                             ]);
 
-                            // Generate membership ID
-                            $membershipId = $this->generateMembershipId();
-
-                            // Create member profile
+                            // Create member
                             $member = Member::create([
                                 'user_id' => $user->id,
-                                'membership_id' => $membershipId,
-                                'first_name' => trim($preparedData['first_name']),
-                                'last_name' => trim($preparedData['last_name']),
-                                'middle_name' => $preparedData['middle_name'] ?: null,
-                                'date_of_birth' => $preparedData['date_of_birth'] ?: '1990-01-01',
-                                'gender' => $preparedData['gender'] ?: 'male',
-                                'marital_status' => $preparedData['marital_status'] ?: 'single',
-                                'physical_address' => $preparedData['physical_address'] ?: 'Not provided',
-                                'postal_address' => $preparedData['postal_address'] ?: 'Not provided',
-                                'city' => $preparedData['city'] ?: 'Not provided',
-                                'county' => $preparedData['county'] ?: 'Nairobi',
+                                'membership_id' => $this->generateMembershipId(),
+                                'first_name' => $preparedData['first_name'],
+                                'last_name' => $preparedData['last_name'],
+                                'middle_name' => $preparedData['middle_name'] ?? null,
+                                'date_of_birth' => $preparedData['date_of_birth'] ?? '1990-01-01',
+                                'gender' => $preparedData['gender'] ?? 'male',
+                                'marital_status' => $preparedData['marital_status'] ?? 'single',
+                                'physical_address' => $preparedData['physical_address'] ?? 'Not provided',
+                                'postal_address' => $preparedData['postal_address'] ?? 'Not provided',
+                                'city' => $preparedData['city'] ?? 'Not provided',
+                                'county' => $preparedData['county'] ?? 'Nairobi',
                                 'country' => 'Kenya',
                                 'id_type' => $preparedData['id_type'],
-                                'id_number' => trim($preparedData['id_number']),
-                                'occupation' => $preparedData['occupation'] ?: null,
-                                'employer' => $preparedData['employer'] ?: null,
-                                'monthly_income' => $preparedData['monthly_income'] ?: null,
-                                'emergency_contact_name' => $preparedData['emergency_contact_name'] ?: 'Not provided',
-                                'emergency_contact_phone' => $preparedData['emergency_contact_phone'] ?: 'Not provided',
-                                'emergency_contact_relationship' => $preparedData['emergency_contact_relationship'] ?: 'Not specified',
+                                'id_number' => $preparedData['id_number'],
+                                'occupation' => $preparedData['occupation'] ?? null,
+                                'employer' => $preparedData['employer'] ?? null,
+                                'monthly_income' => $preparedData['monthly_income'] ?? null,
+                                'emergency_contact_name' => $preparedData['emergency_contact_name'] ?? 'Not provided',
+                                'emergency_contact_phone' => $preparedData['emergency_contact_phone'] ?? 'Not provided',
+                                'emergency_contact_relationship' => $preparedData['emergency_contact_relationship'] ?? 'Not specified',
                                 'membership_date' => now(),
                                 'membership_status' => 'active',
                             ]);
 
                             // Create accounts
-                            $shareCapitalAccountNumber = $this->generateAccountNumber('SEPU', 'S');
                             DB::table('accounts')->insert([
-                                'account_number' => $shareCapitalAccountNumber,
-                                'account_type' => 'share_capital',
-                                'balance' => 0,
-                                'available_balance' => 0,
-                                'is_active' => true,
-                                'member_id' => $member->id,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
-
-                            $shareDepositsAccountNumber = $this->generateAccountNumber('SEPU', 'D');
-                            DB::table('accounts')->insert([
-                                'account_number' => $shareDepositsAccountNumber,
-                                'account_type' => 'share_deposits',
-                                'balance' => 0,
-                                'available_balance' => 0,
-                                'is_active' => true,
-                                'member_id' => $member->id,
-                                'created_at' => now(),
-                                'updated_at' => now(),
+                                [
+                                    'account_number' => $this->generateAccountNumber('SEPU', 'S'),
+                                    'account_type' => 'share_capital',
+                                    'balance' => 0,
+                                    'available_balance' => 0,
+                                    'is_active' => true,
+                                    'member_id' => $member->id,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ],
+                                [
+                                    'account_number' => $this->generateAccountNumber('SEPU', 'D'),
+                                    'account_type' => 'share_deposits',
+                                    'balance' => 0,
+                                    'available_balance' => 0,
+                                    'is_active' => true,
+                                    'member_id' => $member->id,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]
                             ]);
 
                             $successCount++;
@@ -1088,14 +1064,14 @@ class MemberController extends Controller
                             $errorCount++;
                             $errors[] = [
                                 'row' => $rowNumber,
-                                'name' => trim(($preparedData['first_name'] ?? '').' '.($preparedData['last_name'] ?? '')),
+                                'name' => $preparedData['first_name'] ?? 'Unknown Member',
                                 'errors' => [$e->getMessage()],
                             ];
+                            \Log::error("Import failed at row {$rowNumber}: ".$e->getMessage());
                         }
                     }
 
                     DB::commit();
-
                 } catch (\Exception $e) {
                     DB::rollBack();
                     \Log::error('Import chunk failed: '.$e->getMessage());
@@ -1103,19 +1079,17 @@ class MemberController extends Controller
             }
 
             $message = "Import completed: {$successCount} members imported successfully";
-            if ($errorCount > 0) {
-                $message .= ", {$errorCount} failed";
-            }
-            if ($skippedCount > 0) {
-                $message .= ", {$skippedCount} skipped (empty rows)";
-            }
+            if ($errorCount > 0) $message .= ", {$errorCount} failed";
+            if ($skippedCount > 0) $message .= ", {$skippedCount} skipped (empty rows)";
 
             return redirect()->route('members.import.form')
                 ->with('success', $message)
                 ->with('import_errors', $errors);
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to process import: '.$e->getMessage()]);
+            return redirect()->route('members.import.form')
+                ->with('error', 'Import failed: '.$e->getMessage())
+                ->with('import_errors', $errors);
         }
     }
 
@@ -1364,14 +1338,14 @@ class MemberController extends Controller
         return $accountNumber;
     }
 
-    // DEPOSITS
-    /**
-     * Import deposits for existing members
-     */
+   // DEPOSITS
+/**
+ * Import deposits for existing members
+ */
 public function importDeposits(Request $request): RedirectResponse
 {
     \Log::info('=== DEPOSIT IMPORT STARTED ===');
-    
+
     $request->validate([
         'file' => 'required|file|mimes:csv,xlsx,xls|max:5120',
         'year' => 'required|integer|min:2020|max:2030',
@@ -1393,25 +1367,13 @@ public function importDeposits(Request $request): RedirectResponse
 
         $spreadsheet = IOFactory::load($file->getRealPath());
         $worksheet = $spreadsheet->getActiveSheet();
-        
-        // Get the actual highest row with data
+
         $highestRow = $worksheet->getHighestDataRow();
         $rows = $worksheet->rangeToArray('A1:' . $worksheet->getHighestDataColumn() . $highestRow);
 
-        \Log::info('Spreadsheet loaded', [
-            'total_rows' => count($rows),
-            'highest_row' => $highestRow
-        ]);
-
         // Get headers and normalize
-        $headers = array_map(function ($header) {
-            return trim(strtolower(str_replace(' ', '_', $header ?? '')));
-        }, $rows[0]);
-
-        \Log::info('Headers found', ['headers' => $headers]);
-
-        // Remove header row
-        array_shift($rows);
+        $headers = array_map(fn($header) => trim(strtolower(str_replace(' ', '_', $header ?? ''))), $rows[0]);
+        array_shift($rows); // remove header row
 
         $successCount = 0;
         $errorCount = 0;
@@ -1419,16 +1381,13 @@ public function importDeposits(Request $request): RedirectResponse
         $errors = [];
         $totalDepositsProcessed = 0;
 
-        // Find month columns
-        $monthColumns = ['jan', 'feb', 'mar', 'april', 'may', 'june', 'july', 'aug', 'sept', 'oct', 'nov', 'dec'];
+        $monthColumns = ['jan','feb','mar','april','may','june','july','aug','sept','oct','nov','dec'];
         $monthColumnIndices = [];
         foreach ($headers as $index => $header) {
             if (in_array($header, $monthColumns)) {
                 $monthColumnIndices[$header] = $index;
             }
         }
-
-        \Log::info('Month columns found', ['month_columns' => $monthColumnIndices]);
 
         // Find name column index
         $nameColumnIndex = array_search('name', $headers);
@@ -1446,57 +1405,39 @@ public function importDeposits(Request $request): RedirectResponse
                 }
             }
         }
-        
         if ($nameColumnIndex === false) {
-            \Log::error('Name column not found', ['headers' => $headers]);
-            return back()->withErrors(['error' => 'Name column not found in spreadsheet. Looking for columns: "name", "no._name", or similar']);
+            return back()->withErrors(['error' => 'Name column not found in spreadsheet']);
         }
-
-        \Log::info('Name column found', ['index' => $nameColumnIndex, 'header' => $headers[$nameColumnIndex]]);
 
         // Find shares column
         $sharesColumnIndex = array_search('shares', $headers);
-        \Log::info('Shares column', ['index' => $sharesColumnIndex]);
 
-        // Filter out completely empty rows before chunking
-        $rows = array_filter($rows, function($row) {
-            return !empty(array_filter($row, function($cell) {
-                return !is_null($cell) && trim($cell) !== '';
-            }));
-        });
+        // Filter out completely empty rows
+        $rows = array_filter($rows, fn($row) => !empty(array_filter($row, fn($cell) => !is_null($cell) && trim($cell) !== '')));
 
-        \Log::info('After filtering empty rows', ['rows_to_process' => count($rows)]);
-
-        // Process in chunks
         $chunks = array_chunk($rows, 50);
-        \Log::info('Processing chunks', ['total_chunks' => count($chunks), 'chunk_size' => 50]);
 
         foreach ($chunks as $chunkIndex => $chunk) {
-            \Log::info("Processing chunk {$chunkIndex}", ['rows_in_chunk' => count($chunk)]);
-            
             DB::beginTransaction();
-
             try {
                 foreach ($chunk as $index => $row) {
                     $rowNumber = ($chunkIndex * 50) + $index + 2;
+                    $memberName = trim($row[$nameColumnIndex] ?? '');
+
+                    if (empty($memberName)) {
+                        $skippedCount++;
+                        $errors[] = [
+                            'row' => $rowNumber,
+                            'name' => 'Unknown Member',
+                            'errors' => ['Name is missing'],
+                        ];
+                        continue;
+                    }
 
                     try {
-                        $memberName = trim($row[$nameColumnIndex] ?? '');
-
-                        if (empty($memberName)) {
-                            $skippedCount++;
-                            continue;
-                        }
-
-                        \Log::info("Row {$rowNumber}: Processing member", ['name' => $memberName]);
-
-                        // Improved name matching - try multiple strategies
                         $member = $this->findMemberByName($memberName);
 
                         if (!$member) {
-                            \Log::warning("Row {$rowNumber}: Member not found", [
-                                'search_name' => $memberName
-                            ]);
                             $errorCount++;
                             $errors[] = [
                                 'row' => $rowNumber,
@@ -1506,12 +1447,7 @@ public function importDeposits(Request $request): RedirectResponse
                             continue;
                         }
 
-                        \Log::info("Row {$rowNumber}: Member found", [
-                            'member_id' => $member->id,
-                            'member_name' => $member->full_name
-                        ]);
-
-                        // Get or create share capital account
+                        // Share capital account
                         $shareCapitalAccount = Account::firstOrCreate([
                             'member_id' => $member->id,
                             'account_type' => 'share_capital',
@@ -1522,13 +1458,10 @@ public function importDeposits(Request $request): RedirectResponse
                             'is_active' => true,
                         ]);
 
-                        // Process initial shares - use 'deposit' instead of 'share_purchase'
+                        // Initial shares
                         if ($sharesColumnIndex !== false) {
                             $initialShares = $this->parseNumeric($row[$sharesColumnIndex] ?? null);
-
                             if ($initialShares && $initialShares > 0) {
-                                \Log::info("Row {$rowNumber}: Initial shares found", ['amount' => $initialShares]);
-
                                 $existingOpeningBalance = Transaction::where('account_id', $shareCapitalAccount->id)
                                     ->where('transaction_type', 'deposit')
                                     ->where('description', 'LIKE', '%Opening balance%')
@@ -1557,16 +1490,11 @@ public function importDeposits(Request $request): RedirectResponse
                                         'balance' => $balanceAfter,
                                         'available_balance' => $balanceAfter,
                                     ]);
-
-                                    \Log::info("Row {$rowNumber}: Share capital transaction created", [
-                                        'amount' => $initialShares,
-                                        'balance_after' => $balanceAfter
-                                    ]);
                                 }
                             }
                         }
 
-                        // Get or create share deposits account
+                        // Share deposits account
                         $shareDepositsAccount = Account::firstOrCreate([
                             'member_id' => $member->id,
                             'account_type' => 'share_deposits',
@@ -1577,7 +1505,6 @@ public function importDeposits(Request $request): RedirectResponse
                             'is_active' => true,
                         ]);
 
-                        // Process monthly deposits
                         $memberDepositsCount = 0;
                         $currentBalance = $shareDepositsAccount->balance;
 
@@ -1619,34 +1546,23 @@ public function importDeposits(Request $request): RedirectResponse
                             }
                         }
 
-                        // Update account balance
                         if ($memberDepositsCount > 0) {
                             $shareDepositsAccount->update([
                                 'balance' => $currentBalance,
                                 'available_balance' => $currentBalance,
                                 'last_transaction_at' => now(),
                             ]);
-
-                            \Log::info("Row {$rowNumber}: Member processed successfully", [
-                                'deposits_created' => $memberDepositsCount,
-                                'final_balance' => $currentBalance
-                            ]);
-                        }
-
-                        if ($memberDepositsCount > 0) {
                             $successCount++;
                         } else {
                             $skippedCount++;
+                            $errors[] = [
+                                'row' => $rowNumber,
+                                'name' => $memberName,
+                                'errors' => ['No deposits found for any month'],
+                            ];
                         }
 
                     } catch (\Exception $e) {
-                        \Log::error("Row {$rowNumber}: Processing error", [
-                            'name' => $memberName ?? 'Unknown',
-                            'error' => $e->getMessage(),
-                            'file' => $e->getFile(),
-                            'line' => $e->getLine()
-                        ]);
-                        
                         $errorCount++;
                         $errors[] = [
                             'row' => $rowNumber,
@@ -1657,47 +1573,25 @@ public function importDeposits(Request $request): RedirectResponse
                 }
 
                 DB::commit();
-                \Log::info("Chunk {$chunkIndex} committed successfully");
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                \Log::error("Chunk {$chunkIndex} failed", [
-                    'error' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
-                ]);
             }
         }
 
-        \Log::info('=== DEPOSIT IMPORT COMPLETED ===', [
-            'success_count' => $successCount,
-            'error_count' => $errorCount,
-            'skipped_count' => $skippedCount,
-            'total_deposits' => $totalDepositsProcessed
-        ]);
-
         $message = "Deposit import completed: {$successCount} members processed, {$totalDepositsProcessed} deposits recorded";
-        if ($errorCount > 0) {
-            $message .= ", {$errorCount} errors";
-        }
-        if ($skippedCount > 0) {
-            $message .= ", {$skippedCount} skipped";
-        }
+        if ($errorCount > 0) $message .= ", {$errorCount} errors";
+        if ($skippedCount > 0) $message .= ", {$skippedCount} skipped";
 
         return redirect()->route('members.deposits.import.form')
             ->with('success', $message)
             ->with('import_errors', $errors);
 
     } catch (\Exception $e) {
-        \Log::error('=== DEPOSIT IMPORT FAILED ===', [
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ]);
-        
         return back()->withErrors(['error' => 'Failed to process deposit import: '.$e->getMessage()]);
     }
 }
+
 
 
 /**
@@ -1840,27 +1734,30 @@ private function findMemberByName(string $searchName): ?Member
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '0A2342'],
+                'startColor' => ['rgb' => '0A2342'], // Dark Blue
             ],
             'alignment' => [
                 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
             ],
         ];
 
         $sheet->getStyle('A1:N1')->applyFromArray($headerStyle);
 
-        // Style month columns
-        $monthColumnStyle = [
+        // Style data rows only (row 2 onward)
+        $dataRowStyle = [
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'E8F5E9'],
+                'startColor' => ['rgb' => 'E8F5E9'], 
             ],
             'numberFormat' => [
                 'formatCode' => '#,##0.00',
             ],
         ];
 
-        $sheet->getStyle('C1:N1000')->applyFromArray($monthColumnStyle);
+// Apply only from row 2 downward
+$sheet->getStyle('C2:N1000')->applyFromArray($dataRowStyle);
+
 
         // Add instructions sheet
         $instructionSheet = $spreadsheet->createSheet();

@@ -1,6 +1,30 @@
 <template>
-  <AppLayout :title="`${member.first_name} ${member.last_name} - Next of Kin`">
-    <template #header>
+  
+  <AppLayout :breadcrumbs="[
+  { title: 'Members', href: route('members.index') },
+  { title: `${member.first_name} ${member.last_name} - Next of Kin` }
+]">
+
+    <!-- Flash Messages -->
+      <div ref="flashBox" class="max-w-3xl mx-auto mt-4 px-4">
+        <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+          leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+          <div v-if="flashMessage" :class="[
+      flashType === 'success'
+        ? 'bg-green-50 border border-green-200 text-green-700'
+        : 'bg-red-50 border border-red-200 text-red-700',
+      'mb-4 rounded-xl p-4 shadow-sm flex items-center'
+    ]">
+            <component :is="flashType === 'success' ? CheckCircle : AlertCircle" class="h-5 w-5"
+              :class="flashType === 'success' ? 'text-green-600' : 'text-red-600'" />
+            <div class="flex gap-2 items-center">
+              <p class="ml-3 text-sm">{{ flashMessage }}</p>
+              <button @click="flashMessage = null" class="ml-auto text-gray-500 hover:text-gray-700">x</button>
+            </div>
+          </div>
+        </transition>
+      </div>
       <div class="flex items-center justify-between">
         <div class="flex items-center">
           <Link :href="route('members.show', member.id)" class="mr-4">
@@ -23,7 +47,6 @@
           </button>
         </div>
       </div>
-    </template>
 
     <div class="py-12">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -295,9 +318,10 @@
 </template>
 
 <script>
-import { ref, reactive, computed } from 'vue'
-import { Head, Link, router } from '@inertiajs/vue3'
+import { ref, reactive, computed, watch } from 'vue'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+const page = usePage()
 import {
   ArrowLeftIcon,
   PlusIcon,
@@ -339,10 +363,43 @@ export default {
       date_of_birth: '',
       address: ''
     })
+// Flash handling
+const page = usePage();
+const flash = computed(() => page.props.flash || {});
+const flashMessage = ref(null);
+const flashType = ref("success");
+const flashBox = ref(null);
+const isLoading = ref(false)
+
+
+  watch(
+    flash,
+    (val) => {
+      if (val.success) {
+        flashMessage.value = val.success;
+        flashType.value = "success";
+      } else if (val.error) {
+        flashMessage.value = val.error;
+        flashType.value = "error";
+      }
+
+      if (flashMessage.value) {
+        // Scroll to top of page to ensure flash is visible
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        // Optional: also ensure the flash container itself is in view
+        flashBox.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // Auto-hide after 3s
+        setTimeout(() => (flashMessage.value = null), 3000);
+      }
+    },
+    { immediate: true, deep: true }
+  );
 
     const canManage = computed(() => {
-      const userRole = window.Laravel?.user?.role
-      return ['admin', 'management', 'loan_officer'].includes(userRole)
+    const role = page.props.auth?.user?.role
+      return ['admin', 'management', 'loan_officer'].includes(role)
     })
 
     const resetForm = () => {
@@ -425,7 +482,10 @@ export default {
       deleteNextOfKin,
       closeModals,
       submitForm,
-      formatDate
+      formatDate,
+      flashMessage, 
+      flashType, 
+      flashBox 
     }
   }
 }

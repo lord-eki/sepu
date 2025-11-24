@@ -186,10 +186,11 @@
 
                 <!-- Submit Button -->
                 <div class="flex justify-end space-x-3">
-                  <Link :href="route('members.index')"
+                  <button type="button" @click="removeFile"
                     class="bg-gray-200 py-2 px-4 rounded-md shadow-sm text-sm font-medium text-darkBlue hover:bg-gray-300">
                     Cancel
-                  </Link>
+                  </button>
+
                   <button type="submit" :disabled="!selectedFile || form.processing"
                     class="inline-flex items-center justify-center py-2 px-6 rounded-md text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
                     <Upload class="w-5 h-5 mr-2" />
@@ -306,12 +307,18 @@ const submitImport = () => {
     onSuccess: () => {
       selectedFile.value = null;
       form.reset();
+      if (fileInput.value) fileInput.value.value = '';
     },
     onError: (errors) => {
+      // Reset the input to allow re-selecting same file
+      if (fileInput.value) fileInput.value.value = '';
+      selectedFile.value = null;
+      form.file = null;
       console.error("Import errors:", errors);
     },
   });
 };
+
 </script>
 
 <style scoped>
