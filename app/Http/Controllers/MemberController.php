@@ -387,36 +387,40 @@ class MemberController extends Controller
      /**
      * Activate a member
      */
-
     public function activate(Member $member): RedirectResponse
-        {
-            // Eager load accounts
-            $member->load('accounts');
+    {
+        // Eager load accounts
+        $member->load('accounts');
 
-            if ($member->membership_status !== 'approved') {
-                return back()->with('error', 'Only approved members can be activated.');
-            }
+        // Allow activation only for approved or previously active (suspended/inactive) members
+        $allowedStatuses = ['approved', 'inactive', 'suspended', 'active'];
 
-            $hasShareDeposits = $member->accounts->contains(function ($account) {
-                return $account->account_type === 'share_deposits' && $account->available_balance >= 7500;
-            });
-
-            $hasShareCapital = $member->accounts->contains(function ($account) {
-                return $account->account_type === 'share_capital' && $account->available_balance >= 5000;
-            });
-
-            $hasPaid = $hasShareDeposits && $hasShareCapital;
-
-
-            if (! $hasPaid) {
-                return back()->with('error', 'Member has not completed the required payment for activation.');
-            }
-
-            $member->update(['membership_status' => 'active']);
-            $member->user?->update(['is_active' => true]);
-
-            return back()->with('success', 'Member activated successfully.');
+        if (!in_array($member->membership_status, $allowedStatuses)) {
+            return back()->with('error', 'This member cannot be activated.');
         }
+
+        // Check if member has already fully paid for activation
+        $hasShareDeposits = $member->accounts->contains(function ($account) {
+            return $account->account_type === 'share_deposits' && $account->available_balance >= 7500;
+        });
+
+        $hasShareCapital = $member->accounts->contains(function ($account) {
+            return $account->account_type === 'share_capital' && $account->available_balance >= 5000;
+        });
+
+        $hasPaid = $hasShareDeposits && $hasShareCapital;
+
+        // If member hasn’t paid yet, prevent activation
+        if (! $hasPaid) {
+            return back()->with('error', 'Member has not completed the required payment for activation.');
+        }
+
+        // Update member to active
+        $member->update(['membership_status' => 'active']);
+        $member->user?->update(['is_active' => true]);
+
+        return back()->with('success', 'Member activated successfully.');
+    }
 
 
         /**
