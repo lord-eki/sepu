@@ -310,20 +310,4 @@ async function deleteTxn() {
 }
 </script>
 
-<!-- Optional: simple DetailRow component fallback -->
-<script lang="ts">
-/* If you don't have a DetailRow component, create one quickly at
-   resources/js/Components/DetailRow.vue with this content:
-
-<template>
-  <div>
-    <p class="text-xs text-slate-400">{{ label }}</p>
-    <p class="mt-1">{{ value }}</p>
-  </div>
-</template>
-
-<script setup lang="ts">
-defineProps<{ label: string; value: string | number }>();
-</script>
-*/
-</script>
+ 
