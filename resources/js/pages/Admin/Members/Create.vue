@@ -433,7 +433,7 @@ const props = defineProps({
 
 // Flash handling
 const page = usePage();
-const flash = computed(() => page.props.flash || {});
+const flash = computed(() => (page.value?.props?.flash || {}));
 const flashMessage = ref(null);
 const flashType = ref("success");
 const flashBox = ref(null);
@@ -441,10 +441,10 @@ const flashBox = ref(null);
 watch(
   flash,
   (val) => {
-    if (val.success) {
+    if (val?.success) {
       flashMessage.value = val.success;
       flashType.value = "success";
-    } else if (val.error) {
+    } else if (val?.error) {
       flashMessage.value = val.error;
       flashType.value = "error";
     }
@@ -457,6 +457,7 @@ watch(
   },
   { immediate: true, deep: true }
 );
+
 
 // Form state
 const form = useForm({
