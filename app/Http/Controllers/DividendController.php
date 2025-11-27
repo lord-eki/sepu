@@ -1071,12 +1071,11 @@ class DividendController extends Controller
     /**
      * Check if user can approve dividend.
      */
-    private function canApprove($dividend)
-    {
-        return $dividend->status === 'calculated' && 
-               Auth::user()->role === 'admin' && 
-               $dividend->calculated_by !== Auth::id();
-    }
+    protected function canApprove(Dividend $dividend)
+        {
+            return $dividend->status === 'calculated' && auth()->user()->role === 'admin';
+        }
+
 
     /**
      * Check if user can distribute dividend.

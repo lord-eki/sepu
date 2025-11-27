@@ -1,7 +1,10 @@
 <template>
-  <AppLayout :title="`Edit Dividend ${dividend.dividend_year}`">
+  <AppLayout :breadcrumbs="[
+      { title: 'Dividends', href: '/dividends' },
+      { title: `Edit Dividend ${dividend.dividend_year}` }
+  ]">
     <!-- HEADER -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex justify-between items-center mx-4 mt-4 mb-6">
       <h2 class="font-semibold text-2xl text-[#0A1A2F]">
         Edit Dividend {{ dividend.dividend_year }}
       </h2>
@@ -15,7 +18,7 @@
       </Link>
     </div>
 
-    <div class="space-y-6">
+    <div class="space-y-6 m-4">
 
       <!-- WARNING -->
       <div class="bg-orange-50 border-l-4 border-[#F97316] rounded-lg p-4 shadow-sm flex items-start gap-3">
@@ -63,8 +66,8 @@
             <InputLabel for="total_profit" value="Total Profit" class="text-[#0A1A2F]" />
             <div class="mt-1 relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">KSh</div>
-              <TextInput id="total_profit" v-model="form.total_profit" type="number" step="0.01" min="0"
-                class="pl-12 block w-full rounded-lg border border-gray-300 focus:ring-[#0A1A2F] focus:border-[#0A1A2F]"
+              <TextInput id="total_profit" v-model="form.total_profit" type="number" step="0.01" min="1"
+                class="pl-12 block p-2 w-full rounded-lg border border-gray-300 focus:ring-[#0A1A2F] focus:border-[#0A1A2F]"
                 placeholder="0.00" required @input="calculateDividends" />
             </div>
             <InputError :message="form.errors.total_profit" class="mt-2" />
@@ -75,8 +78,8 @@
           <div>
             <InputLabel for="dividend_rate" value="Dividend Rate (%)" class="text-[#0A1A2F]" />
             <div class="mt-1 relative">
-              <TextInput id="dividend_rate" v-model="form.dividend_rate" type="number" step="0.01" min="0" max="100"
-                class="block w-full rounded-lg border border-gray-300 focus:ring-[#0A1A2F] focus:border-[#0A1A2F]"
+              <TextInput id="dividend_rate" v-model="form.dividend_rate" type="number" step="0.01" min="1" max="100"
+                class="block w-full p-2 rounded-lg border border-gray-300 focus:ring-[#0A1A2F] focus:border-[#0A1A2F]"
                 placeholder="0.00" required @input="calculateDividends" />
               <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">%</div>
             </div>
@@ -88,7 +91,7 @@
           <div>
             <InputLabel for="notes" value="Notes (Optional)" class="text-[#0A1A2F]" />
             <TextArea id="notes" v-model="form.notes" rows="4"
-              class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-[#0A1A2F] focus:border-[#0A1A2F]"
+              class="mt-1 block w-full rounded-lg p-2 border border-gray-300 focus:ring-[#0A1A2F] focus:border-[#0A1A2F]"
               placeholder="Add any additional notes..." />
             <InputError :message="form.errors.notes" class="mt-2" />
           </div>
@@ -179,47 +182,93 @@
     </div>
 
     <!-- CONFIRMATION MODAL -->
-    <ConfirmationModal :show="showConfirmModal" @close="showConfirmModal = false">
-      <template #title>Confirm Dividend Update</template>
-      <template #content>
-        <div class="space-y-4">
-          <p class="text-sm text-[#0A1A2F]">
-            Are you sure you want to update the dividend for {{ dividend.dividend_year }}?
-          </p>
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 class="text-sm font-medium text-[#0A1A2F] mb-2">Changes Summary:</h4>
-            <div class="text-sm text-[#0A1A2F] space-y-1">
-              <div v-if="form.total_profit != dividend.total_profit">
-                Total Profit: KSh {{ formatCurrency(dividend.total_profit) }} → KSh {{ formatCurrency(form.total_profit)
-                }}
-              </div>
-              <div v-if="form.dividend_rate != dividend.dividend_rate">
-                Dividend Rate: {{ dividend.dividend_rate }}% → {{ form.dividend_rate }}%
-              </div>
-              <div v-if="calculationPreview">
-                Total Dividends: KSh {{ formatCurrency(dividend.total_dividends) }} → KSh {{
-    formatCurrency(calculationPreview.total_dividends) }}
-              </div>
-            </div>
+    <!-- Confirm Update Modal -->
+<div
+  v-if="showConfirmModal"
+  class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+>
+  <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 animate-fadeIn">
+
+    <!-- Title -->
+    <h3 class="text-lg font-semibold text-[#0A1A2F] mb-4">
+      Confirm Dividend Update
+    </h3>
+
+    <!-- Content -->
+    <div class="space-y-4 text-sm text-[#0A1A2F]">
+
+      <p>
+        Are you sure you want to update the dividend for
+        <strong>{{ dividend.dividend_year }}</strong>?
+      </p>
+
+      <!-- Changes Summary Card -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 class="text-sm font-medium text-[#0A1A2F] mb-2">Changes Summary:</h4>
+
+        <div class="space-y-1 text-sm">
+
+          <div v-if="form.total_profit != dividend.total_profit">
+            Total Profit:
+            KSh {{ formatCurrency(dividend.total_profit) }}
+            →
+            <strong>KSh {{ formatCurrency(form.total_profit) }}</strong>
           </div>
-          <div class="bg-orange-50 border-l-4 border-[#F97316] rounded-lg p-4 flex gap-3">
-            <svg class="w-5 h-5 text-[#F97316]" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" />
-            </svg>
-            <p class="text-sm text-[#0A1A2F]">This will recalculate all member dividends based on the new parameters.
-            </p>
+
+          <div v-if="form.dividend_rate != dividend.dividend_rate">
+            Dividend Rate:
+            {{ dividend.dividend_rate }}%
+            →
+            <strong>{{ form.dividend_rate }}%</strong>
           </div>
+
+          <div v-if="calculationPreview">
+            Total Dividends:
+            KSh {{ formatCurrency(dividend.total_dividends) }}
+            →
+            <strong>KSh {{ formatCurrency(calculationPreview.total_dividends) }}</strong>
+          </div>
+
         </div>
-      </template>
-      <template #footer>
-        <SecondaryButton @click="showConfirmModal = false">Cancel</SecondaryButton>
-        <PrimaryButton class="ml-3" @click="confirmUpdate" :class="{ 'opacity-25': form.processing }"
-          :disabled="form.processing">
-          Confirm Update
-        </PrimaryButton>
-      </template>
-    </ConfirmationModal>
+      </div>
+
+      <!-- Warning box -->
+      <div class="bg-orange-50 border-l-4 border-[#F97316] rounded-lg p-4 flex gap-3">
+        <svg class="w-5 h-5 text-[#F97316]" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fill-rule="evenodd"
+            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+          />
+        </svg>
+        <p>
+          This will recalculate all member dividends based on the new parameters.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="mt-6 flex justify-end gap-3">
+      <button
+        @click="showConfirmModal = false"
+        class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm"
+      >
+        Cancel
+      </button>
+
+      <button
+        @click="confirmUpdate"
+        :disabled="form.processing"
+        class="px-4 py-2 rounded-lg bg-[#0A1A2F] text-white text-sm font-semibold disabled:opacity-50"
+      >
+        <span v-if="form.processing">Processing...</span>
+        <span v-else>Confirm Update</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
   </AppLayout>
 </template>
 
@@ -357,3 +406,9 @@ watch([() => form.total_profit, () => form.dividend_rate], () => {
   calculateDividends()
 }, { debounce: 500 })
 </script>
+
+<style scoped>
+button:hover {
+ cursor: pointer;
+}
+</style>
