@@ -160,11 +160,11 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6">
           <div class="text-center bg-blue-50 rounded-xl p-4">
             <p class="text-lg sm:text-xl font-semibold text-[#0a2342]">{{ formatCurrency(stats.total_savings) }}</p>
-            <p class="text-sm text-gray-600">Total Savings</p>
+            <p class="text-sm text-gray-600">Total Share Deposits</p>
           </div>
           <div class="text-center bg-blue-50 rounded-xl p-4">
             <p class="text-lg sm:text-xl font-semibold text-[#0a2342]">{{ formatCurrency(stats.total_shares) }}</p>
-            <p class="text-sm text-gray-600">Total Shares</p>
+            <p class="text-sm text-gray-600">Total Shares Capital</p>
           </div>
           <div class="text-center bg-blue-50 rounded-xl p-4">
             <p class="text-lg sm:text-xl font-semibold text-[#0a2342]">{{ formatCurrency(stats.total_loans) }}</p>

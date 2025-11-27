@@ -53,17 +53,49 @@
             <h3 class="text-lg font-semibold mb-3">Transaction Details</h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DetailRow label="Member" :value="memberName" />
-              <DetailRow label="Membership ID" :value="transaction.member?.membership_id ?? '-'"/>
-              <DetailRow label="Account" :value="transaction.account?.account_number ?? '-'"/>
-              <DetailRow label="Balance Before" :value="`KSh ${formattedNumber(transaction.balance_before ?? 0)}`" />
-              <DetailRow label="Balance After" :value="`KSh ${formattedNumber(transaction.balance_after ?? 0)}`" />
-              <DetailRow label="Payment Reference" :value="transaction.payment_reference ?? '-'" />
+              <!-- Member -->
+              <div>
+                <p class="text-xs text-slate-400">Member</p>
+                <p class="mt-1 text-sm">{{ memberName }}</p>
+              </div>
+
+              <!-- Membership ID -->
+              <div>
+                <p class="text-xs text-slate-400">Membership ID</p>
+                <p class="mt-1 text-sm">{{ transaction.member?.membership_id ?? '-' }}</p>
+              </div>
+
+              <!-- Account -->
+              <div>
+                <p class="text-xs text-slate-400">Account</p>
+                <p class="mt-1 text-sm">{{ transaction.account?.account_number ?? '-' }}</p>
+              </div>
+
+              <!-- Balance Before -->
+              <div>
+                <p class="text-xs text-slate-400">Balance Before</p>
+                <p class="mt-1 text-sm">KSh {{ formattedNumber(transaction.balance_before ?? 0) }}</p>
+              </div>
+
+              <!-- Balance After -->
+              <div>
+                <p class="text-xs text-slate-400">Balance After</p>
+                <p class="mt-1 text-sm">KSh {{ formattedNumber(transaction.balance_after ?? 0) }}</p>
+              </div>
+
+              <!-- Payment Reference -->
+              <div>
+                <p class="text-xs text-slate-400">Payment Reference</p>
+                <p class="mt-1 text-sm">{{ transaction.payment_reference ?? '-' }}</p>
+              </div>
+
+              <!-- Description (span full width) -->
               <div class="md:col-span-2">
                 <p class="text-xs text-slate-400">Description</p>
                 <p class="mt-1 text-sm">{{ transaction.description ?? '-' }}</p>
               </div>
             </div>
+
           </div>
 
           <!-- Admin Actions -->
@@ -111,24 +143,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-// import DetailRow from '@/components/DetailRow.vue';
-import { useRoute } from 'vue-router';
 
-// fallback detail row if you don't have one
-// You can either create /Components/DetailRow.vue or the following thin local component:
-const hasDetailRow = true;
-try {
-  // attempt to import - if not present, will still use fallback
-} catch (e) {
-  // ignore
-}
 
-// Props & route
-const route = useRoute();
-const params: any = route.params || {};
-const transactionIdParam = params.id ?? null;
+
+const { props: pageProps } = usePage();
+const transactionIdParam = pageProps.transaction?.id ?? null;
+
 
 // reactive transaction
 const transaction = reactive<any>({});

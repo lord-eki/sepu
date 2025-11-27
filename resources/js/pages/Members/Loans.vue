@@ -266,11 +266,10 @@ const currentLoanMessage = computed(() => {
                     class="px-3 py-1 text-xs rounded-full font-medium capitalize"
                     :class="{
                       'text-green-700 bg-green-100': ['completed', 'approved'].includes(loan.status),
-                      'text-orange-700 bg-orange-100': loan.status === 'active',
+                      'text-orange-700 bg-orange-100': ['active', 'under_review'].includes(loan.status),
                       'text-yellow-700 bg-yellow-100': loan.status === 'pending',
                       'text-red-700 bg-red-100': loan.status === 'rejected',
                       'text-gray-700 bg-gray-100': loan.status === 'defaulted',
-                      'text-orange-700 bg-orange-100': loan.status === 'under_review',
                       'text-blue-700 bg-blue-100': loan.status === 'disbursed'
                     }"
                   >
