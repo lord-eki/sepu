@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-if="show"
-    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
-  >
+  <div v-if="show" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-semibold">{{ title }}</h3>

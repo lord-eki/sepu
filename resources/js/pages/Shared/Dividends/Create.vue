@@ -266,8 +266,6 @@ import InputError from '@/components/InputError.vue'
 
 // Flash handling
 const page = usePage()
-
-
 const flash = computed(() => page.props?.flash || {})
 
 const flashMessage = ref(null)
@@ -283,7 +281,7 @@ watch(
     } else if (props.flash?.error) {
       flashMessage.value = props.flash.error
       flashType.value = 'error'
-    } else if (props.errors?.error) {   // <-- added this
+    } else if (props.errors?.error) {   
       flashMessage.value = props.errors.error
       flashType.value = 'error'
     }
