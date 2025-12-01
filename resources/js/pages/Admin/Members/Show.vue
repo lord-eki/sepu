@@ -81,6 +81,13 @@
               </button>
             </template>
 
+            <button 
+              @click="openConfirm('delete')" 
+              class="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm border-t border-gray-100"
+            >
+              Delete Member
+            </button>
+
             <!-- Confirmation Modal -->
             <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
               <div class="bg-white rounded-lg shadow-lg p-6 w-96">
@@ -633,14 +640,34 @@ const openConfirm = (action) => {
 
 const updateStatus = () => {
   isLoading.value = true
+
+  // DELETE MEMBER
+  if (actionType.value === 'delete') {
+    router.delete(route('members.destroy', memberId), {
+      preserveScroll: true,
+      onSuccess: () => {
+        showConfirmModal.value = false
+        showDropdown.value = false
+      },
+      onError: (errors) => {
+        flashMessage.value = errors?.message || "Unable to delete member"
+        flashType.value = "error"
+      },
+      onFinish: () => {
+        isLoading.value = false
+      }
+    })
+    return
+  }
+
+  // ALL OTHER STATUS ACTIONS
   router.post(route(`members.${actionType.value}`, memberId), {}, {
     preserveScroll: true,
-    onSuccess: (page) => {
-      showDropdown.value = false
+    onSuccess: () => {
       showConfirmModal.value = false
+      showDropdown.value = false
     },
     onError: (errors) => {
-      // Show backend error message
       flashMessage.value = errors?.message || "Something went wrong"
       flashType.value = "error"
     },
