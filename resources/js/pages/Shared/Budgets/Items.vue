@@ -1,5 +1,5 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: `Budget Items - ${budget.title}` }]">
+  <AppLayout :breadcrumbs="[{ title: 'Budgets', href: '/budgets'}, { title: `Budget Items - ${budget.title}` }]">
 
     <!-- Flash Message -->
     <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"

@@ -1,5 +1,5 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: `Budget Utilization - ${budget.title}` }]">
+  <AppLayout :breadcrumbs="[{ title: 'Budgets', href: '/budgets' }, { title: `Budget Utilization - ${budget.title}` }]">
 
     <Head :title="`Budget Utilization - ${budget.title}`" />
 

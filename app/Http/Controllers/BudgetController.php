@@ -187,6 +187,7 @@ class BudgetController extends Controller
             'can_close' => $this->canCloseBudget($budget),
             'can_activate' => $this->canActivateBudget($budget),
             'can_edit' => $this->canEditBudget($budget),
+            'can_submit' => $this->canSubmitBudget($budget),
         ]);
     }
 
@@ -321,6 +322,42 @@ class BudgetController extends Controller
             return back()->with('error', 'Failed to delete budget: ' . $e->getMessage());
         }
     }
+
+
+    /**
+     * Submit the specified budget for approval.
+     */
+    public function submit(Budget $budget)
+    {
+        // Only draft budgets can be submitted
+        if ($budget->status !== 'draft') {
+            return redirect()->route('budgets.show', $budget)
+                        ->with('error', 'Only draft budgets can be submitted.');
+        }
+
+        // Permission check using helper
+        if (!$this->canSubmitBudget($budget)) {
+            return redirect()->route('budgets.show', $budget)
+                        ->with('error', 'You do not have permission to submit this budget.');
+        }
+
+        try {
+            $budget->update([
+                'status' => 'pending',
+                'submitted_by' => Auth::id(),
+                'submitted_date' => Carbon::now(),
+            ]);
+
+            return redirect()->route('budgets.show', $budget)
+                        ->with('success', 'Budget submitted for approval successfully.');
+
+        } catch (\Exception $e) {
+            Log::error('Budget submission failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to submit budget: ' . $e->getMessage());
+        }
+    }
+
 
     /**
      * Approve the specified budget.
@@ -800,6 +837,29 @@ class BudgetController extends Controller
         // Only management and admin can approve
         return in_array($user->role, ['management', 'admin']);
     }
+
+
+    /**
+     * Check if the user can submit the budget for approval.
+     */
+    private function canSubmitBudget(Budget $budget)
+    {
+        $user = Auth::user();
+
+        // Only creator can submit
+        if ($budget->created_by !== $user->id) {
+            return false;
+        }
+
+        // Can only submit draft budgets
+        if ($budget->status !== 'draft') {
+            return false;
+        }
+
+        return true;
+    }
+
+
 
     /**
      * Check if user can activate budget.

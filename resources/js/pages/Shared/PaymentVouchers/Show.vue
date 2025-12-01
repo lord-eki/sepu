@@ -423,6 +423,16 @@
               <option value="cheque">Cheque</option>
             </select>
 
+            <!-- Payment Account -->
+            <label class="text-sm text-slate-600">Payment Account</label>
+            <select v-model="paymentForm.acc_id" class="w-full border rounded p-2 mt-1" required>
+              <option value="">-- Select Account --</option>
+              <option v-for="acc in accounts" :key="acc.id" :value="acc.id">
+                {{ formatAccount(acc) }}
+              </option>
+
+            </select>
+
             <input v-model="paymentForm.payment_reference" placeholder="Payment reference (optional)"
               class="border rounded p-2" />
           </div>
@@ -517,7 +527,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3'
 import {
   ArrowLeft, Cog, ChevronDown, Pencil, Paperclip, Files, WindArrowDown, Trash,
-  OctagonAlert, CircleX, File, CheckCircle2, CheckCircle, Clock, EyeClosed, BanknoteIcon
+  OctagonAlert, CircleX, File, CheckCircle2, CheckCircle, AlertCircle, Clock, EyeClosed, BanknoteIcon
 } from 'lucide-vue-next'
 import AppLayout from '@/layouts/AppLayout.vue'
 import Modal from '@/components/Modal.vue'
@@ -528,6 +538,10 @@ const props = defineProps({
   canPay: Boolean,
   canEdit: Boolean,
   canDelete: Boolean,
+  accounts: {
+    type: Array,
+    default: () => [],
+  }
 })
 
 // UI state
@@ -582,7 +596,7 @@ watch(
 // Forms
 const approvalForm = useForm({ approval_notes: '' })
 const rejectionForm = useForm({ rejection_reason: '' })
-const paymentForm = useForm({ payment_method: '', payment_reference: '', payment_notes: '' })
+const paymentForm = useForm({ payment_method: '', acc_id: "", payment_reference: '', payment_notes: '' })
 const cancellationForm = useForm({ cancellation_reason: '' })
 
 // Derived & helpers
@@ -621,6 +635,17 @@ function formatStatus(s) {
   const map = { pending: 'Pending', approved: 'Approved', paid: 'Paid', rejected: 'Rejected', cancelled: 'Cancelled' }
   return map[s] || (s || '—')
 }
+
+
+function formatAccount(acc) {
+  if (!acc) return '—'
+  const name = acc.account_name || acc.name || '—'
+  const number = acc.account_number || '—'
+  return `${name} (${number})`
+}
+
+
+
 
 function formatVoucherType(t) {
   const map = {
@@ -691,7 +716,8 @@ function processPayment() {
       showPaymentModal.value = false
       paymentForm.reset()
     },
-    onError: () => {
+    onError: (errors) => {
+      console.log("err", errors)
       showPaymentModal.value = false
       paymentForm.reset()
       flashMessage.value = 'Payment failed. Try again later'

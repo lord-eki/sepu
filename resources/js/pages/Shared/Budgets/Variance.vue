@@ -1,5 +1,5 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: `Budget - ${budget.title}` }]">
+  <AppLayout :breadcrumbs="[{ title: 'Budgets', href: '/budgets' }, { title: `Budget - ${budget.title}` }]">
     <div class="flex items-center gap-4 mt-4 mb-6">
       <!-- Back Button -->
       <Link :href="route('budgets.show', budget.id)" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm 

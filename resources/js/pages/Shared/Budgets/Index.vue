@@ -53,6 +53,7 @@
               <select v-model="statusFilter" @change="filterBudgets" class="rounded-full border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:border-orange-500 focus:ring focus:ring-orange-100 dark:bg-gray-700 dark:text-white dark:focus:ring-orange-500">
                 <option value="">All Statuses</option>
                 <option value="draft">Draft</option>
+                <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
                 <option value="active">Active</option>
                 <option value="closed">Closed</option>
@@ -123,7 +124,7 @@ const filterBudgets = () => {
 
 const formatCurrency = (amount) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount || 0)
 const formatDate = (date) => new Date(date).toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' })
-const getStatusClass = (status) => ({ draft: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200', approved: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', closed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }[status] || 'bg-gray-100 text-gray-800')
+const getStatusClass = (status) => ({ draft: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200', pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-200', approved: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', closed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }[status] || 'bg-gray-100 text-gray-800')
 const getStatusLabel = (status) => ({ draft: 'Draft', approved: 'Approved', active: 'Active', closed: 'Closed' }[status] || status)
 
 const statsCards = computed(() => [

@@ -1,5 +1,5 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: `Budget - ${budget.title}` }]">
+  <AppLayout :breadcrumbs="[{ title: 'Budgets', href: '/budgets' }, { title: `Budget - ${budget.title}` }]">
     <!-- Flash Message -->
     <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
       enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
@@ -82,6 +82,11 @@
                 class="action-btn border bg-blue-900 border-gray-300 text-white hover:bg-blue-600">
               ✏️ Edit Budget
               </Link>
+
+              <button v-if="can_submit && budget.status === 'draft'" @click="submitBudget"
+                class="action-btn bg-orange-600 text-white hover:cursor-pointer hover:bg-orange-700">
+                📤 Submit for Approval
+              </button>
 
               <button v-if="can_approve && budget.status === 'draft'" @click="approveBudget" :disabled="processing"
                 class="action-btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -166,80 +171,56 @@
       </div>
     </div>
     <!-- GLOBAL LOADING OVERLAY -->
-<transition
-  enter-active-class="duration-200 ease-out"
-  leave-active-class="duration-150 ease-in"
->
-  <div
-    v-if="showOverlay"
-    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center"
-  >
-    <div class="bg-white/90 px-6 py-4 rounded-xl shadow-xl flex flex-col items-center gap-3">
-      <svg
-        class="animate-spin h-8 w-8 text-blue-600"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none" viewBox="0 0 24 24"
-      >
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor"
-          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-        </path>
-      </svg>
+    <transition enter-active-class="duration-200 ease-out" leave-active-class="duration-150 ease-in">
+      <div v-if="showOverlay"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center">
+        <div class="bg-white/90 px-6 py-4 rounded-xl shadow-xl flex flex-col items-center gap-3">
+          <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+            </path>
+          </svg>
 
-      <p class="text-gray-700 text-sm font-medium">Processing...</p>
-    </div>
-  </div>
-</transition>
+          <p class="text-gray-700 text-sm font-medium">Processing...</p>
+        </div>
+      </div>
+    </transition>
 
   </AppLayout>
   <!-- Modern Confirmation Modal -->
-<transition
-  enter-active-class="duration-200 ease-out"
-  enter-from-class="opacity-0"
-  enter-to-class="opacity-100"
-  leave-active-class="duration-150 ease-in"
-  leave-from-class="opacity-100"
-  leave-to-class="opacity-0"
->
-  <div
-    v-if="confirmDialog.visible"
-    class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-  >
-    <div
-      class="bg-white max-w-md w-full rounded-2xl shadow-xl p-6 animate-fadeIn"
-    >
-      <div class="flex items-start gap-4">
-        <div class="p-3 bg-blue-100 text-blue-600 rounded-xl">
-          ⚠️
+  <transition enter-active-class="duration-200 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100"
+    leave-active-class="duration-150 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+    <div v-if="confirmDialog.visible"
+      class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white max-w-md w-full rounded-2xl shadow-xl p-6 animate-fadeIn">
+        <div class="flex items-start gap-4">
+          <div class="p-3 bg-blue-100 text-blue-600 rounded-xl">
+            ⚠️
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">
+              {{ confirmDialog.title }}
+            </h3>
+            <p class="text-gray-600 mt-1">
+              {{ confirmDialog.message }}
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900">
-            {{ confirmDialog.title }}
-          </h3>
-          <p class="text-gray-600 mt-1">
-            {{ confirmDialog.message }}
-          </p>
+
+        <div class="mt-6 flex justify-end gap-3">
+          <button @click="confirmDialog.visible = false"
+            class="px-4 py-2 rounded-lg border hover:cursor-pointer text-gray-700 hover:bg-gray-100">
+            Cancel
+          </button>
+
+          <button @click="confirmDialog.confirm" class="px-4 py-2 hover:cursor-pointer rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+            Confirm
+          </button>
         </div>
-      </div>
-
-      <div class="mt-6 flex justify-end gap-3">
-        <button
-          @click="confirmDialog.visible = false"
-          class="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100"
-        >
-          Cancel
-        </button>
-
-        <button
-          @click="confirmDialog.confirm"
-          class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-        >
-          Confirm
-        </button>
       </div>
     </div>
-  </div>
-</transition>
+  </transition>
 
 </template>
 
@@ -257,7 +238,8 @@ const props = defineProps({
   can_approve: Boolean,
   can_activate: Boolean,
   can_close: Boolean,
-  can_edit: Boolean
+  can_edit: Boolean,
+  can_submit: Boolean
 })
 
 
@@ -297,6 +279,7 @@ const formatCurrency = (amount) =>
 
 const getStatusClass = (status) => ({
   draft: 'bg-gray-100 text-gray-700',
+  pending: 'bg-yellow-100 text-yellow-800',
   approved: 'bg-blue-100 text-blue-800',
   active: 'bg-green-100 text-green-800',
   closed: 'bg-red-100 text-red-800'
@@ -304,6 +287,7 @@ const getStatusClass = (status) => ({
 
 const getStatusLabel = (status) => ({
   draft: 'Draft',
+  pending: 'Pending',
   approved: 'Approved',
   active: 'Active',
   closed: 'Closed'
@@ -329,6 +313,34 @@ function openConfirm({ title, message, onConfirm }) {
 }
 
 const showOverlay = ref(false)
+
+
+const submitBudget = () => {
+  openConfirm({
+    title: "Submit Budget for Approval?",
+    message: "You will not be able to edit once submitted.",
+    onConfirm: () => {
+      processing.value = true
+      showOverlay.value = true
+
+      router.post(route('budgets.submit', props.budget.id), {}, {
+        onSuccess: () => {
+          processing.value = false
+          showOverlay.value = false
+        },
+        onError: () => {
+          processing.value = false
+          showOverlay.value = false
+        },
+        onFinish: () => {
+          processing.value = false
+          showOverlay.value = false
+        }
+      })
+    }
+  })
+}
+
 
 const approveBudget = () => {
   if (processing.value) return
@@ -432,9 +444,17 @@ const viewLinks = [
 }
 
 @keyframes fadeIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
+
 .animate-fadeIn {
   animation: fadeIn 0.15s ease-out;
 }

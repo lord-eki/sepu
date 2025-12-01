@@ -286,6 +286,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{budget}', [BudgetController::class, 'update'])->name('update');
         Route::delete('/{budget}', [BudgetController::class, 'destroy'])->name('destroy');
         // Budget approval
+        Route::post('/{budget}/submit', [BudgetController::class, 'submit'])->name('submit');
         Route::post('/{budget}/approve', [BudgetController::class, 'approve'])->name('approve');
         Route::post('/{budget}/activate', [BudgetController::class, 'activate'])->name('activate');
         Route::post('/{budget}/close', [BudgetController::class, 'close'])->name('close');

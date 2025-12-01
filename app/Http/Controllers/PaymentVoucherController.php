@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use App\Models\Account;
+
 
 class PaymentVoucherController extends Controller
 {
@@ -201,8 +203,11 @@ class PaymentVoucherController extends Controller
     {
         $voucher->load(['creator', 'approver', 'payer', 'budgetItem.budget', 'loan.member']);
 
+        $accounts = Account::select('id', 'account_type as name', 'account_number')->get();
+
         return Inertia::render('Shared/PaymentVouchers/Show', [
             'voucher' => $voucher,
+            'accounts' => $accounts,  
             'canApprove' => $this->canApprove($voucher),
             'canPay' => $this->canPay($voucher),
             'canEdit' => $this->canEdit($voucher),
@@ -451,6 +456,8 @@ class PaymentVoucherController extends Controller
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
+
+        $request->merge(['account_id' => $request->acc_id]);
 
         DB::beginTransaction();
 
@@ -801,12 +808,19 @@ class PaymentVoucherController extends Controller
 
     private function createPaymentTransaction(PaymentVoucher $voucher, Request $request)
     {
-        // This would create a transaction record
+
+        $accountId = $request->account_id;
+        if (!$accountId) {
+            throw new \Exception("Payment account is required for this transaction.");
+        }
+            // This would create a transaction record
         // Implementation depends on your specific transaction structure
         return Transaction::create([
             'transaction_id' => 'TXN' . time(),
             'transaction_type' => 'voucher_payment',
             'amount' => $voucher->amount,
+            'member_id' => $voucher->member_id, 
+            'account_id' => $accountId,
             'description' => 'Payment for voucher: ' . $voucher->voucher_number,
             'payment_method' => $request->payment_method,
             'payment_reference' => $request->payment_reference,
