@@ -71,39 +71,60 @@
                 class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
                 Activate Member
               </button>
-              <button v-if="member.membership_status === 'active'" @click="openConfirm('deactivate')"
+              <button v-if="member.membership_status === 'active' && member.user.id !== $page.props.auth.user.id"
+                @click="openConfirm('deactivate')"
                 class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
                 Deactivate Member
               </button>
-              <button v-if="member.membership_status !== 'suspended'" @click="openConfirm('suspend')"
+              <button v-if="member.membership_status !== 'suspended' && member.user.id !== $page.props.auth.user.id"
+                @click="openConfirm('suspend')"
                 class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
                 Suspend Member
               </button>
+              <button v-if="member.user.id === $page.props.auth.user.id"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+                No action (current user)
+              </button>
             </template>
 
-            <button 
-              @click="openConfirm('delete')" 
-              class="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm border-t border-gray-100"
-            >
+            <button v-if="member.user.id !== $page.props.auth.user.id && member.membership_status === 'inactive'" @click="openConfirm('delete')"
+              class="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm border-t border-gray-100">
               Delete Member
             </button>
+
 
             <!-- Confirmation Modal -->
             <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
               <div class="bg-white rounded-lg shadow-lg p-6 w-96">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Confirm Action</h3>
+
                 <p class="text-gray-600 mb-6">
-                  Are you sure you want to <span class="font-semibold text-orange-600">{{ actionType }}</span> this
-                  member?
+                  <template v-if="actionType === 'delete'">
+                    <strong class="text-red-600">Warning:</strong> Deleting this member will permanently remove the 
+                    member profile and deactivate their system access.  
+                    All historical data (loans, accounts, transactions, dividends) will remain for audit purposes.  
+                    <br><br>
+                    <strong>This action cannot be undone.</strong>
+                  </template>
+
+                  <template v-else>
+                    Are you sure you want to 
+                    <span class="font-semibold text-orange-600">{{ actionType }}</span> this member?
+                  </template>
                 </p>
 
                 <div class="flex justify-end space-x-3">
-                  <button @click="showConfirmModal = false"
-                    class="px-4 py-2 bg-gray-200 hover:cursor-pointer text-gray-800 rounded-md hover:bg-gray-300">
+                  <button 
+                    @click="showConfirmModal = false"
+                    class="px-4 py-2 bg-gray-200 hover:cursor-pointer text-gray-800 rounded-md hover:bg-gray-300"
+                  >
                     Cancel
                   </button>
-                  <button @click="updateStatus"
-                    class="px-4 py-2 bg-[#0a2342] hover:cursor-pointer text-white rounded-md hover:bg-orange-600">
+
+                  <button 
+                    @click="updateStatus"
+                    class="px-4 py-2 bg-[#0a2342] hover:cursor-pointer text-white rounded-md hover:bg-orange-600"
+                  >
                     Yes, {{ actionType }}
                   </button>
                 </div>
@@ -454,10 +475,9 @@
             <div v-else class="text-center py-8">
               <p class="text-gray-500">No next of kin information available</p>
             </div>
-             <Link :href="route('members.next-of-kin', member.id)"
-                class="text-indigo-600 hover:text-indigo-500 text-sm">
-                Manage Next of Kin
-              </Link>
+            <Link :href="route('members.next-of-kin', member.id)" class="text-indigo-600 hover:text-indigo-500 text-sm">
+            Manage Next of Kin
+            </Link>
           </div>
 
           <!-- Documents Tab -->
