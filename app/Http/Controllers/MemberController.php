@@ -389,24 +389,40 @@ class MemberController extends Controller
     public function bulkDelete(Request $request)
     {
         $memberIds = $request->member_ids;
-
+    
         if (empty($memberIds)) {
             return redirect()->back()->with('error', 'No members selected for deletion.');
         }
-
+    
+        $currentUserId = auth()->id(); // Logged-in user
+        $currentMember = Member::where('user_id', $currentUserId)->first(); // The member record of logged-in admin
+    
+        // Prevent self-deletion
+        if ($currentMember && in_array($currentMember->id, $memberIds)) {
+    
+            // Remove the admin from the deletion list
+            $memberIds = array_diff($memberIds, [$currentMember->id]);
+    
+            // If admin was the only selected member
+            if (empty($memberIds)) {
+                return redirect()->back()->with('error', "You cannot delete your own account.");
+            }
+        }
+    
         try {
             DB::beginTransaction();
-
+    
             $members = Member::with(['user', 'loans', 'accounts', 'dividends', 'nextOfKin', 'transactions'])
                 ->whereIn('id', $memberIds)
                 ->get();
-
+    
             foreach ($members as $member) {
+    
                 // Delete profile photo
                 if ($member->profile_photo) {
                     Storage::disk('public')->delete($member->profile_photo);
                 }
-
+    
                 // Delete member documents
                 if (!empty($member->documents)) {
                     $docs = json_decode($member->documents, true);
@@ -414,10 +430,10 @@ class MemberController extends Controller
                         Storage::disk('public')->delete($doc['path']);
                     }
                 }
-
+    
                 // Delete transactions
                 $member->transactions()->delete();
-
+    
                 // Delete loans + attachments
                 foreach ($member->loans as $loan) {
                     if (!empty($loan->attachments)) {
@@ -427,52 +443,36 @@ class MemberController extends Controller
                     }
                     $loan->delete();
                 }
-
+    
                 // Delete next of kin
                 $member->nextOfKin()->delete();
-
+    
                 // Delete dividends
                 $member->dividends()->delete();
-
+    
                 // Delete accounts
                 $member->accounts()->delete();
-
+    
                 // Delete associated user
                 if ($member->user) {
                     $member->user->delete();
                 }
-
+    
                 // Finally delete member record
                 $member->forceDelete();
             }
-
+    
             DB::commit();
-
-            return redirect()->route('members.index')->with('success', 'Selected members permanently deleted.');
-
+    
+            return redirect()->route('members.index')
+                ->with('success', 'Selected members permanently deleted.');
+    
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Bulk delete failed: ' . $e->getMessage());
         }
     }
-
-
-
-
-    /**
-     * Approve a pending member
-     */
-    public function approve(Member $member): RedirectResponse
-    {
-        if ($member->membership_status !== 'pending') {
-            return back()->with('error', 'Only pending members can be approved.');
-        }
-
-        $member->update(['membership_status' => 'approved']);
-        $member->user?->update(['is_active' => false]); // keep inactive until activation
-
-        return back()->with('success', 'Member approved successfully.');
-    }
+    
 
 
      /**
