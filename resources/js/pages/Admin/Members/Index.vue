@@ -20,6 +20,7 @@
           <!-- Action Buttons -->
           <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
 
+      
             <!-- Add Member Button -->
             <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
               class="inline-flex items-center gap-2 rounded-xl bg-[#f97316] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-orange-600 transition-all duration-200 w-fit">
@@ -65,6 +66,35 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
               </svg>
             </button>
+
+            <!-- More Actions Dropdown -->
+            <div ref="actionsWrapper" class="relative">
+              <button
+                @click="openActions = !openActions"
+                class="inline-flex items-center gap-2 rounded-xl bg-[#0a2342] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-[#103a66] transition-all duration-200 w-fit"
+              >
+                More
+                <svg class="ml-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <div
+                v-if="openActions"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+              >
+                <div class="py-1">
+                  <button
+                    @click="confirmDelete"
+                    class="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                  >
+                    <CircleX class="w-4 h-4 mr-2" />
+                    Delete Selected
+                  </button>
+                </div>
+              </div>
+            </div>
+
 
           </div>
         </div>
@@ -304,8 +334,8 @@ const flashMessage = ref(null)
 const flashType = ref('success')
 const flashBox = ref(null)
 
+// Import dropdown
 const openImport = ref(false)
-
 const importWrapper = ref(null)
 
 const handleClickOutside = (event) => {
@@ -322,7 +352,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('click', handleClickOutside)
 })
 
-
+// Selected members
 const selectedMembers = ref([])
 const selectAll = ref(false)
 
@@ -334,25 +364,23 @@ const toggleSelectAll = () => {
   }
 }
 
-const isGenerating = ref(false) // loader state
+// Generate usernames
+const isGenerating = ref(false)
 
 const generateUsernames = () => {
   if (!selectedMembers.value.length) {
     flashMessage.value = 'Please select at least one member'
     flashType.value = 'error'
-    setTimeout(() => {
-      flashMessage.value = null
-    }, 5000);
+    setTimeout(() => flashMessage.value = null, 5000)
     return
   }
-
 
   isGenerating.value = true
 
   router.post(route('members.assignUsernames'), { member_ids: selectedMembers.value }, {
     onFinish: () => {
       isGenerating.value = false
-      selectedMembers.value = [] // reset checkboxes
+      selectedMembers.value = []
       selectAll.value = false
     },
     onError: () => {
@@ -362,9 +390,54 @@ const generateUsernames = () => {
   })
 }
 
+// More actions dropdown
+const openActions = ref(false)
+const actionsWrapper = ref(null)
 
+const handleClickOutsideActions = (e) => {
+  if (actionsWrapper.value && !actionsWrapper.value.contains(e.target)) {
+    openActions.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutsideActions)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutsideActions)
+})
+
+// Delete members
+const showDeleteConfirm = ref(false)
+
+const confirmDelete = () => {
+  if (!selectedMembers.value.length) {
+    flashMessage.value = 'Please select members to delete'
+    flashType.value = 'error'
+    return
+  }
+  showDeleteConfirm.value = true
+}
+
+const deleteMembers = () => {
+  router.post(route('members.bulkDelete'), { member_ids: selectedMembers.value }, {
+    onSuccess: () => {
+      flashMessage.value = 'Selected members deleted successfully!'
+      flashType.value = 'success'
+      selectedMembers.value = []
+      selectAll.value = false
+      showDeleteConfirm.value = false
+    },
+    onError: () => {
+      flashMessage.value = 'An error occurred while deleting members.'
+      flashType.value = 'error'
+    }
+  })
+}
+
+// Member statuses
 const statuses = ref(['active', 'inactive', 'suspended', 'pending', 'approved', 'rejected'])
-// Status to color map
 const statusColors = {
   active: 'bg-green-100 text-green-700',
   inactive: 'bg-red-100 text-red-700',
@@ -374,8 +447,7 @@ const statusColors = {
   rejected: 'bg-red-100 text-red-700'
 }
 
-
-
+// Flash messages watcher
 watch(flash, (val) => {
   if (val.success) {
     flashMessage.value = val.success
@@ -384,10 +456,11 @@ watch(flash, (val) => {
     flashMessage.value = val.error
     flashType.value = 'error'
   }
+
   if (flashMessage.value) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
     flashBox.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    setTimeout(() => (flashMessage.value = null), 5000)
+    setTimeout(() => flashMessage.value = null, 5000)
   }
 }, { immediate: true, deep: true })
 
@@ -398,7 +471,7 @@ const props = defineProps({
   stats: Object
 })
 
-// Form state
+// Form state & search
 const form = ref({
   search: props.filters.search || '',
   status: props.filters.status || '',
@@ -413,8 +486,10 @@ const search = debounce(() => {
   })
 }, 300)
 
+// Format date
 const formatDate = (date) => new Date(date).toLocaleDateString()
 </script>
+
 
 <style scoped>
 @keyframes fadeIn {

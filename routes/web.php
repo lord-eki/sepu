@@ -572,3 +572,10 @@ Route::post('/stop-role', [RoleSwitchController::class, 'stop'])->name('role.sto
 
 Route::post('/members/assign-usernames', [MemberController::class, 'assignUsernames'])
     ->name('members.assignUsernames');
+
+
+// TEMPORARY — REMOVE BEFORE PRODUCTION
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::post('/members/bulk-delete', [MemberController::class, 'bulkDelete'])->name('members.bulkDelete');
+});
+

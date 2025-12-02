@@ -327,12 +327,13 @@ class MemberController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            dd($e->getMessage(), $e->getTraceAsString());
 
             return back()->withErrors(['error' => 'Failed to update member: '.$e->getMessage()]);
         }
     }
 
-    /**
+  /**
      * Remove the specified member
      */
     public function destroy(Member $member): RedirectResponse
@@ -340,33 +341,123 @@ class MemberController extends Controller
         try {
             DB::beginTransaction();
 
-            // Check if member has active loans
-            if ($member->loans()->whereIn('status', ['active', 'pending', 'approved'])->exists()) {
-                return back()->withErrors(['error' => 'Cannot delete member with active loans']);
+            // Only allow deleting INACTIVE, REJECTED, or SUSPENDED members
+            if (!in_array($member->membership_status, ['inactive', 'rejected', 'suspended'])) {
+                return redirect()->route('members.show', $member->id)
+                    ->with('error', 'Only inactive, rejected, or suspended members can be deleted.');
             }
 
-            // Check if member has account balances
+            // Prevent delete if member still has any loans
+            if ($member->loans()->exists()) {
+                return redirect()->route('members.show', $member->id)
+                    ->with('error', 'Cannot delete member with loans.');
+            }
+
+            // Prevent delete if member has balances
             if ($member->accounts()->where('balance', '>', 0)->exists()) {
-                return back()->withErrors(['error' => 'Cannot delete member with account balances']);
+                return redirect()->route('members.show', $member->id)
+                    ->with('error', 'Cannot delete member with account balances.');
             }
 
-            // Soft delete member (preserves historical data)
+            // Soft delete member
             $member->delete();
 
-            // Deactivate user account
-            $member->user->update(['is_active' => false]);
+            // Deactivate login
+            if ($member->user) {
+                $member->user->update(['is_active' => false]);
+            }
 
             DB::commit();
 
             return redirect()->route('members.index')
-                ->with('success', 'Member deleted successfully');
+                ->with('success', 'Member deleted successfully.');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return redirect()->route('members.show', $member->id)
+                ->with('error', 'Failed to delete member: ' . $e->getMessage());
+        }
+    }
+
+
+    /**
+     * TEMPORARY HARD DELETE – DEVELOPMENT ONLY
+     * Permanently removes a member and all related data.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $memberIds = $request->member_ids;
+
+        if (empty($memberIds)) {
+            return redirect()->back()->with('error', 'No members selected for deletion.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $members = Member::with(['user', 'loans', 'accounts', 'dividends', 'nextOfKin', 'transactions'])
+                ->whereIn('id', $memberIds)
+                ->get();
+
+            foreach ($members as $member) {
+                // Delete profile photo
+                if ($member->profile_photo) {
+                    Storage::disk('public')->delete($member->profile_photo);
+                }
+
+                // Delete member documents
+                if (!empty($member->documents)) {
+                    $docs = json_decode($member->documents, true);
+                    foreach ($docs as $doc) {
+                        Storage::disk('public')->delete($doc['path']);
+                    }
+                }
+
+                // Delete transactions
+                $member->transactions()->delete();
+
+                // Delete loans + attachments
+                foreach ($member->loans as $loan) {
+                    if (!empty($loan->attachments)) {
+                        foreach (json_decode($loan->attachments, true) as $file) {
+                            Storage::disk('public')->delete($file['path']);
+                        }
+                    }
+                    $loan->delete();
+                }
+
+                // Delete next of kin
+                $member->nextOfKin()->delete();
+
+                // Delete dividends
+                $member->dividends()->delete();
+
+                // Delete accounts
+                $member->accounts()->delete();
+
+                // Delete associated user
+                if ($member->user) {
+                    $member->user->delete();
+                }
+
+                // Finally delete member record
+                $member->forceDelete();
+            }
+
+            DB::commit();
+
+            return redirect()->route('members.index')->with('success', 'Selected members permanently deleted.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return back()->withErrors(['error' => 'Failed to delete member: '.$e->getMessage()]);
+            return redirect()->back()->with('error', 'Bulk delete failed: ' . $e->getMessage());
         }
     }
+
+
+
 
     /**
      * Approve a pending member

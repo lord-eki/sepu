@@ -4,6 +4,7 @@
     { title: `${member.first_name} ${member.last_name}` }
   ]">
 
+
     <!-- Flash Messages -->
     <div ref="flashBox" class="max-w-3xl mx-auto mt-4 px-4">
       <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
@@ -87,11 +88,12 @@
               </button>
             </template>
 
-            <button v-if="member.user.id !== $page.props.auth.user.id && member.membership_status === 'inactive'" @click="openConfirm('delete')"
+            <!-- <button 
+              v-if="member.user.id !== $page.props.auth.user.id && member.membership_status === 'inactive'" 
+              @click="openConfirm('delete')"
               class="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm border-t border-gray-100">
               Delete Member
-            </button>
-
+            </button> -->
 
             <!-- Confirmation Modal -->
             <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
@@ -549,7 +551,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { ArrowLeft, ChevronDown, File, Pencil, User } from 'lucide-vue-next'
+import { ArrowLeft, ChevronDown, AlertCircle, File, Pencil, User } from 'lucide-vue-next'
 
 // Flash handling
 const page = usePage();
@@ -666,18 +668,30 @@ const updateStatus = () => {
     router.delete(route('members.destroy', memberId), {
       preserveScroll: true,
       onSuccess: () => {
+        const flash = usePage().props.flash
+
+        if (flash?.error) {
+          flashMessage.value = flash.error
+          flashType.value = "error"
+        }
+
+        if (flash?.success) {
+          flashMessage.value = flash.success
+          flashType.value = "success"
+        }
+
         showConfirmModal.value = false
         showDropdown.value = false
-      },
-      onError: (errors) => {
-        flashMessage.value = errors?.message || "Unable to delete member"
-        flashType.value = "error"
+
+        // Optional: redirect to members list after deletion
+        router.visit(route('members.index'))
       },
       onFinish: () => {
         isLoading.value = false
       }
     })
-    return
+
+    return 
   }
 
   // ALL OTHER STATUS ACTIONS
