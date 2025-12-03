@@ -2,157 +2,196 @@
   <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }]">
     <Head title="Admin Dashboard" />
 
-    <div class="min-h-screen p-6 space-y-10 transition-colors duration-300 bg-gray-50 dark:bg-gray-900 animate-fadeIn">
+    <div class="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-950">
 
-      <!-- Header -->
-      <header
-        class="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between
-               bg-gradient-to-r from-[#0a2342] to-[#12345a] dark:from-gray-800 dark:to-gray-700">
-        <div class="absolute inset-0 opacity-20 dark:opacity-30 bg-[url('/patterns/mesh.svg')] bg-cover"></div>
+    <!-- TOP HEADER -->
+<div
+  class="rounded-3xl px-8 py-8 mb-10 relative overflow-hidden backdrop-blur-xl
+         shadow-[0_8px_35px_rgba(0,0,0,0.15)]
+         bg-gradient-to-br from-[#091d39] via-[#0b2549] to-[#0e3264]
+         dark:from-[#091d39] dark:via-[#0b2549] dark:to-[#0e3264]
+         border border-white/10 dark:border-gray-700/20">
 
-        <div class="relative z-10">
-          <h1 class="text-3xl font-extrabold tracking-tight drop-shadow-sm">
-            SEPU <span class="text-orange-500">SACCO</span>
-          </h1>
-          <p class="text-sm text-blue-100 dark:text-gray-300 mt-1">
-            Admin panel for insights, performance analytics and real-time SACCO operations.
-          </p>
-        </div>
+  <div class="relative z-10">
+    <h1 class="text-4xl font-black text-white tracking-tight">
+      SEPU <span class="text-orange-400">SACCO</span> — Admin Dashboard
+    </h1>
 
-        <div class="relative z-10 mt-4 sm:mt-0 flex flex-col items-center gap-2">
-          <Handshake class="w-7 h-7 text-orange-400 animate-bounce" />
-          <div class="h-1.5 w-24 bg-orange-500 rounded-full animate-pulse"></div>
-        </div>
-      </header>
+    <p class="mt-2 text-gray-200 text-sm tracking-wide">
+      Smart insights, real-time operations & intelligent system overview.
+    </p>
+  </div>
 
-      <!-- Quick Stats -->
-      <section class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <Card
-          v-for="stat in quickStats"
-          :key="stat.title"
-          class="rounded-2xl border border-gray-200 dark:border-gray-800 shadow-md bg-white dark:bg-gray-800/80 backdrop-blur-sm
-                 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <CardHeader class="flex items-center justify-between">
-            <CardTitle class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ stat.title }}</CardTitle>
-            <div class="p-2 rounded-xl" :class="stat.color">
-              <component :is="stat.icon" class="h-5 w-5" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div class="text-xl sm:text-2xl font-bold text-[#0a2342] dark:text-white">{{ stat.value }}</div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{ stat.sub }}</p>
-          </CardContent>
-        </Card>
-      </section>
+  <!-- floating orb -->
+  <div class="absolute right-10 top-6 w-36 h-36 bg-orange-400/20 rounded-full blur-3xl"></div>
+</div>
 
-      <!-- Activities & System Info -->
-      <section class="grid gap-6 lg:grid-cols-3">
 
-        <!-- Recent Activities -->
-        <div class="lg:col-span-2">
-          <h2 class="text-lg font-semibold mb-3 text-[#0a2342] dark:text-gray-200">Recent Activities</h2>
-          <div
-            class="rounded-2xl border border-gray-200 dark:border-gray-800 shadow-md bg-white dark:bg-gray-800/80 backdrop-blur-sm
-                   h-[350px] overflow-y-auto custom-scroll divide-y divide-gray-100 dark:divide-gray-700">
-            <div
-              v-for="(item, i) in recentActivities"
-              :key="i"
-              class="flex items-center justify-between p-4 hover:bg-orange-50 dark:hover:bg-gray-700 transition">
-              <div class="flex items-start gap-3">
-                <ArrowRightCircle class="h-5 w-5 text-orange-500" />
-                <div>
-                  <p class="text-sm text-gray-800 dark:text-gray-200 leading-tight">{{ item.description }}</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ new Date(item.time).toLocaleString() }}</p>
-                </div>
-              </div>
-              <span class="text-sm text-[#0a2342] dark:text-white">Ksh. {{ item.amount }}</span>
-            </div>
+    <!-- QUICK STATS -->
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-7">
+  <div
+    v-for="stat in quickStats"
+    :key="stat.title"
+    class="p-6 rounded-2xl bg-gradient-to-br from-white to-[#f3f4f6]
+           dark:from-[#0f1e33] dark:to-[#0a1628]
+           shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer
+           border border-gray-200 dark:border-gray-700 flex flex-col gap-4 backdrop-blur-sm"
+  >
+    <div class="flex justify-between items-center">
+      <component :is="stat.icon" class="h-8 w-8 text-orange-500" />
+      <span class="text-xs font-medium text-gray-600 dark:text-gray-300">{{ stat.title }}</span>
+    </div>
+
+    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ stat.value }}</h2>
+    <p class="text-xs text-gray-500 dark:text-gray-400">{{ stat.sub }}</p>
+  </div>
+</div>
+
+<!-- PENDING APPROVALS -->
+<div class="mt-12">
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+    <FileWarning class="h-5 w-5 text-orange-500" />
+    Pending Approvals
+  </h2>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div
+      v-for="item in approvalItems"
+      :key="item.label"
+      class="p-5 rounded-2xl shadow-lg bg-gradient-to-br from-white to-gray-100
+             dark:from-[#0f1e33] dark:to-[#0a1628]
+             border border-gray-200 dark:border-gray-700
+             hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer"
+      @click="$inertia.visit(item.link)"
+    >
+      <div class="flex justify-between items-center">
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+          {{ item.label }}
+        </span>
+
+        <span :class="item.badge">
+          {{ item.value }}
+        </span>
+      </div>
+
+      <p class="text-xs mt-2 text-gray-500 dark:text-gray-400">
+        Awaiting approval
+      </p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ACTIVITIES + SYSTEM -->
+<div class="grid lg:grid-cols-3 gap-8 mt-12 items-start">
+
+  <!-- RECENT ACTIVITIES -->
+  <div class="lg:col-span-2 flex flex-col">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      Recent Activity
+    </h2>
+
+    <div
+      class="h-[380px] overflow-y-auto rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+             shadow-lg backdrop-blur-lg divide-y divide-gray-100 dark:divide-gray-700 custom-scroll p-4"
+    >
+      <div
+        v-for="(item, i) in recentActivities"
+        :key="i"
+        class="flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition"
+      >
+        <div class="flex items-start gap-4">
+          <ArrowRightCircle class="h-6 w-6 text-orange-500" />
+          <div>
+            <p class="text-sm text-gray-800 dark:text-gray-200">{{ item.description }}</p>
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              {{ new Date(item.time).toLocaleString() }}
+            </span>
           </div>
         </div>
+        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">
+          Ksh {{ item.amount }}
+        </span>
+      </div>
+    </div>
+  </div>
 
-        <!-- Approvals & System Health -->
-        <Card
-          class="rounded-2xl border border-gray-200 dark:border-gray-800 shadow-md bg-white dark:bg-gray-800/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle class="text-base font-semibold text-[#0a2342] dark:text-gray-200 flex items-center gap-2">
-              <Clock class="h-4 w-4 text-orange-500" /> Pending Approvals
-            </CardTitle>
-          </CardHeader>
+  <!-- SYSTEM OVERVIEW -->
+  <div class="flex flex-col">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+      <Settings class="h-5 w-5 text-orange-500" /> System Overview
+    </h2>
 
-          <CardContent class="pb-0">
-            <ul class="space-y-2 text-sm mb-4">
-              <li
-                v-for="item in approvalItems"
-                :key="item.label"
-                class="flex justify-between items-center cursor-pointer hover:text-orange-600 dark:hover:text-orange-400"
-                @click="item.link && $inertia.visit(item.link)">
-                <span class="dark:text-gray-300">{{ item.label }}</span>
-                <span :class="item.badge">{{ item.value }}</span>
-              </li>
-            </ul>
+    <ul
+      class="h-[380px] overflow-y-auto space-y-4 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+             shadow-lg backdrop-blur-xl p-6 custom-scroll"
+    >
+      <li class="flex items-center gap-3">
+        <Database class="h-5 w-5 text-green-600" />
+        <span class="text-gray-800 dark:text-gray-200">Database:</span>
+        <span class="font-bold text-green-600 dark:text-green-400">
+          {{ systemHealth.database_status }}
+        </span>
+      </li>
 
-            <hr class="border-gray-200 dark:border-gray-700 mb-4" />
+      <li class="flex items-center gap-3">
+        <Clock class="h-5 w-5 text-blue-600" />
+        <span class="text-gray-800 dark:text-gray-200">Last Backup:</span>
+        <span class="text-gray-700 dark:text-gray-400">
+          {{ new Date(systemHealth.last_backup).toLocaleString() }}
+        </span>
+      </li>
 
-            <CardTitle class="text-base font-semibold text-[#0a2342] dark:text-gray-200 flex items-center gap-2">
-              <Database class="h-4 w-4 text-blue-800 dark:text-blue-400" /> System Health
-            </CardTitle>
+      <li class="flex items-center gap-3">
+        <Users class="h-5 w-5 text-gray-700 dark:text-gray-300" />
+        <span class="text-gray-800 dark:text-gray-200">Active Users:</span>
+        <span class="font-bold">{{ systemHealth.active_users }}</span>
+      </li>
 
-            <ul class="space-y-3 text-sm mt-5">
-              <li class="flex items-center gap-2 dark:text-gray-300">
-                <Database class="h-4 w-4 text-green-600" /> Status:
-                <span class="font-medium text-green-700 dark:text-green-400">{{ systemHealth.database_status }}</span>
-              </li>
-              <li class="flex items-center gap-2 dark:text-gray-300">
-                <Clock class="h-4 w-4 text-gray-500" /> Last Backup:
-                <span>{{ new Date(systemHealth.last_backup).toLocaleString() }}</span>
-              </li>
-              <li class="flex items-center gap-2 dark:text-gray-300">
-                <Users class="h-4 w-4 text-[#0a2342] dark:text-gray-100" /> Active Users:
-                <span class="font-medium">{{ systemHealth.active_users }}</span>
-              </li>
-              <li class="flex items-center gap-2 dark:text-gray-300">
-                <AlertTriangle class="h-4 w-4 text-red-600" /> Errors:
-                <span class="font-medium text-red-600">{{ systemHealth.system_errors }}</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-      </section>
+      <li class="flex items-center gap-3">
+        <AlertTriangle class="h-5 w-5 text-red-600" />
+        <span class="text-gray-800 dark:text-gray-200">Errors:</span>
+        <span class="font-bold text-red-600">{{ systemHealth.system_errors }}</span>
+      </li>
+    </ul>
+  </div>
+</div>
 
-      <!-- Setup -->
-      <section>
-        <h2 class="text-lg font-semibold mb-4 text-[#0a2342] dark:text-gray-200 flex items-center gap-2">
-          <Settings class="h-5 w-5 text-orange-500" /> System Setup & Configuration
+
+
+      <!-- SETUP SECTION -->
+      <div class="mt-14">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+          <Settings class="h-5 w-5 text-orange-500" /> Setup & Configuration
         </h2>
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <Card
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div
             v-for="setup in setupItems"
             :key="setup.title"
-            class="rounded-2xl border border-gray-200 dark:border-gray-800 shadow-md bg-white dark:bg-gray-800/80
-                   hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-            @click="$inertia.visit(setup.link)">
-            <CardHeader class="flex items-center justify-between pb-2">
-              <CardTitle class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ setup.title }}</CardTitle>
-              <div class="p-2 rounded-xl " :class="setup.color">
-                <component :is="setup.icon" class="h-5 w-5 " />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p class="text-xs text-gray-500 dark:text-gray-400">{{ setup.desc }}</p>
-            </CardContent>
-          </Card>
+            class="p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                   rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition cursor-pointer"
+            @click="$inertia.visit(setup.link)"
+          >
+            <div class="flex justify-between">
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ setup.title }}</h3>
+              <component :is="setup.icon" class="h-6 w-6 text-orange-500" />
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              {{ setup.desc }}
+            </p>
+          </div>
         </div>
-      </section>
+      </div>
 
-      <!-- Footer -->
-      <footer class="text-center text-xs text-gray-500 dark:text-gray-400 pt-8 pb-4">
-        © {{ new Date().getFullYear() }}
-        <span class="font-semibold text-[#0a2342] dark:text-gray-200">SEPU SACCO</span> — All Rights Reserved.
+      <!-- FOOTER -->
+      <footer class="text-center mt-10 text-xs text-gray-500 dark:text-gray-400">
+        © {{ new Date().getFullYear() }} SEPU SACCO — Smart Cooperative Admin Suite.
       </footer>
-
     </div>
   </AppLayout>
 </template>
+
 
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
