@@ -318,13 +318,25 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div class="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full">
         <h2 class="text-lg font-bold mb-4">Confirm Delete</h2>
         <p class="mb-4">Are you sure you want to delete the selected members?</p>
         <div class="flex justify-end gap-3">
           <button @click="showDeleteConfirm = false" class="px-4 py-2 rounded bg-gray-200">Cancel</button>
-          <button @click="deleteMembers" class="px-4 py-2 rounded bg-red-600 text-white">Delete</button>
+          <button @click="deleteMembers"
+              class="px-4 py-2 rounded bg-red-600 text-white flex items-center gap-2"
+              :disabled="isDeleting">
+
+              <svg v-if="isDeleting" class="animate-spin h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10"
+                  stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+              <span>{{ isDeleting ? 'Deleting...' : 'Delete' }}</span>
+            </button>
         </div>
       </div>
     </div>
@@ -346,6 +358,9 @@ const flash = computed(() => page.props.flash || {})
 const flashMessage = ref(null)
 const flashType = ref('success')
 const flashBox = ref(null)
+
+const isDeleting = ref(false)
+
 
 // Import dropdown
 const openImport = ref(false)
@@ -434,20 +449,22 @@ const confirmDelete = () => {
 }
 
 const deleteMembers = () => {
-  router.post(route('members.bulkDelete'), { member_ids: selectedMembers.value }, {
-    onSuccess: () => {
-      flashMessage.value = 'Selected members deleted successfully!'
-      flashType.value = 'success'
-      selectedMembers.value = []
-      selectAll.value = false
-      showDeleteConfirm.value = false
-    },
-    onError: () => {
-      flashMessage.value = 'An error occurred while deleting members.'
-      flashType.value = 'error'
+  isDeleting.value = true
+
+  router.post(
+    route('members.bulkDelete'),
+    { member_ids: selectedMembers.value }, 
+    {
+      preserveScroll: true,
+      onFinish: () => {
+        isDeleting.value = false
+        showDeleteConfirm.value = false
+      }
     }
-  })
+  )
 }
+
+
 
 // Member statuses
 const statuses = ref(['active', 'inactive', 'suspended', 'pending', 'approved', 'rejected'])

@@ -37,20 +37,28 @@
               <h2 class="font-bold text-lg sm:text-xl text-blue-900">Account Details</h2>
             </div>
             <p class="self-center text-sm text-gray-600 mt-1">
-              {{ account.account_number }} - {{ account.member.first_name }} {{ account.member.last_name }}
+              {{ account.account_number }}
+              - {{ account.member?.first_name || 'Unknown' }}
+              {{ account.member?.last_name || 'Member' }}
             </p>
           </div>
-          <div class="flex space-x-3">
-            <!-- Only show Deposit button for Share Deposits account -->
+          <div v-if="account.member" class="flex space-x-3">
+            <!-- Only for share deposits -->
             <Link v-if="account.account_type === 'share_deposits'" :href="route('accounts.deposit.show', account.id)"
               class="inline-flex items-center px-4 py-2 bg-blue-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-blue-900 transition">
             Deposit
             </Link>
+
+            <!-- Edit button -->
             <Link :href="route('accounts.edit', account.id)"
               class="inline-flex items-center px-4 py-2 bg-gray-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-gray-900 transition">
             Edit
             </Link>
           </div>
+          <div v-else class="text-gray-500 italic text-sm">
+            Member deleted — actions unavailable
+          </div>
+
         </div>
 
         <!-- Account Summary Cards -->
@@ -134,9 +142,15 @@
               <div class="py-3 grid grid-cols-3 gap-4">
                 <dt class="text-sm font-medium text-gray-500">Member</dt>
                 <dd class="col-span-2">
-                  <Link :href="route('members.show', account.member.id)" class="text-blue-700 hover:underline">
+                  <!-- If member exists -->
+                  <Link v-if="account.member" :href="route('members.show', account.member.id)"
+                    class="text-blue-700 hover:underline">
                   {{ account.member.first_name }} {{ account.member.last_name }}
                   </Link>
+
+                  <!-- If member is missing/deleted -->
+                  <span v-else class="text-gray-500 italic">Member Removed</span>
+
                 </dd>
               </div>
               <div class="py-3 grid grid-cols-3 gap-4">
