@@ -25,33 +25,7 @@ class UserSeeder extends Seeder
                 'is_active' => true,
                 'email_verified_at' => now(),
             ],
-            [
-                'name' => 'John Doe',
-                'email' => 'manager@sepusacco.co.ke',
-                'password' => Hash::make('manager123'),
-                'phone' => '+254700000002',
-                'role' => 'management',
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ],
-            [
-                'name' => 'Jane Smith',
-                'email' => 'accountant@sepusacco.co.ke',
-                'password' => Hash::make('accountant123'),
-                'phone' => '+254700000003',
-                'role' => 'accountant',
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ],
-            [
-                'name' => 'Peter Kamau',
-                'email' => 'loanofficer@sepusacco.co.ke',
-                'password' => Hash::make('officer123'),
-                'phone' => '+254700000004',
-                'role' => 'loan_officer',
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ],
+            
         ];
 
         foreach ($users as $userData) {
