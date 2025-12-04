@@ -46,7 +46,7 @@
             </span>
           </div>
 
-          <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h2 class="text-xl sm:text-2xl font-semibold text-[#0a2342] dark:text-white">
             {{ stat.value }}
           </h2>
 
@@ -108,7 +108,7 @@
             </div>
 
             <p
-              v-if="item.label === 'Member Activation'"
+              v-if="item.label === 'Member activation'"
               class="text-xs mt-2 text-gray-500 dark:text-gray-400"
             >
               Awaiting activation
@@ -129,7 +129,7 @@
         <!-- RECENT ACTIVITY -->
         <div class="lg:col-span-2 flex flex-col">
           <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-            Recent Activity
+            Recent Activities
           </h2>
 
           <div
@@ -251,6 +251,12 @@ const props = defineProps([
   'stats', 'recentActivities', 'pendingApprovals', 'systemHealth'
 ])
 
+const formatMoney = (num) => {
+  if (num == null) return 'Ksh 0';
+  return 'Ksh ' + Number(num).toLocaleString();
+};
+
+
 const quickStats = [
   {
     title: 'Total Members',
@@ -261,10 +267,9 @@ const quickStats = [
   },
   {
     title: 'Total Share Deposits',
-    value: props.stats.financial.total_share_deposits?.toLocaleString(),
-    sub: `Share Capital: ${props.stats.financial.total_share_capital?.toLocaleString()}`,
+    value: formatMoney(props.stats.financial.total_share_deposits),
+    sub: `Share Capital: ${formatMoney(props.stats.financial.total_share_capital)}`,
     icon: Banknote,
-    color: 'bg-orange-100 text-orange-600 dark:bg-orange-700/30 dark:text-orange-300'
   },
   {
     title: 'Active Loans',

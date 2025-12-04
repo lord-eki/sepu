@@ -129,11 +129,11 @@
               class="inline-flex items-center px-4 py-2 bg-[#0A1A2F] text-white rounded-lg shadow hover:bg-[#112C4F] transition disabled:opacity-50">
               Preview Changes
             </button>
-            <PrimaryButton type="submit" :class="{ 'opacity-25': form.processing }"
+            <button type="submit" :class="{ 'opacity-25': form.processing }"
               :disabled="form.processing || !hasChanges"
               class="bg-[#F97316] hover:bg-[#ea6a0f] text-white rounded-lg px-4 py-2 shadow transition">
               Update Dividend
-            </PrimaryButton>
+            </button>
           </div>
         </form>
       </div>
