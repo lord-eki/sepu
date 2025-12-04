@@ -4,9 +4,9 @@
     <Head title="Dividends Management" />
 
     <!-- Header -->
-    <div class="bg-header text-white py-5 mt-5 mx-5 px-6 sm:px-10 rounded-3xl shadow-lg">
-      <h2 class="text-xl sm:text-2xl font-bold tracking-tight">
-        Dividends Management
+    <div class="bg-header text-white py-5 mt-5 mx-8 px-6 sm:px-10 rounded-3xl shadow-lg">
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">
+        Dividends
       </h2>
       <p class="mt-2 text-sm sm:text-base opacity-90">
         Track, approve, and distribute member dividends with ease.
@@ -14,7 +14,7 @@
     </div>
 
     <div class="py-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <div class="max-w-7xl mx-auto px-4 space-y-10">
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -32,8 +32,8 @@
                 </svg>
               </div>
               <div>
-                <p class="text-sm text-gray-500">{{ card.label }}</p>
-                <p class="text-lg font-semibold text-[#0a2342]">{{ card.value }}</p>
+                <p class="text-sm sm:text-base text-gray-500">{{ card.label }}</p>
+                <p class="text-lg sm:text-xl font-semibold text-[#0a2342]">{{ card.value }}</p>
               </div>
             </div>
           </div>
@@ -222,6 +222,6 @@ const distributeDividend = (dividend) => {
 
 <style scoped>
 .bg-header {
-  background: linear-gradient(135deg, #0a2342 0%, #f97316 100%);
+  background: linear-gradient(135deg, #0a2342 0%, #0b2549 50%, #f97316 100%);
 }
 </style>

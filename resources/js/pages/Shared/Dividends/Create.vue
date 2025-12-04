@@ -127,7 +127,7 @@
               <div>
                 <InputLabel for="dividend_rate" value="Dividend Rate (%) *" class="text-[#0A1A2F]" />
                 <TextInput id="dividend_rate" type="number" step="0.01" min="1" max="100"
-                  class="mt-1 border border-gray-50 p-2 rounded-md block w-full" v-model="form.dividend_rate"
+                  class="mt-1 border border-gray-50 p-2 rounded-md block w-full" placeholder="0-9" v-model="form.dividend_rate"
                   @input="calculateDividends" required />
                 <InputError class="mt-2" :message="form.errors.dividend_rate" />
               </div>
