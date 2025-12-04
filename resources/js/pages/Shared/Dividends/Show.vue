@@ -3,7 +3,7 @@
     { title: 'Dividends', href: '/dividends' },
     { title: `Dividend ${dividend.dividend_year}` }
   ]">
-
+   <Head title="View Dividend" />
     <!-- Flash -->
     <div ref="flashBox" class="max-w-3xl mx-auto mt-4 z-50 px-4">
       <transition name="fade-slide">
@@ -383,7 +383,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { Link, router, useForm, usePage } from '@inertiajs/vue3'
+import { Link, router, useForm, Head, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import Pagination from '@/components/Pagination.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'

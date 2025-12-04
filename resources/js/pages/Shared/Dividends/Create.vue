@@ -168,12 +168,17 @@
                 <TextInput
                   id="dividend_rate"
                   type="number"
+                  min="0.01"
+                  max="9"
+                  step="0.01"
                   class="mt-1 p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   v-model="form.dividend_rate"
                   @input="calculateDividends"
                 />
                 <InputError :message="form.errors.dividend_rate" />
+                <p class="text-sm text-gray-500 mt-1">Enter a value greater than 0 and maximum 9%</p>
               </div>
+
 
               <!-- NOTES -->
               <div>
