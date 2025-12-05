@@ -49,7 +49,7 @@
 
     <!-- Header -->
     <div
-      class="bg-header text-white py-5 mt-5 mx-3 px-6 sm:px-10 rounded-3xl shadow-lg dark:bg-[#0a122d]"
+      class="bg-header text-white py-5 mx-3 px-6 sm:px-10 rounded-3xl shadow-lg dark:bg-[#0a122d]"
     >
       <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Dividends</h2>
       <p class="mt-2 text-sm sm:text-base opacity-90">
