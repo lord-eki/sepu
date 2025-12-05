@@ -26,59 +26,110 @@
     </div>
 
     <!-- Header -->
-    <div class="flex flex-col md:flex-row justify-between items-center gap-4 max-w-7xl px-4 sm:px-6 lg:px-8 mt-2">
-      <div class="flex flex-col gap-2">
-        <h1 class="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100">
+    <div
+      class="flex flex-col md:flex-row justify-between items-center gap-4 
+            max-w-7xl px-4 sm:px-6 lg:px-8 mb-4 
+            bg-gradient-to-r from-[#0A1A2F] via-[#F97316] to-white 
+            rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5"
+    >
+      <!-- Title + Status -->
+      <div class="flex flex-col gap-1">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white dark:text-white">
           Dividend {{ dividend.dividend_year }}
         </h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+
+        <p class="text-sm text-gray-200 dark:text-gray-400 flex items-center gap-2">
           Status:
-          <span :class="[
-            'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
-            getStatusClass(dividend.status)
-          ]">
+          <span
+            :class="[
+              'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm',
+              getStatusClass(dividend.status)
+            ]"
+          >
             {{ formatStatus(dividend.status) }}
           </span>
         </p>
       </div>
 
+      <!-- Action Buttons -->
       <div class="flex flex-wrap items-start gap-3 mt-3 md:mt-0">
+
         <!-- Back -->
-        <Link :href="route('dividends.index')" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-semibold hover:bg-slate-900 transition">
+        <Link
+          :href="route('dividends.index')"
+          class="modern-btn bg-[#0A1A2F] hover:bg-[#112C4F] flex items-center gap-1 p-1.5 rounded-sm text-white"
+        >
           <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" />
+            <path fill-rule="evenodd"
+              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 
+                1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 
+                1 0 010 1.414z" />
           </svg>
           Back
         </Link>
 
         <!-- Edit -->
-        <Link v-if="dividend.status === 'calculated'" :href="route('dividends.edit', dividend.id)" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-800 text-white text-sm font-semibold hover:bg-blue-900 transition">
+        <Link
+          v-if="dividend.status === 'calculated'"
+          :href="route('dividends.edit', dividend.id)"
+          class="flex items-center gap-1 p-1.5 rounded-sm modern-btn bg-blue-800 hover:bg-blue-900 text-white"
+        >
           <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            <path
+              d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 
+                5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
           </svg>
           Edit
         </Link>
 
         <!-- Approve -->
-        <button v-if="canApprove" @click="showApproveModal = true" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition">
+        <button
+          v-if="canApprove"
+          @click="showApproveModal = true"
+          class="modern-btn flex items-center gap-1 p-1.5 rounded-sm bg-green-800 hover:bg-green-900 text-white"
+        >
           <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+            <path fill-rule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 
+                01-1.414 0l-4-4a1 1 0 011.414-1.414L8 
+                12.586l7.293-7.293a1 1 0 011.414 0z" />
           </svg>
           Approve
         </button>
 
         <!-- Distribute -->
-        <button v-if="canDistribute" @click="showDistributeModal = true" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition">
+        <button
+          v-if="canDistribute"
+          @click="showDistributeModal = true"
+          class="modern-btn flex items-center gap-1 p-1.5 rounded-sm bg-[#F97316] hover:bg-orange-600 text-white"
+        >
           <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 011-1h1a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h6a1 1 0 011 1v3a1 1 0 01-1 1H9a1 1 0 01-1-1V4z" />
+            <path
+              d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 
+                013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 
+                0 013 0zM3 4a1 1 0 011-1h1a1 1 0 011 1v3a1 
+                1 0 01-1 1H4a1 1 0 01-1-1V4zM8 4a1 1 0 
+                011-1h6a1 1 0 011 1v3a1 1 0 01-1 1H9a1 1 
+                0 01-1-1V4z" />
           </svg>
           Distribute
         </button>
 
         <!-- Reverse -->
-        <button v-if="dividend.status === 'distributed'" @click="showReverseModal = true" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition">
+        <button
+          v-if="dividend.status === 'distributed'"
+          @click="showReverseModal = true"
+          class="modern-btn flex items-center gap-1 p-1.5 rounded-sm bg-red-600 hover:bg-red-700 text-white"
+        >
           <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
+            <path fill-rule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 
+                0L10 8.586l4.293-4.293a1 1 0 
+                111.414 1.414L11.414 10l4.293 
+                4.293a1 1 0 01-1.414 1.414L10 
+                11.414l-4.293 4.293a1 1 0 
+                01-1.414-1.414L8.586 10 4.293 
+                5.707a1 1 0 010-1.414z" />
           </svg>
           Reverse
         </button>
@@ -90,24 +141,24 @@
 
       <!-- Overview cards -->
       <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="rounded-xl shadow-sm bg-white dark:bg-gray-800 p-5 border border-gray-100 dark:border-gray-700">
+        <div class="rounded-xl shadow-sm bg-white dark:bg-gray-800 p-5 border border-orange-100 dark:border-gray-700">
           <p class="text-sm font-medium text-gray-900 dark:text-gray-200">Total Profit</p>
-          <p class="mt-2 text-xl font-bold text-gray-900 dark:text-gray-100">KSh {{ formatCurrency(dividend.total_profit) }}</p>
+          <p class="mt-2 text-xl font-bold text-blue-900 dark:text-gray-100">KSh {{ formatCurrency(dividend.total_profit) }}</p>
         </div>
 
-        <div class="rounded-xl shadow-sm bg-white dark:bg-gray-800 p-5 border border-gray-100 dark:border-gray-700">
+        <div class="rounded-xl shadow-sm bg-white dark:bg-gray-800 p-5 border border-orange-100 dark:border-gray-700">
           <p class="text-sm font-medium text-gray-900 dark:text-gray-200">Dividend Rate</p>
-          <p class="mt-2 text-xl font-bold text-gray-900 dark:text-gray-100">{{ dividend.dividend_rate }}%</p>
+          <p class="mt-2 text-xl font-bold text-blue-900 dark:text-gray-100">{{ dividend.dividend_rate }}%</p>
         </div>
 
-        <div class="rounded-xl shadow-sm bg-white dark:bg-gray-800 p-5 border border-gray-100 dark:border-gray-700">
+        <div class="rounded-xl shadow-sm bg-white dark:bg-gray-800 p-5 border border-orange-100 dark:border-gray-700">
           <p class="text-sm font-medium text-gray-900 dark:text-gray-200">Total Dividends</p>
-          <p class="mt-2 text-xl font-bold text-gray-900 dark:text-gray-100">KSh {{ formatCurrency(dividend.total_dividends) }}</p>
+          <p class="mt-2 text-xl font-bold text-blue-900 dark:text-gray-100">KSh {{ formatCurrency(dividend.total_dividends) }}</p>
         </div>
 
-        <div class="rounded-xl shadow-sm bg-white dark:bg-gray-800 p-5 border border-gray-100 dark:border-gray-700">
+        <div class="rounded-xl shadow-sm bg-white dark:bg-gray-800 p-5 border border-orange-100 dark:border-gray-700">
           <p class="text-sm font-medium text-gray-900 dark:text-gray-200">Profit Utilization</p>
-          <p class="mt-2 text-xl font-bold text-gray-900 dark:text-gray-100">{{ profitUtilization }}%</p>
+          <p class="mt-2 text-xl font-bold text-blue-900 dark:text-gray-100">{{ profitUtilization }}%</p>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">of total profit</p>
         </div>
       </section>

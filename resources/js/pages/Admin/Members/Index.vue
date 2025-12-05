@@ -1,7 +1,7 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Members', href: '/members' }]">
 
-    <Head title="Members Management" />
+    <Head title="Members" />
     <!-- Flash Messages -->
     <div ref="flashBox" class="max-w-3xl mx-auto px-4">
       <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
@@ -31,11 +31,11 @@
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 transition-colors">
       <!-- HEADER -->
       <div
-        class="mx-4 mt-6 rounded-2xl shadow-lg bg-gradient-to-br from-[#0a2342] via-[#0c2e55] to-[#103a66] dark:from-gray-800 dark:to-gray-700 text-white p-6 sm:p-8">
+        class="mx-2 mt-4 rounded-2xl shadow-lg bg-gradient-to-br from-[#0a2342] via-[#0c2e55] to-[#103a66] dark:from-gray-800 dark:to-gray-700 text-white p-4 sm:p-6">
 
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 class="text-2xl sm:text-3xl font-bold">Members Management</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold">Members</h1>
             <p class="text-blue-100 max-sm:text-sm mt-1 dark:text-gray-300">
               Manage and organize all SACCO members efficiently.
             </p>
@@ -45,7 +45,7 @@
           <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
 
             <!-- Add Member -->
-            <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')" class="px-4 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 
+            <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')" class="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 
                     text-white text-sm sm:text-base shadow flex items-center gap-1">
             <PlusCircle class="w-4 h-4" />
             Add Member
@@ -53,7 +53,7 @@
 
             <!-- Import dropdown -->
             <div class="relative" ref="importWrapper">
-              <button @click="openImport = !openImport" class="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 
+              <button @click="openImport = !openImport" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 
                       text-white text-sm sm:text-base shadow flex items-center gap-1">
                 <Upload class="w-4 h-4" /> Import
                 <ChevronDownIcon class="w-4 h-4" />
@@ -74,7 +74,7 @@
             </div>
 
             <!-- Generate usernames -->
-            <button @click="generateUsernames" class="px-4 py-3 rounded-xl bg-green-600 hover:bg-green-700 
+            <button @click="generateUsernames" class="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 
                     text-white text-sm sm:text-base flex items-center gap-2 shadow" :disabled="isGenerating">
               <Loader2Icon v-if="isGenerating" class="w-4 h-4 animate-spin" />
               {{ isGenerating ? "Generating..." : "Generate Username(s)" }}
@@ -84,7 +84,7 @@
             <!-- More actions -->
             <div class="relative" ref="actionsWrapper">
               <button @click="openActions = !openActions"
-                class="px-4 py-3 rounded-xl bg-[#0a2342] hover:bg-[#103a66] text-white text-sm sm:text-base shadow flex items-center gap-1 dark:bg-gray-700 dark:hover:bg-gray-600">
+                class="px-4 py-2.5 rounded-xl bg-[#0a2342] hover:bg-[#103a66] text-white text-sm sm:text-base shadow flex items-center gap-1 dark:bg-gray-700 dark:hover:bg-gray-600">
                 More
                 <ChevronDownIcon class="w-4 h-4" />
               </button>

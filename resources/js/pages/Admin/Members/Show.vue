@@ -1,26 +1,42 @@
 <template>
-  <AppLayout :breadcrumbs="[
-    { title: 'Members', href: route('members.index') },
-    { title: `${member.first_name} ${member.last_name}` }
-  ]">
-
-
+  <AppLayout
+    :breadcrumbs="[
+      { title: 'Members', href: route('members.index') },
+      { title: `${member.first_name} ${member.last_name}` }
+    ]"
+  >
     <!-- Flash Messages -->
     <div ref="flashBox" class="max-w-3xl mx-auto mt-4 px-4">
-      <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
-        <div v-if="flashMessage" :class="[
-    flashType === 'success'
-      ? 'bg-green-50 border border-green-200 text-green-700'
-      : 'bg-red-50 border border-red-200 text-red-700',
-    'mb-4 rounded-xl p-4 shadow-sm flex items-center'
-  ]">
-          <component :is="flashType === 'success' ? CheckCircle : AlertCircle" class="h-5 w-5"
-            :class="flashType === 'success' ? 'text-green-600' : 'text-red-600'" />
+      <transition
+        enter-active-class="transition ease-out duration-300"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2"
+      >
+        <div
+          v-if="flashMessage"
+          :class="[
+            flashType === 'success'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-700 dark:text-green-300'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300',
+            'mb-4 rounded-xl p-4 shadow-sm flex items-center border'
+          ]"
+        >
+          <component
+            :is="flashType === 'success' ? CheckCircle : AlertCircle"
+            class="h-5 w-5"
+            :class="flashType === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+          />
           <div class="flex gap-2 items-center">
             <p class="ml-3 text-sm">{{ flashMessage }}</p>
-            <button @click="flashMessage = null" class="ml-auto text-gray-500 hover:text-gray-700">x</button>
+            <button
+              @click="flashMessage = null"
+              class="ml-auto text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            >
+              x
+            </button>
           </div>
         </div>
       </transition>
@@ -28,104 +44,153 @@
 
     <!-- Header -->
     <div
-      class="flex flex-col sm:flex-row items-start sm:items-center justify-between  max-sm:mx-2 gap-4 px-4 sm:px-8 py-6 bg-[#0a2342] text-white rounded-b-3xl shadow-md">
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between max-sm:mx-2 gap-4 px-4 sm:px-8 py-6 
+             bg-[#0a2342] text-white rounded-b-3xl shadow-md
+             dark:bg-[#0e1628] dark:text-gray-100"
+    >
       <div class="flex items-center gap-3">
         <Link :href="route('members.index')" class="hover:text-orange-400 transition">
-        <ArrowLeft class="w-5 h-5" />
+          <ArrowLeft class="w-5 h-5" />
         </Link>
+
         <div>
           <h2 class="font-bold text-lg sm:text-xl">{{ member.first_name }} {{ member.last_name }}</h2>
           <p class="text-sm opacity-75">Member ID: {{ member.membership_id }}</p>
         </div>
       </div>
 
+      <!-- ACTION BUTTONS -->
       <div v-if="canEdit" class="flex flex-wrap gap-2">
-        <Link :href="route('members.edit', member.id)"
-          class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition">
-        <Pencil class="w-4 h-4" /> Edit
+        <Link
+          :href="route('members.edit', member.id)"
+          class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 
+                 text-white px-4 py-2 rounded-xl text-sm font-medium transition"
+        >
+          <Pencil class="w-4 h-4" /> Edit
         </Link>
 
+        <!-- DROPDOWN -->
         <div class="relative" ref="dropdown">
-          <button @click="showDropdown = !showDropdown"
-            class="inline-flex items-center gap-2 bg-white text-[#0a2342] border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium hover:bg-gray-50">
+          <button
+            @click="showDropdown = !showDropdown"
+            class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-[#0a2342] dark:text-gray-100 
+                   border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm font-medium 
+                   hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
             Actions
             <ChevronDown class="w-4 h-4" />
           </button>
-          <div v-if="showDropdown"
-            class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 z-10 border border-gray-100">
 
-            <!-- Pending members: only Approve or Reject -->
+          <div
+            v-if="showDropdown"
+            class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg py-2 z-10 
+                   border border-gray-100 dark:border-gray-700"
+          >
+            <!-- Pending members -->
             <template v-if="member.membership_status === 'pending' && canManageStatus">
-              <button @click="openConfirm('approve')"
-                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+              <button
+                @click="openConfirm('approve')"
+                class="block w-full text-left px-4 py-2 
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20
+                       text-gray-700 dark:text-gray-300 text-sm"
+              >
                 Approve Member
               </button>
-              <button @click="openConfirm('reject')"
-                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+
+              <button
+                @click="openConfirm('reject')"
+                class="block w-full text-left px-4 py-2 
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20
+                       text-gray-700 dark:text-gray-300 text-sm"
+              >
                 Reject Member
               </button>
             </template>
 
-            <!-- Active/Inactive/Suspended members: other actions -->
+            <!-- Active / Inactive / Suspended -->
             <template v-else-if="canManageStatus">
-              <button v-if="member.membership_status !== 'active'" @click="openConfirm('activate')"
-                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+              <button
+                v-if="member.membership_status !== 'active'"
+                @click="openConfirm('activate')"
+                class="block w-full text-left px-4 py-2 
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20
+                       text-gray-700 dark:text-gray-300 text-sm"
+              >
                 Activate Member
               </button>
-              <button v-if="member.membership_status === 'active' && member.user.id !== $page.props.auth.user.id"
+
+              <button
+                v-if="member.membership_status === 'active' && member.user.id !== $page.props.auth.user.id"
                 @click="openConfirm('deactivate')"
-                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+                class="block w-full text-left px-4 py-2 
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20
+                       text-gray-700 dark:text-gray-300 text-sm"
+              >
                 Deactivate Member
               </button>
-              <button v-if="member.membership_status !== 'suspended' && member.user.id !== $page.props.auth.user.id"
+
+              <button
+                v-if="member.membership_status !== 'suspended' && member.user.id !== $page.props.auth.user.id"
                 @click="openConfirm('suspend')"
-                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+                class="block w-full text-left px-4 py-2 
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20
+                       text-gray-700 dark:text-gray-300 text-sm"
+              >
                 Suspend Member
               </button>
-              <button v-if="member.user.id === $page.props.auth.user.id"
-                class="block w-full text-left px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm">
+
+              <button
+                v-if="member.user.id === $page.props.auth.user.id"
+                class="block w-full text-left px-4 py-2 
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20
+                       text-gray-700 dark:text-gray-300 text-sm"
+              >
                 No action (current user)
               </button>
             </template>
 
-            <!-- <button 
-              v-if="member.user.id !== $page.props.auth.user.id && member.membership_status === 'inactive'" 
-              @click="openConfirm('delete')"
-              class="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm border-t border-gray-100">
-              Delete Member
-            </button> -->
+            <!-- CONFIRMATION MODAL -->
+            <div
+              v-if="showConfirmModal"
+              class="fixed inset-0 flex items-center justify-center bg-black/70 z-50"
+            >
+              <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-96 
+                          border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Confirm Action
+                </h3>
 
-            <!-- Confirmation Modal -->
-            <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-              <div class="bg-white rounded-lg shadow-lg p-6 w-96">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Confirm Action</h3>
-
-                <p class="text-gray-600 mb-6">
+                <p class="text-gray-600 dark:text-gray-300 mb-6">
                   <template v-if="actionType === 'delete'">
-                    <strong class="text-red-600">Warning:</strong> Deleting this member will permanently remove the 
-                    member profile and deactivate their system access.  
-                    All historical data (loans, accounts, transactions, dividends) will remain for audit purposes.  
-                    <br><br>
+                    <strong class="text-red-600 dark:text-red-400">Warning:</strong>
+                    Deleting this member will permanently remove the profile.  
+                    <br /><br />
                     <strong>This action cannot be undone.</strong>
                   </template>
 
                   <template v-else>
-                    Are you sure you want to 
-                    <span class="font-semibold text-orange-600">{{ actionType }}</span> this member?
+                    Are you sure you want to
+                    <span class="font-semibold text-orange-600 dark:text-orange-400">
+                      {{ actionType }}
+                    </span>
+                    this member?
                   </template>
                 </p>
 
                 <div class="flex justify-end space-x-3">
-                  <button 
+                  <button
                     @click="showConfirmModal = false"
-                    class="px-4 py-2 bg-gray-200 hover:cursor-pointer text-gray-800 rounded-md hover:bg-gray-300"
+                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 
+                           text-gray-800 dark:text-gray-200 rounded-md 
+                           hover:bg-gray-300 dark:hover:bg-gray-600"
                   >
                     Cancel
                   </button>
 
-                  <button 
+                  <button
                     @click="updateStatus"
-                    class="px-4 py-2 bg-[#0a2342] hover:cursor-pointer text-white rounded-md hover:bg-orange-600"
+                    class="px-4 py-2 bg-[#0a2342] dark:bg-orange-600 
+                           text-white rounded-md hover:bg-orange-600 dark:hover:bg-orange-500"
                   >
                     Yes, {{ actionType }}
                   </button>
@@ -137,13 +202,19 @@
       </div>
     </div>
 
-    <!-- Suspended or Rejected Notice -->
-    <div v-if="['suspended', 'rejected'].includes(member.membership_status)"
-      class="max-w-3xl mx-auto mt-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl shadow-sm flex items-center gap-2">
-      <AlertCircle class="w-5 h-5 text-red-600" />
+    <!-- Suspended/Rejected Notice -->
+    <div
+      v-if="['suspended', 'rejected'].includes(member.membership_status)"
+      class="max-w-3xl mx-auto mt-6 px-4 py-3 
+             bg-red-50 dark:bg-red-900/20 
+             border border-red-200 dark:border-red-700 
+             text-red-700 dark:text-red-300 
+             rounded-xl shadow-sm flex items-center gap-2"
+    >
+      <AlertCircle class="w-5 h-5 text-red-600 dark:text-red-400" />
       <p class="text-sm">
         This member has been
-        <strong>{{ member.membership_status }}</strong>.
+        <strong>{{ member.membership_status }}</strong>.  
         Certain actions are disabled until reinstated.
       </p>
     </div>

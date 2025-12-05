@@ -1,6 +1,6 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Dividends', href: '/dividends' }]">
-    <Head title="Dividends Management" />
+    <Head title="Dividends" />
 
     <!-- Flash -->
     <div ref="flashBox" class="max-w-3xl mx-auto mt-4 px-4">
