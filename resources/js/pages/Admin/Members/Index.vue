@@ -104,7 +104,7 @@
       </div>
 
       <!-- Content Section -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 mt-8 animate-fadeIn">
+      <div class="max-w-7xl mx-auto space-y-8 mt-8 animate-fadeIn">
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -266,7 +266,7 @@
       </div>
 
       <!-- DESKTOP TABLE -->
-      <div class="max-w-7xl mx-auto mt-10 px-4 hidden sm:block">
+      <div class="max-w-7xl mx-auto mt-10 hidden sm:block">
         <div class="overflow-x-auto rounded-sm shadow border border-gray-200 dark:border-gray-700">
           <table class="w-full text-sm px-2">
             <thead class="bg-[rgb(10,35,66)] dark:bg-gray-800 text-white">
@@ -507,8 +507,9 @@ const showDeleteConfirm = ref(false)
 
 const confirmDelete = () => {
   if (!selectedMembers.value.length) {
-    flashMessage.value = 'Please select members to delete'
+    flashMessage.value = 'Please select at least one member'
     flashType.value = 'error'
+    setTimeout(() => flashMessage.value = null, 5000)
     return
   }
   showDeleteConfirm.value = true

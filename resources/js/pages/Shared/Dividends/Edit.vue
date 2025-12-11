@@ -8,7 +8,7 @@
     <div class="flex justify-between items-center mx-6 mt-4">
       <h2 class="font-semibold flex items-center text-2xl sm:text-3xl text-[#0A1A2F] dark:text-gray-100">
         <span>Edit Dividend</span>&nbsp;
-        <span class="text-xl text-orange-500 text-center">({{ dividend.dividend_year }})</span>
+        <span class="text-orange-500 text-center">({{ dividend.dividend_year }})</span>
       </h2>
 
       <Link
