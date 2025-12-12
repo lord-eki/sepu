@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, Eye, EyeOff } from 'lucide-vue-next';
-import { ref } from 'vue';
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 
 defineProps<{
     status?: string;
@@ -22,7 +21,6 @@ const form = useForm({
     remember: false,
 });
 
-
 watch(() => form.login, () => {
     if (form.errors.login) form.clearErrors('login');
 });
@@ -30,7 +28,6 @@ watch(() => form.login, () => {
 watch(() => form.password, () => {
     if (form.errors.password) form.clearErrors('password');
 });
-
 
 const showPassword = ref(false);
 
@@ -41,8 +38,6 @@ const togglePassword = () => {
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
-        onError: (errors) => console.log('Login errors:', errors),
-        onSuccess: () => console.log('Login successful'),
     });
 };
 </script>
@@ -55,17 +50,16 @@ const submit = () => {
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit" class="flex flex-col gap-6 logform">
+        <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
                 <!-- Username/Email -->
                 <div class="grid gap-2">
-                    <Label for="login">Username or Email</Label>
+                    <Label for="login" class="text-gray-800 dark:text-gray-200">Username or Email</Label>
                     <Input
                         id="login"
                         type="text"
                         required
                         autofocus
-                        :tabindex="1"
                         autocomplete="username"
                         v-model="form.login"
                         placeholder="username or email@example.com"
@@ -76,12 +70,12 @@ const submit = () => {
                 <!-- Password -->
                 <div class="grid gap-2 relative">
                     <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
+                        <Label for="password" class="text-gray-800 dark:text-gray-200">Password</Label>
+
                         <TextLink
                             v-if="canResetPassword"
                             :href="route('password.request')"
                             class="text-sm"
-                            :tabindex="5"
                         >
                             Forgot password?
                         </TextLink>
@@ -92,15 +86,15 @@ const submit = () => {
                             id="password"
                             :type="showPassword ? 'text' : 'password'"
                             required
-                            :tabindex="2"
                             autocomplete="current-password"
                             v-model="form.password"
                             placeholder="Password"
                         />
+
                         <button
                             type="button"
                             @click="togglePassword"
-                            class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                            class="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground transition"
                             tabindex="-1"
                         >
                             <Eye v-if="!showPassword" class="h-5 w-5" />
@@ -113,35 +107,24 @@ const submit = () => {
 
                 <!-- Remember -->
                 <div class="flex items-center justify-between">
-                    <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
+                    <Label for="remember" class="flex items-center space-x-3 text-gray-800 dark:text-gray-200">
+                        <Checkbox id="remember" v-model="form.remember" />
                         <span>Remember me</span>
                     </Label>
                 </div>
 
-                <!-- Submit -->
-                <Button
-                    type="submit"
-                    class="hover:cursor-pointer mt-4 w-full"
-                    :tabindex="4"
-                    :disabled="form.processing"
-                >
+                <!-- Submit Button -->
+                <Button type="submit" class="mt-4 w-full" :disabled="form.processing">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Log in
+                    <span v-else>Log in</span>
                 </Button>
             </div>
 
             <!-- Sign up -->
             <div class="text-center text-sm text-muted-foreground">
                 Don't have an account?
-                <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
+                <TextLink :href="route('register')">Sign up</TextLink>
             </div>
         </form>
     </AuthBase>
 </template>
-
-<style>
-.logform label {
-    color: #081642;
-}
-</style>

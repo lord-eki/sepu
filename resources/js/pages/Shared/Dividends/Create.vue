@@ -4,90 +4,118 @@
     { title: 'Calculate' }
   ]">
 
-    <Head title="Dividends" />
-    <div v-if="form.processing" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+    <Head title="Calculate Dividend" />
+
+    <!-- Processing Loader -->
+    <div v-if="form.processing"
+      class="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center z-50">
       <div class="loader border-4 border-white border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
     </div>
 
-    <!-- Flash Messages -->
+    <!-- FLASH BOX -->
     <div ref="flashBox" class="max-w-3xl mx-auto mt-4 px-4">
       <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
         enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
         leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
-        <div v-if="flashMessage" class="flex gap-3" :class="[
+        <div v-if="flashMessage" :class="[
+    'mb-4 rounded-md p-4 shadow flex items-center gap-3 border',
     flashType === 'success'
-      ? 'bg-green-50 border border-green-200 text-green-700'
-      : 'bg-red-50 border border-red-200 text-red-700',
-    'mb-4 rounded-md p-4 shadow flex items-center'
+      ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900 dark:text-green-200 dark:border-green-700'
+      : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900 dark:text-red-200 dark:border-red-700'
   ]">
-          <component :is="flashType === 'success' ? CheckCircle : AlertCircle" class="h-5 w-5"
-            :class="flashType === 'success' ? 'text-green-600' : 'text-red-600'" />
           <p class="ml-3 text-sm">{{ flashMessage }}</p>
-          <button type="button" class="ml-auto text-gray-500 hover:text-gray-700" @click="flashMessage = null">
+
+          <button class="ml-auto text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200"
+            @click="flashMessage = null">
             ✕
           </button>
         </div>
       </transition>
     </div>
 
-
-    <!-- PAGE TITLE -->
-    <h2 class="font-semibold text-2xl px-4 sm:px-10 pt-5 text-[#0A1A2F]">
-      Calculate New Dividend
-    </h2>
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mx-8 mt-4">
+      <h2 class="font-semibold flex items-center text-2xl sm:text-3xl">
+        Calculate New Dividend
+      </h2>
+      <Link :href="route('dividends.index')"
+        class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-900 transition">
+      <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" />
+      </svg>
+      Back <span class="max-sm:hidden">&nbsp;to Dividend</span>
+      </Link>
+    </div>
 
     <div class="py-6 max-md:px-3">
-      <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-8">
+      <div class="max-w-5xl mx-auto space-y-8">
 
-        <!-- Existing Dividend Warning -->
-        <div v-if="existingDividend" class="bg-orange-50 border-l-4 border-[#F97316] rounded-md p-4 shadow-sm">
+        <!-- EXISTING DIVIDEND WARNING -->
+        <div v-if="existingDividend"
+          class="bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 rounded-md py-4 shadow-sm">
           <div class="flex items-start gap-3">
-            <svg class="w-6 h-6 text-[#F97316]" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 6a1 1 0 112 0v4a1 1 0 11-2 0V6zm1 9a1 1 0 100-2 1 1 0 000 2z" />
+            <svg class="w-6 h-6 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8..." />
             </svg>
-
+            <div class="flex items-center gap-2">
+            <svg class="sm:w-8 sm:h-8 w-1/8 h-1/8 text-[#F97316]" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+              </svg>
             <div>
-              <h3 class="text-sm font-semibold text-[#0A1A2F]">Existing Dividend Found</h3>
-              <p class="text-sm text-gray-700 mt-1">
-                A dividend for {{ existingDividend.dividend_year }} already exists ({{ existingDividend.status }}).
-                <Link :href="route('dividends.show', existingDividend.id)" class="font-medium text-[#F97316] underline">
-                View existing dividend
+              <h3 class="text-sm font-semibold text-[#0A1A2F] dark:text-white">
+                Existing Dividend Found
+              </h3>
+              <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                A dividend for {{ existingDividend.dividend_year }} already exists.
+                <Link :href="route('dividends.show', existingDividend.id)"
+                  class="font-medium text-orange-500 underline">
+                View existing
                 </Link>
               </p>
+            </div>
             </div>
           </div>
         </div>
 
-        <!-- Financial Overview -->
-        <div class="bg-white shadow-lg rounded-xl border border-gray-100">
+        <!-- FINANCIAL OVERVIEW -->
+        <div class="bg-white dark:bg-[#0a0f1a] shadow-lg rounded-xl border border-gray-100 dark:border-gray-700">
           <div class="p-6">
-            <h3 class="text-lg font-semibold text-[#0A1A2F] mb-6">Financial Overview</h3>
+            <h3 class="text-lg font-semibold text-[#0A1A2F] dark:text-white mb-6">
+              Financial Overview
+            </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <!-- Total Shares -->
-              <div class="bg-[#0A1A2F] text-white p-5 rounded-xl shadow-sm">
+
+              <!-- TOTAL ACTIVE SHARES -->
+              <div class="bg-[#0A1A2F] dark:bg-[#111f38] text-white p-5 rounded-xl shadow-sm">
                 <div class="text-sm opacity-90">Total Active Shares</div>
                 <div class="text-xl font-bold mt-1">KSh {{ formatCurrency(totalShares) }}</div>
                 <div class="text-sm opacity-80 mt-1">{{ activeMembers }} active members</div>
               </div>
 
-              <!-- Profit -->
-              <div class="bg-orange-100 p-5 rounded-xl border border-orange-200">
-                <div class="text-sm font-medium text-[#0A1A2F]">Available for Dividend</div>
-                <div class="text-xl font-bold text-[#F97316] mt-1">
+              <!-- PROFIT -->
+              <div
+                class="bg-orange-100 dark:bg-orange-900/40 p-5 rounded-xl border border-orange-200 dark:border-orange-700">
+                <div class="text-sm font-medium text-[#0A1A2F] dark:text-white">
+                  Available for Dividend
+                </div>
+                <div class="text-xl font-bold text-orange-600 mt-1">
                   KSh {{ formatCurrency(form.total_profit || 0) }}
                 </div>
-                <div class="text-sm text-gray-600 mt-1">Based on entered profit</div>
+                <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Based on entered profit
+                </div>
               </div>
 
-              <!-- Calculated Dividends -->
-              <div class="bg-blue-50 p-5 rounded-xl border border-blue-100">
-                <div class="text-sm font-medium text-[#0A1A2F]">Calculated Dividends</div>
-                <div class="text-xl font-bold text-[#0A1A2F] mt-1">
+              <!-- CALCULATED DIVIDENDS -->
+              <div class="bg-blue-50 dark:bg-blue-900/40 p-5 rounded-xl border border-blue-200 dark:border-blue-700">
+                <div class="text-sm font-medium text-[#0A1A2F] dark:text-white">Calculated Dividends</div>
+                <div class="text-xl font-bold text-[#0A1A2F] dark:text-white mt-1">
                   KSh {{ formatCurrency(calculatedDividends) }}
                 </div>
-                <div class="text-sm text-gray-600 mt-1">
+                <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
                   At {{ form.dividend_rate || 0 }}%
                 </div>
               </div>
@@ -95,105 +123,117 @@
           </div>
         </div>
 
-        <!-- DIVIDEND FORM -->
-        <div class="bg-white shadow-lg rounded-xl border border-gray-100">
+        <!-- DIVIDEND FORM WRAPPER -->
+        <div class="bg-white dark:bg-[#0a0f1a] shadow-lg rounded-xl border border-gray-100 dark:border-gray-700">
           <div class="p-6">
-            <h3 class="text-lg font-semibold text-[#0A1A2F] mb-6">Dividend Calculation</h3>
+
+            <h3 class="text-lg font-semibold text-[#0A1A2F] dark:text-white mb-6">
+              Dividend Calculation
+            </h3>
 
             <form @submit.prevent="submitForm" class="space-y-8">
 
               <!-- YEAR -->
               <div>
-                <InputLabel for="dividend_year" value="Dividend Year *" class="text-[#0A1A2F]" />
+                <InputLabel for="dividend_year" value="Dividend Year *" class="dark:text-gray-200" />
                 <TextInput id="dividend_year" type="number"
-                  class="mt-1 border border-gray-50 p-2 rounded-md block w-full" v-model="form.dividend_year"
-                  :min="2000" :max="new Date().getFullYear() + 1" required />
-                <InputError class="mt-2" :message="form.errors.dividend_year" />
-                <p class="text-sm text-gray-500 mt-1">
-                  Typically the current year for the previous year's profits.
-                </p>
+                  class="mt-1 p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  v-model="form.dividend_year" required />
+                <InputError :message="form.errors.dividend_year" />
               </div>
 
               <!-- PROFIT -->
               <div>
-                <InputLabel for="total_profit" value="Total Profit Available (KSh) *" class="text-[#0A1A2F]" />
-                <TextInput id="total_profit" type="number" step="0.01" min="1"
-                  class="mt-1 border border-gray-50 p-2 rounded-md block w-full" v-model="form.total_profit"
-                  @input="calculateDividends" required />
-                <InputError class="mt-2" :message="form.errors.total_profit" />
+                <InputLabel for="total_profit" value="Total Profit (KSh) *" class="dark:text-gray-200" />
+                <TextInput id="total_profit" type="number"
+                  class="mt-1 p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  v-model="form.total_profit" @input="calculateDividends" />
+                <InputError :message="form.errors.total_profit" />
               </div>
 
               <!-- RATE -->
               <div>
-                <InputLabel for="dividend_rate" value="Dividend Rate (%) *" class="text-[#0A1A2F]" />
-                <TextInput id="dividend_rate" type="number" step="0.01" min="1" max="100"
-                  class="mt-1 border border-gray-50 p-2 rounded-md block w-full" v-model="form.dividend_rate"
-                  @input="calculateDividends" required />
-                <InputError class="mt-2" :message="form.errors.dividend_rate" />
+                <InputLabel for="dividend_rate" value="Dividend Rate (%) *" class="dark:text-gray-200" />
+                <TextInput id="dividend_rate" type="number" min="0.01" max="9" step="0.01"
+                  class="mt-1 p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  v-model="form.dividend_rate" @input="calculateDividends" />
+                <InputError :message="form.errors.dividend_rate" />
+                <p class="text-sm text-gray-500 mt-1">Enter a value greater than 0 and maximum 9%</p>
               </div>
+
 
               <!-- NOTES -->
               <div>
-                <InputLabel for="notes" value="Notes" class="text-[#0A1A2F]" />
-                <TextArea id="notes" class="mt-1 block w-full border border-gray-50 p-2 rounded-lg" :rows="4"
-                  v-model="form.notes" placeholder="Additional notes..." />
-
+                <InputLabel for="notes" value="Notes" class="dark:text-gray-200" />
+                <TextArea id="notes"
+                  class="p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  v-model="form.notes" />
               </div>
 
               <!-- SUMMARY -->
-              <div v-if="calculationSummary" class="bg-blue-50 border border-blue-100 rounded-xl p-5">
-                <h4 class="text-md font-semibold text-[#0A1A2F] mb-3">Calculation Summary</h4>
+              <div v-if="calculationSummary"
+                class="bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-xl p-5">
+                <h4 class="text-md font-semibold text-[#0A1A2F] dark:text-white mb-3">
+                  Calculation Summary
+                </h4>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+
                   <div>
-                    <div class="text-sm text-gray-700">Total Dividends</div>
-                    <div class="text-lg font-bold">
+                    <div class="text-sm text-gray-700 dark:text-gray-300">Total Dividends</div>
+                    <div class="text-lg font-bold dark:text-white">
                       KSh {{ formatCurrency(calculationSummary.total_dividends) }}
                     </div>
                   </div>
 
                   <div>
-                    <div class="text-sm text-gray-700">Members Eligible</div>
-                    <div class="text-lg font-bold">{{ calculationSummary.member_count }}</div>
+                    <div class="text-sm text-gray-700 dark:text-gray-300">Members Eligible</div>
+                    <div class="text-lg font-bold dark:text-white">
+                      {{ calculationSummary.member_count }}
+                    </div>
                   </div>
 
                   <div>
-                    <div class="text-sm text-gray-700">Average Dividend</div>
-                    <div class="text-lg font-bold">
+                    <div class="text-sm text-gray-700 dark:text-gray-300">Average Dividend</div>
+                    <div class="text-lg font-bold dark:text-white">
                       KSh {{ formatCurrency(calculationSummary.average_dividend) }}
                     </div>
                   </div>
 
                   <div>
-                    <div class="text-sm text-gray-700">Profit Utilization</div>
-                    <div class="text-lg font-bold">{{ profitUtilization }}%</div>
+                    <div class="text-sm text-gray-700 dark:text-gray-300">Profit Utilization</div>
+                    <div class="text-lg font-bold dark:text-white">
+                      {{ profitUtilization }}%
+                    </div>
                   </div>
+
                 </div>
               </div>
 
               <!-- PREVIEW BUTTON -->
               <div class="flex justify-center">
                 <button type="button" @click="previewCalculation" :disabled="!canPreview" class="inline-flex items-center px-6 py-3 rounded-lg text-white font-semibold shadow-md
-                    bg-[#0A1A2F] hover:bg-[#112C4F] transition disabled:opacity-30">
+                    bg-[#0A1A2F] dark:bg-[#21395c] hover:bg-[#112C4F] transition
+                    disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0A1A2F] disabled:bg-gray-400">
                   Preview Calculation
                 </button>
               </div>
 
               <!-- MEMBER PREVIEW TABLE -->
-              <div v-if="memberBreakdown && memberBreakdown.length > 0"
-                class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b bg-gray-50">
-                  <h4 class="text-md font-semibold text-[#0A1A2F]">
+              <div v-if="memberBreakdown.length"
+                class="bg-white dark:bg-[#0a0f1a] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
+                  <h4 class="text-md font-semibold text-[#0A1A2F] dark:text-white">
                     Member Dividend Breakdown (Preview)
                   </h4>
-                  <p class="text-sm text-gray-500">
+                  <p class="text-sm text-gray-600 dark:text-gray-300">
                     Showing first 10 of {{ memberBreakdown.length }} members
                   </p>
                 </div>
 
                 <div class="overflow-x-auto">
                   <table class="min-w-full text-sm">
-                    <thead class="bg-[#0A1A2F] text-white">
+                    <thead class="bg-[#0A1A2F] dark:bg-[#21395c] text-white">
                       <tr>
                         <th class="px-4 py-3 text-left">Member</th>
                         <th class="px-4 py-3 text-left">Shares Balance</th>
@@ -201,20 +241,21 @@
                       </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-gray-200">
-                      <tr v-for="member in memberBreakdown.slice(0, 10)" :key="member.member_id">
-                        <td class="px-4 py-3">
-                          <div class="font-medium text-[#0A1A2F]">
-                            {{ member.member_name }}
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                      <tr v-for="member in memberBreakdown.slice(0, 10)" :key="member.member_id"
+                        class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                        <td class="px-4 py-3 text-[#0A1A2F] dark:text-white">
+                          <div class="font-medium">{{ member.member_name }}</div>
+                          <div class="text-gray-500 dark:text-gray-300">
+                            {{ member.membership_id }}
                           </div>
-                          <div class="text-gray-500">{{ member.membership_id }}</div>
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 dark:text-white">
                           KSh {{ formatCurrency(member.shares_balance) }}
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 dark:text-white">
                           KSh {{ formatCurrency(member.dividend_amount) }}
                         </td>
                       </tr>
@@ -222,7 +263,8 @@
                   </table>
                 </div>
 
-                <div v-if="memberBreakdown.length > 10" class="p-3 text-center text-gray-600 bg-gray-50 text-sm">
+                <div v-if="memberBreakdown.length > 10"
+                  class="p-3 text-center bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300 text-sm">
                   ... and {{ memberBreakdown.length - 10 }} more members
                 </div>
               </div>
@@ -230,12 +272,12 @@
               <!-- ACTION BUTTONS -->
               <div class="flex items-center justify-between pt-4">
                 <Link :href="route('dividends.index')"
-                  class="px-5 py-3 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 text-[#0A1A2F] transition">
+                  class="px-5 py-3 rounded-lg font-semibold bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-[#0A1A2F] dark:text-white transition">
                 Cancel
                 </Link>
 
                 <button type="submit" :disabled="form.processing || loading"
-                  class="px-6 py-3 bg-orange-500 text-white hover:bg-orange-600 hover:cursor-pointer rounded-md shadow-md">
+                  class="px-6 py-3 bg-orange-500 dark:bg-orange-600 text-white hover:bg-orange-600 dark:hover:bg-orange-700 rounded-md shadow-md">
                   <span v-if="loading">Calculating...</span>
                   <span v-else>Calculate Dividend</span>
                 </button>
@@ -250,7 +292,6 @@
   </AppLayout>
 </template>
 
-
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
@@ -261,13 +302,9 @@ import InputLabel from '@/components/InputLabel.vue'
 import TextInput from '@/components/TextInput.vue'
 import TextArea from '@/components/TextArea.vue'
 import InputError from '@/components/InputError.vue'
-// import PrimaryButton from '@/components/PrimaryButton.vue'
 
-
-// Flash handling
+// FLASH HANDLING
 const page = usePage()
-const flash = computed(() => page.props?.flash || {})
-
 const flashMessage = ref(null)
 const flashType = ref('success')
 const flashBox = ref(null)
@@ -281,14 +318,12 @@ watch(
     } else if (props.flash?.error) {
       flashMessage.value = props.flash.error
       flashType.value = 'error'
-    } else if (props.errors?.error) {   
+    } else if (props.errors?.error) {
       flashMessage.value = props.errors.error
       flashType.value = 'error'
     }
 
     if (flashMessage.value) {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      flashBox.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       setTimeout(() => (flashMessage.value = null), 5000)
     }
   },
@@ -299,15 +334,11 @@ const props = defineProps({
   suggestedYear: Number,
   previousYear: Number,
   existingDividend: Object,
-  financialData: Object,
-  totalShares: [Number, String],
-  activeMembers: Number
+  totalShares: Number,
+  activeMembers: Number,
 })
 
-
-const calculationSummary = ref(null)
-const memberBreakdown = ref([])
-
+// FORM
 const form = useForm({
   dividend_year: props.suggestedYear,
   total_profit: 0,
@@ -315,18 +346,16 @@ const form = useForm({
   notes: ''
 })
 
-const numericTotalShares = computed(() => {
-  const n = Number(props.totalShares)
-  return isNaN(n) ? 0 : n
-})
+const calculationSummary = ref(null)
+const memberBreakdown = ref([])
+const loading = ref(false)
 
+const numericTotalShares = computed(() => Number(props.totalShares) || 0)
 
 const calculatedDividends = computed(() => {
   if (!form.dividend_rate || numericTotalShares.value <= 0) return 0
   return (numericTotalShares.value * form.dividend_rate) / 100
 })
-
-
 
 const profitUtilization = computed(() => {
   if (!form.total_profit || !calculatedDividends.value) return 0
@@ -337,55 +366,47 @@ const canPreview = computed(() => {
   return form.dividend_year && form.total_profit > 0 && form.dividend_rate > 0
 })
 
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-KE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount || 0)
-}
+const formatCurrency = (amount) =>
+  new Intl.NumberFormat('en-KE', { minimumFractionDigits: 2 }).format(amount || 0)
 
 const calculateDividends = () => {
   if (canPreview.value) {
     calculationSummary.value = {
       total_dividends: calculatedDividends.value,
       member_count: props.activeMembers,
-      average_dividend: props.activeMembers > 0 ? calculatedDividends.value / props.activeMembers : 0
+      average_dividend:
+        props.activeMembers > 0 ? calculatedDividends.value / props.activeMembers : 0
     }
   }
 }
 
 const previewCalculation = async () => {
   if (!canPreview.value) return
-
   try {
-    const response = await axios.post(route('dividends.calculate', form.dividend_year), {
+    const res = await axios.post(route('dividends.calculate', form.dividend_year), {
       total_profit: form.total_profit,
-      dividend_rate: form.dividend_rate
+      dividend_rate: form.dividend_rate,
     })
-
-    calculationSummary.value = response.data
-    memberBreakdown.value = response.data.member_breakdown || []
-  } catch (error) {
-    console.error('Failed to calculate dividend preview:', error)
+    calculationSummary.value = res.data
+    memberBreakdown.value = res.data.member_breakdown || []
+  } catch (e) {
+    console.error(e)
   }
 }
-
-const loading = ref(false)
 
 const submitForm = () => {
   loading.value = true
   form.post(route('dividends.store'), {
-    onFinish: () => {
-      loading.value = false
-    },
-    onError: () => {
-      loading.value = false
-    }
+    onFinish: () => (loading.value = false),
+    onError: () => (loading.value = false),
   })
 }
 
-
-
-// Watch for changes and auto-calculate
 watch([() => form.total_profit, () => form.dividend_rate], calculateDividends)
 </script>
+
+<style scoped>
+button:hover {
+  cursor: pointer;
+}
+</style>

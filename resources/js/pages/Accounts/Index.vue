@@ -125,8 +125,13 @@
               <div>
                 <p class="font-semibold text-[#0a2342]">{{ account.account_number }} • {{ account.account_type }}</p>
                 <p class="text-xs text-gray-500">Created: {{ formatDate(account.created_at) }}</p>
-                <p class="text-sm text-gray-700 mt-2">{{ account.member.first_name }} {{ account.member.last_name }}</p>
-                <p class="text-xs text-gray-400">{{ account.member.membership_id }}</p>
+                <p class="text-sm text-gray-700 mt-2">
+                  {{ account.member?.first_name || 'Deleted' }} 
+                  {{ account.member?.last_name || 'Member' }}
+                </p>
+                <p class="text-xs text-gray-400">
+                  {{ account.member?.membership_id || 'N/A' }}
+                </p>
               </div>
               <div class="text-right">
                 <div :class="account.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
@@ -173,17 +178,31 @@
 
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
+
                       <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-                        <span class="text-sm font-medium text-orange-600">{{ getInitials(account.member.first_name + ' '
-    + account.member.last_name) }}</span>
+                        <span class="text-sm font-medium text-orange-600">
+                          {{ account.member ? getInitials(account.member.first_name + ' ' + account.member.last_name) : 'NA' }}
+                        </span>
                       </div>
+
                       <div>
-                        <div class="text-sm font-semibold text-[#0a2342]">{{ account.member.first_name }} {{
-    account.member.last_name }}</div>
-                        <div class="text-xs text-gray-500">{{ account.member.membership_id }}</div>
+                        <div class="text-sm font-semibold text-[#0a2342]">
+                          <template v-if="account.member">
+                            {{ account.member.first_name }} {{ account.member.last_name }}
+                          </template>
+                          <template v-else>
+                            Deleted Member
+                          </template>
+                        </div>
+
+                        <div class="text-xs text-gray-500">
+                          {{ account.member?.membership_id || 'N/A' }}
+                        </div>
                       </div>
+
                     </div>
                   </td>
+
 
                   <td class="px-6 py-4">
                     <span
@@ -296,9 +315,13 @@ const formatDate = (date) => {
 }
 
 const getInitials = (name) => {
-  if (!name) return ''
-  return name.split(' ').map(n => n[0] || '').join('').slice(0, 2).toUpperCase()
+  if (!name) return 'NA'
+  return name.split(' ')
+    .map(n => (n[0] || '').toUpperCase())
+    .join('')
+    .slice(0, 2)
 }
+
 
 const getAccountTypeClass = (type) => {
   const classes = {

@@ -2,7 +2,7 @@
   <AppLayout :breadcrumbs="[{ title: 'Budgets', href: '/budgets' }]">
     <Head title="Budget Management" />
 
-    <div class="min-h-screen p-6 space-y-10 transition-colors duration-300 bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen p-4 space-y-10 transition-colors duration-300 bg-gray-50 dark:bg-gray-900">
       <!-- Header -->
       <div class="relative overflow-hidden rounded-3xl p-6 flex flex-col md:flex-row md:items-center md:justify-between bg-gradient-to-r from-[#0a2342] to-orange-500 shadow-lg border-l-4 border-orange-500">
         <div class="relative z-10">
@@ -20,7 +20,7 @@
         </Link>
       </div>
 
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <div class="max-w-7xl mx-auto space-y-10">
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div v-for="card in statsCards" :key="card.label" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-md p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
