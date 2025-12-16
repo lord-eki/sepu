@@ -217,7 +217,7 @@
               M-Pesa Number <span class="text-red-500">*</span>
             </label>
 
-            <input v-model="form.payee_phone" type="text" placeholder="07XXXXXXXX"
+            <input v-model="form.payment_phone" type="text" placeholder="07XXXXXXXX"
               class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]" />
           </div>
 
@@ -235,7 +235,7 @@
               <label class="block text-sm font-medium text-[#0a2342] mb-2">
                 Account Number <span class="text-red-500">*</span>
               </label>
-              <input v-model="form.payee_account" type="text"
+              <input v-model="form.payment_account" type="text"
                 class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]" />
             </div>
 
@@ -464,6 +464,18 @@ watch(() => form.payment_type, () => {
   form.bank_name = ''
   form.payee_account = ''
 })
+
+
+watch(() => form.payment_type, (type) => {
+  if (type === 'mpesa' && !form.payment_phone) {
+    form.payment_phone = form.payee_phone
+  }
+
+  if (type === 'bank') {
+    form.payment_phone = ''
+  }
+})
+
 
 
 const handleFileUpload = (event) => {

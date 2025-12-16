@@ -95,7 +95,17 @@ class PaymentVoucherController extends Controller
             'budgetItems' => $budgetItems,
             'pendingLoans' => $pendingLoans,
             'voucherTypes' => $this->getVoucherTypes(),
-            'members' => Member::active()->get(),
+            'members' => Member::active()
+                ->with('user:id,phone')
+                ->get()
+                ->map(fn ($member) => [
+                    'id' => $member->id,
+                    'first_name' => $member->first_name,
+                    'last_name' => $member->last_name,
+                    'membership_id' => $member->membership_id,
+                    'phone' => $member->user?->phone, // ✅ users table
+                ]),
+
         ]);
     }
 
