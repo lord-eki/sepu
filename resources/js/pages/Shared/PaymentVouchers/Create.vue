@@ -122,6 +122,38 @@
             </div>
           </div>
 
+          <!-- Payee Type -->
+          <div>
+            <label class="block text-sm font-medium text-[#0a2342] mb-2">
+              Payee Type <span class="text-red-500">*</span>
+            </label>
+
+            <select v-model="form.payee_type"
+              class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]">
+              <option value="">Select Payee Type</option>
+              <option value="direct">Direct Payee</option>
+              <option value="member">Member</option>
+            </select>
+
+          </div>
+
+
+          <!-- Member Selection -->
+          <div v-if="form.payee_type === 'member'">
+            <label class="block text-sm font-medium text-[#0a2342] mb-2">
+              Select Member <span class="text-red-500">*</span>
+            </label>
+
+            <select v-model="form.member_id"
+              class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]">
+              <option value="">Select Member</option>
+              <option v-for="member in props.members" :key="member.id" :value="member.id">
+                {{ member.first_name }} {{ member.last_name }} – {{ member.membership_id }}
+              </option>
+            </select>
+          </div>
+
+
           <!-- PAYEE INFORMATION -->
           <div class="bg-white shadow-[0_3px_10px_rgb(0,0,0,0.1)] rounded-xl border">
             <div class="px-6 py-4 border-b">
@@ -162,23 +194,55 @@
                 </div>
 
               </div>
-
-              <!-- Account -->
-              <div>
-                <label class="block text-sm font-medium text-[#0a2342] mb-2">
-                  Account Details
-                </label>
-
-                <input v-model="form.payee_account" type="text"
-                  class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]" />
-
-                <p v-if="$page.props.errors.payee_account" class="text-red-600 text-sm mt-1">
-                  {{ $page.props.errors.payee_account }}
-                </p>
-              </div>
-
             </div>
           </div>
+
+
+          <!-- Payment Type -->
+          <div>
+            <label class="block text-sm font-medium text-[#0a2342] mb-2">
+              Payment Type <span class="text-red-500">*</span>
+            </label>
+
+            <select v-model="form.payment_type"
+              class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]">
+              <option value="">Select Payment Type</option>
+              <option value="mpesa">M-Pesa</option>
+              <option value="bank">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div v-if="form.payment_type === 'mpesa'">
+            <label class="block text-sm font-medium text-[#0a2342] mb-2">
+              M-Pesa Number <span class="text-red-500">*</span>
+            </label>
+
+            <input v-model="form.payee_phone" type="text" placeholder="07XXXXXXXX"
+              class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]" />
+          </div>
+
+          <div v-if="form.payment_type === 'bank'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div>
+              <label class="block text-sm font-medium text-[#0a2342] mb-2">
+                Bank Name <span class="text-red-500">*</span>
+              </label>
+              <input v-model="form.bank_name" type="text"
+                class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-[#0a2342] mb-2">
+                Account Number <span class="text-red-500">*</span>
+              </label>
+              <input v-model="form.payee_account" type="text"
+                class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]" />
+            </div>
+
+          </div>
+
+
+
 
           <!-- SUPPORTING DOCUMENTS -->
           <div class="bg-white shadow-[0_3px_10px_rgb(0,0,0,0.1)] rounded-xl border">
@@ -245,9 +309,8 @@
             <button type="submit" :disabled="form.processing"
               class="px-5 py-2 bg-[#0a2342] text-white rounded-lg shadow hover:bg-[#0c2f63] transition disabled:opacity-50 flex items-center">
               <svg v-if="form.processing" class="animate-spin h-4 w-4 mr-2 text-white" viewBox="0 0 24 24" fill="none">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.38 0 0 5.38 0 12h4z"/>
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.38 0 0 5.38 0 12h4z" />
               </svg>
               <span>{{ form.processing ? "Creating..." : "Create Voucher" }}</span>
             </button>
@@ -259,15 +322,13 @@
       </div>
     </div>
 
-  <!-- FULL SCREEN LOADER -->
+    <!-- FULL SCREEN LOADER -->
     <div v-if="form.processing"
       class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]">
       <div class="bg-white p-6 rounded-xl shadow-xl flex flex-col items-center space-y-3">
         <svg class="animate-spin h-8 w-8 text-[#0a2342]" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" 
-                  stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.38 0 0 5.38 0 12h4z"/>
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.38 0 0 5.38 0 12h4z" />
         </svg>
         <p class="text-[#0a2342] font-medium">Creating Voucher...</p>
       </div>
@@ -288,7 +349,8 @@ import AppLayout from '@/layouts/AppLayout.vue'
 const props = defineProps({
   budgetItems: Array,
   pendingLoans: Array,
-  voucherTypes: Object
+  voucherTypes: Object,
+  members: Array,
 })
 
 
@@ -309,7 +371,7 @@ watch(
     } else if (props.flash?.error) {
       flashMessage.value = props.flash.error
       flashType.value = 'error'
-    } else if (props.errors?.error) {   
+    } else if (props.errors?.error) {
       flashMessage.value = props.errors.error
       flashType.value = 'error'
     }
@@ -329,9 +391,14 @@ const fileInput = ref(null)
 // Initialize the form with useForm
 const form = useForm({
   voucher_type: '',
+  payee_type: '',
+  member_id: '',
   payee_name: '',
   payee_phone: '',
-  payee_account: '',
+  payment_phone: '',
+  payment_account: '',
+  payment_type: '',
+  bank_name: '',
   amount: '',
   purpose: '',
   description: '',
@@ -339,6 +406,19 @@ const form = useForm({
   loan_id: '',
   supporting_documents: []
 })
+
+
+watch(() => form.member_id, (id) => {
+  if (!id) return
+
+  const member = props.members.find(m => m.id === id)
+  if (member) {
+    form.payee_name = `${member.first_name} ${member.last_name}`
+    form.payee_phone = member.phone
+  }
+})
+
+
 
 const selectedBudgetItem = computed(() => {
   if (!form.budget_item_id) return null
@@ -379,6 +459,12 @@ watch(() => form.loan_id, (newLoanId) => {
     }
   }
 })
+
+watch(() => form.payment_type, () => {
+  form.bank_name = ''
+  form.payee_account = ''
+})
+
 
 const handleFileUpload = (event) => {
   const files = Array.from(event.target.files)

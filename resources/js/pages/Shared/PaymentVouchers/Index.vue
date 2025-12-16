@@ -25,7 +25,7 @@
       </div>
 
     <!-- Header -->
-    <div class="bg-header text-white py-5 mt-5 mx-5 px-6 sm:px-10 rounded-3xl shadow-lg">
+    <div class="bg-header text-white py-5 mt-5 mx-6 px-6 sm:px-10 rounded-3xl shadow-lg">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 class="text-xl sm:text-2xl font-bold tracking-tight">
@@ -45,7 +45,7 @@
     </div>
 
     <div class="py-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <div class="max-w-7xl mx-auto px-4 space-y-10">
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div v-for="card in [

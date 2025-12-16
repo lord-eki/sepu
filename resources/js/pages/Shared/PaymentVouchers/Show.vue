@@ -26,7 +26,7 @@
     </div>
     <!-- Header -->
     <div
-      class="bg-[#0A2342] text-white rounded-xl px-5 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 shadow">
+      class="bg-[#0A2342] text-white rounded-xl px-5 py-5 mx-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 shadow">
       <div>
         <h1 class="text-2xl font-semibold">Payment Voucher • {{ voucher.voucher_number }}</h1>
         <p class="text-sm opacity-80 mt-1">
