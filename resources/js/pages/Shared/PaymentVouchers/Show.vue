@@ -209,6 +209,31 @@
           </div>
         </section>
 
+        <section
+          v-if="voucher.status === 'paid'"
+          class="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-5"
+        >
+          <h3 class="font-semibold text-[#0A2342]">Payment Details</h3>
+
+          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt class="text-slate-500">Paid By</dt>
+              <dd class="font-medium">{{ voucher.payer?.name || '—' }}</dd>
+            </div>
+
+            <div>
+              <dt class="text-slate-500">Payment Date</dt>
+              <dd class="font-medium">{{ formatDate(voucher.payment_date) }}</dd>
+            </div>
+
+            <div class="md:col-span-2">
+              <dt class="text-slate-500">Amount Paid</dt>
+              <dd class="font-semibold text-lg">{{ formatCurrency(voucher.amount) }}</dd>
+            </div>
+          </div>
+        </section>
+
+
 
 
           <!-- Budget & Loan Card -->
@@ -447,14 +472,12 @@
 
         <form @submit.prevent="processPayment" class="mt-4 space-y-3">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <select v-model="paymentForm.payment_method" required class="border rounded p-2">
-              <option value="">Select payment method</option>
-              <option value="cash">Cash</option>
-              <option value="mobile_money">Mobile Money</option>
-              <option value="bank_transfer">Bank Transfer</option>
-              <option value="cheque">Cheque</option>
-            </select>
-
+            <div class="bg-slate-100 rounded p-2 text-sm">
+            <span class="text-slate-500">Payment Method:</span>
+            <span class="font-medium ml-1">
+              {{ voucher.payment_type?.toUpperCase() || '—' }}
+            </span>
+          </div>
 
             <input v-model="paymentForm.payment_reference" placeholder="Payment reference (optional)"
               class="border rounded p-2" />
@@ -620,7 +643,11 @@ const voucher = props.voucher || {}
 // Forms
 const approvalForm = useForm({ approval_notes: '' })
 const rejectionForm = useForm({ rejection_reason: '' })
-const paymentForm = useForm({ payment_method: voucher.payment_type || '', acc_id: "", payment_reference: '', payment_notes: '' })
+const paymentForm = useForm({
+  payment_notes: ''
+})
+
+
 const cancellationForm = useForm({ cancellation_reason: '' })
 
 
@@ -704,14 +731,6 @@ function onDocumentClick(e) {
     showActionsMenu.value = false
   }
 }
-
-watch(showPaymentModal, (open) => {
-  if (!open) return
-
-  paymentForm.payment_method = paymentForm.payment_method || 'mobile_money'
-  paymentForm.payment_reference = ''
-  paymentForm.payment_notes = `Payment for voucher ${voucher.voucher_number}`
-})
 
 
 onMounted(() => document.addEventListener('click', onDocumentClick))

@@ -218,7 +218,6 @@ class PaymentVoucherController extends Controller
             'payer',
             'budgetItem.budget',
             'loan.member',
-            'payment.account',
         ]);
 
         $accounts = Account::select('id', 'account_type as name', 'account_number')->get();
