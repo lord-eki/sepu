@@ -13,6 +13,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentVoucherController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SystemUserController;
@@ -578,4 +579,10 @@ Route::post('/members/assign-usernames', [MemberController::class, 'assignUserna
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/members/bulk-delete', [MemberController::class, 'bulkDelete'])->name('members.bulkDelete');
 });
+
+
+Route::get('/schedule/loan-disbursement', [ScheduleController::class, 'loanDisbursement'])->name('schedule.loan-disbursement');
+Route::get('/schedule/loan-repayment', [ScheduleController::class, 'loanRepayment'])->name('schedule.loan-repayment');
+Route::get('/schedule/monthly-deposit', [ScheduleController::class, 'monthlyDeposit'])->name('schedule.monthly-deposit');
+Route::get('/schedule/dividend-repayment', [ScheduleController::class, 'dividendRepayment'])->name('schedule.dividend-repayment');
 

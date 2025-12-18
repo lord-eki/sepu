@@ -205,6 +205,38 @@ const adminNavItems: NavItem[] = [
     routeName: 'reports.index',
     icon: FileText,
   },
+
+  {
+    title: 'Schedule',
+    icon: ClipboardList,
+    children: [
+      {
+        title: 'Loan Disbursement',
+        href: route('schedule.loan-disbursement'),
+        routeName: 'schedule.loan-disbursement',
+        icon: HandCoins,
+      },
+      {
+        title: 'Loan Repayment',
+        href: route('schedule.loan-repayment'),
+        routeName: 'schedule.loan-repayment',
+        icon: ArrowRightLeft,
+      },
+      {
+        title: 'Monthly Deposit',
+        href: route('schedule.monthly-deposit'),
+        routeName: 'schedule.monthly-deposit',
+        icon: Calculator,
+      },
+      {
+        title: 'Dividend Repayment',
+        href: route('schedule.dividend-repayment'),
+        routeName: 'schedule.dividend-repayment',
+        icon: HandCoins,
+      },
+    ],
+  },
+
   {
     title: 'System Users',
     icon: UserCog,
