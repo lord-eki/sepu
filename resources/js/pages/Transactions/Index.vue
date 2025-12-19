@@ -112,12 +112,12 @@
             Export
           </button>
 
-          <Link-Inertia
+          <Link
             href="/transactions/create"
             class="px-5 py-2.5 bg-[#F97316] text-white rounded-lg hover:bg-orange-500 transition ml-auto"
           >
             New Transaction
-          </Link-Inertia>
+          </Link>
         </div>
       </div>
 
