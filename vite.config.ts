@@ -11,7 +11,7 @@ export default defineConfig({
         strictPort: true, 
         cors: true,
         hmr: {
-            host: '192.168.0.224', // local IP
+            host: '192.168.0.103', // local IP
         },
     },
     plugins: [
