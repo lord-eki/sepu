@@ -12,8 +12,8 @@ class ScheduleController extends Controller
      */
     public function loanDisbursement()
     {
-        // Here you can fetch disbursement data from your database
-        $loans = []; // Replace with actual data
+     
+        $loans = []; // help me get this
 
         return Inertia::render('Admin/Schedule/LoanDisbursement', [
             'loans' => $loans,
@@ -25,7 +25,7 @@ class ScheduleController extends Controller
      */
     public function loanRepayment()
     {
-        $repayments = []; // Replace with actual data
+        $repayments = []; // help me get this 
 
         return Inertia::render('Admin/Schedule/LoanRepayment', [
             'repayments' => $repayments,
@@ -37,7 +37,7 @@ class ScheduleController extends Controller
      */
     public function monthlyDeposit()
     {
-        $deposits = []; // Replace with actual data
+        $deposits = []; // help me get this
 
         return Inertia::render('Admin/Schedule/MonthlyDeposit', [
             'deposits' => $deposits,
@@ -49,7 +49,7 @@ class ScheduleController extends Controller
      */
     public function dividendRepayment()
     {
-        $dividends = []; // Replace with actual data
+        $dividends = []; // help code this
 
         return Inertia::render('Admin/Schedule/DividendRepayment', [
             'dividends' => $dividends,
