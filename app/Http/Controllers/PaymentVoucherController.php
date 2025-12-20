@@ -17,6 +17,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Models\Account;
+use Barryvdh\DomPDF\Facade\Pdf; 
 
 
 class PaymentVoucherController extends Controller
@@ -967,10 +968,10 @@ class PaymentVoucherController extends Controller
     {
         $voucher->load(['creator', 'approver', 'payer', 'budgetItem.budget', 'loan.member']);
 
-        // This would generate a PDF of the voucher
-        // You would need to implement PDF generation using a library like DOMPDF or similar
-        // For now, returning a view that can be printed
-        return view('vouchers.pdf', compact('voucher'));
+        $pdf = Pdf::loadView('vouchers.pdf', compact('voucher'));
+
+        // Stream PDF to browser for preview instead of forcing download
+        return $pdf->stream('Voucher-'.$voucher->voucher_number.'.pdf');
     }
 
     /**
