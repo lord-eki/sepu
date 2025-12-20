@@ -16,11 +16,11 @@
         class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md"
       >
         <div
-          :class="toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'"
-          class="text-white px-5 py-4 rounded-2xl shadow-xl flex items-start gap-3"
+          :class="toast.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
+          class="px-5 py-4 rounded-2xl shadow-xl flex items-start gap-3"
         >
-          <span class="font-semibold capitalize">{{ toast.type }}</span>
-          <p class="text-sm leading-relaxed">{{ toast.message }}</p>
+          <span class="font-semibold capitalize">{{ toast.type }} !</span><br>
+          <p class="text-sm leading-relaxed">{{ toast.message }} </p>
         </div>
       </div>
     </transition>
@@ -124,7 +124,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in users.data" :key="user.id"
+          <tr v-for="user in sortedUsers" :key="user.id"
             class="border-b dark:border-gray-700 hover:bg-orange-50 dark:hover:bg-[#14294B]/50 transition">
             <td class="px-4 py-3">
               <input type="checkbox" v-model="selected" :value="user.id" :disabled="auth.user.id === user.id" />
@@ -146,6 +146,7 @@
                 class="text-blue-600 hover:underline">Edit</Link>
             </td>
           </tr>
+
         </tbody>
       </table>
     </div>
@@ -208,6 +209,14 @@ const toggleSelectAll = (checked) => {
     ? props.users.data.filter(u => u.id !== auth.value.user.id).map(u => u.id)
     : []
 }
+
+const sortedUsers = computed(() => {
+  if (!props.users?.data) return []
+  const me = props.users.data.find(u => u.id === auth.value.user.id)
+  const others = props.users.data.filter(u => u.id !== auth.value.user.id)
+  return me ? [me, ...others] : others
+})
+
 
 const statsSummary = computed(() => ({
   total: { label: 'Total Users', count: props.stats.total },

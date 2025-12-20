@@ -127,17 +127,18 @@ class TransactionController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+       $request->validate([
             'account_id' => 'required|exists:accounts,id',
-            'transaction_type' => 'required|in:deposit,withdrawal,transfer,loan_disbursement,loan_repayment,dividend_payment,fee_payment,interest_payment',
+            'transaction_type' => 'required|in:deposit,withdrawal,transfer',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:500',
-            'payment_method' => 'required|in:cash,mobile_money,bank_transfer,cheque,system_transfer',
-            'payment_reference' => 'nullable|string|max:255',
-            'reference_number' => 'nullable|string|max:255',
-            'metadata' => 'nullable|array',
-            'destination_account_id' => 'required_if:transaction_type,transfer|exists:accounts,id',
+            'payment_method' => 'required',
+            'destination_account_id' =>
+                'required_if:transaction_type,transfer|exists:accounts,id|different:account_id',
         ]);
+
+
+
 
         if ($validator->fails()) {
             return response()->json([
@@ -201,19 +202,18 @@ class TransactionController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction created successfully',
-                'data' => $transaction->load(['account', 'member', 'processedBy'])
-            ], 201);
+            return redirect()
+                ->route('transactions.index')
+                ->with('success', 'Transaction created successfully');
+
 
         } catch (Exception $e) {
             DB::rollback();
             
-            return response()->json([
-                'success' => false,
-                'message' => 'Transaction failed: ' . $e->getMessage()
-            ], 400);
+            return back()->withErrors([
+                'general' => 'Transaction failed: ' . $e->getMessage()
+            ]);
+
         }
     }
 

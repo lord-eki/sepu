@@ -1,118 +1,136 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: 'Transactions', href: '/transactions' }, { title: 'New Transaction' }]">
-
+  <AppLayout
+    :breadcrumbs="[
+      { title: 'Transactions', href: '/transactions' },
+      { title: 'New Transaction' }
+    ]"
+  >
     <Head title="New Transaction" />
 
-    <!-- Global message -->
-    <div v-if="message.visible"
-      :class="message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
-      class="fixed top-5 left-1/2 transform -translate-x-1/2 py-3 px-6 rounded shadow-lg z-50 flex items-center justify-between gap-3 min-w-[250px] max-w-sm transition-opacity duration-300">
+    <!-- GLOBAL MESSAGE -->
+    <div
+      v-if="message.visible"
+      :class="message.type === 'success' ? 'alert success' : 'alert error'"
+    >
       <span>{{ message.text }}</span>
-      <button @click="message.visible = false" class="text-gray-500 hover:text-gray-800 font-bold">&times;</button>
+      <button @click="message.visible = false">&times;</button>
     </div>
 
-    <div class="max-w-3xl mx-auto p-4 bg-[#F4F6F8] min-h-screen space-y-6">
+    <div class="container">
 
-      <!-- Page header -->
-      <h1 class="text-2xl font-semibold text-[#0A2342]">Create New Transaction</h1>
+      <!-- HEADER -->
+      <div class="page-header">
+        <h1>New Transaction</h1>
+        <p>Record deposits, withdrawals and transfers securely</p>
+      </div>
 
-      <!-- Form -->
-      <form @submit.prevent="submitTransaction"
-        class="bg-white p-6 rounded-2xl shadow space-y-4 border border-gray-100">
+      <!-- FORM -->
+      <form @submit.prevent="submitTransaction" class="form-card">
 
-        <!-- Member -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Member</label>
-          <select v-model="form.member_id" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#0A2342]">
+        <!-- MEMBER -->
+        <div class="form-group">
+          <label>Member</label>
+          <select v-model="form.member_id">
             <option value="">Select member</option>
             <option v-for="m in members" :key="m.id" :value="m.id">
               {{ m.first_name }} {{ m.last_name }} ({{ m.membership_id }})
             </option>
           </select>
-          <p v-if="errors.member_id" class="text-rose-500 text-sm mt-1">{{ errors.member_id[0] }}</p>
+          <span v-if="fieldError('member_id')" class="error">
+            {{ fieldError('member_id') }}
+          </span>
         </div>
 
-        <!-- Account -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Account</label>
-          <select v-model="form.account_id"
-            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#0A2342]">
+        <!-- ACCOUNT -->
+        <div class="form-group">
+          <label>Account</label>
+          <select v-model="form.account_id">
             <option value="">Select account</option>
             <option v-for="a in accounts" :key="a.id" :value="a.id">
-              {{ a.account_number }} - {{ a.member ? `${a.member.first_name} ${a.member.last_name}` : 'No Member' }}
+              {{ a.account_number }} –
+              {{ a.member ? `${a.member.first_name} ${a.member.last_name}` : 'No Member' }}
             </option>
           </select>
-          <p v-if="errors.account_id" class="text-rose-500 text-sm mt-1">{{ errors.account_id[0] }}</p>
+          <span v-if="fieldError('account_id')" class="error">
+            {{ fieldError('account_id') }}
+          </span>
         </div>
 
-        <!-- Transaction Type -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Transaction Type</label>
-          <select v-model="form.transaction_type"
-            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#0A2342]">
+        <!-- TRANSACTION TYPE -->
+        <div class="form-group">
+          <label>Transaction Type</label>
+          <select v-model="form.transaction_type">
             <option value="">Select type</option>
-            <option v-for="(label, key) in transactionTypes" :key="key" :value="key">{{ label }}</option>
+            <option v-for="(label, key) in transactionTypes" :key="key" :value="key">
+              {{ label }}
+            </option>
           </select>
-          <p v-if="errors.transaction_type" class="text-rose-500 text-sm mt-1">{{ errors.transaction_type[0] }}</p>
+          <span v-if="fieldError('transaction_type')" class="error">
+            {{ fieldError('transaction_type') }}
+          </span>
         </div>
 
-        <!-- Amount -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Amount</label>
-          <input type="number" min="0.01" step="0.01" v-model="form.amount"
-            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#0A2342]" />
-          <p v-if="errors.amount" class="text-rose-500 text-sm mt-1">{{ errors.amount[0] }}</p>
+        <!-- AMOUNT -->
+        <div class="form-group">
+          <label>Amount</label>
+          <input type="number" v-model="form.amount" />
+          <span v-if="fieldError('amount')" class="error">
+            {{ fieldError('amount') }}
+          </span>
         </div>
 
-        <!-- Payment Method -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Payment Method</label>
-          <select v-model="form.payment_method"
-            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#0A2342]">
+        <!-- PAYMENT METHOD -->
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select v-model="form.payment_method">
             <option value="">Select method</option>
-            <option v-for="(label, key) in paymentMethods" :key="key" :value="key">{{ label }}</option>
+            <option v-for="(label, key) in paymentMethods" :key="key" :value="key">
+              {{ label }}
+            </option>
           </select>
-          <p v-if="errors.payment_method" class="text-rose-500 text-sm mt-1">{{ errors.payment_method[0] }}</p>
+          <span v-if="fieldError('payment_method')" class="error">
+            {{ fieldError('payment_method') }}
+          </span>
         </div>
 
-        <!-- Payment Reference -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Payment Reference</label>
-          <input type="text" v-model="form.payment_reference"
-            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#0A2342]" />
-          <p v-if="errors.payment_reference" class="text-rose-500 text-sm mt-1">{{ errors.payment_reference[0] }}</p>
+        <!-- PAYMENT REFERENCE -->
+        <div class="form-group">
+          <label>Payment Reference</label>
+          <input v-model="form.payment_reference" />
+          <span v-if="fieldError('payment_reference')" class="error">
+            {{ fieldError('payment_reference') }}
+          </span>
         </div>
 
-        <!-- Description -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Description</label>
-          <textarea v-model="form.description" rows="3"
-            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#0A2342]"></textarea>
-          <p v-if="errors.description" class="text-rose-500 text-sm mt-1">{{ errors.description[0] }}</p>
+        <!-- DESCRIPTION -->
+        <div class="form-group">
+          <label>Description</label>
+          <textarea rows="3" v-model="form.description"></textarea>
+          <span v-if="fieldError('description')" class="error">
+            {{ fieldError('description') }}
+          </span>
         </div>
 
-        <!-- Destination Account for Transfers -->
-        <div v-if="form.transaction_type === 'transfer'">
-          <label class="block text-sm font-medium text-gray-700">Destination Account</label>
-          <select v-model="form.destination_account_id"
-            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#0A2342]">
+        <!-- DESTINATION ACCOUNT -->
+        <div v-if="form.transaction_type === 'transfer'" class="form-group">
+          <label>Destination Account</label>
+          <select v-model="form.destination_account_id">
             <option value="">Select destination</option>
             <option v-for="a in accounts" :key="a.id" :value="a.id">
-              {{ a.account_number }} - {{ a.member ? `${a.member.first_name} ${a.member.last_name}` : 'No Member' }}
+              {{ a.account_number }} –
+              {{ a.member ? `${a.member.first_name} ${a.member.last_name}` : 'No Member' }}
             </option>
           </select>
-          <p v-if="errors.destination_account_id" class="text-rose-500 text-sm mt-1">{{ errors.destination_account_id[0]
-            }}</p>
+          <span v-if="fieldError('destination_account_id')" class="error">
+            {{ fieldError('destination_account_id') }}
+          </span>
         </div>
 
-        <!-- Submit -->
-        <div class="flex justify-end gap-2 pt-2">
-          <Link href="/transactions" class="px-4 py-2 border rounded hover:bg-gray-50">Cancel</Link>
-          <button type="submit"
-            class="px-4 py-2 bg-[#F97316] text-white rounded hover:bg-orange-500 flex items-center gap-2"
-            :disabled="loading">
-            <span v-if="loading" class="animate-spin">⏳</span>
-            <span>{{ loading ? 'Submitting...' : 'Submit' }}</span>
+        <!-- ACTIONS -->
+        <div class="form-actions">
+          <Link href="/transactions" class="btn-outline">Cancel</Link>
+          <button type="submit" class="btn-primary" :disabled="loading">
+            {{ loading ? 'Submitting...' : 'Submit Transaction' }}
           </button>
         </div>
       </form>
@@ -121,23 +139,19 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
+import { reactive, ref, computed } from 'vue'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const props = defineProps<{
-  accounts: any[];
-  members: any[];
-  transactionTypes: Record<string, string>;
-  paymentMethods: Record<string, string>;
-}>();
+  accounts: any[]
+  members: any[]
+  transactionTypes: Record<string, string>
+  paymentMethods: Record<string, string>
+}>()
 
-const accounts = props.accounts;
-const members = props.members;
-const transactionTypes = props.transactionTypes;
-const paymentMethods = props.paymentMethods;
+const page = usePage()
 
-// Form state
 const form = reactive({
   member_id: '',
   account_id: '',
@@ -147,47 +161,158 @@ const form = reactive({
   payment_method: '',
   payment_reference: '',
   destination_account_id: '',
-});
+})
 
-// UI state
-const errors = reactive<any>({});
-const loading = ref(false);
-const message = reactive({ text: '', type: 'success', visible: false });
+const loading = ref(false)
+const errors = computed(() => page.props.errors || {})
 
-function showMessage(text: string, type: 'success' | 'error' = 'success') {
-  message.text = text;
-  message.type = type;
-  message.visible = true;
-  setTimeout(() => (message.visible = false), 4000);
+const message = reactive({
+  text: '',
+  type: 'success',
+  visible: false,
+})
+
+function fieldError(field: string) {
+  const error = errors.value?.[field]
+  if (!error) return null
+  return Array.isArray(error) ? error[0] : error
 }
 
-// Submit form
-async function submitTransaction() {
-  errors.value = {};
-  loading.value = true;
+function submitTransaction() {
+  loading.value = true
 
-  try {
-    await router.post('/transactions', form, {
-      preserveState: true,
-      onSuccess: (page) => {
-        showMessage('Transaction created successfully!', 'success');
-        router.visit('/transactions');
-      },
-      onError: (err) => {
-        Object.assign(errors, err);
-        showMessage('Please fix the errors', 'error');
-      },
-      onFinish: () => { loading.value = false; },
-    });
-  } catch (e) {
-    showMessage('Transaction failed', 'error');
-    loading.value = false;
-  }
+  router.post('/transactions', form, {
+    onFinish: () => (loading.value = false),
+  })
 }
 </script>
 
 <style scoped>
-button:hover {
+/* Layout */
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* Header */
+.page-header {
+  background: linear-gradient(90deg, #0a2342, #0c2e55, #103a66);
+  color: white;
+  padding: 24px;
+  border-radius: 18px;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.page-header p {
+  margin-top: 6px;
+  color: #cfe3ff;
+}
+
+/* Form */
+.form-card {
+  background: white;
+  padding: 24px;
+  border-radius: 18px;
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #0a2342;
+}
+
+/* Errors */
+.error {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Buttons */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-primary {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: #ea580c;
+}
+
+.btn-outline {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: transparent;
+}
+
+/* Alerts */
+.alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 50;
+}
+
+.alert.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.alert.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.alert button {
+  background: none;
+  border: none;
+  font-size: 18px;
   cursor: pointer;
 }
 </style>

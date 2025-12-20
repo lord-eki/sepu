@@ -78,6 +78,48 @@
                   </p>
                 </div>
 
+                <!-- Budget Item -->
+                <div>
+                  <label class="block text-sm font-medium text-[#0a2342] mb-2">
+                    Budget Item <span class="text-red-500">*</span>
+                  </label>
+
+                  <!-- Normal vouchers -->
+                  <select
+                    v-if="form.voucher_type !== 'loan_disbursement'"
+                    v-model="form.budget_item_id"
+                    class="w-full rounded-lg border p-2 border-gray-300 focus:border-[#ff7a00] focus:ring-[#ff7a00]"
+                  >
+                    <option value="">Select Budget Item</option>
+                    <option
+                      v-for="item in props.budgetItems"
+                      :key="item.id"
+                      :value="item.id"
+                    >
+                      {{ item.item_name }} — {{ item.budget?.title }}
+                    </option>
+                  </select>
+
+                  <!-- Loan disbursement (read-only) -->
+                  <input
+                    v-else
+                    type="text"
+                    :value="selectedBudgetItem?.item_name || 'Loan Disbursement'"
+                    disabled
+                    class="w-full rounded-lg border bg-gray-100 p-2 text-gray-700 cursor-not-allowed"
+                  />
+
+                  <p v-if="form.voucher_type === 'loan_disbursement'" class="text-xs text-gray-500 mt-1">
+                    Automatically assigned for loan disbursement
+                  </p>
+
+                  <p v-if="$page.props.errors.budget_item_id" class="text-red-600 text-sm mt-1">
+                    {{ $page.props.errors.budget_item_id }}
+                  </p>
+</div>
+
+
+
                 <!-- Amount -->
                 <div>
                   <label class="block text-sm font-medium text-[#0a2342] mb-2">
@@ -417,6 +459,13 @@ watch(() => form.member_id, (id) => {
     form.payee_phone = member.phone
   }
 })
+
+watch(() => form.voucher_type, (type) => {
+  if (type === 'loan_disbursement') {
+    form.budget_item_id = ''
+  }
+})
+
 
 
 

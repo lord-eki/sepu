@@ -316,6 +316,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{voucher}/reject', [PaymentVoucherController::class, 'reject'])->name('reject');
         Route::post('/{voucher}/pay', [PaymentVoucherController::class, 'pay'])->name('pay');
         Route::post('/{voucher}/cancel', [PaymentVoucherController::class, 'cancel'])->name('cancel');
+        Route::post('/{voucher}/duplicate', [PaymentVoucherController::class, 'duplicate'])
+        ->name('duplicate');
+
         // Voucher PDF route
         Route::get('/{voucher}/pdf', [PaymentVoucherController::class, 'downloadPdf'])
         ->name('pdf');

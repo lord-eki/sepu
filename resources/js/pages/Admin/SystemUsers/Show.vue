@@ -167,4 +167,8 @@ const fmtCurrency = (v: number) => new Intl.NumberFormat('en-KE', { style: 'curr
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fadeIn { animation: fadeIn 0.45s ease-out; }
+
+button:hover {
+cursor: pointer;
+}
 </style>
