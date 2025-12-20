@@ -26,27 +26,23 @@ class TransactionController extends Controller
         $query = Transaction::with(['account', 'member', 'processedBy'])
             ->orderBy('created_at', 'desc');
 
-        // Filter by member if specified
+        // Apply filters
         if ($request->filled('member_id')) {
             $query->where('member_id', $request->member_id);
         }
 
-        // Filter by account if specified
         if ($request->filled('account_id')) {
             $query->where('account_id', $request->account_id);
         }
 
-        // Filter by transaction type
         if ($request->filled('transaction_type')) {
             $query->where('transaction_type', $request->transaction_type);
         }
 
-        // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by date range
         if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
@@ -55,7 +51,6 @@ class TransactionController extends Controller
             $query->whereDate('created_at', '<=', $request->end_date);
         }
 
-        // Filter by amount range
         if ($request->filled('min_amount')) {
             $query->where('amount', '>=', $request->min_amount);
         }
@@ -64,48 +59,53 @@ class TransactionController extends Controller
             $query->where('amount', '<=', $request->max_amount);
         }
 
-        // Search functionality
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('transaction_id', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('reference_number', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('description', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('payment_reference', 'LIKE', "%{$searchTerm}%")
-                  ->orWhereHas('member', function ($memberQuery) use ($searchTerm) {
-                      $memberQuery->where('first_name', 'LIKE', "%{$searchTerm}%")
-                                 ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
-                                 ->orWhere('membership_id', 'LIKE', "%{$searchTerm}%");
-                  });
+                ->orWhere('reference_number', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('payment_reference', 'LIKE', "%{$searchTerm}%")
+                ->orWhereHas('member', function ($memberQuery) use ($searchTerm) {
+                    $memberQuery->where('first_name', 'LIKE', "%{$searchTerm}%")
+                                ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
+                                ->orWhere('membership_id', 'LIKE', "%{$searchTerm}%");
+                });
             });
         }
 
+        // Clone query for stats BEFORE pagination
+        $statsQuery = (clone $query);
+
         $transactions = $query->paginate(20);
 
-        // Get summary statistics
-        $totalTransactions = $query->count();
-        $totalAmount = $query->sum('amount');
-        $pendingCount = $query->where('status', 'pending')->count();
-        $completedCount = $query->where('status', 'completed')->count();
-
         $statistics = [
-            'total_transactions' => $totalTransactions,
-            'total_amount' => $totalAmount,
-            'pending_count' => $pendingCount,
-            'completed_count' => $completedCount,
-            'failed_count' => $query->where('status', 'failed')->count(),
-            'reversed_count' => $query->where('status', 'reversed')->count(),
+            'total_transactions' => $statsQuery->count(),
+            'total_amount' => $statsQuery->sum('amount'),
+            'pending_count' => (clone $statsQuery)->where('status', 'pending')->count(),
+            'completed_count' => (clone $statsQuery)->where('status', 'completed')->count(),
+            'failed_count' => (clone $statsQuery)->where('status', 'failed')->count(),
+            'reversed_count' => (clone $statsQuery)->where('status', 'reversed')->count(),
         ];
 
-        // return response()->json([
-        //     'success' => true,
-        //     'data' => $transactions,
-        //     'statistics' => $statistics,
-        // ]);
         return Inertia::render('Transactions/Index', [
             'transactions' => $transactions,
             'statistics' => $statistics,
+            'transactionTypes' => $this->getTransactionTypes(),
+            // Pass filters back so they persist on reload
+            'filters' => [
+                'search' => $request->query('search', ''),
+                'member_id' => $request->query('member_id', ''),
+                'account_id' => $request->query('account_id', ''),
+                'transaction_type' => $request->query('transaction_type', ''),
+                'status' => $request->query('status', ''),
+                'start_date' => $request->query('start_date', ''),
+                'end_date' => $request->query('end_date', ''),
+                'min_amount' => $request->query('min_amount', ''),
+                'max_amount' => $request->query('max_amount', ''),
+            ],
         ]);
+        
 
     }
 
@@ -860,8 +860,8 @@ class TransactionController extends Controller
             'loan_disbursement' => 'Loan Disbursement',
             'loan_repayment' => 'Loan Repayment',
             'dividend_payment' => 'Dividend Payment',
-            'fee_payment' => 'Fee Payment',
-            'interest_payment' => 'Interest Payment',
+            'fee' => 'Fee Payment',
+            'penalty' => 'Penalty',
         ];
     }
 

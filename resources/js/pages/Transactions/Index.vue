@@ -196,12 +196,12 @@
               <td class="px-4 py-3 text-center">
                 <div class="flex justify-center gap-2">
                   <!-- VIEW -->
-                  <Link-Inertia
+                  <Link
                     :href="`/transactions/${t.id}`"
                     class="px-3 py-1.5 bg-gray-100 text-[#0A2342] rounded-md text-sm hover:bg-gray-200 transition"
                   >
                     View
-                  </Link-Inertia>
+                  </Link>
 
                   <!-- APPROVE -->
                   <button
@@ -243,7 +243,7 @@
 
       
         <!-- PAGINATION -->
-        <Pagination :data="transactionsProp" @page-changed="goToPage" />
+        <Pagination :data="transactions" @page-changed="goToPage" />
 
       </div>
 
@@ -343,11 +343,12 @@ const props = page.props as any;
 
 // Transactions & stats
 const stats = computed(() => props.statistics ?? {});
-const transactionsProp = computed(() => props.transactions ?? {});
+const transactions = ref(props.transactions ?? {});
+const transactionTypes = computed(() => props.transactionTypes ?? {});
 
 // Pagination helpers
-const meta = computed(() => transactionsProp.value.meta ?? {});
-const pageData = computed(() => transactionsProp.value.data ?? []);
+const meta = computed(() => transactions.value.meta ?? {});
+const pageData = computed(() => transactions.value.data ?? []);
 
 // Filters
 const filters = reactive({
@@ -358,17 +359,6 @@ const filters = reactive({
   end_date: props.filters?.end_date ?? '',
 });
 
-// Transaction type labels
-const transactionTypes = {
-  deposit: 'Deposit',
-  withdrawal: 'Withdrawal',
-  transfer: 'Transfer',
-  loan_disbursement: 'Loan Disbursement',
-  loan_repayment: 'Loan Repayment',
-  dividend_payment: 'Dividend Payment',
-  fee_payment: 'Fee Payment',
-  interest_payment: 'Interest Payment',
-};
 
 // Utilities
 function formattedNumber(n: number) { return Number(n ?? 0).toLocaleString(); }
@@ -420,7 +410,8 @@ function goToPage(pageNum: number) {
 }
 
 function applyFilters() {
-  router.get('/transactions', { ...filters, page: 1 }, { replace: true, preserveState: true });
+  router.get('/transactions', { ...filters, page: 1 }, { replace: true }); 
+  
 }
 
 function resetFilters() {
@@ -495,8 +486,8 @@ async function fetchTransactions(page = 1) {
   try {
     const { data } = await axios.get('/transactions', { params: { ...filters, page } });
     if (data.data) {
-      transactionsProp.value.data = data.data.data;
-      transactionsProp.value.meta = data.data.meta;
+      transactions.value.data = data.data.data;
+      transactions.value.meta = data.data.meta;
     }
   } catch (e) { console.error(e); }
 }

@@ -185,6 +185,7 @@ function submitTransaction() {
     onFinish: () => (loading.value = false),
   })
 }
+
 </script>
 
 <style scoped>
