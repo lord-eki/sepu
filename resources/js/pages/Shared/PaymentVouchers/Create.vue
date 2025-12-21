@@ -26,7 +26,7 @@
     </div>
 
     <!-- Page Header -->
-    <div class="bg-[#0a2342] rounded-xl px-6 py-6 text-white shadow-md mb-8 flex justify-between items-center">
+    <div class="bg-[#0a2342] rounded-xl px-6 py-6 text-white shadow-md mb-8 flex max-sm:flex-col max-sm:gap-4 justify-between items-center">
       <div>
         <h2 class="font-semibold text-2xl">Create Payment Voucher</h2>
         <p class="text-sm opacity-80">Create a new payment voucher for approval</p>
@@ -39,7 +39,7 @@
       </Link>
     </div>
 
-    <div class="py-6">
+    <div class="py-6 max-sm:mx-2">
       <div class="max-w-4xl mx-auto">
 
         <form @submit.prevent="submit" class="space-y-8">

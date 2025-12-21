@@ -31,8 +31,7 @@
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 transition-colors">
 
       <!-- HEADER -->
-      <div
-        class="mx-4 mt-6 rounded-3xl shadow-xl p-6 sm:p-8
+      <div class="mx-4 mt-6 rounded-3xl shadow-xl p-6 sm:p-8
               bg-gradient-to-r from-[#0a2342] via-[#0c2e55] to-[#103a66]
               text-white
               dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-700 dark:to-gray-600">
@@ -53,7 +52,7 @@
             <!-- Add Member -->
             <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
               class="px-5 py-2.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm sm:text-base shadow-md flex items-center gap-2 transition transform hover:-translate-y-0.5">
-              <PlusCircle class="w-5 h-5" /> Add Member
+            <PlusCircle class="w-5 h-5" /><span class="sm:hidden"> Add</span> <span class="max-sm:hidden"> Add Member</span>
             </Link>
 
             <!-- Import Dropdown -->
@@ -68,11 +67,11 @@
                 class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden border dark:border-gray-700 z-50">
                 <Link :href="route('members.import.form')"
                   class="block px-4 py-3 text-sm hover:bg-blue-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-200">
-                  Import Members
+                Import Members
                 </Link>
                 <Link :href="route('members.deposits.import.form')"
                   class="block px-4 py-3 text-sm hover:bg-blue-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-200">
-                  Import Deposits
+                Import Deposits
                 </Link>
               </div>
             </div>
@@ -82,7 +81,8 @@
               class="px-5 py-2.5 rounded-2xl bg-orange-300 hover:bg-orange-400 text-gray-800 font-semibold text-sm sm:text-base shadow-md flex items-center gap-2 transition transform hover:-translate-y-0.5 dark:bg-orange-500 dark:hover:bg-orange-600 dark:text-white">
               <DownloadIcon class="w-5 h-5" />
               <Loader2Icon v-if="isExporting" class="w-5 h-5 animate-spin" />
-              <span>{{ isExporting ? "Exporting..." : "Export Members" }}</span>
+              <span class="sm:hidden">{{ isExporting ? "Exporting..." : "Export" }}</span>
+              <span class="max-sm:hidden">{{ isExporting ? "Exporting..." : "Export Members" }}</span>
             </button>
 
             <!-- More Actions Dropdown -->
