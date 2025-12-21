@@ -1,54 +1,52 @@
 <template>
-  <AppLayout
-    :breadcrumbs="[
-      { title: 'Transactions', href: '/transactions' },
-      { title: 'New Transaction' }
-    ]"
-  >
+  <AppLayout :breadcrumbs="[
+    { title: 'Transactions', href: '/transactions' },
+    { title: 'New Transaction', href: '#' }
+  ]">
+
     <Head title="New Transaction" />
 
-    <!-- GLOBAL MESSAGE -->
-    <div
-      v-if="message.visible"
-      :class="message.type === 'success' ? 'alert success' : 'alert error'"
-    >
-      <span>{{ message.text }}</span>
-      <button @click="message.visible = false">&times;</button>
-    </div>
+    <!-- FLASH BOX -->
+    <div ref="flashBox" class="max-w-3xl mx-auto mt-4 px-4">
+        <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+          leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+          <div v-if="flashMessage" :class="[
+      'mb-4 rounded-md p-4 shadow flex items-center gap-3 border',
+      flashType === 'success'
+        ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900 dark:text-green-200 dark:border-green-700'
+        : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900 dark:text-red-200 dark:border-red-700'
+    ]">
+            <p class="ml-3 text-sm">{{ flashMessage }}</p>
+
+            <button class="ml-auto text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200"
+              @click="flashMessage = null">
+              ✕
+            </button>
+          </div>
+        </transition>
+      </div>
+
 
     <div class="container">
 
       <!-- HEADER -->
       <div class="page-header">
         <h1>New Transaction</h1>
-        <p>Record deposits, withdrawals and transfers securely</p>
+        <p>Record deposits and withdrawals securely</p>
       </div>
 
       <!-- FORM -->
       <form @submit.prevent="submitTransaction" class="form-card">
-
-        <!-- MEMBER -->
-        <div class="form-group">
-          <label>Member</label>
-          <select v-model="form.member_id">
-            <option value="">Select member</option>
-            <option v-for="m in members" :key="m.id" :value="m.id">
-              {{ m.first_name }} {{ m.last_name }} ({{ m.membership_id }})
-            </option>
-          </select>
-          <span v-if="fieldError('member_id')" class="error">
-            {{ fieldError('member_id') }}
-          </span>
-        </div>
 
         <!-- ACCOUNT -->
         <div class="form-group">
           <label>Account</label>
           <select v-model="form.account_id">
             <option value="">Select account</option>
-            <option v-for="a in accounts" :key="a.id" :value="a.id">
+            <option v-for="a in shareAccounts" :key="a.id" :value="a.id">
               {{ a.account_number }} –
-              {{ a.member ? `${a.member.first_name} ${a.member.last_name}` : 'No Member' }}
+              {{ a.member.first_name }} {{ a.member.last_name }}
             </option>
           </select>
           <span v-if="fieldError('account_id')" class="error">
@@ -61,7 +59,7 @@
           <label>Transaction Type</label>
           <select v-model="form.transaction_type">
             <option value="">Select type</option>
-            <option v-for="(label, key) in transactionTypes" :key="key" :value="key">
+            <option v-for="(label, key) in filteredTransactionTypes" :key="key" :value="key">
               {{ label }}
             </option>
           </select>
@@ -97,9 +95,6 @@
         <div class="form-group">
           <label>Payment Reference</label>
           <input v-model="form.payment_reference" />
-          <span v-if="fieldError('payment_reference')" class="error">
-            {{ fieldError('payment_reference') }}
-          </span>
         </div>
 
         <!-- DESCRIPTION -->
@@ -111,41 +106,26 @@
           </span>
         </div>
 
-        <!-- DESTINATION ACCOUNT -->
-        <div v-if="form.transaction_type === 'transfer'" class="form-group">
-          <label>Destination Account</label>
-          <select v-model="form.destination_account_id">
-            <option value="">Select destination</option>
-            <option v-for="a in accounts" :key="a.id" :value="a.id">
-              {{ a.account_number }} –
-              {{ a.member ? `${a.member.first_name} ${a.member.last_name}` : 'No Member' }}
-            </option>
-          </select>
-          <span v-if="fieldError('destination_account_id')" class="error">
-            {{ fieldError('destination_account_id') }}
-          </span>
-        </div>
-
         <!-- ACTIONS -->
         <div class="form-actions">
           <Link href="/transactions" class="btn-outline">Cancel</Link>
           <button type="submit" class="btn-primary" :disabled="loading">
-            {{ loading ? 'Submitting...' : 'Submit Transaction' }}
+            {{ loading ? 'Submitting…' : 'Submit Transaction' }}
           </button>
         </div>
+
       </form>
     </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, watch, computed } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const props = defineProps<{
   accounts: any[]
-  members: any[]
   transactionTypes: Record<string, string>
   paymentMethods: Record<string, string>
 }>()
@@ -153,24 +133,44 @@ const props = defineProps<{
 const page = usePage()
 
 const form = reactive({
-  member_id: '',
   account_id: '',
   transaction_type: '',
   amount: '',
   description: '',
   payment_method: '',
   payment_reference: '',
-  destination_account_id: '',
 })
+
+
+// FLASH HANDLING
+const flashMessage = ref(null)
+const flashType = ref('success')
+const flashBox = ref(null)
+
+watch(
+  () => page.props,
+  (props) => {
+    if (props.flash?.success) {
+      flashMessage.value = props.flash.success
+      flashType.value = 'success'
+    } else if (props.flash?.error) {
+      flashMessage.value = props.flash.error
+      flashType.value = 'error'
+    } else if (props.errors?.error) {
+      flashMessage.value = props.errors.error
+      flashType.value = 'error'
+    }
+
+    if (flashMessage.value) {
+      setTimeout(() => (flashMessage.value = null), 5000)
+    }
+  },
+  { immediate: true, deep: true }
+)
+
 
 const loading = ref(false)
 const errors = computed(() => page.props.errors || {})
-
-const message = reactive({
-  text: '',
-  type: 'success',
-  visible: false,
-})
 
 function fieldError(field: string) {
   const error = errors.value?.[field]
@@ -178,15 +178,28 @@ function fieldError(field: string) {
   return Array.isArray(error) ? error[0] : error
 }
 
+// Filter accounts to only share deposit accounts
+const shareAccounts = computed(() =>
+  props.accounts.filter(acc => acc.account_type === 'share_deposits' && acc.is_active)
+)
+
+// Filter transaction types to only deposit and withdrawal
+const filteredTransactionTypes = computed(() =>
+  Object.fromEntries(
+    Object.entries(props.transactionTypes).filter(([key]) =>
+      ['deposit', 'withdrawal'].includes(key)
+    )
+  )
+)
+
 function submitTransaction() {
   loading.value = true
-
-  router.post('/transactions', form, {
+  router.post(route('transactions.store'), form, {
     onFinish: () => (loading.value = false),
   })
 }
-
 </script>
+
 
 <style scoped>
 /* Layout */

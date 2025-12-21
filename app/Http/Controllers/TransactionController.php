@@ -115,7 +115,12 @@ class TransactionController extends Controller
     public function create()
     {
         return Inertia::render('Transactions/Create', [
-            'accounts' => Account::with('member')->where('is_active', true)->get(),
+            'accounts' => Account::with('member')
+                ->where('is_active', true)
+                ->whereHas('member', function ($q) {
+                    $q->where('membership_status', 'active');
+                })
+                ->get(),
             'members' => Member::where('membership_status', 'active')->get(),
             'transactionTypes' => $this->getTransactionTypes(),
             'paymentMethods' => $this->getPaymentMethods(),
@@ -127,93 +132,70 @@ class TransactionController extends Controller
      */
     public function store(Request $request)
     {
-       $request->validate([
+        // Validate only deposit and withdrawal
+        $request->validate([
             'account_id' => 'required|exists:accounts,id',
-            'transaction_type' => 'required|in:deposit,withdrawal,transfer',
+            'transaction_type' => 'required|in:deposit,withdrawal',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:500',
             'payment_method' => 'required',
-            'destination_account_id' =>
-                'required_if:transaction_type,transfer|exists:accounts,id|different:account_id',
+            'payment_reference' => 'nullable|string|max:100',
         ]);
-
-
-
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
 
         try {
             DB::beginTransaction();
 
-            $account = Account::findOrFail($request->account_id);
+            // Get account with member
+            $account = Account::with('member')->findOrFail($request->account_id);
             $member = $account->member;
 
-            // Validate account is active
-            if (!$account->is_active) {
-                throw new Exception('Account is not active');
-            }
+            // Validate account and member are active
+            if (!$account->is_active) throw new \Exception('Account is not active');
+            if ($member->membership_status !== 'active') throw new \Exception('Member account is not active');
 
-            // Validate member is active
-            if ($member->membership_status !== 'active') {
-                throw new Exception('Member account is not active');
-            }
-
-            // For withdrawals and transfers, check sufficient balance
-            if (in_array($request->transaction_type, ['withdrawal', 'transfer'])) {
+            // For withdrawals, check sufficient balance
+            if ($request->transaction_type === 'withdrawal') {
                 if ($account->available_balance < $request->amount) {
-                    throw new Exception('Insufficient account balance');
+                    throw new \Exception('Insufficient account balance');
                 }
             }
 
-            // Generate unique transaction ID
-            $transactionId = $this->generateTransactionId();
+            // Calculate balances
+            $balanceBefore = $account->balance;
+            $balanceAfter = $request->transaction_type === 'deposit'
+                ? $account->balance + $request->amount
+                : $account->balance - $request->amount;
 
             // Create the transaction
             $transaction = Transaction::create([
-                'transaction_id' => $transactionId,
-                'account_id' => $account->id,
-                'member_id' => $member->id,
-                'transaction_type' => $request->transaction_type,
-                'amount' => $request->amount,
-                'balance_before' => $account->balance,
-                'balance_after' => $this->calculateNewBalance($account, $request->transaction_type, $request->amount),
-                'description' => $request->description,
-                'reference_number' => $request->reference_number,
-                'payment_method' => $request->payment_method,
-                'payment_reference' => $request->payment_reference,
-                'status' => 'pending',
-                'processed_by' => Auth::id(),
-                'processed_at' => now(),
-                'metadata' => $request->metadata,
+                'transaction_id'     => $this->generateTransactionId(),
+                'account_id'         => $account->id,
+                'member_id'          => $member->id,
+                'transaction_type'   => $request->transaction_type,
+                'amount'             => $request->amount,
+                'balance_before'     => $balanceBefore,
+                'balance_after'      => $balanceAfter,
+                'description'        => $request->description,
+                'reference_number'   => $request->reference_number,
+                'payment_method'     => $request->payment_method,
+                'payment_reference'  => $request->payment_reference,
+                'status'             => 'pending',
+                'processed_by'       => Auth::id(),
+                'processed_at'       => now(),
+                'metadata'           => $request->metadata,
             ]);
 
-            // Handle transfer transactions
-            if ($request->transaction_type === 'transfer') {
-                $this->processTransfer($transaction, $request->destination_account_id);
-            }
-
-            // Process the transaction
-            $this->processTransaction($transaction);
+            // Update account balance
+            $account->balance = $balanceAfter;
+            $account->save();
 
             DB::commit();
 
-            return redirect()
-                ->route('transactions.index')
-                ->with('success', 'Transaction created successfully');
+            return redirect()->route('transactions.index')->with('success', 'Transaction created successfully');
 
-
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
-            
-            return back()->withErrors([
-                'general' => 'Transaction failed: ' . $e->getMessage()
-            ]);
-
+            return back()->withErrors(['general' => 'Transaction failed: ' . $e->getMessage()]);
         }
     }
 

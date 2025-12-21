@@ -1,15 +1,27 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: 'Transactions' }]">
+  <AppLayout :breadcrumbs="[{ title: 'Transactions', href: '/transactions' }]">
     <Head title="Transactions" />
-    <!-- GLOBAL MESSAGE -->
-        <div 
-          v-if="message.visible" 
-          :class="message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'" 
-          class="fixed top-5 left-1/2 transform -translate-x-1/2 py-3 px-6 rounded shadow-lg z-9999 flex items-center justify-between gap-3 min-w-[250px] max-w-sm transition-opacity duration-300"
-        >
-          <span>{{ message.text }}</span>
-          <button @click="message.visible = false" class="text-gray-500 hover:text-gray-800 font-bold">&times;</button>
-        </div>
+
+      <!-- FLASH BOX -->
+      <div ref="flashBox" class="max-w-3xl mx-auto mt-4 px-4">
+        <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+          leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+          <div v-if="flashMessage" :class="[
+      'mb-4 rounded-md p-4 shadow flex items-center gap-3 border',
+      flashType === 'success'
+        ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900 dark:text-green-200 dark:border-green-700'
+        : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900 dark:text-red-200 dark:border-red-700'
+    ]">
+            <p class="ml-3 text-sm">{{ flashMessage }}</p>
+
+            <button class="ml-auto text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200"
+              @click="flashMessage = null">
+              ✕
+            </button>
+          </div>
+        </transition>
+      </div>
 
     <div class="space-y-8 bg-[#F4F6F8] min-h-screen p-2 sm:p-4">
 
@@ -331,11 +343,12 @@
 
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, watch, reactive } from 'vue';
 import { Head, router, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Pagination from '@/components/Pagination.vue'; 
 import axios from 'axios';
+
 
 // Props from Inertia
 const page = usePage();
@@ -358,6 +371,33 @@ const filters = reactive({
   start_date: props.filters?.start_date ?? '',
   end_date: props.filters?.end_date ?? '',
 });
+
+
+// FLASH HANDLING
+const flashMessage = ref(null)
+const flashType = ref('success')
+const flashBox = ref(null)
+
+watch(
+  () => page.props,
+  (props) => {
+    if (props.flash?.success) {
+      flashMessage.value = props.flash.success
+      flashType.value = 'success'
+    } else if (props.flash?.error) {
+      flashMessage.value = props.flash.error
+      flashType.value = 'error'
+    } else if (props.errors?.error) {
+      flashMessage.value = props.errors.error
+      flashType.value = 'error'
+    }
+
+    if (flashMessage.value) {
+      setTimeout(() => (flashMessage.value = null), 5000)
+    }
+  },
+  { immediate: true, deep: true }
+)
 
 
 // Utilities
