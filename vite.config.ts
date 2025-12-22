@@ -8,10 +8,10 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         port: 5173,
-        strictPort: true, 
+        strictPort: true,
         cors: true,
         hmr: {
-            host: '192.168.40.224', // local IP
+            host: '192.168.36.224', // local IP
         },
     },
     plugins: [

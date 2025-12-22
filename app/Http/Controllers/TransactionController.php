@@ -114,19 +114,11 @@ class TransactionController extends Controller
      */
     public function create()
     {
-        $accounts = Account::with('member')->where('is_active', true)->get();
-        $members = Member::where('membership_status', 'active')->get();
-        $transactionTypes = $this->getTransactionTypes();
-        $paymentMethods = $this->getPaymentMethods();
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'accounts' => $accounts,
-                'members' => $members,
-                'transaction_types' => $transactionTypes,
-                'payment_methods' => $paymentMethods,
-            ]
+        return Inertia::render('Transactions/Create', [
+            'accounts' => Account::with('member')->where('is_active', true)->get(),
+            'members' => Member::where('membership_status', 'active')->get(),
+            'transactionTypes' => $this->getTransactionTypes(),
+            'paymentMethods' => $this->getPaymentMethods(),
         ]);
     }
 

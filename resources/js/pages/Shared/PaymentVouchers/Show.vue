@@ -26,7 +26,7 @@
     </div>
     <!-- Header -->
     <div
-      class="bg-[#0A2342] text-white rounded-xl px-5 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 shadow">
+      class="bg-[#0A2342] text-white rounded-xl px-5 py-5 mx-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 shadow">
       <div>
         <h1 class="text-2xl font-semibold">Payment Voucher • {{ voucher.voucher_number }}</h1>
         <p class="text-sm opacity-80 mt-1">
@@ -160,6 +160,7 @@
             </div>
           </section>
 
+
           <!-- Payee Card -->
           <section class="bg-white rounded-xl shadow p-5 border">
             <h3 class="text-md font-semibold text-[#0A2342]">Payee Information</h3>
@@ -173,13 +174,67 @@
                 <dt class="text-xs text-slate-500">Phone</dt>
                 <dd class="mt-1 text-slate-800">{{ voucher.payee_phone }}</dd>
               </div>
-
-              <div v-if="voucher.payee_account" class="md:col-span-2">
-                <dt class="text-xs text-slate-500">Account Details</dt>
-                <dd class="mt-1 text-slate-800">{{ voucher.payee_account }}</dd>
-              </div>
             </div>
           </section>
+
+          <section class="bg-white rounded-xl shadow p-5 border">
+          <h3 class="text-md font-semibold text-[#0A2342]">Payment Instructions</h3>
+
+          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt class="text-slate-500">Payment Type</dt>
+              <dd class="font-medium">
+                {{ voucher.payment_type ? voucher.payment_type.toUpperCase() : '—' }}
+              </dd>
+            </div>
+
+            <template v-if="voucher.payment_type === 'mpesa'">
+              <div>
+                <dt class="text-slate-500">M-Pesa Number</dt>
+                <dd class="font-medium">{{ voucher.payment_phone || '—' }}</dd>
+              </div>
+            </template>
+
+            <template v-if="voucher.payment_type === 'bank'">
+              <div>
+                <dt class="text-slate-500">Bank</dt>
+                <dd class="font-medium">{{ voucher.bank_name || '—' }}</dd>
+              </div>
+
+              <div>
+                <dt class="text-slate-500">Account Number</dt>
+                <dd class="font-medium">{{ voucher.payment_account || '—' }}</dd>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <section
+          v-if="voucher.status === 'paid'"
+          class="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-5"
+        >
+          <h3 class="font-semibold text-[#0A2342]">Payment Details</h3>
+
+          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt class="text-slate-500">Paid By</dt>
+              <dd class="font-medium">{{ voucher.payer?.name || '—' }}</dd>
+            </div>
+
+            <div>
+              <dt class="text-slate-500">Payment Date</dt>
+              <dd class="font-medium">{{ formatDate(voucher.payment_date) }}</dd>
+            </div>
+
+            <div class="md:col-span-2">
+              <dt class="text-slate-500">Amount Paid</dt>
+              <dd class="font-semibold text-lg">{{ formatCurrency(voucher.amount) }}</dd>
+            </div>
+          </div>
+        </section>
+
+
+
 
           <!-- Budget & Loan Card -->
           <section v-if="voucher.budget_item || voucher.loan" class="bg-white rounded-xl shadow p-5 border">
@@ -203,6 +258,8 @@
               </div>
             </div>
           </section>
+
+
 
           <!-- Supporting Documents -->
           <section v-if="voucher.supporting_documents && voucher.supporting_documents.length"
@@ -415,23 +472,12 @@
 
         <form @submit.prevent="processPayment" class="mt-4 space-y-3">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <select v-model="paymentForm.payment_method" required class="border rounded p-2">
-              <option value="">Select payment method</option>
-              <option value="cash">Cash</option>
-              <option value="mobile_money">Mobile Money</option>
-              <option value="bank_transfer">Bank Transfer</option>
-              <option value="cheque">Cheque</option>
-            </select>
-
-            <!-- Payment Account -->
-            <label class="text-sm text-slate-600">Payment Account</label>
-            <select v-model="paymentForm.acc_id" class="w-full border rounded p-2 mt-1" required>
-              <option value="">-- Select Account --</option>
-              <option v-for="acc in accounts" :key="acc.id" :value="acc.id">
-                {{ formatAccount(acc) }}
-              </option>
-
-            </select>
+            <div class="bg-slate-100 rounded p-2 text-sm">
+            <span class="text-slate-500">Payment Method:</span>
+            <span class="font-medium ml-1">
+              {{ voucher.payment_type?.toUpperCase() || '—' }}
+            </span>
+          </div>
 
             <input v-model="paymentForm.payment_reference" placeholder="Payment reference (optional)"
               class="border rounded p-2" />
@@ -593,14 +639,19 @@ watch(
   { immediate: true, deep: true }
 )
 
+const voucher = props.voucher || {}
 // Forms
 const approvalForm = useForm({ approval_notes: '' })
 const rejectionForm = useForm({ rejection_reason: '' })
-const paymentForm = useForm({ payment_method: '', acc_id: "", payment_reference: '', payment_notes: '' })
+const paymentForm = useForm({
+  payment_notes: ''
+})
+
+
 const cancellationForm = useForm({ cancellation_reason: '' })
 
+
 // Derived & helpers
-const voucher = props.voucher || {}
 const statusBadgeClass = computed(() => {
   const map = {
     pending: 'bg-yellow-100 text-yellow-800',
@@ -611,6 +662,17 @@ const statusBadgeClass = computed(() => {
   }
   return map[voucher.status] || 'bg-gray-100 text-gray-800'
 })
+
+
+watch(showPaymentModal, (open) => {
+  if (!open || voucher.status === 'paid') return
+
+  paymentForm.payment_method = voucher.payment_type
+
+  // Optional defaults
+  paymentForm.payment_notes = `Payment for voucher ${voucher.voucher_number}`
+})
+
 
 function formatDate(date) {
   if (!date) return '—'
@@ -669,6 +731,7 @@ function onDocumentClick(e) {
     showActionsMenu.value = false
   }
 }
+
 
 onMounted(() => document.addEventListener('click', onDocumentClick))
 onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))

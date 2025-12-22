@@ -122,7 +122,7 @@ import { Phone, Mail, MapPin, Clock } from 'lucide-vue-next'
                border border-gray-200 dark:border-gray-800 transition-colors"
       >
         <iframe
-          class="w-full h-80 grayscale dark:invert-[0.9] dark:saturate-50"
+          class="w-full h-80 dark:invert-[0.9] dark:saturate-50"
           frameborder="0"
           allowfullscreen
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.857688611686!2d36.7596649!3d-1.2996543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f1a68dc564e65%3A0x5b2831f1a654bf2b!2sSchool%20Equipment%20Production%20Unit!5e0!3m2!1sen!2ske!4v1730995200000!5m2!1sen!2ske">

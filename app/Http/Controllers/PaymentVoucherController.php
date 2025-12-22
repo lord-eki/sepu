@@ -95,6 +95,17 @@ class PaymentVoucherController extends Controller
             'budgetItems' => $budgetItems,
             'pendingLoans' => $pendingLoans,
             'voucherTypes' => $this->getVoucherTypes(),
+            'members' => Member::active()
+                ->with('user:id,phone')
+                ->get()
+                ->map(fn ($member) => [
+                    'id' => $member->id,
+                    'first_name' => $member->first_name,
+                    'last_name' => $member->last_name,
+                    'membership_id' => $member->membership_id,
+                    'phone' => $member->user?->phone, // ✅ users table
+                ]),
+
         ]);
     }
 
@@ -201,19 +212,26 @@ class PaymentVoucherController extends Controller
      */
     public function show(PaymentVoucher $voucher)
     {
-        $voucher->load(['creator', 'approver', 'payer', 'budgetItem.budget', 'loan.member']);
+        $voucher->load([
+            'creator',
+            'approver',
+            'payer',
+            'budgetItem.budget',
+            'loan.member',
+        ]);
 
         $accounts = Account::select('id', 'account_type as name', 'account_number')->get();
 
         return Inertia::render('Shared/PaymentVouchers/Show', [
             'voucher' => $voucher,
-            'accounts' => $accounts,  
+            'accounts' => $accounts,
             'canApprove' => $this->canApprove($voucher),
             'canPay' => $this->canPay($voucher),
             'canEdit' => $this->canEdit($voucher),
             'canDelete' => $this->canDelete($voucher),
         ]);
     }
+
 
     /**
      * Show the form for editing the specified payment voucher.
