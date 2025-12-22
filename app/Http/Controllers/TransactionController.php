@@ -26,27 +26,23 @@ class TransactionController extends Controller
         $query = Transaction::with(['account', 'member', 'processedBy'])
             ->orderBy('created_at', 'desc');
 
-        // Filter by member if specified
+        // Apply filters
         if ($request->filled('member_id')) {
             $query->where('member_id', $request->member_id);
         }
 
-        // Filter by account if specified
         if ($request->filled('account_id')) {
             $query->where('account_id', $request->account_id);
         }
 
-        // Filter by transaction type
         if ($request->filled('transaction_type')) {
             $query->where('transaction_type', $request->transaction_type);
         }
 
-        // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by date range
         if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
@@ -55,7 +51,6 @@ class TransactionController extends Controller
             $query->whereDate('created_at', '<=', $request->end_date);
         }
 
-        // Filter by amount range
         if ($request->filled('min_amount')) {
             $query->where('amount', '>=', $request->min_amount);
         }
@@ -64,48 +59,53 @@ class TransactionController extends Controller
             $query->where('amount', '<=', $request->max_amount);
         }
 
-        // Search functionality
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('transaction_id', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('reference_number', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('description', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('payment_reference', 'LIKE', "%{$searchTerm}%")
-                  ->orWhereHas('member', function ($memberQuery) use ($searchTerm) {
-                      $memberQuery->where('first_name', 'LIKE', "%{$searchTerm}%")
-                                 ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
-                                 ->orWhere('membership_id', 'LIKE', "%{$searchTerm}%");
-                  });
+                ->orWhere('reference_number', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('payment_reference', 'LIKE', "%{$searchTerm}%")
+                ->orWhereHas('member', function ($memberQuery) use ($searchTerm) {
+                    $memberQuery->where('first_name', 'LIKE', "%{$searchTerm}%")
+                                ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
+                                ->orWhere('membership_id', 'LIKE', "%{$searchTerm}%");
+                });
             });
         }
 
+        // Clone query for stats BEFORE pagination
+        $statsQuery = (clone $query);
+
         $transactions = $query->paginate(20);
 
-        // Get summary statistics
-        $totalTransactions = $query->count();
-        $totalAmount = $query->sum('amount');
-        $pendingCount = $query->where('status', 'pending')->count();
-        $completedCount = $query->where('status', 'completed')->count();
-
         $statistics = [
-            'total_transactions' => $totalTransactions,
-            'total_amount' => $totalAmount,
-            'pending_count' => $pendingCount,
-            'completed_count' => $completedCount,
-            'failed_count' => $query->where('status', 'failed')->count(),
-            'reversed_count' => $query->where('status', 'reversed')->count(),
+            'total_transactions' => $statsQuery->count(),
+            'total_amount' => $statsQuery->sum('amount'),
+            'pending_count' => (clone $statsQuery)->where('status', 'pending')->count(),
+            'completed_count' => (clone $statsQuery)->where('status', 'completed')->count(),
+            'failed_count' => (clone $statsQuery)->where('status', 'failed')->count(),
+            'reversed_count' => (clone $statsQuery)->where('status', 'reversed')->count(),
         ];
 
-        // return response()->json([
-        //     'success' => true,
-        //     'data' => $transactions,
-        //     'statistics' => $statistics,
-        // ]);
         return Inertia::render('Transactions/Index', [
             'transactions' => $transactions,
             'statistics' => $statistics,
+            'transactionTypes' => $this->getTransactionTypes(),
+            // Pass filters back so they persist on reload
+            'filters' => [
+                'search' => $request->query('search', ''),
+                'member_id' => $request->query('member_id', ''),
+                'account_id' => $request->query('account_id', ''),
+                'transaction_type' => $request->query('transaction_type', ''),
+                'status' => $request->query('status', ''),
+                'start_date' => $request->query('start_date', ''),
+                'end_date' => $request->query('end_date', ''),
+                'min_amount' => $request->query('min_amount', ''),
+                'max_amount' => $request->query('max_amount', ''),
+            ],
         ]);
+        
 
     }
 
@@ -115,7 +115,12 @@ class TransactionController extends Controller
     public function create()
     {
         return Inertia::render('Transactions/Create', [
-            'accounts' => Account::with('member')->where('is_active', true)->get(),
+            'accounts' => Account::with('member')
+                ->where('is_active', true)
+                ->whereHas('member', function ($q) {
+                    $q->where('membership_status', 'active');
+                })
+                ->get(),
             'members' => Member::where('membership_status', 'active')->get(),
             'transactionTypes' => $this->getTransactionTypes(),
             'paymentMethods' => $this->getPaymentMethods(),
@@ -127,93 +132,70 @@ class TransactionController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        // Validate only deposit and withdrawal
+        $request->validate([
             'account_id' => 'required|exists:accounts,id',
-            'transaction_type' => 'required|in:deposit,withdrawal,transfer,loan_disbursement,loan_repayment,dividend_payment,fee_payment,interest_payment',
+            'transaction_type' => 'required|in:deposit,withdrawal',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:500',
-            'payment_method' => 'required|in:cash,mobile_money,bank_transfer,cheque,system_transfer',
-            'payment_reference' => 'nullable|string|max:255',
-            'reference_number' => 'nullable|string|max:255',
-            'metadata' => 'nullable|array',
-            'destination_account_id' => 'required_if:transaction_type,transfer|exists:accounts,id',
+            'payment_method' => 'required',
+            'payment_reference' => 'nullable|string|max:100',
         ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
 
         try {
             DB::beginTransaction();
 
-            $account = Account::findOrFail($request->account_id);
+            // Get account with member
+            $account = Account::with('member')->findOrFail($request->account_id);
             $member = $account->member;
 
-            // Validate account is active
-            if (!$account->is_active) {
-                throw new Exception('Account is not active');
-            }
+            // Validate account and member are active
+            if (!$account->is_active) throw new \Exception('Account is not active');
+            if ($member->membership_status !== 'active') throw new \Exception('Member account is not active');
 
-            // Validate member is active
-            if ($member->membership_status !== 'active') {
-                throw new Exception('Member account is not active');
-            }
-
-            // For withdrawals and transfers, check sufficient balance
-            if (in_array($request->transaction_type, ['withdrawal', 'transfer'])) {
+            // For withdrawals, check sufficient balance
+            if ($request->transaction_type === 'withdrawal') {
                 if ($account->available_balance < $request->amount) {
-                    throw new Exception('Insufficient account balance');
+                    throw new \Exception('Insufficient account balance');
                 }
             }
 
-            // Generate unique transaction ID
-            $transactionId = $this->generateTransactionId();
+            // Calculate balances
+            $balanceBefore = $account->balance;
+            $balanceAfter = $request->transaction_type === 'deposit'
+                ? $account->balance + $request->amount
+                : $account->balance - $request->amount;
 
             // Create the transaction
             $transaction = Transaction::create([
-                'transaction_id' => $transactionId,
-                'account_id' => $account->id,
-                'member_id' => $member->id,
-                'transaction_type' => $request->transaction_type,
-                'amount' => $request->amount,
-                'balance_before' => $account->balance,
-                'balance_after' => $this->calculateNewBalance($account, $request->transaction_type, $request->amount),
-                'description' => $request->description,
-                'reference_number' => $request->reference_number,
-                'payment_method' => $request->payment_method,
-                'payment_reference' => $request->payment_reference,
-                'status' => 'pending',
-                'processed_by' => Auth::id(),
-                'processed_at' => now(),
-                'metadata' => $request->metadata,
+                'transaction_id'     => $this->generateTransactionId(),
+                'account_id'         => $account->id,
+                'member_id'          => $member->id,
+                'transaction_type'   => $request->transaction_type,
+                'amount'             => $request->amount,
+                'balance_before'     => $balanceBefore,
+                'balance_after'      => $balanceAfter,
+                'description'        => $request->description,
+                'reference_number'   => $request->reference_number,
+                'payment_method'     => $request->payment_method,
+                'payment_reference'  => $request->payment_reference,
+                'status'             => 'pending',
+                'processed_by'       => Auth::id(),
+                'processed_at'       => now(),
+                'metadata'           => $request->metadata,
             ]);
 
-            // Handle transfer transactions
-            if ($request->transaction_type === 'transfer') {
-                $this->processTransfer($transaction, $request->destination_account_id);
-            }
-
-            // Process the transaction
-            $this->processTransaction($transaction);
+            // Update account balance
+            // $account->balance = $balanceAfter;
+            // $account->save();
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction created successfully',
-                'data' => $transaction->load(['account', 'member', 'processedBy'])
-            ], 201);
+            return redirect()->route('transactions.index')->with('success', 'Transaction created successfully');
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Transaction failed: ' . $e->getMessage()
-            ], 400);
+            return back()->withErrors(['general' => 'Transaction failed: ' . $e->getMessage()]);
         }
     }
 
@@ -369,95 +351,91 @@ class TransactionController extends Controller
         }
     }
 
-    /**
+  /**
      * Approve a pending transaction.
      */
     public function approve($id)
     {
-        $transaction = Transaction::findOrFail($id);
+        $transaction = Transaction::with('account')->findOrFail($id);
 
         if ($transaction->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only pending transactions can be approved'
-            ], 400);
+            return back()->withErrors([
+                'general' => 'Only pending transactions can be approved.'
+            ]);
         }
 
         try {
-            DB::beginTransaction();
+            DB::transaction(function () use ($transaction) {
+                $account = $transaction->account;
 
-            $this->processTransaction($transaction);
+                // Safety check at approval time
+                if ($transaction->transaction_type === 'withdrawal') {
+                    if ($account->balance < $transaction->amount) {
+                        throw new \Exception('Insufficient balance at approval time.');
+                    }
+                    $account->balance -= $transaction->amount;
+                } else {
+                    $account->balance += $transaction->amount;
+                }
 
-            DB::commit();
+                $account->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction approved successfully',
-                'data' => $transaction->load(['account', 'member', 'processedBy'])
+                $transaction->update([
+                    'status' => 'completed',
+                    'approved_by' => Auth::id(),
+                    'approved_at' => now(),
+                ]);
+            });
+
+            return redirect()
+                ->route('transactions.index')
+                ->with('success', 'Transaction approved successfully.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'general' => 'Transaction approval failed: ' . $e->getMessage()
             ]);
-
-        } catch (Exception $e) {
-            DB::rollback();
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Transaction approval failed: ' . $e->getMessage()
-            ], 400);
         }
     }
 
-    /**
-     * Reject a pending transaction.
-     */
+
+   /**
+    * Reject a pending transaction.
+    */
     public function reject(Request $request, $id)
     {
         $transaction = Transaction::findOrFail($id);
 
         if ($transaction->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only pending transactions can be rejected'
-            ], 400);
+            return back()->withErrors([
+                'general' => 'Only pending transactions can be rejected.'
+            ]);
         }
 
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'rejection_reason' => 'required|string|max:500',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
-            DB::beginTransaction();
+            DB::transaction(function () use ($transaction, $request) {
+                $transaction->update([
+                    'status' => 'failed',
+                    'metadata' => array_merge($transaction->metadata ?? [], [
+                        'rejection_reason' => $request->rejection_reason,
+                        'rejected_by' => Auth::id(),
+                        'rejected_at' => now(),
+                    ])
+                ]);
+            });
 
-            $transaction->update([
-                'status' => 'failed',
-                'metadata' => array_merge($transaction->metadata ?? [], [
-                    'rejection_reason' => $request->rejection_reason,
-                    'rejected_by' => Auth::id(),
-                    'rejected_at' => now(),
-                ])
+            return redirect()
+                ->route('transactions.index')
+                ->with('success', 'Transaction rejected successfully.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'general' => 'Transaction rejection failed: ' . $e->getMessage()
             ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction rejected successfully',
-                'data' => $transaction->load(['account', 'member', 'processedBy'])
-            ]);
-
-        } catch (Exception $e) {
-            DB::rollback();
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Transaction rejection failed: ' . $e->getMessage()
-            ], 400);
         }
     }
 
@@ -466,93 +444,76 @@ class TransactionController extends Controller
      */
     public function reverse(Request $request, $id)
     {
-        $transaction = Transaction::findOrFail($id);
+        $transaction = Transaction::with('account')->findOrFail($id);
 
         if ($transaction->status !== 'completed') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only completed transactions can be reversed'
-            ], 400);
+            return back()->withErrors([
+                'general' => 'Only completed transactions can be reversed.'
+            ]);
         }
 
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'reversal_reason' => 'required|string|max:500',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
-            DB::beginTransaction();
+            DB::transaction(function () use ($transaction, $request) {
+                $account = $transaction->account;
 
-            $account = $transaction->account;
+                // Calculate reversal balance
+                $balanceAfter = $transaction->transaction_type === 'deposit'
+                    ? $account->balance - $transaction->amount
+                    : $account->balance + $transaction->amount;
 
-            // Create reversal transaction
-            $reversalTransaction = Transaction::create([
-                'transaction_id' => $this->generateTransactionId(),
-                'account_id' => $account->id,
-                'member_id' => $transaction->member_id,
-                'transaction_type' => $this->getReversalTransactionType($transaction->transaction_type),
-                'amount' => $transaction->amount,
-                'balance_before' => $account->balance,
-                'balance_after' => $this->calculateReversalBalance($account, $transaction),
-                'description' => 'Reversal of transaction: ' . $transaction->transaction_id,
-                'reference_number' => $transaction->reference_number,
-                'payment_method' => $transaction->payment_method,
-                'payment_reference' => $transaction->payment_reference,
-                'status' => 'completed',
-                'processed_by' => Auth::id(),
-                'processed_at' => now(),
-                'metadata' => [
-                    'original_transaction_id' => $transaction->id,
-                    'reversal_reason' => $request->reversal_reason,
-                    'reversed_by' => Auth::id(),
-                    'reversed_at' => now(),
-                ]
+                // Create reversal transaction
+                $reversal = Transaction::create([
+                    'transaction_id' => $this->generateTransactionId(),
+                    'account_id' => $account->id,
+                    'member_id' => $transaction->member_id,
+                    'transaction_type' => $this->getReversalTransactionType($transaction->transaction_type),
+                    'amount' => $transaction->amount,
+                    'balance_before' => $account->balance,
+                    'balance_after' => $balanceAfter,
+                    'description' => 'Reversal of transaction: ' . $transaction->transaction_id,
+                    'payment_method' => $transaction->payment_method,
+                    'payment_reference' => $transaction->payment_reference,
+                    'status' => 'completed',
+                    'processed_by' => Auth::id(),
+                    'processed_at' => now(),
+                    'metadata' => [
+                        'original_transaction_id' => $transaction->id,
+                        'reversal_reason' => $request->reversal_reason,
+                        'reversed_by' => Auth::id(),
+                        'reversed_at' => now(),
+                    ],
+                ]);
+
+                // Apply reversal balance
+                $account->update([
+                    'balance' => $balanceAfter,
+                    'last_transaction_at' => now(),
+                ]);
+
+                // Mark original as reversed
+                $transaction->update([
+                    'status' => 'reversed',
+                    'metadata' => array_merge($transaction->metadata ?? [], [
+                        'reversal_transaction_id' => $reversal->id,
+                    ]),
+                ]);
+            });
+
+            return redirect()
+                ->route('transactions.index')
+                ->with('success', 'Transaction reversed successfully.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'general' => 'Transaction reversal failed: ' . $e->getMessage()
             ]);
-
-            // Update account balance
-            $account->update([
-                'balance' => $reversalTransaction->balance_after,
-                'available_balance' => $reversalTransaction->balance_after,
-                'last_transaction_at' => now(),
-            ]);
-
-            // Mark original transaction as reversed
-            $transaction->update([
-                'status' => 'reversed',
-                'metadata' => array_merge($transaction->metadata ?? [], [
-                    'reversal_transaction_id' => $reversalTransaction->id,
-                    'reversal_reason' => $request->reversal_reason,
-                    'reversed_by' => Auth::id(),
-                    'reversed_at' => now(),
-                ])
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction reversed successfully',
-                'data' => [
-                    'original_transaction' => $transaction->load(['account', 'member', 'processedBy']),
-                    'reversal_transaction' => $reversalTransaction->load(['account', 'member', 'processedBy'])
-                ]
-            ]);
-
-        } catch (Exception $e) {
-            DB::rollback();
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Transaction reversal failed: ' . $e->getMessage()
-            ], 400);
         }
     }
+
 
     /**
      * Get member's transaction history.
@@ -860,8 +821,8 @@ class TransactionController extends Controller
             'loan_disbursement' => 'Loan Disbursement',
             'loan_repayment' => 'Loan Repayment',
             'dividend_payment' => 'Dividend Payment',
-            'fee_payment' => 'Fee Payment',
-            'interest_payment' => 'Interest Payment',
+            'fee' => 'Fee Payment',
+            'penalty' => 'Penalty',
         ];
     }
 

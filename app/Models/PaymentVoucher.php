@@ -90,4 +90,11 @@ class PaymentVoucher extends Model
     {
         return $this->paidBy();
     }
+
+    public function payeeMember()
+    {
+        return $this->belongsTo(Member::class, 'member_id'); // nullable
+    }
+
+
 }

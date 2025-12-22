@@ -17,6 +17,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Models\Account;
+use Barryvdh\DomPDF\Facade\Pdf; 
 
 
 class PaymentVoucherController extends Controller
@@ -218,6 +219,7 @@ class PaymentVoucherController extends Controller
             'payer',
             'budgetItem.budget',
             'loan.member',
+            'payeeMember',
         ]);
 
         $accounts = Account::select('id', 'account_type as name', 'account_number')->get();
@@ -961,17 +963,25 @@ class PaymentVoucherController extends Controller
     }
 
     /**
-     * Download voucher as PDF
+     * Preview voucher as PDF
      */
     public function downloadPdf(PaymentVoucher $voucher)
     {
-        $voucher->load(['creator', 'approver', 'payer', 'budgetItem.budget', 'loan.member']);
+        $voucher->load([
+            'creator',
+            'approver',
+            'payer',
+            'budgetItem',
+            'loan.member',
+        ]);
 
-        // This would generate a PDF of the voucher
-        // You would need to implement PDF generation using a library like DOMPDF or similar
-        // For now, returning a view that can be printed
-        return view('vouchers.pdf', compact('voucher'));
+        $pdf = Pdf::loadView('vouchers.pdf', compact('voucher'))
+            ->setPaper('a4');
+
+        // Preview in browser (not force download)
+        return $pdf->stream('Voucher-'.$voucher->voucher_number.'.pdf');
     }
+
 
     /**
      * Export vouchers to Excel
@@ -1225,14 +1235,26 @@ class PaymentVoucherController extends Controller
     }
 
     /**
-     * Duplicate voucher
+     * Duplicate voucher (create a NEW pending voucher)
      */
     public function duplicate(PaymentVoucher $voucher)
     {
-        $newVoucher = $voucher->replicate();
+        $newVoucher = $voucher->replicate([
+            'voucher_number',
+            'status',
+            'approved_by',
+            'paid_by',
+            'approval_date',
+            'payment_date',
+            'approval_notes',
+            'rejection_reason',
+            'supporting_documents',
+        ]);
+
         $newVoucher->voucher_number = $this->generateVoucherNumber();
         $newVoucher->status = 'pending';
-        $newVoucher->created_by = Auth::id();
+        $newVoucher->created_by = auth()->id();
+
         $newVoucher->approved_by = null;
         $newVoucher->paid_by = null;
         $newVoucher->approval_date = null;
@@ -1240,9 +1262,12 @@ class PaymentVoucherController extends Controller
         $newVoucher->approval_notes = null;
         $newVoucher->rejection_reason = null;
         $newVoucher->supporting_documents = null;
+
         $newVoucher->save();
 
-        return redirect()->route('vouchers.show', $newVoucher)
-            ->with('success', 'Voucher duplicated successfully.');
+        return redirect()
+            ->route('vouchers.show', $newVoucher->id)
+            ->with('success', 'Voucher duplicated. Please review and submit for approval.');
     }
+
 }

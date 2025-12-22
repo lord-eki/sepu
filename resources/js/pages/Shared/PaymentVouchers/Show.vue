@@ -62,15 +62,20 @@
                   <Paperclip class="h-4 w-4" /> Submit for Approval
                 </button>
 
+                <!-- Duplicate Voucher -->
                 <button @click="duplicateVoucher"
-                  class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                  <Files class="h-4 w-4" /> Duplicate Voucher
+                  class="w-full inline-flex items-center gap-2 justify-center px-3 py-2 rounded bg-slate-500 border border-slate-600 text-white hover:brightness-95">
+                  <Files class="h-4 w-4" />
+                  <span>{{ isDuplicating ? 'Duplicating...' : 'Duplicate' }}</span>
                 </button>
 
+                <!-- Download PDF -->
                 <button @click="downloadPDF"
-                  class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                  <WindArrowDown class="h-4 w-4" /> Download PDF
+                  class="w-full inline-flex items-center gap-2 justify-center px-3 py-2 rounded border border-slate-600 bg-slate-500 text-white hover:brightness-95">
+                  <WindArrowDown class="h-4 w-4" />
+                  <span>{{ isExporting ? 'Generating PDF...' : 'Print' }}</span>
                 </button>
+
 
                 <button v-if="canDelete" @click="confirmDeleteVoucher"
                   class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
@@ -161,79 +166,83 @@
           </section>
 
 
+        
           <!-- Payee Card -->
           <section class="bg-white rounded-xl shadow p-5 border">
             <h3 class="text-md font-semibold text-[#0A2342]">Payee Information</h3>
             <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <dt class="text-xs text-slate-500">Name</dt>
-                <dd class="mt-1 font-medium text-slate-800">{{ voucher.payee_name || '—' }}</dd>
+                <dd class="mt-1 font-medium text-slate-800">
+                  {{ voucher.payee_name || '—' }}
+                </dd>
               </div>
 
               <div v-if="voucher.payee_phone">
                 <dt class="text-xs text-slate-500">Phone</dt>
                 <dd class="mt-1 text-slate-800">{{ voucher.payee_phone }}</dd>
               </div>
+
+              <!-- Membership ID -->
+              <div v-if="voucher.payeeMember?.membership_id">
+                <dt class="text-xs text-slate-500">Membership ID</dt>
+                <dd class="mt-1 text-slate-800">{{ voucher.payeeMember.membership_id }}</dd>
+              </div>
             </div>
           </section>
 
           <section class="bg-white rounded-xl shadow p-5 border">
-          <h3 class="text-md font-semibold text-[#0A2342]">Payment Instructions</h3>
+            <h3 class="text-md font-semibold text-[#0A2342]">Payment Instructions</h3>
 
-          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <dt class="text-slate-500">Payment Type</dt>
-              <dd class="font-medium">
-                {{ voucher.payment_type ? voucher.payment_type.toUpperCase() : '—' }}
-              </dd>
-            </div>
-
-            <template v-if="voucher.payment_type === 'mpesa'">
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <dt class="text-slate-500">M-Pesa Number</dt>
-                <dd class="font-medium">{{ voucher.payment_phone || '—' }}</dd>
-              </div>
-            </template>
-
-            <template v-if="voucher.payment_type === 'bank'">
-              <div>
-                <dt class="text-slate-500">Bank</dt>
-                <dd class="font-medium">{{ voucher.bank_name || '—' }}</dd>
+                <dt class="text-slate-500">Payment Type</dt>
+                <dd class="font-medium">
+                  {{ voucher.payment_type ? voucher.payment_type.toUpperCase() : '—' }}
+                </dd>
               </div>
 
+              <template v-if="voucher.payment_type === 'mpesa'">
+                <div>
+                  <dt class="text-slate-500">M-Pesa Number</dt>
+                  <dd class="font-medium">{{ voucher.payment_phone || '—' }}</dd>
+                </div>
+              </template>
+
+              <template v-if="voucher.payment_type === 'bank'">
+                <div>
+                  <dt class="text-slate-500">Bank</dt>
+                  <dd class="font-medium">{{ voucher.bank_name || '—' }}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-slate-500">Account Number</dt>
+                  <dd class="font-medium">{{ voucher.payment_account || '—' }}</dd>
+                </div>
+              </template>
+            </div>
+          </section>
+
+          <section v-if="voucher.status === 'paid'" class="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-5">
+            <h3 class="font-semibold text-[#0A2342]">Payment Details</h3>
+
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <dt class="text-slate-500">Account Number</dt>
-                <dd class="font-medium">{{ voucher.payment_account || '—' }}</dd>
+                <dt class="text-slate-500">Paid By</dt>
+                <dd class="font-medium">{{ voucher.payer?.name || '—' }}</dd>
               </div>
-            </template>
-          </div>
-        </section>
 
-        <section
-          v-if="voucher.status === 'paid'"
-          class="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-5"
-        >
-          <h3 class="font-semibold text-[#0A2342]">Payment Details</h3>
+              <div>
+                <dt class="text-slate-500">Payment Date</dt>
+                <dd class="font-medium">{{ formatDate(voucher.payment_date) }}</dd>
+              </div>
 
-          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <dt class="text-slate-500">Paid By</dt>
-              <dd class="font-medium">{{ voucher.payer?.name || '—' }}</dd>
+              <div class="md:col-span-2">
+                <dt class="text-slate-500">Amount Paid</dt>
+                <dd class="font-semibold text-lg">{{ formatCurrency(voucher.amount) }}</dd>
+              </div>
             </div>
-
-            <div>
-              <dt class="text-slate-500">Payment Date</dt>
-              <dd class="font-medium">{{ formatDate(voucher.payment_date) }}</dd>
-            </div>
-
-            <div class="md:col-span-2">
-              <dt class="text-slate-500">Amount Paid</dt>
-              <dd class="font-semibold text-lg">{{ formatCurrency(voucher.amount) }}</dd>
-            </div>
-          </div>
-        </section>
-
-
+          </section>
 
 
           <!-- Budget & Loan Card -->
@@ -252,10 +261,13 @@
                 <dt class="text-xs text-slate-500">Loan</dt>
                 <dd class="mt-1 text-slate-800">
                   {{ voucher.loan.loan_number }}
-                  <div class="text-xs text-slate-500">Member: {{ voucher.loan.member?.first_name }} {{
-    voucher.loan.member?.last_name }}</div>
+                  <div class="text-xs text-slate-500">
+                    Member: {{ voucher.loan.member?.first_name }} {{ voucher.loan.member?.last_name }}
+                    <span v-if="voucher.loan.member?.membership_id">• ID: {{ voucher.loan.member.membership_id }}</span>
+                  </div>
                 </dd>
               </div>
+
             </div>
           </section>
 
@@ -326,14 +338,16 @@
                 <BanknoteIcon class="h-4 w-4" /> Process Payment
               </button>
 
-              <button @click="duplicateVoucher"
+              <button
+                @click="duplicateVoucher"
                 class="w-full inline-flex items-center gap-2 justify-center px-3 py-2 rounded bg-slate-600 text-white hover:brightness-95">
-                <Files class="h-4 w-4" /> Duplicate
+                <Files class="h-4 w-4" />
+                {{ isDuplicating ? 'Duplicating...' : 'Duplicate (New Voucher)' }}
               </button>
 
               <button @click="downloadPDF"
                 class="w-full inline-flex items-center gap-2 justify-center px-3 py-2 rounded bg-slate-600 text-white hover:brightness-95">
-                <WindArrowDown class="h-4 w-4" /> PDF
+                <WindArrowDown class="h-4 w-4" /> Print
               </button>
 
               <button v-if="canDelete" @click="confirmDeleteVoucher"
@@ -473,11 +487,11 @@
         <form @submit.prevent="processPayment" class="mt-4 space-y-3">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="bg-slate-100 rounded p-2 text-sm">
-            <span class="text-slate-500">Payment Method:</span>
-            <span class="font-medium ml-1">
-              {{ voucher.payment_type?.toUpperCase() || '—' }}
-            </span>
-          </div>
+              <span class="text-slate-500">Payment Method:</span>
+              <span class="font-medium ml-1">
+                {{ voucher.payment_type?.toUpperCase() || '—' }}
+              </span>
+            </div>
 
             <input v-model="paymentForm.payment_reference" placeholder="Payment reference (optional)"
               class="border rounded p-2" />
@@ -548,6 +562,41 @@
       </div>
     </Modal>
 
+    <!-- CONFIRM DUPLICATE VOUCHER -->
+    <Modal :show="showDuplicateConfirm" @close="showDuplicateConfirm = false">
+      <div class="p-4">
+        <div class="flex items-center gap-3">
+          <Files class="h-6 w-6 text-slate-600" />
+          <h3 class="font-semibold text-lg">Duplicate Voucher</h3>
+        </div>
+
+        <p class="text-sm text-slate-600 mt-2">
+          This will create a <strong>NEW voucher</strong> using the same details as
+          <strong>{{ voucher.voucher_number }}</strong>.
+          Do you want to continue?
+        </p>
+
+        <div class="flex justify-end gap-3 mt-4">
+          <button
+            @click="showDuplicateConfirm = false"
+            class="px-3 py-2 rounded bg-slate-200"
+          >
+            Cancel
+          </button>
+
+          <button
+            @click="duplicateVoucherConfirmed"
+            :disabled="isDuplicating"
+            class="px-3 py-2 rounded bg-slate-600 text-white"
+          >
+            <span v-if="isDuplicating">Duplicating...</span>
+            <span v-else>Duplicate</span>
+          </button>
+        </div>
+      </div>
+</Modal>
+
+
     <!-- CONFIRM DELETE VOUCHER -->
     <Modal :show="showDeleteVoucherConfirm" @close="showDeleteVoucherConfirm = false">
       <div class="p-4">
@@ -578,6 +627,7 @@ import {
 import AppLayout from '@/layouts/AppLayout.vue'
 import Modal from '@/components/Modal.vue'
 
+
 const props = defineProps({
   voucher: Object,
   canApprove: Boolean,
@@ -598,6 +648,7 @@ const showPaymentModal = ref(false)
 const showCancelConfirm = ref(false)
 const showDeleteDocConfirm = ref(false)
 const showDeleteVoucherConfirm = ref(false)
+const showDuplicateConfirm = ref(false)
 
 const docToDelete = ref(null)
 const docDeleteProcessing = ref(false)
@@ -707,8 +758,6 @@ function formatAccount(acc) {
 }
 
 
-
-
 function formatVoucherType(t) {
   const map = {
     loan_disbursement: 'Loan Disbursement',
@@ -799,14 +848,42 @@ function cancelVoucher() {
   })
 }
 
+
+const isExporting = ref(false);
+
+// Duplicate voucher
+const isDuplicating = ref(false)
+
 function duplicateVoucher() {
-  router.post(route('vouchers.duplicate', voucher.id))
+  showDuplicateConfirm.value = true
 }
 
-function downloadPDF() {
-  // open in new tab
-  window.open(route('vouchers.download-pdf', voucher.id), '_blank')
+function duplicateVoucherConfirmed() {
+  showDuplicateConfirm.value = false
+  isDuplicating.value = true
+
+  router.post(
+    route('vouchers.duplicate', { voucher: voucher.id }),
+    {},
+    {
+      onFinish: () => {
+        isDuplicating.value = false
+      },
+    }
+  )
 }
+
+// Download PDF
+function downloadPDF() {
+  isExporting.value = true;
+
+  // Open PDF in new tab (pass route params as object)
+  window.open(route('vouchers.pdf', { voucher: voucher.id }), '_blank');
+
+  // Reset loading
+  setTimeout(() => { isExporting.value = false; }, 1000);
+}
+
 
 function confirmDeleteDocument(document) {
   docToDelete.value = document

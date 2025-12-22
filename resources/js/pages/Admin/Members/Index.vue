@@ -29,79 +29,92 @@
 
 
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 transition-colors">
-      <!-- HEADER -->
-      <div
-        class="mx-2 mt-4 rounded-2xl shadow-lg bg-gradient-to-br from-[#0a2342] via-[#0c2e55] to-[#103a66] dark:from-gray-800 dark:to-gray-700 text-white p-4 sm:p-6">
 
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <!-- HEADER -->
+      <div class="mx-4 mt-6 rounded-3xl shadow-xl p-6 sm:p-8
+              bg-gradient-to-r from-[#0a2342] via-[#0c2e55] to-[#103a66]
+              text-white
+              dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-700 dark:to-gray-600">
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+
+          <!-- Title -->
           <div>
-            <h1 class="text-2xl sm:text-3xl font-bold">Members</h1>
-            <p class="text-blue-100 max-sm:text-sm mt-1 dark:text-gray-300">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Members</h1>
+            <p class="text-blue-200 mt-1 max-sm:text-sm dark:text-blue-300">
               Manage and organize all SACCO members efficiently.
             </p>
           </div>
 
-          <!-- SMART ACTIONS -->
-          <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-4 sm:gap-3 items-center">
 
             <!-- Add Member -->
-            <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')" class="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 
-                    text-white text-sm sm:text-base shadow flex items-center gap-1">
-            <PlusCircle class="w-4 h-4" />
-            Add Member
+            <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
+              class="px-5 py-2.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm sm:text-base shadow-md flex items-center gap-2 transition transform hover:-translate-y-0.5">
+            <PlusCircle class="w-5 h-5" /><span class="sm:hidden"> Add</span> <span class="max-sm:hidden"> Add Member</span>
             </Link>
 
-            <!-- Import dropdown -->
+            <!-- Import Dropdown -->
             <div class="relative" ref="importWrapper">
-              <button @click="openImport = !openImport" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 
-                      text-white text-sm sm:text-base shadow flex items-center gap-1">
-                <Upload class="w-4 h-4" /> Import
+              <button @click="openImport = !openImport"
+                class="px-5 py-2.5 rounded-2xl bg-blue-800 hover:bg-blue-900 text-white font-semibold text-sm sm:text-base shadow-md flex items-center gap-2 transition transform hover:-translate-y-0.5 dark:bg-blue-900 dark:hover:bg-blue-700">
+                <Upload class="w-5 h-5" /> Import
                 <ChevronDownIcon class="w-4 h-4" />
               </button>
 
-              <div v-if="openImport" class="absolute right-0 py-2 mt-2 w-48 bg-gray-100 dark:bg-gray-800 
-                      shadow-lg rounded-xl overflow-hidden border dark:border-gray-700 z-50">
-                <Link :href="route('members.import.form')" class="block px-4 py-2 text-sm hover:bg-blue-200 dark:hover:bg-gray-700 
-                        text-slate-900 dark:text-gray-200">
+              <div v-if="openImport"
+                class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden border dark:border-gray-700 z-50">
+                <Link :href="route('members.import.form')"
+                  class="block px-4 py-3 text-sm hover:bg-blue-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-200">
                 Import Members
                 </Link>
-
-                <Link :href="route('members.deposits.import.form')" class="block px-4 py-2 text-sm hover:bg-blue-200 dark:hover:bg-gray-700 
-                        text-slate-900 dark:text-gray-200">
+                <Link :href="route('members.deposits.import.form')"
+                  class="block px-4 py-3 text-sm hover:bg-blue-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-200">
                 Import Deposits
                 </Link>
               </div>
             </div>
 
-            <!-- Generate usernames -->
-            <button @click="generateUsernames" class="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 
-                    text-white text-sm sm:text-base flex items-center gap-2 shadow" :disabled="isGenerating">
-              <Loader2Icon v-if="isGenerating" class="w-4 h-4 animate-spin" />
-              {{ isGenerating ? "Generating..." : "Generate Username(s)" }}
+            <!-- Export Members -->
+            <button @click="exportMembers"
+              class="px-5 py-2.5 rounded-2xl bg-orange-300 hover:bg-orange-400 text-gray-800 font-semibold text-sm sm:text-base shadow-md flex items-center gap-2 transition transform hover:-translate-y-0.5 dark:bg-orange-500 dark:hover:bg-orange-600 dark:text-white">
+              <DownloadIcon class="w-5 h-5" />
+              <Loader2Icon v-if="isExporting" class="w-5 h-5 animate-spin" />
+              <span class="sm:hidden">{{ isExporting ? "Exporting..." : "Export" }}</span>
+              <span class="max-sm:hidden">{{ isExporting ? "Exporting..." : "Export Members" }}</span>
             </button>
 
-
-            <!-- More actions -->
+            <!-- More Actions Dropdown -->
             <div class="relative" ref="actionsWrapper">
               <button @click="openActions = !openActions"
-                class="px-4 py-2.5 rounded-xl bg-[#0a2342] hover:bg-[#103a66] text-white text-sm sm:text-base shadow flex items-center gap-1 dark:bg-gray-700 dark:hover:bg-gray-600">
+                class="px-5 py-2.5 rounded-2xl bg-[#0a2342] hover:bg-[#103a66] text-white font-semibold text-sm sm:text-base shadow-md flex items-center gap-2 transition transform hover:-translate-y-0.5 dark:bg-gray-700 dark:hover:bg-gray-600">
                 More
                 <ChevronDownIcon class="w-4 h-4" />
               </button>
 
               <div v-if="openActions"
-                class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden border dark:border-gray-700 z-50">
+                class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden border dark:border-gray-700 z-50">
+
+                <button @click="generateUsernames"
+                  class="w-full px-4 py-3 text-left text-sm sm:text-base text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                  <Loader2Icon v-if="isGenerating" class="w-4 h-4 animate-spin" />
+                  {{ isGenerating ? "Generating..." : "Generate Username(s)" }}
+                </button>
+
                 <button @click="confirmDelete"
                   class="w-full px-4 py-3 text-left text-sm sm:text-base text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 flex items-center gap-2">
                   <CircleX class="w-4 h-4" />
                   Delete Selected
                 </button>
+
               </div>
             </div>
 
           </div>
         </div>
       </div>
+
 
       <!-- Content Section -->
       <div class="max-w-7xl mx-auto space-y-8 mt-8 animate-fadeIn">
@@ -394,8 +407,9 @@ import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
 import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import { debounce } from 'lodash'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { CheckCircle, CircleX, PlusCircle, TriangleAlert, ChevronDownIcon, User2Icon, Users, AlertCircle, Upload } from 'lucide-vue-next'
+import { CheckCircle, CircleX, PlusCircle, TriangleAlert, Loader2Icon, DownloadIcon, ChevronDownIcon, User2Icon, Users, AlertCircle, Upload } from 'lucide-vue-next'
 import Pagination from '@/components/Pagination.vue'
+
 
 // Flash Message Handling
 const page = usePage();
@@ -403,6 +417,7 @@ const flash = computed(() => (page.value?.props?.flash || {}));
 const flashMessage = ref(null);
 const flashType = ref("success");
 const flashBox = ref(null);
+const filtersOpen = ref(false)
 
 watch(
   flash,
@@ -457,6 +472,30 @@ const toggleSelectAll = () => {
     selectedMembers.value = []
   }
 }
+
+
+const isExporting = ref(false)
+
+const exportMembers = () => {
+  if (!selectedMembers.value.length) {
+    flashMessage.value = 'Please select at least one member to export'
+    flashType.value = 'error'
+    setTimeout(() => flashMessage.value = null, 5000)
+    return
+  }
+
+  isExporting.value = true
+
+  const params = new URLSearchParams()
+  selectedMembers.value.forEach(id => params.append('member_ids[]', id))
+
+  // Trigger download
+  window.location.href = route('members.export') + '?' + params.toString()
+
+  // Reset loader after a short delay (browser handles download asynchronously)
+  setTimeout(() => (isExporting.value = false), 2000)
+}
+
 
 // Generate usernames
 const isGenerating = ref(false)

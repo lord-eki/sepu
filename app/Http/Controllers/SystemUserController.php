@@ -6,7 +6,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Models\Member;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+
 
 class SystemUserController extends Controller
 {
@@ -74,10 +77,26 @@ class SystemUserController extends Controller
             'management' => 'Management',
         ];
 
+        $members = Member::with('user')
+            ->whereNotNull('user_id')
+            ->whereHas('user', function ($q) {
+                $q->where('role', 'member'); // 🔥 ONLY normal members
+            })
+            ->get()
+            ->map(fn ($m) => [
+                'user_id' => $m->user_id,
+                'full_name' => $m->first_name . ' ' . $m->last_name,
+                'email' => $m->user->email,
+                'phone' => $m->user->phone,
+                'membership_id' => $m->membership_id,
+            ]);
+
         return Inertia::render('Admin/SystemUsers/Create', [
             'roles' => $roles,
+            'members' => $members,
         ]);
     }
+
 
     /**
      * Store a newly created system user.
@@ -85,24 +104,20 @@ class SystemUserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone' => ['required', 'string', 'max:20', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'user_id' => ['required', 'exists:users,id'],
             'role' => ['required', Rule::in(['admin', 'loan_officer', 'accountant', 'management'])],
             'is_active' => ['boolean'],
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'],
-            'password' => Hash::make($validated['password']),
+        $user = User::findOrFail($validated['user_id']);
+
+        $user->update([
             'role' => $validated['role'],
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
-        return redirect()->route('system-users.index')
+        return redirect()
+            ->route('system-users.index')
             ->with('success', 'System user created successfully.');
     }
 
@@ -151,92 +166,88 @@ class SystemUserController extends Controller
      */
     public function update(Request $request, User $systemUser)
     {
+        //  Prevent user from editing themselves
+        if (Auth::id() === $systemUser->id) {
+            abort(403, 'You cannot edit your own role.');
+        }
+
+        //  Prevent editing members (optional safeguard)
         if ($systemUser->role === 'member') {
             abort(403, 'Unauthorized access.');
         }
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($systemUser->id)],
-            'phone' => ['required', 'string', 'max:20', Rule::unique('users')->ignore($systemUser->id)],
             'role' => ['required', Rule::in(['admin', 'loan_officer', 'accountant', 'management'])],
             'is_active' => ['boolean'],
         ]);
 
-        $systemUser->update($validated);
-
-        return redirect()->route('system-users.index')
-            ->with('success', 'System user updated successfully.');
-    }
-
-    /**
-     * Update the password for the specified system user.
-     */
-    public function updatePassword(Request $request, User $systemUser)
-    {
-        if ($systemUser->role === 'member') {
-            abort(403, 'Unauthorized access.');
-        }
-
-        $validated = $request->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-
         $systemUser->update([
-            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+            'is_active' => $validated['is_active'] ?? $systemUser->is_active,
         ]);
 
-        return back()->with('success', 'Password updated successfully.');
+        return redirect()
+            ->route('system-users.index')
+            ->with('success', 'User role updated successfully.');
     }
 
-    /**
-     * Toggle the active status of a system user.
-     */
-    public function toggleStatus(User $systemUser)
-    {
-        if ($systemUser->role === 'member') {
-            abort(403, 'Unauthorized access.');
-        }
 
-        // Prevent admins from deactivating themselves
-        if ($systemUser->id === auth()->id()) {
-            return back()->with('error', 'You cannot deactivate your own account.');
-        }
-
-        $systemUser->update([
-            'is_active' => !$systemUser->is_active,
-        ]);
-
-        $status = $systemUser->is_active ? 'activated' : 'deactivated';
-        
-        return back()->with('success', "User {$status} successfully.");
-    }
-
-    /**
-     * Remove the specified system user.
+ /**
+     * Remove system privileges from the specified user
+     * (Revert to normal member instead of deleting)
      */
     public function destroy(User $systemUser)
     {
-        // Ensure we're only deleting system users, not regular members
+        // Prevent acting on normal members
         if ($systemUser->role === 'member') {
             abort(403, 'Unauthorized access.');
         }
 
-        // Prevent admins from deleting themselves
+        // Prevent admins from demoting themselves
         if ($systemUser->id === auth()->id()) {
-            return back()->with('error', 'You cannot delete your own account.');
+            return back()->with('error', 'You cannot remove your own system role.');
         }
 
-        // Check if user has any critical associations
-        if ($systemUser->loans()->exists() || $systemUser->transactions()->exists()) {
-            return back()->with('error', 'Cannot delete user with existing loans or transactions.');
-        }
+        // Revert to normal member
+        $systemUser->update([
+            'role' => 'member',
+            'is_active' => false, // optional but recommended
+        ]);
 
-        $systemUser->delete();
-
-        return redirect()->route('system-users.index')
-            ->with('success', 'System user deleted successfully.');
+        return redirect()
+            ->route('system-users.index')
+            ->with('success', 'System user reverted to normal member successfully.');
     }
+
+
+
+    /**
+     * Toggle active / inactive status of a system user
+     */
+    public function toggleStatus(User $systemUser)
+    {
+        // Prevent self-deactivation
+        if (auth()->id() === $systemUser->id) {
+            return back()->with('error', 'You cannot deactivate your own account.');
+        }
+
+        // Prevent toggling normal members
+        if ($systemUser->role === 'member') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $systemUser->update([
+            'is_active' => ! $systemUser->is_active,
+        ]);
+
+        return back()->with(
+            'success',
+            $systemUser->is_active
+                ? 'User activated successfully.'
+                : 'User deactivated successfully.'
+        );
+    }
+
 
     /**
      * Display roles and permissions management.

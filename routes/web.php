@@ -64,64 +64,64 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/addmember', [MemberController::class, 'store'])->name('addmember.store');
 
     Route::prefix('members')->name('members.')->group(function () {
+
+        // CRUD
         Route::get('/', [MemberController::class, 'index'])->name('index');
         Route::get('/create', [MemberController::class, 'create'])->name('create');
         Route::post('/', [MemberController::class, 'store'])->name('store');
+
+
+        // =========================
+        // IMPORT / EXPORT
+        // =========================
+    
+        // Import members
+        Route::get('/import', [MemberController::class, 'showImportForm'])->name('import.form');
+        Route::post('/import', [MemberController::class, 'bulkImport'])->name('import');
+        Route::get('/import/template', [MemberController::class, 'downloadTemplate'])->name('import.template');
+    
+        // Export members 
+        Route::get('/export', [MemberController::class, 'exportMembers'])->name('export');
+    
+        // Deposits import
+        Route::get('/deposits/import', [MemberController::class, 'showDepositsImportForm'])
+            ->name('deposits.import.form');
+        Route::post('/deposits/import', [MemberController::class, 'importDeposits'])
+            ->name('deposits.import');
+        Route::get('/deposits/import/template', [MemberController::class, 'downloadDepositsTemplate'])
+            ->name('deposits.import.template');
         Route::get('/{member}', [MemberController::class, 'show'])->name('show');
         Route::get('/{member}/edit', [MemberController::class, 'edit'])->name('edit');
         Route::put('/{member}', [MemberController::class, 'update'])->name('update');
         Route::delete('/{member}', [MemberController::class, 'destroy'])->name('destroy');
-
-        // Member-specific actions
+    
+        // Member actions
         Route::post('/{member}/activate', [MemberController::class, 'activate'])->name('activate');
         Route::post('/{member}/deactivate', [MemberController::class, 'deactivate'])->name('deactivate');
         Route::post('/{member}/approve', [MemberController::class, 'approve'])->name('approve');
         Route::post('/{member}/reject', [MemberController::class, 'reject'])->name('reject');
         Route::post('/{member}/suspend', [MemberController::class, 'suspend'])->name('suspend');
+    
+        // Relations
         Route::get('/{member}/accounts', [MemberController::class, 'accounts'])->name('accounts');
         Route::get('/{member}/transactions', [MemberController::class, 'transactions'])->name('transactions');
         Route::get('/{member}/loans', [MemberController::class, 'loans'])->name('loans');
         Route::get('/{member}/dividends', [MemberController::class, 'dividends'])->name('dividends');
         Route::get('/{member}/guarantees', [MemberController::class, 'guarantees'])->name('guarantees');
-
-        // Next of kin management
+    
+        // Next of kin
         Route::get('/{member}/next-of-kin', [MemberController::class, 'nextOfKin'])->name('next-of-kin');
         Route::post('/{member}/next-of-kin', [MemberController::class, 'storeNextOfKin'])->name('store-next-of-kin');
         Route::put('/{member}/next-of-kin/{nextOfKin}', [MemberController::class, 'updateNextOfKin'])->name('update-next-of-kin');
         Route::delete('/{member}/next-of-kin/{nextOfKin}', [MemberController::class, 'destroyNextOfKin'])->name('destroy-next-of-kin');
-
-        // Document uploads
+    
+        // Documents
         Route::post('/{member}/documents', [MemberController::class, 'uploadDocuments'])->name('upload-documents');
         Route::delete('/{member}/documents/{document}', [MemberController::class, 'deleteDocument'])->name('delete-document');
-
-        Route::post('/loans/check-eligibility', [LoanController::class, 'checkEligibility'])
-            ->name('loans.check-eligibility');
-
-        Route::get('/members/{member}/loan-eligibility', [MemberController::class, 'loanEligibility'])
-            ->name('members.loan-eligibility');
-
-        // Show import form
-        Route::get('/members/import', [MemberController::class, 'showImportForm'])
-            ->name('import.form');
-
-        // Process bulk import
-        Route::post('/members/import', [MemberController::class, 'bulkImport'])
-            ->name('import');
-
-        // Download template
-        Route::get('/members/import/template', [MemberController::class, 'downloadTemplate'])
-            ->name('import.template');
-
-        Route::get('/members/deposits/import', [MemberController::class, 'showDepositsImportForm'])
-        ->name('deposits.import.form');
-        Route::post('/members/deposits/import', [MemberController::class, 'importDeposits'])
-        ->name('deposits.import');
-        Route::get('/members/deposits/import/template', [MemberController::class, 'downloadDepositsTemplate'])
-        ->name('deposits.import.template');
-
-        Route::post('/bulk-export', [MemberController::class, 'bulkExport'])->name('bulk-export');
-
+    
+        
     });
+    
 
     // SYSTEM USERS ROUTES (Admin only)
     Route::middleware('role:admin')->prefix('system-users')->name('system-users.')->group(function () {
@@ -316,6 +316,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{voucher}/reject', [PaymentVoucherController::class, 'reject'])->name('reject');
         Route::post('/{voucher}/pay', [PaymentVoucherController::class, 'pay'])->name('pay');
         Route::post('/{voucher}/cancel', [PaymentVoucherController::class, 'cancel'])->name('cancel');
+        Route::post('/{voucher}/duplicate', [PaymentVoucherController::class, 'duplicate'])
+        ->name('duplicate');
+
+        // Voucher PDF route
+        Route::get('/{voucher}/pdf', [PaymentVoucherController::class, 'downloadPdf'])
+        ->name('pdf');
+
 
         // Voucher documents
         Route::post('/{voucher}/documents', [PaymentVoucherController::class, 'uploadDocuments'])->name('upload-documents');

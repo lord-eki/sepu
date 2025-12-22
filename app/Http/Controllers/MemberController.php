@@ -23,6 +23,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use App\Exports\MembersExport;
 
 class MemberController extends Controller
 {
@@ -996,8 +997,10 @@ class MemberController extends Controller
      */
     public function exportMembers(Request $request)
     {
-        // Implementation for CSV/Excel export
-        return response()->json(['message' => 'Export functionality to be implemented']);
+        $memberIds = $request->input('member_ids', []);
+
+        $export = new MembersExport($memberIds);
+        return $export->download();
     }
 
     public function bulkImport(Request $request): RedirectResponse

@@ -92,18 +92,25 @@
             color: #888;
         }
         .div1 {
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 1.25rem;
             text-align: center;
+            margin-bottom: 10px;
         }
+
+        .div1 img {
+            display: block;
+            margin: 0 auto;     /* THIS centers the logo */
+            width: 80px;
+            height: auto;
+        }
+
+
     </style>
 </head>
 <body>
-    <div class="div1"><img src="{{ asset('apple-touch-icon1.png') }}" alt="Logo" class="w-20 md:w-28 mx-auto lg:mx-0" />
-    <h3>SEPU SACCO</h3>
+    <div class="div1">
+    <img src="{{ public_path('apple-touch-icon1.png') }}" alt="SEPU SACCO" />
     </div>
+
     <h2>Account Statement</h2>
 
     <div class="summary">

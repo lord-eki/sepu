@@ -5,156 +5,233 @@
   ]">
     <Head title="Add System User" />
 
-    <!-- Flash Messages -->
+    <!-- CENTER TOAST -->
     <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 -translate-y-3"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-3"
+      enter-active-class="transition ease-out duration-300"
+      enter-from-class="opacity-0 scale-90"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-90"
+    >
+      <div
+        v-if="toast.visible"
+        class="fixed inset-0 z-50 flex items-start justify-center pt-20"
+      >
+        <div
+          :class="toast.type === 'success'
+            ? 'bg-emerald-600/90'
+            : 'bg-rose-600/90'"
+          class="backdrop-blur-xl text-white px-6 py-4 rounded-2xl shadow-xl max-w-md w-full text-center"
         >
-        <div>
-            <div v-if="$page.props.flash.success" class="mb-4 p-3 rounded-lg text-white bg-green-600">
-            {{ $page.props.flash.success }}
-            </div>
-            <div v-if="$page.props.flash.error" class="mb-4 p-3 rounded-lg text-white bg-red-600">
-            {{ $page.props.flash.error }}
-            </div>
+          <p class="font-semibold text-lg">
+            {{ toast.message }}
+          </p>
         </div>
-        </transition>
+      </div>
+    </transition>
 
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-6 mx-6 mt-6">
+      <h1 class="text-2xl font-bold text-[#0B1F3A] dark:text-white">
+        Add System User
+      </h1>
 
-    <!-- Title -->
-    <div class="flex items-center justify-between mb-6 mx-6 mt-4">
-      <h1 class="text-2xl font-bold text-[#0B1F3A] dark:text-white">Add System User</h1>
       <Link
         :href="route('system-users.index')"
-        class="px-4 py-2 bg-[#0B1F3A] hover:bg-blue-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white dark:text-white rounded-lg transition"
+        class="px-4 py-2 rounded-xl bg-[#0B1F3A] hover:bg-blue-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white transition"
       >
         Back
       </Link>
     </div>
 
-    <!-- Form Card -->
-    <div class="bg-white dark:bg-[#0B1F3A] rounded-2xl shadow p-6 border border-gray-100 dark:border-gray-700 max-w-3xl mx-auto">
-      <form @submit.prevent="submit" class="grid grid-cols-1 md:grid-cols-2 gap-6 role-form">
+    <!-- FORM CARD -->
+    <div class="max-w-3xl mx-auto bg-white dark:bg-[#0B1F3A] rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-8">
+      <form @submit.prevent="submit" class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <!-- Name -->
-        <div>
-          <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Full Name</label>
-          <input
-            v-model="form.name"
-            type="text"
-            placeholder="Enter full name"
-            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
-          />
-          <p v-if="form.errors.name" class="text-sm text-red-500 mt-1">{{ form.errors.name }}</p>
+        <!-- MEMBER SELECT -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+            Select Member
+          </label>
+
+          <Combobox v-model="form.user_id">
+            <div class="relative">
+              <ComboboxInput
+                class="w-full rounded-xl border p-2 border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white px-4 py-2 focus:ring-orange-500 focus:border-orange-500"
+                :displayValue="displayMember"
+                placeholder="Search member by name or ID"
+                @change="query = $event.target.value"
+              />
+
+              <ComboboxOptions
+                class="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white dark:bg-[#14294B] shadow-lg border dark:border-gray-700"
+              >
+                <ComboboxOption
+                  v-for="member in filteredMembers"
+                  :key="member.user_id"
+                  :value="member.user_id"
+                  class="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {{ member.full_name }} — {{ member.membership_id }}
+                </ComboboxOption>
+
+                <div
+                  v-if="!filteredMembers.length"
+                  class="px-4 py-2 text-sm text-gray-500"
+                >
+                  No member found
+                </div>
+              </ComboboxOptions>
+            </div>
+          </Combobox>
+
+          <p v-if="form.errors.user_id" class="text-sm text-rose-500 mt-1">
+            {{ form.errors.user_id }}
+          </p>
         </div>
 
-        <!-- Email -->
-        <div>
-          <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Email</label>
-          <input
-            v-model="form.email"
-            type="email"
-            placeholder="Enter email address"
-            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
-          />
-          <p v-if="form.errors.email" class="text-sm text-red-500 mt-1">{{ form.errors.email }}</p>
-        </div>
+    
+        <!-- READONLY INFO -->
+          <div>
+            <label class="label text-slate-800 font-bold mr-4">Full Name</label>
+            <input
+              :value="selectedMember?.full_name || ''"
+              readonly
+              class="input-readonly border p-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 w-full"
+            />
+          </div>
 
-        <!-- Phone -->
-        <div>
-          <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Phone Number</label>
-          <input
-            v-model="form.phone"
-            type="text"
-            placeholder="e.g. 0712345678"
-            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
-          />
-          <p v-if="form.errors.phone" class="text-sm text-red-500 mt-1">{{ form.errors.phone }}</p>
-        </div>
+          <div>
+            <label class="label text-slate-800 font-bold mr-4">Email</label>
+            <input
+              :value="selectedMember?.email || ''"
+              readonly
+              class="input-readonly border p-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 w-full"
+            />
+          </div>
 
-        <!-- Role -->
-        <div>
-          <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">User Role</label>
-          <select
-            v-model="form.role"
-            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
-          >
-            <option disabled value="">Select role</option>
-            <option v-for="(label, key) in roles" :key="key" :value="key">{{ label }}</option>
-          </select>
-          <p v-if="form.errors.role" class="text-sm text-red-500 mt-1">{{ form.errors.role }}</p>
-        </div>
+          <div>
+            <label class="label text-slate-800 font-bold mr-4">Phone Number</label>
+            <input
+              :value="selectedMember?.phone || ''"
+              readonly
+              class="input-readonly border p-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 w-full"
+            />
+          </div>
 
-        <!-- Password -->
-        <div>
-          <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Password</label>
-          <input
-            v-model="form.password"
-            type="password"
-            placeholder="Enter password"
-            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
-          />
-          <p v-if="form.errors.password" class="text-sm text-red-500 mt-1">{{ form.errors.password }}</p>
-        </div>
+          <!-- ROLE -->
+          <div>
+            <label class="label text-slate-800 font-bold mr-4">User Role</label>
+            <select
+              v-model="form.role"
+              class="input border p-3 rounded-xl w-full bg-white dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
+            >
+              <option disabled value="">Select role</option>
+              <option v-for="(label, key) in roles" :key="key" :value="key">
+                {{ label }}
+              </option>
+            </select>
 
-        <!-- Confirm Password -->
-        <div>
-          <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Confirm Password</label>
-          <input
-            v-model="form.password_confirmation"
-            type="password"
-            placeholder="Confirm password"
-            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-[#14294B] text-gray-900 dark:text-white focus:ring-orange-500 focus:border-orange-500"
-          />
-        </div>
+            <p v-if="form.errors.role" class="text-sm text-rose-500 mt-1">
+              {{ form.errors.role }}
+            </p>
+          </div>
 
-        <!-- Active Status -->
-        <div class="md:col-span-2 flex items-center gap-2 mt-2">
-          <input type="checkbox" v-model="form.is_active" id="active" class="rounded text-orange-600 focus:ring-orange-500" />
-          <label for="active" class="text-gray-700 dark:text-gray-300">Active</label>
-        </div>
 
-        <!-- Submit -->
-        <div class="md:col-span-2 flex justify-end mt-4">
+        <!-- SUBMIT -->
+        <div class="md:col-span-2 flex justify-end pt-4">
           <button
             type="submit"
             :disabled="form.processing"
-            class="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition disabled:opacity-50"
+            class="px-6 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold transition disabled:opacity-50"
           >
             {{ form.processing ? 'Saving...' : 'Create User' }}
           </button>
         </div>
+
       </form>
     </div>
   </AppLayout>
 </template>
 
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { computed, ref, watch } from 'vue'
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxOptions,
+  ComboboxOption,
+} from '@headlessui/vue'
 
 const props = defineProps({
   roles: Object,
+  members: Array,
 })
 
+const page = usePage()
+
+/* FORM */
 const form = useForm({
-  name: '',
-  email: '',
-  phone: '',
-  password: '',
-  password_confirmation: '',
+  user_id: '',
   role: '',
   is_active: true,
 })
 
+/* SELECTED MEMBER */
+const selectedMember = computed(() =>
+  props.members.find(m => m.user_id === form.user_id)
+)
+
+/* COMBOBOX */
+const query = ref('')
+
+const filteredMembers = computed(() => {
+  if (!query.value) return props.members
+  return props.members.filter(m =>
+    m.full_name.toLowerCase().includes(query.value.toLowerCase()) ||
+    m.membership_id.toLowerCase().includes(query.value.toLowerCase())
+  )
+})
+
+const displayMember = (id) => {
+  const member = props.members.find(m => m.user_id === id)
+  return member ? `${member.full_name} — ${member.membership_id}` : ''
+}
+
+/* TOAST */
+const toast = ref({
+  visible: false,
+  message: '',
+  type: 'success',
+})
+
+watch(
+  () => page.props.flash,
+  (flash) => {
+    if (flash.success || flash.error) {
+      toast.value = {
+        visible: true,
+        message: flash.success || flash.error,
+        type: flash.success ? 'success' : 'error',
+      }
+
+      setTimeout(() => {
+        toast.value.visible = false
+      }, 4000)
+    }
+  },
+  { deep: true }
+)
+
+/* SUBMIT */
 const submit = () => {
   form.post(route('system-users.store'))
 }
 </script>
+
 
 <style scoped>
 .role-form input,
@@ -163,4 +240,3 @@ const submit = () => {
   padding: 10px;
 }
 </style>
-
