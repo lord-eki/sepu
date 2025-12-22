@@ -104,8 +104,8 @@
 
 <script setup lang="ts">
 import { useForm, Link } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
-import InputError from '@/Components/InputError.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+import InputError from '@/components/InputError.vue'
 
 const props = defineProps({
   voucher: Object,
