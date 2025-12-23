@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Dividend;
 use App\Models\Member;
 use App\Models\MemberDividend;
-use App\Models\Account;
 use App\Models\Transaction;
-use App\Models\SystemSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Carbon\Carbon;
 
 class DividendController extends Controller
 {
@@ -46,7 +43,7 @@ class DividendController extends Controller
             'dividends' => $dividends,
             'availableYears' => $availableYears,
             'filters' => $request->only(['status', 'year']),
-            'stats' => $this->getDividendStats()
+            'stats' => $this->getDividendStats(),
         ]);
     }
 
@@ -58,21 +55,32 @@ class DividendController extends Controller
         $currentYear = now()->year;
         $previousYear = $currentYear - 1;
 
-        // Check if dividend already exists for current/previous year
         $existingDividend = Dividend::where('dividend_year', $currentYear)
             ->orWhere('dividend_year', $previousYear)
             ->first();
 
-        // Get financial data for calculation
         $financialData = $this->getFinancialDataForYear($previousYear);
+
+        // Get both account types
+        $totalShareCapital = Account::where('account_type', 'share_capital')
+            ->where('is_active', true)
+            ->whereHas('member', fn ($q) => $q->where('membership_status', 'active'))
+            ->sum('balance');
+
+        $totalShareDeposits = Account::where('account_type', 'share_deposits')
+            ->where('is_active', true)
+            ->whereHas('member', fn ($q) => $q->where('membership_status', 'active'))
+            ->sum('balance');
 
         return Inertia::render('Shared/Dividends/Create', [
             'suggestedYear' => $currentYear,
             'previousYear' => $previousYear,
             'existingDividend' => $existingDividend,
             'financialData' => $financialData,
-            'totalShares' => $this->getTotalShares($previousYear),
-            'activeMembers' => Member::where('membership_status', 'active')->count()
+            'totalShareCapital' => $totalShareCapital,
+            'totalShareDeposits' => $totalShareDeposits,
+            'totalShares' => $totalShareCapital + $totalShareDeposits, // Total combined
+            'activeMembers' => Member::where('membership_status', 'active')->count(),
         ]);
     }
 
@@ -81,53 +89,111 @@ class DividendController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'dividend_year' => [
-                'required',
-                'integer',
-                'min:2000',
-                'max:' . (now()->year + 1),
-                Rule::unique('dividends', 'dividend_year')
-            ],
-            'total_profit' => 'required|numeric|min:0',
-            'dividend_rate' => 'required|numeric|min:0|max:100',
-            'notes' => 'nullable|string|max:1000'
-        ]);
+        // Check if this is enhanced (separate rates) or traditional (single rate)
+        $isEnhanced = $request->has('share_capital_rate') && $request->has('share_deposits_rate');
+
+        if ($isEnhanced) {
+            $validated = $request->validate([
+                'dividend_year' => 'required|integer|min:2000|unique:dividends,dividend_year',
+                'total_profit' => 'required|numeric|min:0',
+                'share_capital_rate' => 'required|numeric|min:0|max:100',
+                'share_deposits_rate' => 'required|numeric|min:0|max:100',
+                'notes' => 'nullable|string',
+            ]);
+        } else {
+            // Traditional single rate
+            $validated = $request->validate([
+                'dividend_year' => 'required|integer|min:2000|unique:dividends,dividend_year',
+                'total_profit' => 'required|numeric|min:0',
+                'dividend_rate' => 'required|numeric|min:0|max:100',
+                'notes' => 'nullable|string',
+            ]);
+        }
 
         try {
             DB::beginTransaction();
 
-            // Calculate total dividends
-            $totalShares = $this->getTotalShares($validated['dividend_year']);
-            $totalDividends = ($totalShares * $validated['dividend_rate']) / 100;
+            if ($isEnhanced) {
+                // Enhanced: Calculate with separate rates
+                $totalShareCapital = Account::where('account_type', 'share_capital')
+                    ->where('is_active', true)
+                    ->whereHas('member', fn ($q) => $q->where('membership_status', 'active'))
+                    ->sum('balance');
 
-            // Create dividend record
-            $dividend = Dividend::create([
-                'dividend_year' => $validated['dividend_year'],
-                'total_profit' => $validated['total_profit'],
-                'dividend_rate' => $validated['dividend_rate'],
-                'total_dividends' => $totalDividends,
-                'status' => 'calculated',
-                'calculation_date' => now(),
-                'calculated_by' => Auth::id(),
-                'notes' => $validated['notes']
-            ]);
+                $totalShareDeposits = Account::where('account_type', 'share_deposits')
+                    ->where('is_active', true)
+                    ->whereHas('member', fn ($q) => $q->where('membership_status', 'active'))
+                    ->sum('balance');
 
-            // Generate member dividends
-            $this->generateMemberDividends($dividend);
+                $shareCapitalDividends = ($totalShareCapital * $validated['share_capital_rate']) / 100;
+                $shareDepositsDividends = ($totalShareDeposits * $validated['share_deposits_rate']) / 100;
+                $totalDividends = $shareCapitalDividends + $shareDepositsDividends;
+
+                // Validate against profit
+                if ($totalDividends > $validated['total_profit']) {
+                    return back()->withErrors([
+                        'error' => 'Total dividends ('.number_format($totalDividends, 2).
+                                  ') exceed profit ('.number_format($validated['total_profit'], 2).')',
+                    ])->withInput();
+                }
+
+                // Create dividend with metadata
+                $dividend = Dividend::create([
+                    'dividend_year' => $validated['dividend_year'],
+                    'total_profit' => $validated['total_profit'],
+                    'dividend_rate' => 0, 
+                    'total_dividends' => $totalDividends,
+                    'status' => 'calculated',
+                    'calculation_date' => now(),
+                    'calculated_by' => Auth::id(),
+                    'notes' => json_encode([
+                        'user_notes' => $validated['notes'] ?? null,
+                        'is_enhanced' => true,
+                        'share_capital_rate' => $validated['share_capital_rate'],
+                        'share_deposits_rate' => $validated['share_deposits_rate'],
+                        'total_share_capital' => $totalShareCapital,
+                        'total_share_deposits' => $totalShareDeposits,
+                        'share_capital_dividends' => $shareCapitalDividends,
+                        'share_deposits_dividends' => $shareDepositsDividends,
+                    ]),
+                ]);
+
+                // Generate with separate rates
+                $this->generateMemberDividends(
+                    $dividend,
+                    $validated['share_capital_rate'],
+                    $validated['share_deposits_rate']
+                );
+
+            } else {
+                // Single rate
+                $totalShares = $this->getTotalShares($validated['dividend_year']);
+                $totalDividends = ($totalShares * $validated['dividend_rate']) / 100;
+
+                $dividend = Dividend::create([
+                    'dividend_year' => $validated['dividend_year'],
+                    'total_profit' => $validated['total_profit'],
+                    'dividend_rate' => $validated['dividend_rate'],
+                    'total_dividends' => $totalDividends,
+                    'status' => 'calculated',
+                    'calculation_date' => now(),
+                    'calculated_by' => Auth::id(),
+                    'notes' => $validated['notes'],
+                ]);
+
+                $this->generateMemberDividends($dividend);
+            }
 
             DB::commit();
 
             return redirect()->route('dividends.show', $dividend)
-                ->with('success', 'Dividend calculated successfully for year ' . $validated['dividend_year']);
+                ->with('success', 'Dividend calculated successfully for year '.$validated['dividend_year']);
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend creation failed: ' . $e->getMessage());
-            
-            return back()->withErrors([
-                'error' => 'Failed to calculate dividend. Please try again.'
-            ])->withInput();
+            Log::error('Dividend creation failed: '.$e->getMessage());
+
+            return back()->withErrors(['error' => 'Failed: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -138,13 +204,24 @@ class DividendController extends Controller
     {
         $dividend->load(['calculatedBy', 'approvedBy']);
 
-        // Get member dividends with pagination
-        $memberDividends = MemberDividend::with(['member', 'transaction'])
+        // Decode notes to check if enhanced
+        $metadata = json_decode($dividend->notes, true);
+        $isEnhanced = isset($metadata['is_enhanced']) && $metadata['is_enhanced'];
+
+        $memberDividends = MemberDividend::with(['member.user', 'transaction'])
             ->where('dividend_id', $dividend->id)
             ->orderBy('dividend_amount', 'desc')
             ->paginate(20);
 
-        // Get summary statistics
+        // Add breakdown to each member dividend if enhanced
+        if ($isEnhanced) {
+            $memberDividends->getCollection()->transform(function ($md) {
+                $md->breakdown = json_decode($md->metadata ?? '{}', true);
+
+                return $md;
+            });
+        }
+
         $stats = [
             'total_members' => MemberDividend::where('dividend_id', $dividend->id)->count(),
             'total_paid' => MemberDividend::where('dividend_id', $dividend->id)
@@ -158,15 +235,26 @@ class DividendController extends Controller
                 ->count(),
             'members_pending' => MemberDividend::where('dividend_id', $dividend->id)
                 ->where('status', 'pending')
-                ->count()
+                ->count(),
         ];
+
+        // Add enhanced stats if applicable
+        if ($isEnhanced) {
+            $stats['is_enhanced'] = true;
+            $stats['share_capital_rate'] = $metadata['share_capital_rate'] ?? 0;
+            $stats['share_deposits_rate'] = $metadata['share_deposits_rate'] ?? 0;
+            $stats['share_capital_dividends'] = $metadata['share_capital_dividends'] ?? 0;
+            $stats['share_deposits_dividends'] = $metadata['share_deposits_dividends'] ?? 0;
+        }
 
         return Inertia::render('Shared/Dividends/Show', [
             'dividend' => $dividend,
+            'metadata' => $metadata,
+            'isEnhanced' => $isEnhanced,
             'memberDividends' => $memberDividends,
             'stats' => $stats,
             'canApprove' => $this->canApprove($dividend),
-            'canDistribute' => $this->canDistribute($dividend)
+            'canDistribute' => $this->canDistribute($dividend),
         ]);
     }
 
@@ -186,7 +274,7 @@ class DividendController extends Controller
         return Inertia::render('Shared/Dividends/Edit', [
             'dividend' => $dividend,
             'financialData' => $financialData,
-            'totalShares' => $this->getTotalShares($dividend->dividend_year)
+            'totalShares' => $this->getTotalShares($dividend->dividend_year),
         ]);
     }
 
@@ -204,7 +292,7 @@ class DividendController extends Controller
         $validated = $request->validate([
             'total_profit' => 'required|numeric|min:0',
             'dividend_rate' => 'required|numeric|min:0|max:100',
-            'notes' => 'nullable|string|max:1000'
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         try {
@@ -219,7 +307,7 @@ class DividendController extends Controller
                 'total_profit' => $validated['total_profit'],
                 'dividend_rate' => $validated['dividend_rate'],
                 'total_dividends' => $totalDividends,
-                'notes' => $validated['notes']
+                'notes' => $validated['notes'],
             ]);
 
             // Regenerate member dividends
@@ -233,10 +321,10 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend update failed: ' . $e->getMessage());
-            
+            Log::error('Dividend update failed: '.$e->getMessage());
+
             return back()->withErrors([
-                'error' => 'Failed to update dividend. Please try again.'
+                'error' => 'Failed to update dividend. Please try again.',
             ])->withInput();
         }
     }
@@ -268,8 +356,8 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend deletion failed: ' . $e->getMessage());
-            
+            Log::error('Dividend deletion failed: '.$e->getMessage());
+
             return redirect()->route('dividends.index')
                 ->with('error', 'Failed to delete dividend. Please try again.');
         }
@@ -282,7 +370,7 @@ class DividendController extends Controller
     {
         $validated = $request->validate([
             'total_profit' => 'required|numeric|min:0',
-            'dividend_rate' => 'required|numeric|min:0|max:100'
+            'dividend_rate' => 'required|numeric|min:0|max:100',
         ]);
 
         try {
@@ -290,7 +378,7 @@ class DividendController extends Controller
             $existingDividend = Dividend::where('dividend_year', $year)->first();
             if ($existingDividend) {
                 return response()->json([
-                    'error' => 'Dividend already exists for year ' . $year
+                    'error' => 'Dividend already exists for year '.$year,
                 ], 422);
             }
 
@@ -305,14 +393,14 @@ class DividendController extends Controller
                 'total_dividends' => $totalDividends,
                 'member_count' => count($memberBreakdown),
                 'member_breakdown' => $memberBreakdown,
-                'average_dividend' => count($memberBreakdown) > 0 ? $totalDividends / count($memberBreakdown) : 0
+                'average_dividend' => count($memberBreakdown) > 0 ? $totalDividends / count($memberBreakdown) : 0,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Dividend calculation failed: ' . $e->getMessage());
-            
+            Log::error('Dividend calculation failed: '.$e->getMessage());
+
             return response()->json([
-                'error' => 'Failed to calculate dividends. Please try again.'
+                'error' => 'Failed to calculate dividends. Please try again.',
             ], 500);
         }
     }
@@ -328,7 +416,7 @@ class DividendController extends Controller
         }
 
         $validated = $request->validate([
-            'approval_notes' => 'nullable|string|max:1000'
+            'approval_notes' => 'nullable|string|max:1000',
         ]);
 
         try {
@@ -336,15 +424,15 @@ class DividendController extends Controller
                 'status' => 'approved',
                 'approval_date' => now(),
                 'approved_by' => Auth::id(),
-                'approval_notes' => $validated['approval_notes']
+                'approval_notes' => $validated['approval_notes'],
             ]);
 
             return redirect()->route('dividends.show', $dividend)
                 ->with('success', 'Dividend approved successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Dividend approval failed: ' . $e->getMessage());
-            
+            Log::error('Dividend approval failed: '.$e->getMessage());
+
             return back()->with('error', 'Failed to approve dividend. Please try again.');
         }
     }
@@ -378,8 +466,9 @@ class DividendController extends Controller
                         ->where('is_active', true)
                         ->first();
 
-                    if (!$sharesAccount) {
+                    if (! $sharesAccount) {
                         $failedCount++;
+
                         continue;
                     }
 
@@ -397,27 +486,27 @@ class DividendController extends Controller
                         'payment_method' => 'system_transfer',
                         'status' => 'completed',
                         'processed_by' => Auth::id(),
-                        'processed_at' => now()
+                        'processed_at' => now(),
                     ]);
 
                     // Update account balance
                     $sharesAccount->update([
                         'balance' => $sharesAccount->balance + $memberDividend->dividend_amount,
                         'available_balance' => $sharesAccount->available_balance + $memberDividend->dividend_amount,
-                        'last_transaction_at' => now()
+                        'last_transaction_at' => now(),
                     ]);
 
                     // Update member dividend status
                     $memberDividend->update([
                         'status' => 'paid',
                         'payment_date' => now(),
-                        'transaction_id' => $transaction->id
+                        'transaction_id' => $transaction->id,
                     ]);
 
                     $distributedCount++;
 
                 } catch (\Exception $e) {
-                    Log::error("Failed to distribute dividend to member {$memberDividend->member_id}: " . $e->getMessage());
+                    Log::error("Failed to distribute dividend to member {$memberDividend->member_id}: ".$e->getMessage());
                     $failedCount++;
                 }
             }
@@ -426,7 +515,7 @@ class DividendController extends Controller
             if ($failedCount === 0) {
                 $dividend->update([
                     'status' => 'distributed',
-                    'distribution_date' => now()
+                    'distribution_date' => now(),
                 ]);
             }
 
@@ -442,8 +531,8 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend distribution failed: ' . $e->getMessage());
-            
+            Log::error('Dividend distribution failed: '.$e->getMessage());
+
             return back()->with('error', 'Failed to distribute dividends. Please try again.');
         }
     }
@@ -459,7 +548,7 @@ class DividendController extends Controller
         }
 
         $validated = $request->validate([
-            'reason' => 'required|string|max:500'
+            'reason' => 'required|string|max:500',
         ]);
 
         try {
@@ -493,28 +582,28 @@ class DividendController extends Controller
                             'payment_method' => 'system_transfer',
                             'status' => 'completed',
                             'processed_by' => Auth::id(),
-                            'processed_at' => now()
+                            'processed_at' => now(),
                         ]);
 
                         // Update account balance
                         $account->update([
                             'balance' => $account->balance - $memberDividend->dividend_amount,
                             'available_balance' => $account->available_balance - $memberDividend->dividend_amount,
-                            'last_transaction_at' => now()
+                            'last_transaction_at' => now(),
                         ]);
 
                         // Update member dividend status
                         $memberDividend->update([
                             'status' => 'pending',
                             'payment_date' => null,
-                            'transaction_id' => null
+                            'transaction_id' => null,
                         ]);
 
                         $reversedCount++;
                     }
 
                 } catch (\Exception $e) {
-                    Log::error("Failed to reverse dividend for member {$memberDividend->member_id}: " . $e->getMessage());
+                    Log::error("Failed to reverse dividend for member {$memberDividend->member_id}: ".$e->getMessage());
                     $failedCount++;
                 }
             }
@@ -525,7 +614,7 @@ class DividendController extends Controller
                 'distribution_date' => null,
                 'reversal_reason' => $validated['reason'],
                 'reversed_by' => Auth::id(),
-                'reversed_at' => now()
+                'reversed_at' => now(),
             ]);
 
             DB::commit();
@@ -540,8 +629,8 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend reversal failed: ' . $e->getMessage());
-            
+            Log::error('Dividend reversal failed: '.$e->getMessage());
+
             return back()->with('error', 'Failed to reverse dividends. Please try again.');
         }
     }
@@ -558,7 +647,7 @@ class DividendController extends Controller
 
         return Inertia::render('Dividends/Members', [
             'dividend' => $dividend,
-            'memberDividends' => $memberDividends
+            'memberDividends' => $memberDividends,
         ]);
     }
 
@@ -585,7 +674,7 @@ class DividendController extends Controller
         return Inertia::render('Dividends/MemberDetails', [
             'dividend' => $dividend,
             'memberDividend' => $memberDividend,
-            'shareTransactions' => $shareTransactions
+            'shareTransactions' => $shareTransactions,
         ]);
     }
 
@@ -602,7 +691,7 @@ class DividendController extends Controller
             ->where('member_id', $member->id)
             ->first();
 
-        if (!$memberDividend || $memberDividend->status === 'paid') {
+        if (! $memberDividend || $memberDividend->status === 'paid') {
             return back()->with('error', 'Member dividend not found or already paid.');
         }
 
@@ -615,7 +704,7 @@ class DividendController extends Controller
                 ->where('is_active', true)
                 ->first();
 
-            if (!$sharesAccount) {
+            if (! $sharesAccount) {
                 return back()->with('error', 'Member does not have an active shares account.');
             }
 
@@ -633,21 +722,21 @@ class DividendController extends Controller
                 'payment_method' => 'system_transfer',
                 'status' => 'completed',
                 'processed_by' => Auth::id(),
-                'processed_at' => now()
+                'processed_at' => now(),
             ]);
 
             // Update account balance
             $sharesAccount->update([
                 'balance' => $sharesAccount->balance + $memberDividend->dividend_amount,
                 'available_balance' => $sharesAccount->available_balance + $memberDividend->dividend_amount,
-                'last_transaction_at' => now()
+                'last_transaction_at' => now(),
             ]);
 
             // Update member dividend status
             $memberDividend->update([
                 'status' => 'paid',
                 'payment_date' => now(),
-                'transaction_id' => $transaction->id
+                'transaction_id' => $transaction->id,
             ]);
 
             DB::commit();
@@ -656,8 +745,8 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Member dividend payment failed: ' . $e->getMessage());
-            
+            Log::error('Member dividend payment failed: '.$e->getMessage());
+
             return back()->with('error', 'Failed to pay member dividend. Please try again.');
         }
     }
@@ -681,13 +770,13 @@ class DividendController extends Controller
             'paid_count' => $memberDividends->where('status', 'paid')->count(),
             'pending_count' => $memberDividends->where('status', 'pending')->count(),
             'paid_amount' => $memberDividends->where('status', 'paid')->sum('dividend_amount'),
-            'pending_amount' => $memberDividends->where('status', 'pending')->sum('dividend_amount')
+            'pending_amount' => $memberDividends->where('status', 'pending')->sum('dividend_amount'),
         ];
 
         return Inertia::render('Dividends/Report', [
             'dividend' => $dividend,
             'memberDividends' => $memberDividends,
-            'stats' => $stats
+            'stats' => $stats,
         ]);
     }
 
@@ -697,7 +786,7 @@ class DividendController extends Controller
     public function history(Request $request)
     {
         $years = $request->get('years', 5);
-        
+
         $dividends = Dividend::with(['calculatedBy', 'approvedBy'])
             ->orderBy('dividend_year', 'desc')
             ->limit($years)
@@ -707,13 +796,13 @@ class DividendController extends Controller
             'yearly_trends' => $this->getYearlyTrends($dividends),
             'rate_trends' => $this->getRateTrends($dividends),
             'member_participation' => $this->getMemberParticipation($dividends),
-            'profit_vs_dividends' => $this->getProfitVsDividends($dividends)
+            'profit_vs_dividends' => $this->getProfitVsDividends($dividends),
         ];
 
         return Inertia::render('Dividends/Analytics/History', [
             'dividends' => $dividends,
             'analytics' => $analytics,
-            'years' => $years
+            'years' => $years,
         ]);
     }
 
@@ -736,7 +825,7 @@ class DividendController extends Controller
             'projections' => $projections,
             'historicalData' => $historicalData,
             'currentYear' => $currentYear,
-            'projectionYears' => $projectionYears
+            'projectionYears' => $projectionYears,
         ]);
     }
 
@@ -748,7 +837,7 @@ class DividendController extends Controller
         $validated = $request->validate([
             'projected_profit' => 'required|numeric|min:0',
             'projected_rate' => 'required|numeric|min:0|max:100',
-            'year' => 'required|integer|min:2000'
+            'year' => 'required|integer|min:2000',
         ]);
 
         try {
@@ -762,15 +851,15 @@ class DividendController extends Controller
                 'total_dividends' => $totalDividends,
                 'member_count' => $memberCount,
                 'average_dividend' => $averageDividend,
-                'dividend_to_profit_ratio' => $validated['projected_profit'] > 0 ? 
-                    ($totalDividends / $validated['projected_profit']) * 100 : 0
+                'dividend_to_profit_ratio' => $validated['projected_profit'] > 0 ?
+                    ($totalDividends / $validated['projected_profit']) * 100 : 0,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Dividend projection calculation failed: ' . $e->getMessage());
-            
+            Log::error('Dividend projection calculation failed: '.$e->getMessage());
+
             return response()->json([
-                'error' => 'Failed to calculate projection. Please try again.'
+                'error' => 'Failed to calculate projection. Please try again.',
             ], 500);
         }
     }
@@ -783,14 +872,14 @@ class DividendController extends Controller
     private function getDividendStats()
     {
         $currentYear = now()->year;
-        
+
         return [
             'total_dividends' => Dividend::count(),
             'current_year_dividend' => Dividend::where('dividend_year', $currentYear)->first(),
             'last_year_dividend' => Dividend::where('dividend_year', $currentYear - 1)->first(),
             'total_distributed' => Dividend::where('status', 'distributed')->sum('total_dividends'),
             'pending_approval' => Dividend::where('status', 'calculated')->count(),
-            'approved_pending_distribution' => Dividend::where('status', 'approved')->count()
+            'approved_pending_distribution' => Dividend::where('status', 'approved')->count(),
         ];
     }
 
@@ -808,7 +897,7 @@ class DividendController extends Controller
             'loan_interest_income' => 0,
             'other_income' => 0,
             'operational_expenses' => 0,
-            'provisions' => 0
+            'provisions' => 0,
         ];
     }
 
@@ -829,22 +918,53 @@ class DividendController extends Controller
     /**
      * Generate member dividends for a dividend record.
      */
-    private function generateMemberDividends(Dividend $dividend)
+    private function generateMemberDividends(Dividend $dividend, ?float $shareCapitalRate, ?float $shareDepositsRate)
     {
-        $memberDividends = $this->calculateMemberDividends($dividend->dividend_year, $dividend->dividend_rate);
+        $members = Member::where('membership_status', 'active')
+            ->with(['accounts' => function ($q) {
+                $q->whereIn('account_type', ['share_capital', 'share_deposits'])
+                    ->where('is_active', true)
+                    ->where('balance', '>', 0);
+            }])
+            ->whereHas('accounts', function ($q) {
+                $q->whereIn('account_type', ['share_capital', 'share_deposits'])
+                    ->where('is_active', true)
+                    ->where('balance', '>', 0);
+            })
+            ->get();
 
-        foreach ($memberDividends as $memberDividend) {
-            MemberDividend::create([
-                'dividend_id' => $dividend->id,
-                'member_id' => $memberDividend['member_id'],
-                'shares_balance' => $memberDividend['shares_balance'],
-                'dividend_amount' => $memberDividend['dividend_amount'],
-                'status' => 'pending'
-            ]);
+        foreach ($members as $member) {
+            $scAccount = $member->accounts->where('account_type', 'share_capital')->first();
+            $sdAccount = $member->accounts->where('account_type', 'share_deposits')->first();
+
+            // Calculate dividends from each account type
+            $scDividend = $scAccount ? ($scAccount->balance * $shareCapitalRate) / 100 : 0;
+            $sdDividend = $sdAccount ? ($sdAccount->balance * $shareDepositsRate) / 100 : 0;
+
+            $totalDividend = $scDividend + $sdDividend;
+
+            if ($totalDividend > 0) {
+                MemberDividend::create([
+                    'dividend_id' => $dividend->id,
+                    'member_id' => $member->id,
+                    'shares_balance' => ($scAccount ? $scAccount->balance : 0) +
+                                       ($sdAccount ? $sdAccount->balance : 0),
+                    'dividend_amount' => round($totalDividend, 2),
+                    'status' => 'pending',
+                    'metadata' => json_encode([
+                        'share_capital_balance' => $scAccount ? $scAccount->balance : 0,
+                        'share_deposits_balance' => $sdAccount ? $sdAccount->balance : 0,
+                        'share_capital_dividend' => round($scDividend, 2),
+                        'share_deposits_dividend' => round($sdDividend, 2),
+                        'share_capital_rate' => $shareCapitalRate,
+                        'share_deposits_rate' => $shareDepositsRate,
+                    ]),
+                ]);
+            }
         }
     }
 
-   /**
+    /**
      * Calculate member dividends.
      */
     private function calculateMemberDividends($year, $dividendRate)
@@ -853,33 +973,33 @@ class DividendController extends Controller
 
         $membersWithShares = Member::with(['accounts' => function ($query) {
             $query->where('account_type', 'share_deposits')
-                  ->where('is_active', true);
+                ->where('is_active', true);
         }])
-        ->where('membership_status', 'active')
-        ->whereHas('accounts', function ($query) {
-            $query->where('account_type', 'share_deposits')
-                  ->where('is_active', true)
-                  ->where('balance', '>', 0);
-        })
-        ->get();
+            ->where('membership_status', 'active')
+            ->whereHas('accounts', function ($query) {
+                $query->where('account_type', 'share_deposits')
+                    ->where('is_active', true)
+                    ->where('balance', '>', 0);
+            })
+            ->get();
 
         foreach ($membersWithShares as $member) {
             $sharesAccount = $member->accounts->first();
-            
+
             if ($sharesAccount) {
                 // Calculate dividend amount based on shares balance and dividend rate
                 $dividendAmount = ($sharesAccount->balance * $dividendRate) / 100;
-                
+
                 // Round to 2 decimal places for currency
                 $dividendAmount = round($dividendAmount, 2);
-                
+
                 $memberDividends[] = [
                     'member_id' => $member->id,
-                    'member_name' => $member->first_name . ' ' . $member->last_name,
+                    'member_name' => $member->first_name.' '.$member->last_name,
                     'membership_id' => $member->membership_id,
                     'shares_balance' => $sharesAccount->balance,
                     'dividend_amount' => $dividendAmount,
-                    'dividend_rate' => $dividendRate
+                    'dividend_rate' => $dividendRate,
                 ];
             }
         }
@@ -899,8 +1019,8 @@ class DividendController extends Controller
                 'total_profit' => $dividend->total_profit,
                 'dividend_rate' => $dividend->dividend_rate,
                 'member_count' => MemberDividend::where('dividend_id', $dividend->id)->count(),
-                'average_dividend' => $dividend->total_dividends > 0 ? 
-                    $dividend->total_dividends / MemberDividend::where('dividend_id', $dividend->id)->count() : 0
+                'average_dividend' => $dividend->total_dividends > 0 ?
+                    $dividend->total_dividends / MemberDividend::where('dividend_id', $dividend->id)->count() : 0,
             ];
         });
     }
@@ -914,8 +1034,8 @@ class DividendController extends Controller
             return [
                 'year' => $dividend->dividend_year,
                 'rate' => $dividend->dividend_rate,
-                'profit_margin' => $dividend->total_profit > 0 ? 
-                    ($dividend->total_dividends / $dividend->total_profit) * 100 : 0
+                'profit_margin' => $dividend->total_profit > 0 ?
+                    ($dividend->total_dividends / $dividend->total_profit) * 100 : 0,
             ];
         });
     }
@@ -929,15 +1049,15 @@ class DividendController extends Controller
             $totalMembers = Member::where('membership_status', 'active')
                 ->whereYear('created_at', '<=', $dividend->dividend_year)
                 ->count();
-            
+
             $participatingMembers = MemberDividend::where('dividend_id', $dividend->id)->count();
-            
+
             return [
                 'year' => $dividend->dividend_year,
                 'total_members' => $totalMembers,
                 'participating_members' => $participatingMembers,
-                'participation_rate' => $totalMembers > 0 ? 
-                    ($participatingMembers / $totalMembers) * 100 : 0
+                'participation_rate' => $totalMembers > 0 ?
+                    ($participatingMembers / $totalMembers) * 100 : 0,
             ];
         });
     }
@@ -953,8 +1073,8 @@ class DividendController extends Controller
                 'profit' => $dividend->total_profit,
                 'dividends' => $dividend->total_dividends,
                 'retained_earnings' => $dividend->total_profit - $dividend->total_dividends,
-                'dividend_payout_ratio' => $dividend->total_profit > 0 ? 
-                    ($dividend->total_dividends / $dividend->total_profit) * 100 : 0
+                'dividend_payout_ratio' => $dividend->total_profit > 0 ?
+                    ($dividend->total_dividends / $dividend->total_profit) * 100 : 0,
             ];
         });
     }
@@ -978,7 +1098,7 @@ class DividendController extends Controller
         $memberGrowthRates = [];
 
         $historicalArray = $historicalData->toArray();
-        
+
         for ($i = 0; $i < count($historicalArray) - 1; $i++) {
             $current = $historicalArray[$i];
             $previous = $historicalArray[$i + 1];
@@ -1006,20 +1126,20 @@ class DividendController extends Controller
 
         for ($i = 1; $i <= $projectionYears; $i++) {
             $projectionYear = $currentYear + $i;
-            
+
             // Project profit with growth rate
             $projectedProfit = $baseProfit * pow(1 + ($avgProfitGrowth / 100), $i);
-            
+
             // Project dividend rate (with some constraints)
             $projectedDividendRate = max(0, min(25, $baseDividendRate + ($avgDividendRateChange * $i)));
-            
+
             // Project member count
             $projectedMembers = $currentMembers * pow(1 + ($avgMemberGrowth / 100), $i);
-            
+
             // Estimate total shares (assuming average share balance growth)
             $avgSharesPerMember = $this->getTotalShares($currentYear) / $currentMembers;
             $projectedTotalShares = $projectedMembers * $avgSharesPerMember * pow(1.05, $i); // 5% annual growth in shares
-            
+
             // Calculate projected dividends
             $projectedTotalDividends = ($projectedTotalShares * $projectedDividendRate) / 100;
             $projectedAvgDividend = $projectedMembers > 0 ? $projectedTotalDividends / $projectedMembers : 0;
@@ -1032,13 +1152,77 @@ class DividendController extends Controller
                 'projected_total_dividends' => round($projectedTotalDividends, 2),
                 'projected_member_count' => round($projectedMembers),
                 'projected_avg_dividend' => round($projectedAvgDividend, 2),
-                'dividend_payout_ratio' => $projectedProfit > 0 ? 
+                'dividend_payout_ratio' => $projectedProfit > 0 ?
                     round(($projectedTotalDividends / $projectedProfit) * 100, 2) : 0,
-                'confidence_level' => $this->calculateConfidenceLevel($i, count($historicalData))
+                'confidence_level' => $this->calculateConfidenceLevel($i, count($historicalData)),
             ];
         }
 
         return $projections;
+    }
+
+    /**
+     * Preview with separate rates
+     */
+    public function preview(Request $request)
+    {
+        $validated = $request->validate([
+            'dividend_year' => 'required|integer',
+            'total_profit' => 'required|numeric|min:0',
+            'share_capital_rate' => 'required|numeric|min:0|max:100',
+            'share_deposits_rate' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $members = Member::where('membership_status', 'active')
+            ->with(['accounts' => function ($q) {
+                $q->whereIn('account_type', ['share_capital', 'share_deposits'])
+                    ->where('is_active', true);
+            }])
+            ->get();
+
+        $preview = [];
+        $totalSC = 0;
+        $totalSD = 0;
+
+        foreach ($members as $member) {
+            $scAcc = $member->accounts->where('account_type', 'share_capital')->first();
+            $sdAcc = $member->accounts->where('account_type', 'share_deposits')->first();
+
+            $scDiv = $scAcc ? ($scAcc->balance * $validated['share_capital_rate']) / 100 : 0;
+            $sdDiv = $sdAcc ? ($sdAcc->balance * $validated['share_deposits_rate']) / 100 : 0;
+
+            $total = $scDiv + $sdDiv;
+            $totalSC += $scDiv;
+            $totalSD += $sdDiv;
+
+            if ($total > 0) {
+                $preview[] = [
+                    'member_name' => $member->first_name.' '.$member->last_name,
+                    'membership_id' => $member->membership_id,
+                    'share_capital_balance' => $scAcc ? $scAcc->balance : 0,
+                    'share_deposits_balance' => $sdAcc ? $sdAcc->balance : 0,
+                    'share_capital_dividend' => round($scDiv, 2),
+                    'share_deposits_dividend' => round($sdDiv, 2),
+                    'total_dividend' => round($total, 2),
+                ];
+            }
+        }
+
+        usort($preview, fn ($a, $b) => $b['total_dividend'] <=> $a['total_dividend']);
+
+        return response()->json([
+            'success' => true,
+            'preview' => array_slice($preview, 0, 100),
+            'summary' => [
+                'member_count' => count($preview),
+                'total_share_capital_dividends' => round($totalSC, 2),
+                'total_share_deposits_dividends' => round($totalSD, 2),
+                'grand_total' => round($totalSC + $totalSD, 2),
+                'profit_utilization' => $validated['total_profit'] > 0
+                    ? round((($totalSC + $totalSD) / $validated['total_profit']) * 100, 2)
+                    : 0,
+            ],
+        ]);
     }
 
     /**
@@ -1052,7 +1236,7 @@ class DividendController extends Controller
         $dataPointBonus = min(20, $historicalDataPoints * 2); // Bonus for more historical data
 
         $confidence = $baseConfidence - ($yearOffset * $yearDecay) + $dataPointBonus;
-        
+
         return max(20, min(90, $confidence)); // Keep between 20% and 90%
     }
 
@@ -1062,7 +1246,7 @@ class DividendController extends Controller
     private function generateTransactionId()
     {
         do {
-            $transactionId = 'TXN-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+            $transactionId = 'TXN-'.now()->format('Ymd').'-'.strtoupper(substr(uniqid(), -6));
         } while (Transaction::where('transaction_id', $transactionId)->exists());
 
         return $transactionId;
@@ -1072,17 +1256,16 @@ class DividendController extends Controller
      * Check if user can approve dividend.
      */
     protected function canApprove(Dividend $dividend)
-        {
-            return $dividend->status === 'calculated' && auth()->user()->role === 'admin';
-        }
-
+    {
+        return $dividend->status === 'calculated' && auth()->user()->role === 'admin';
+    }
 
     /**
      * Check if user can distribute dividend.
      */
     private function canDistribute($dividend)
     {
-        return $dividend->status === 'approved' && 
+        return $dividend->status === 'approved' &&
                Auth::user()->role === 'admin';
     }
 }

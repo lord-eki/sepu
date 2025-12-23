@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ChartOfAccount extends Model
 {
@@ -30,6 +32,8 @@ class ChartOfAccount extends Model
         'is_system_account' => 'boolean',
         'level' => 'integer',
     ];
+
+    protected $table = 'charts_of_accounts';
 
     // Relationships
     public function parentAccount()
