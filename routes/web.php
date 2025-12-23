@@ -588,8 +588,32 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 
-Route::get('/schedule/loan-disbursement', [ScheduleController::class, 'loanDisbursement'])->name('schedule.loan-disbursement');
-Route::get('/schedule/loan-repayment', [ScheduleController::class, 'loanRepayment'])->name('schedule.loan-repayment');
-Route::get('/schedule/monthly-deposit', [ScheduleController::class, 'monthlyDeposit'])->name('schedule.monthly-deposit');
-Route::get('/schedule/dividend-repayment', [ScheduleController::class, 'dividendRepayment'])->name('schedule.dividend-repayment');
+
+
+
+Route::prefix('schedule')->name('schedule.')->group(function () {
+    // Loan Disbursement
+    Route::get('loan-disbursement', [ScheduleController::class, 'loanDisbursement'])
+        ->name('loan-disbursement');
+
+    // Loan Repayment
+    Route::get('loan-repayment', [ScheduleController::class, 'loanRepayment'])
+        ->name('loan-repayment');
+
+    // Monthly Deposit
+    Route::get('monthly-deposit', [ScheduleController::class, 'monthlyDeposit'])
+        ->name('monthly-deposit');
+
+    // Dividend Payment
+    Route::get('dividend-payment', [ScheduleController::class, 'dividendPayment'])
+        ->name('dividend-payment');
+
+    // Exports
+    Route::get('loan-disbursement/export', [ScheduleController::class, 'exportLoanDisbursement'])
+        ->name('loan-disbursement.export');
+
+    Route::get('loan-repayment/export', [ScheduleController::class, 'exportLoanRepayment'])
+        ->name('loan-repayment.export');
+});
+
 

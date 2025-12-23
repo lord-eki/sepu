@@ -384,7 +384,7 @@ class MemberController extends Controller
 
 
     /**
-     * TEMPORARY HARD DELETE – DEVELOPMENT ONLY
+     * T
      * Permanently removes a member and all related data.
      */
     public function bulkDelete(Request $request)
