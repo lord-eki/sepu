@@ -248,11 +248,8 @@
             <span class="font-semibold">{{ currentTxn.transaction_id }}</span>
           </p>
 
-          <textarea
-            v-model="actionPayload.rejection_reason"
-            rows="4"
-            :class="['w-full border rounded p-2 mb-4', !actionPayload.rejection_reason.trim() && modals.reject ? 'border-red-500' : 'border-gray-300']"
-          />
+          <textarea v-model="actionPayload.rejection_reason" rows="4"
+            :class="['w-full border rounded p-2 mb-4', !actionPayload.rejection_reason.trim() && modals.reject ? 'border-red-500' : 'border-gray-300']" />
 
 
           <div class="flex justify-end gap-2">
@@ -276,11 +273,8 @@
             <span class="font-semibold">{{ currentTxn.transaction_id }}</span>
           </p>
 
-          <textarea
-            v-model="actionPayload.reversal_reason"
-            rows="4"
-            :class="['w-full border rounded p-2 mb-4', !actionPayload.reversal_reason.trim() && modals.reverse ? 'border-red-500' : 'border-gray-300']"
-          />
+          <textarea v-model="actionPayload.reversal_reason" rows="4"
+            :class="['w-full border rounded p-2 mb-4', !actionPayload.reversal_reason.trim() && modals.reverse ? 'border-red-500' : 'border-gray-300']" />
 
 
           <div class="flex justify-end gap-2">
@@ -423,6 +417,16 @@ function resetFilters() {
   applyFilters();
 }
 
+
+function refreshTransactions() {
+  router.get(
+    '/transactions',
+    { ...filters, page: meta.value.current_page ?? 1 },
+    { preserveState: true, replace: true } // preserves filters/pagination
+  );
+}
+
+
 // Admin modals & actions
 const modals = reactive({ approve: false, reject: false, reverse: false });
 const currentTxn = reactive<any>({});
@@ -444,7 +448,8 @@ function csrfToken() {
 }
 
 function approveTransaction() {
-  loading.value = true; // START loader
+  loading.value = true;
+
   router.post(
     `/transactions/${currentTxn.id}/approve`,
     {},
@@ -452,22 +457,23 @@ function approveTransaction() {
       preserveScroll: true,
       onSuccess: () => {
         closeModals();
-        loading.value = false; 
-        fetchTransactions();
+        loading.value = false;
+        refreshTransactions(); // reload table
         showMessage('Transaction approved', 'success');
       },
       onError: () => { loading.value = false; }
     }
-  )
+  );
 }
 
 function rejectTransaction() {
   if (!actionPayload.rejection_reason.trim()) {
-    alert('Please provide a rejection reason', 'error');
+    alert('Please provide a rejection reason');
     return;
   }
 
   loading.value = true;
+
   router.post(
     `/transactions/${currentTxn.id}/reject`,
     { rejection_reason: actionPayload.rejection_reason },
@@ -476,21 +482,23 @@ function rejectTransaction() {
       onSuccess: () => {
         closeModals();
         loading.value = false;
-        fetchTransactions();
+        refreshTransactions(); // reload table
         showMessage('Transaction rejected', 'success');
       },
       onError: () => { loading.value = false; }
     }
-  )
+  );
 }
+
 
 function reverseTransaction() {
   if (!actionPayload.reversal_reason.trim()) {
-    alert('Please provide a reversal reason', 'error');
+    alert('Please provide a reversal reason');
     return;
   }
 
   loading.value = true;
+
   router.post(
     `/transactions/${currentTxn.id}/reverse`,
     { reversal_reason: actionPayload.reversal_reason },
@@ -499,13 +507,14 @@ function reverseTransaction() {
       onSuccess: () => {
         closeModals();
         loading.value = false;
-        fetchTransactions();
+        refreshTransactions(); // reload table
         showMessage('Transaction reversed', 'success');
       },
       onError: () => { loading.value = false; }
     }
-  )
+  );
 }
+
 
 
 // Fetch transactions via Axios for table reload after action

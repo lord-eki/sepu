@@ -230,7 +230,7 @@ const adminNavItems: NavItem[] = [
       },
       {
         title: 'Dividend Repayment',
-        href: route('schedule.dividend-repayment'),
+        href: route('schedule.dividend-payment'),
         routeName: 'schedule.dividend-repayment',
         icon: HandCoins,
       },
