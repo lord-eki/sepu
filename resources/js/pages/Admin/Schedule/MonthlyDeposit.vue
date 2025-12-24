@@ -1,8 +1,9 @@
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
+
     <Head title="Monthly Deposit Schedule" />
 
-    <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div class="max-w-7xl mx-4 px-4 py-6 space-y-6">
 
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -15,15 +16,10 @@
           </p>
         </div>
 
-        <input
-          type="month"
-          v-model="selectedMonth"
-          @change="changeMonth"
-          class="rounded-lg border px-3 py-2
+        <input type="month" v-model="selectedMonth" @change="changeMonth" class="rounded-lg border px-3 py-2
                  bg-white dark:bg-slate-800
                  text-slate-900 dark:text-white
-                 border-slate-300 dark:border-slate-600"
-        />
+                 border-slate-300 dark:border-slate-600" />
       </div>
 
       <!-- Summary -->
@@ -79,20 +75,15 @@
               <td>{{ d.membership_id }}</td>
               <td>{{ currency(d.expected_amount) }}</td>
               <td>{{ currency(d.deposited_amount) }}</td>
-              <td
-                :class="d.variance >= 0
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'"
-              >
+              <td :class="d.variance >= 0
+    ? 'text-green-600 dark:text-green-400'
+    : 'text-red-600 dark:text-red-400'">
                 {{ currency(d.variance) }}
               </td>
               <td>
-                <span
-                  class="px-2 py-1 text-xs rounded-full font-semibold"
-                  :class="d.status === 'deposited'
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'"
-                >
+                <span class="px-2 py-1 text-xs rounded-full font-semibold" :class="d.status === 'deposited'
+    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'">
                   {{ d.status }}
                 </span>
               </td>
@@ -144,14 +135,18 @@ const currency = (v) =>
 
 <style scoped>
 .th {
-  padding: 0.75rem 1rem;   /* py-3 px-4 */
+  padding: 0.75rem 1rem;
+  /* py-3 px-4 */
   text-align: left;
-  font-weight: 600;       /* font-semibold */
-  color: #334155;         /* slate-700 */
+  font-weight: 600;
+  /* font-semibold */
+  color: #334155;
+  /* slate-700 */
 }
 
 .dark .th {
-  color: #e2e8f0;         /* slate-200 */
+  color: #e2e8f0;
+  /* slate-200 */
 }
 
 .tr {
@@ -159,15 +154,17 @@ const currency = (v) =>
 }
 
 .dark .tr {
-  border-top-color: #334155; /* slate-700 */
+  border-top-color: #334155;
+  /* slate-700 */
 }
 
 .tr:hover {
-  background-color: #f8fafc; /* slate-50 */
+  background-color: #f8fafc;
+  /* slate-50 */
 }
 
 .dark .tr:hover {
-  background-color: #334155; /* slate-700 */
+  background-color: #334155;
+  /* slate-700 */
 }
-
 </style>
