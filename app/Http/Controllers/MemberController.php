@@ -474,6 +474,68 @@ class MemberController extends Controller
         }
     }
     
+   /**
+     * Approve a member (before activation)
+     */
+    public function approve(Member $member): RedirectResponse
+    {
+        // Only pending members can be approved
+        if ($member->membership_status !== 'pending') {
+            return back()->with('error', 'This member cannot be approved.');
+        }
+
+        // Approve member
+        $member->update([
+            'membership_status' => 'approved',
+            'approved_at' => now(),
+        ]);
+
+        return back()->with('success', 'Member approved successfully.');
+    }
+
+    /**
+     * Check payment after registration
+     */
+    private function hasCompletedActivationPayment(Member $member): bool
+    {
+        $member->load('accounts');
+
+        $hasShareDeposits = $member->accounts->contains(fn ($a) =>
+            $a->account_type === 'share_deposits' && $a->available_balance >= 7500
+        );
+
+        $hasShareCapital = $member->accounts->contains(fn ($a) =>
+            $a->account_type === 'share_capital' && $a->available_balance >= 5000
+        );
+
+        return $hasShareDeposits && $hasShareCapital;
+    }
+
+
+
+    public function confirmPayment(Request $request)
+    {
+        $member = $request->user()->member;
+
+        if (!$member) {
+            return redirect()->back()->with('error', 'Member record not found.');
+        }
+
+        if ($member->membership_status !== 'approved') {
+            return redirect()->back()->with('error', 'Your membership is not ready for activation.');
+        }
+
+        if (! $this->hasCompletedActivationPayment($member)) {
+            return redirect()->back()->with(
+                'error',
+                'Payment not yet reflected. Please complete the required payments.'
+            );
+        }
+
+        // Payment verified → redirect to dashboard with success message
+        return redirect()->route('dashboard')
+            ->with('success', 'Payment verified. Your account will be activated shortly.');
+    }
 
 
      /**

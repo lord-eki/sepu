@@ -55,7 +55,7 @@
       <h2
         class="max-sm:px-6 text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100"
       >
-        Your Profile is Awaiting Activation
+        Your Profile is Awaiting Approval
       </h2>
 
       <!-- Message -->
@@ -63,7 +63,7 @@
         class="max-sm:text-sm max-w-xl text-gray-600 dark:text-gray-400"
       >
         Thank you for completing your registration.  
-        Admin is reviewing your details. Once your account is activated, you will be able to access all features.
+        Admin is reviewing your details. Once your account is approved, you will be able to access all features.
       </p>
 
       <!-- Estimated time -->

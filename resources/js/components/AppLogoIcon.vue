@@ -19,6 +19,6 @@ defineProps<Props>();
   <img
     src="/apple-touch-icon1.png"
     :class="className"
-    alt="Logo"
+    alt="SEPU"
   />
 </template>

@@ -227,7 +227,7 @@ class SystemUserController extends Controller
     public function toggleStatus(User $systemUser)
     {
         // Prevent self-deactivation
-        if (auth()->id() === $systemUser->id) {
+        if ($systemUser->id === auth()->id()) {
             return back()->with('error', 'You cannot deactivate your own account.');
         }
 
