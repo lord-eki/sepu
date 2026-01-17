@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, Link } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { Head, Link, usePage } from '@inertiajs/vue3'
+import { ref, watch, computed } from 'vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,28 @@ interface RecentTransaction { id: number; transaction_type: string; amount: numb
 interface LoanProduct { id: number; name: string }
 interface Loan { id: number; status: string; outstanding_balance: number; disbursed_amount?: number; first_repayment_date?: string | null; loanProduct?: LoanProduct }
 interface NotificationItem { id: number; message: string; created_at: string }
+
+// Flash message handling
+const page = usePage()
+const flash = computed(() => page.props.flash || {})
+const showFlash = ref(false)
+const flashType = ref<'success' | 'error'>('success')
+const flashMessage = ref('')
+
+// Watch for flash messages from backend
+watch(flash, (val) => {
+  if (val?.success) {
+    flashType.value = 'success'
+    flashMessage.value = val.success
+    showFlash.value = true
+    setTimeout(() => (showFlash.value = false), 5000)
+  } else if (val?.error) {
+    flashType.value = 'error'
+    flashMessage.value = val.error
+    showFlash.value = true
+    setTimeout(() => (showFlash.value = false), 5000)
+  }
+}, { immediate: true })
 
 const props = defineProps<{
   member: Member
@@ -65,6 +87,30 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
     <Head title="Dashboard" />
 
     <div class="min-h-screen bg-[#f5f7fb] p-5 sm:p-6 space-y-10">
+      <!-- Flash Message Box -->
+      <!-- Flash Message Box -->
+<div v-if="showFlash" class="fixed top-5 inset-x-5 sm:inset-x-20 z-50 transition">
+  <!-- add padding-right so text doesn't overlap close -->
+<Alert
+  :class="flashType === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'"
+  class="relative pr-10 sm:pr-12"
+>
+  <AlertTitle v-if="flashType === 'success'" class="text-green-700">Success</AlertTitle>
+  <AlertTitle v-else class="text-red-700">Error</AlertTitle>
+  <AlertDescription class="text-sm">{{ flashMessage }}</AlertDescription>
+
+  <!-- Close button -->
+  <button
+    @click="showFlash = false"
+    class="absolute top-2 right-2 sm:right-3 text-gray-500 hover:text-gray-700 text-lg"
+    aria-label="Close message"
+  >
+    ×
+  </button>
+</Alert>
+
+</div>
+
 
       <!-- Header Banner -->
       <div class="relative bg-gradient-to-r from-[#0B2B40] to-[#133263] rounded-3xl p-6 text-white shadow-xl">
