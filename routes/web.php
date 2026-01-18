@@ -100,6 +100,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{member}/deactivate', [MemberController::class, 'deactivate'])->name('deactivate');
         Route::post('/{member}/approve', [MemberController::class, 'approve'])->name('approve');
         Route::post('/confirm-payment', [MemberController::class, 'confirmPayment'])->name('confirm-payment');
+        Route::post('/check-activation', [MemberController::class, 'checkActivation'])->name('check-activation');
         Route::post('/{member}/reject', [MemberController::class, 'reject'])->name('reject');
         Route::post('/{member}/suspend', [MemberController::class, 'suspend'])->name('suspend');
     

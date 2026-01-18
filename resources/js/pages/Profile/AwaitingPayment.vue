@@ -30,19 +30,28 @@
         Your membership has been approved. To fully activate your account, please make the minimum payments below.
       </p>
 
-      <!-- Payment Modal Section -->
       <div class="mt-6 w-full max-w-md">
 
         <!-- Flash Messages -->
-        <div v-if="flash.error" class="mb-4 bg-red-100 text-red-800 p-4 rounded-lg">
+        <div
+          v-if="showError"
+          class="mb-4 bg-red-100 text-red-800 p-4 rounded-lg transition"
+        >
           {{ flash.error }}
         </div>
-        <div v-if="flash.success" class="mb-4 bg-green-100 text-green-800 p-4 rounded-lg">
+
+        <div
+          v-if="showSuccess"
+          class="mb-4 bg-green-100 text-green-800 p-4 rounded-lg transition"
+        >
           {{ flash.success }}
         </div>
 
+        <!-- Card -->
         <div class="bg-white rounded-2xl shadow-xl p-6">
-          <h3 class="text-lg font-semibold text-[#081642] mb-2">Membership Payment Details</h3>
+          <h3 class="text-lg font-semibold text-[#081642] mb-2">
+            Membership Payment Details
+          </h3>
 
           <ul class="text-sm space-y-1 mb-4">
             <li>• Registration Fee: <strong>Kshs. 2,500</strong></li>
@@ -50,8 +59,11 @@
             <li>• Minimum Share Deposits: <strong>Kshs. 5,000</strong></li>
           </ul>
 
+          <!-- Payment Method -->
           <div class="space-y-3">
-            <label class="block text-sm font-medium text-gray-700">Payment Method</label>
+            <label class="block text-sm font-medium text-gray-700">
+              Payment Method
+            </label>
             <select
               v-model="selectedPaymentMethod"
               class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-orange-500 focus:border-orange-500"
@@ -62,16 +74,25 @@
             </select>
           </div>
 
-          <div v-if="selectedPaymentMethod === 'mpesa'" class="mt-4 bg-orange-50 p-3 rounded-md text-sm">
+          <!-- MPESA -->
+          <div
+            v-if="selectedPaymentMethod === 'mpesa'"
+            class="mt-4 bg-orange-50 p-3 rounded-md text-sm"
+          >
             <p><strong>Paybill Number:</strong> 400200</p>
             <p><strong>Account Number:</strong> 01***********00</p>
           </div>
 
-          <div v-if="selectedPaymentMethod === 'bank'" class="mt-4 bg-blue-50 p-3 rounded-md text-sm">
+          <!-- BANK -->
+          <div
+            v-if="selectedPaymentMethod === 'bank'"
+            class="mt-4 bg-blue-50 p-3 rounded-md text-sm"
+          >
             <p><strong>Bank Name:</strong> Co-operative Bank</p>
             <p><strong>Account No:</strong> 01***********000</p>
           </div>
 
+          <!-- Actions -->
           <div class="mt-6 flex justify-end gap-3">
             <Link
               :href="route('logout')"
@@ -81,13 +102,66 @@
             >
               Logout
             </Link>
+
+            <!-- WAITING FOR ACTIVATION -->
             <button
-              @click="confirmPayment"
-              class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg"
+              v-if="waitingForActivation"
+              @click="finish"
+              :disabled="finishLoading"
+              class="px-4 py-2 text-sm font-medium text-white rounded-lg flex items-center gap-2"
+              :class="finishLoading
+                ? 'bg-blue-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'"
             >
-              I’ve Paid
+              <svg
+                v-if="finishLoading"
+                class="w-4 h-4 animate-spin"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" />
+                <path class="opacity-75" d="M4 12a8 8 0 018-8" />
+              </svg>
+
+              <span>{{ finishLoading ? 'Checking...' : 'Finish' }}</span>
+            </button>
+
+            <!-- NORMAL PAY BUTTON -->
+            <button
+              v-else
+              @click="confirmPayment"
+              :disabled="loading"
+              class="px-4 py-2 text-sm font-medium text-white rounded-lg flex items-center gap-2"
+              :class="loading
+                ? 'bg-orange-400 cursor-not-allowed'
+                : 'bg-orange-600 hover:bg-orange-700'"
+            >
+              <svg
+                v-if="loading"
+                class="w-4 h-4 animate-spin"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" />
+                <path class="opacity-75" d="M4 12a8 8 0 018-8" />
+              </svg>
+
+              <span>{{ loading ? 'Checking...' : 'I’ve Paid' }}</span>
             </button>
           </div>
+
+          <!-- Waiting Message -->
+          <p
+            v-if="waitingForActivation"
+            class="mt-4 text-sm text-blue-600"
+          >
+            ⏳ Payment verified. Waiting for account activation by SACCO admin.
+          </p>
+
         </div>
       </div>
     </div>
@@ -95,28 +169,100 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 
 const selectedPaymentMethod = ref('')
+const loading = ref(false)
+const finishLoading = ref(false)
+const waitingForActivation = ref(false)
+
 const page = usePage()
-const flash = page.props.value?.flash || {}
+const flash = computed(() => page.props.flash || {})
 
-// Function called when the "I've Paid" button is clicked
+const showSuccess = ref(false)
+const showError = ref(false)
+
+// Watch flash messages and auto-hide after 5s
+watch(
+  () => flash.value,
+  (val) => {
+    showError.value = false
+    showSuccess.value = false
+
+    if (val?.error) {
+      showError.value = true
+      setTimeout(() => (showError.value = false), 5000)
+    }
+
+    if (val?.success) {
+      showSuccess.value = true
+
+      // Only set waiting if activated=false
+      if (val?.activated === false) {
+        waitingForActivation.value = true
+      } else if (val?.activated === true) {
+        waitingForActivation.value = false
+      }
+
+      setTimeout(() => (showSuccess.value = false), 5000)
+    }
+  },
+  { immediate: true }
+)
+
+// Confirm payment
 const confirmPayment = () => {
-
-  // POST request to check payment & update status
+  loading.value = true
   router.post(route('members.confirm-payment'), {}, {
-    preserveState: true, // stay on same page
+    preserveState: true,
+    preserveScroll: true,
     onSuccess: (page) => {
-      // on success, the flash messages will automatically populate via page.props.flash
-      // you could also reset selection if needed
-      selectedPaymentMethod.value = ''
+      // Force flash update manually
+      const flashProps = page.props.flash || {}
+
+      if (flashProps.success) showSuccess.value = true
+      if (flashProps.error) showError.value = true
+
+      // If flash message contains "Click Finish" → mark waiting
+      if (flashProps.success?.includes('Click Finish')) {
+        waitingForActivation.value = true
+      }
     },
-    onError: (errors) => {
-      // handle validation errors if any
-      console.log(errors)
+    onFinish: () => {
+      loading.value = false
     }
   })
 }
+
+
+// Check activation
+const finish = () => {
+  finishLoading.value = true
+
+  router.post(route('members.check-activation'), {}, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: (page) => {
+      const flashProps = page.props.flash || {}
+      
+      // Show flash messages
+      if (flashProps.success) showSuccess.value = true
+      if (flashProps.error) showError.value = true
+
+      // Check if account is active
+      if (flashProps.activated) {
+        waitingForActivation.value = false
+        // Optionally redirect or show success
+        // router.visit(route('dashboard'))
+      } else {
+        waitingForActivation.value = true
+      }
+    },
+    onFinish: () => {
+      finishLoading.value = false
+    }
+  })
+}
+
 </script>

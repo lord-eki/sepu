@@ -494,7 +494,7 @@ class MemberController extends Controller
     }
 
     /**
-     * Check payment after registration
+     * Check payment after registration checking process
      */
     private function hasCompletedActivationPayment(Member $member): bool
     {
@@ -517,24 +517,57 @@ class MemberController extends Controller
     {
         $member = $request->user()->member;
 
-        if (!$member) {
-            return redirect()->back()->with('error', 'Member record not found.');
+        if (! $member) {
+            return back()->with('error', 'Member record not found.');
         }
 
-        if ($member->membership_status !== 'approved') {
-            return redirect()->back()->with('error', 'Your membership is not ready for activation.');
+        if ($member->membership_status === 'pending') {
+            return back()->with('error', 'Your membership is still under review.');
+        }
+
+        if (! in_array($member->membership_status, ['approved', 'active'])) {
+            return back()->with('error', 'Your membership is not ready for activation.');
         }
 
         if (! $this->hasCompletedActivationPayment($member)) {
-            return redirect()->back()->with(
+            return back()->with(
                 'error',
                 'Payment not yet reflected. Please complete the required payments.'
             );
         }
 
-        // Payment verified → redirect to dashboard with success message
-        return redirect()->route('dashboard')
-            ->with('success', 'Payment verified. Your account will be activated shortly.');
+        // Payment verified
+        if ($member->membership_status === 'active') {
+            // Redirect to dashboard immediately
+            return redirect()->route('dashboard')
+                            ->with('success', 'Payment verified. Your account is active!');
+        }
+
+        // Payment verified but not activated
+        return back()->with([
+            'success' => 'Payment verified successfully. Click Finish to check activation.',
+            'activated' => false,
+        ]);
+    }
+
+    public function checkActivation(Request $request)
+    {
+        $member = $request->user()->member;
+
+        if (! $member) {
+            return back()->with('error', 'Member record not found.');
+        }
+
+        if ($member->membership_status === 'active') {
+            // Redirect automatically if active
+            return redirect()->route('dashboard')
+                            ->with('success', 'Your account is now active!');
+        }
+
+        return back()->with([
+            'error' => 'Your account is still awaiting activation. Please wait.',
+            'activated' => false,
+        ]);
     }
 
 
