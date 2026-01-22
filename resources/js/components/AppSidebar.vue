@@ -200,11 +200,47 @@ const adminNavItems: NavItem[] = [
     icon: ArrowRightLeft,
   },
   {
-    title: 'Reports',
-    href: route('reports.index'),
-    routeName: 'reports.index',
-    icon: FileText,
-  },
+  title: 'Reports',
+  icon: FileText,
+  children: [
+    {
+      title: 'Financial Reports',
+      href: route('reports.financial.balance-sheet'),
+      routeName: 'reports.financial.balance-sheet',
+      icon: Calculator,
+    },
+    {
+      title: 'Member Reports',
+      href: route('reports.members.register'),
+      routeName: 'reports.members.register',
+      icon: Users,
+    },
+    {
+      title: 'Loan Reports',
+      href: route('reports.loans.portfolio'),
+      routeName: 'reports.loans.portfolio',
+      icon: BriefcaseConveyorBelt,
+    },
+    {
+      title: 'Transaction Reports',
+      href: route('reports.transactions.daily'),
+      routeName: 'reports.transactions.daily',
+      icon: ArrowRightLeft,
+    },
+    {
+      title: 'Regulatory Reports',
+      href: route('reports.regulatory.statutory'),
+      routeName: 'reports.regulatory.statutory',
+      icon: Shield,
+    },
+    {
+      title: 'Custom Reports',
+      href: route('reports.custom.builder'),
+      routeName: 'reports.custom.builder',
+      icon: Folder,
+    },
+  ],
+},
 
   {
     title: 'Schedule',

@@ -31,6 +31,11 @@ class ReportController extends Controller
     /**
      * Financial Reports
      */
+    public function financialIndex()
+    {
+        return Inertia::render('Reports/Financial/Index');
+    }
+
     public function balanceSheet(Request $request)
     {
         $date = $request->input('date', Carbon::now()->format('Y-m-d'));

@@ -360,41 +360,57 @@ class DashboardController extends Controller
     private function getRecentActivities()
     {
         return collect([
+            // TRANSACTIONS
             Transaction::with(['member', 'account'])
                 ->latest()
                 ->take(5)
                 ->get()
-                ->map(fn($t) => [
+                ->map(fn ($t) => [
                     'type' => 'transaction',
+                    'id' => $t->id,
                     'description' => "{$t->member->first_name} {$t->member->last_name} - {$t->transaction_type}",
                     'amount' => $t->amount,
+                    'status' => $t->status,
                     'time' => $t->created_at,
+                    'link' => $t->status === 'pending'
+                        ? '/transactions?status=pending'
+                        : null,
                 ]),
 
+            // LOAN APPLICATIONS
             Loan::with('member')
                 ->where('status', 'pending')
                 ->latest()
                 ->take(3)
                 ->get()
-                ->map(fn($l) => [
+                ->map(fn ($l) => [
                     'type' => 'loan_application',
+                    'id' => $l->id,
                     'description' => "{$l->member->first_name} {$l->member->last_name} - Loan Application",
                     'amount' => $l->applied_amount,
+                    'status' => $l->status, // pending
                     'time' => $l->created_at,
+                    'link' => '/loans?status=pending',
                 ]),
 
+            // MEMBER APPLICATIONS
             Member::where('membership_status', 'pending')
-            ->latest()
-            ->take(3)
-            ->get()
-            ->map(fn($m) => [
-                'type' => 'new_member',
-                'description' => "{$m->first_name} {$m->last_name} - New Member Joined",
-                'amount' => null,
-                'time' => $m->created_at,
-            ]),
-
-        ])->flatten(1)->sortByDesc('time')->take(10)->values();
+                ->latest()
+                ->take(3)
+                ->get()
+                ->map(fn ($m) => [
+                    'type' => 'member',
+                    'id' => $m->id,
+                    'description' => "{$m->first_name} {$m->last_name} - Membership Application",
+                    'status' => 'pending',
+                    'time' => $m->created_at,
+                    'link' => '/admin/pending-members',
+                ]),
+        ])
+        ->flatten(1)
+        ->sortByDesc('time')
+        ->take(10)
+        ->values();
     }
 
 

@@ -340,6 +340,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         // Financial reports
+        Route::get('/financial', [ReportController::class, 'financialIndex'])->name('financial.index');
         Route::get('/financial/balance-sheet', [ReportController::class, 'balanceSheet'])->name('financial.balance-sheet');
         Route::get('/financial/income-statement', [ReportController::class, 'incomeStatement'])->name('financial.income-statement');
         Route::get('/financial/cash-flow', [ReportController::class, 'cashFlow'])->name('financial.cash-flow');
