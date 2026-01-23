@@ -125,16 +125,14 @@
                 class="flex justify-between items-center p-3 sm:p-4 rounded-xl transition"
                 :class="[
                   item.status === 'pending'
-                    ? 'cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-900/20 ring-1 ring-orange-200 dark:ring-orange-700/30'
+                    ? 'cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-900/20 mb-1 ring-1 ring-orange-100 dark:ring-orange-700/30'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700/40'
                 ]"
                 @click="item.status === 'pending' && item.link ? $inertia.visit(item.link) : null"
               >
 
-
-
               <div class="flex items-start gap-3 sm:gap-4">
-                <ArrowRightCircle class="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
+                <ArrowRightCircle class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
                 <div>
                   <p class="text-sm text-gray-800 dark:text-gray-200">
                     {{ item.description }}
@@ -177,45 +175,90 @@
         </div>
 
         <!-- SYSTEM OVERVIEW -->
-        <div class="flex flex-col">
-          <h2
-            class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center gap-2">
-            <Settings class="h-5 w-5 text-orange-500" /> System Overview
-          </h2>
+          <div class="flex flex-col">
+            <!-- Header -->
+            <h2
+              class="flex items-center gap-2 mb-4 text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <Settings class="h-5 w-5 text-orange-500" />
+              System Overview
+            </h2>
 
-          <ul class="h-[300px] sm:h-[380px] overflow-y-auto space-y-4 rounded-2xl bg-white dark:bg-gray-800 
-            border border-gray-200 dark:border-gray-700 shadow-lg backdrop-blur-xl p-5 sm:p-6 custom-scroll">
-            <li class="flex items-center gap-3">
-              <Database class="h-5 w-5 text-green-600" />
-              <span class="text-gray-800 dark:text-gray-200">Database:</span>
-              <span class="font-bold text-green-600 dark:text-green-400">
-                {{ systemHealth.database_status }}
-              </span>
-            </li>
+            <!-- Card -->
+            <div
+              class="h-[300px] sm:h-[380px] overflow-y-auto rounded-2xl
+                    bg-white dark:bg-gray-900
+                    border border-gray-200 dark:border-gray-700
+                    shadow-xl backdrop-blur-xl
+                    divide-y divide-gray-100 dark:divide-gray-800
+                    p-5 sm:p-6 custom-scroll">
 
-            <li class="flex items-center gap-3">
-              <Clock class="h-5 w-5 text-blue-600" />
-              <span class="text-gray-800 dark:text-gray-200">Last Backup:</span>
-              <span class="text-gray-700 dark:text-gray-400">
-                {{ new Date(systemHealth.last_backup).toLocaleString() }}
-              </span>
-            </li>
+              <!-- Database Status -->
+              <div class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-3">
+                  <Database class="h-5 w-5 text-green-600" />
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Database Status
+                  </span>
+                </div>
 
-            <li class="flex items-center gap-3">
-              <Users class="h-5 w-5 text-gray-700 dark:text-gray-300" />
-              <span class="text-gray-800 dark:text-gray-200">Active Users:</span>
-              <span class="font-bold">{{ systemHealth.active_users }}</span>
-            </li>
+                <span
+                  class="px-3 py-1 text-xs font-semibold rounded-full
+                        bg-green-100 text-green-700
+                        dark:bg-green-900/40 dark:text-green-400">
+                  {{ systemHealth.database_status }}
+                </span>
+              </div>
 
-            <li class="flex items-center gap-3">
-              <AlertTriangle class="h-5 w-5 text-red-600" />
-              <span class="text-gray-800 dark:text-gray-200">Errors:</span>
-              <span class="font-bold text-red-600">{{ systemHealth.system_errors }}</span>
-            </li>
-          </ul>
-        </div>
+              <!-- Last Backup -->
+              <div class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-3">
+                  <Clock class="h-5 w-5 text-blue-600" />
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Last Backup
+                  </span>
+                </div>
+
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  {{ new Date(systemHealth.last_backup).toLocaleString() }}
+                </span>
+              </div>
+
+              <!-- Active Users -->
+              <div class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-3">
+                  <Users class="h-5 w-5 text-indigo-600" />
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Active Users
+                  </span>
+                </div>
+
+                <span
+                  class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  {{ systemHealth.active_users }}
+                </span>
+              </div>
+
+              <!-- System Errors -->
+              <div class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-3">
+                  <AlertTriangle class="h-5 w-5 text-red-600" />
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    System Errors
+                  </span>
+                </div>
+
+                <span
+                  class="px-3 py-1 text-xs font-semibold rounded-full
+                        bg-red-100 text-red-700
+                        dark:bg-red-900/40 dark:text-red-400">
+                  {{ systemHealth.system_errors }}
+                </span>
+              </div>
+
+            </div>
+          </div>
+
       </div>
-
 
 
       <!-- SETUP -->
