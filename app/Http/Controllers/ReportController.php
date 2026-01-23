@@ -31,6 +31,11 @@ class ReportController extends Controller
     /**
      * Financial Reports
      */
+    public function financialIndex()
+    {
+        return Inertia::render('Reports/Financial/Index');
+    }
+
     public function balanceSheet(Request $request)
     {
         $date = $request->input('date', Carbon::now()->format('Y-m-d'));
@@ -73,16 +78,17 @@ class ReportController extends Controller
         $totalEquity = collect($equity)->flatten()->sum();
 
         return Inertia::render('Reports/Financial/BalanceSheet', [
-            'assets' => $assets,
-            'liabilities' => $liabilities,
-            'equity' => $equity,
+            'assets' => $this->mapAccounts($assets),
+            'liabilities' => $this->mapAccounts($liabilities),
+            'equity' => $this->mapAccounts($equity),
             'totals' => [
-                'assets' => $totalAssets,
-                'liabilities' => $totalLiabilities,
-                'equity' => $totalEquity,
+                'total_assets' => $totalAssets,
+                'total_liabilities' => $totalLiabilities,
+                'total_equity' => $totalEquity,
             ],
             'date' => $date,
         ]);
+
     }
 
     public function incomeStatement(Request $request)
@@ -993,9 +999,10 @@ private function getOtherReceivables($asOf)
 private function getPropertyEquipment($asOf)
 {
     return PaymentVoucher::where('voucher_type', 'asset_purchase')
-        ->where('approved_at', '<=', $asOf)
+        ->where('approval_date', '<=', $asOf)
         ->sum('amount');
 }
+
 
 private function getInvestments($asOf)
 {
@@ -1015,8 +1022,8 @@ private function getAccruedExpenses($asOf)
 {
     return PaymentVoucher::where('status', 'approved')
         ->where('voucher_type', 'expense')
-        ->where('approved_at', '<=', $asOf)
-        ->whereNull('paid_at')
+        ->where('approval_date', '<=', $asOf)
+        ->whereNull('payment_date') // not yet paid
         ->sum('amount');
 }
 
@@ -1096,17 +1103,28 @@ private function getInterestExpense($start, $end)
         ->sum('amount');
 }
 
+/**
+ * EXPENSES FROM PAYMENT VOUCHERS
+ * Uses approval_date (NOT approved_at)
+ */
 private function getStaffCosts($start, $end)
 {
     return PaymentVoucher::where('voucher_type', 'staff_cost')
-        ->whereBetween('approved_at', [$start, $end])
+        ->whereBetween('approval_date', [$start, $end])
         ->sum('amount');
 }
 
 private function getAdministrativeExpenses($start, $end)
 {
     return PaymentVoucher::where('voucher_type', 'administrative')
-        ->whereBetween('approved_at', [$start, $end])
+        ->whereBetween('approval_date', [$start, $end])
+        ->sum('amount');
+}
+
+private function getOtherExpenses($start, $end)
+{
+    return PaymentVoucher::where('voucher_type', 'other_expense')
+        ->whereBetween('approval_date', [$start, $end])
         ->sum('amount');
 }
 
@@ -1117,26 +1135,21 @@ private function getLoanLossProvision($start, $end)
         ->sum('amount');
 }
 
-private function getOtherExpenses($start, $end)
-{
-    return PaymentVoucher::where('voucher_type', 'other_expense')
-        ->whereBetween('approved_at', [$start, $end])
-        ->sum('amount');
-}
-
 private function getNetIncome($start, $end)
 {
-    $revenue = $this->getInterestIncome($start, $end) + 
-               $this->getLoanFees($start, $end) + 
-               $this->getServiceCharges($start, $end) + 
-               $this->getOtherIncome($start, $end);
-    
-    $expenses = $this->getInterestExpense($start, $end) + 
-                $this->getStaffCosts($start, $end) + 
-                $this->getAdministrativeExpenses($start, $end) + 
-                $this->getLoanLossProvision($start, $end) + 
-                $this->getOtherExpenses($start, $end);
-    
+    $revenue =
+        $this->getInterestIncome($start, $end) +
+        $this->getLoanFees($start, $end) +
+        $this->getServiceCharges($start, $end) +
+        $this->getOtherIncome($start, $end);
+
+    $expenses =
+        $this->getInterestExpense($start, $end) +
+        $this->getStaffCosts($start, $end) +
+        $this->getAdministrativeExpenses($start, $end) +
+        $this->getLoanLossProvision($start, $end) +
+        $this->getOtherExpenses($start, $end);
+
     return $revenue - $expenses;
 }
 
@@ -1403,5 +1416,21 @@ private function exportToExcel($reportType, $data)
         'Content-Disposition' => 'attachment; filename="report.xlsx"'
     ]);
 }
+
+private function mapAccounts(array $data)
+{
+    return collect($data)
+        ->flatMap(function ($group) {
+            return collect($group)->map(function ($amount, $name) {
+                return [
+                    'name' => ucwords(str_replace('_', ' ', $name)),
+                    'balance' => (float) $amount,
+                ];
+            });
+        })
+        ->values();
 }
+
+}
+
 

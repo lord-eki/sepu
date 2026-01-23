@@ -474,6 +474,101 @@ class MemberController extends Controller
         }
     }
     
+   /**
+     * Approve a member (before activation)
+     */
+    public function approve(Member $member): RedirectResponse
+    {
+        // Only pending members can be approved
+        if ($member->membership_status !== 'pending') {
+            return back()->with('error', 'This member cannot be approved.');
+        }
+
+        // Approve member
+        $member->update([
+            'membership_status' => 'approved',
+            'approved_at' => now(),
+        ]);
+
+        return back()->with('success', 'Member approved successfully.');
+    }
+
+    /**
+     * Check payment after registration checking process
+     */
+    private function hasCompletedActivationPayment(Member $member): bool
+    {
+        $member->load('accounts');
+
+        $hasShareDeposits = $member->accounts->contains(fn ($a) =>
+            $a->account_type === 'share_deposits' && $a->available_balance >= 7500
+        );
+
+        $hasShareCapital = $member->accounts->contains(fn ($a) =>
+            $a->account_type === 'share_capital' && $a->available_balance >= 5000
+        );
+
+        return $hasShareDeposits && $hasShareCapital;
+    }
+
+
+
+    public function confirmPayment(Request $request)
+    {
+        $member = $request->user()->member;
+
+        if (! $member) {
+            return back()->with('error', 'Member record not found.');
+        }
+
+        if ($member->membership_status === 'pending') {
+            return back()->with('error', 'Your membership is still under review.');
+        }
+
+        if (! in_array($member->membership_status, ['approved', 'active'])) {
+            return back()->with('error', 'Your membership is not ready for activation.');
+        }
+
+        if (! $this->hasCompletedActivationPayment($member)) {
+            return back()->with(
+                'error',
+                'Payment not yet reflected. Please complete the required payments.'
+            );
+        }
+
+        // Payment verified
+        if ($member->membership_status === 'active') {
+            // Redirect to dashboard immediately
+            return redirect()->route('dashboard')
+                            ->with('success', 'Payment verified. Your account is active!');
+        }
+
+        // Payment verified but not activated
+        return back()->with([
+            'success' => 'Payment verified successfully. Click Finish to check activation.',
+            'activated' => false,
+        ]);
+    }
+
+    public function checkActivation(Request $request)
+    {
+        $member = $request->user()->member;
+
+        if (! $member) {
+            return back()->with('error', 'Member record not found.');
+        }
+
+        if ($member->membership_status === 'active') {
+            // Redirect automatically if active
+            return redirect()->route('dashboard')
+                            ->with('success', 'Your account is now active!');
+        }
+
+        return back()->with([
+            'error' => 'Your account is still awaiting activation. Please wait.',
+            'activated' => false,
+        ]);
+    }
 
 
      /**

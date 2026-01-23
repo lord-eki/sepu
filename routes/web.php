@@ -99,6 +99,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{member}/activate', [MemberController::class, 'activate'])->name('activate');
         Route::post('/{member}/deactivate', [MemberController::class, 'deactivate'])->name('deactivate');
         Route::post('/{member}/approve', [MemberController::class, 'approve'])->name('approve');
+        Route::post('/confirm-payment', [MemberController::class, 'confirmPayment'])->name('confirm-payment');
+        Route::post('/check-activation', [MemberController::class, 'checkActivation'])->name('check-activation');
         Route::post('/{member}/reject', [MemberController::class, 'reject'])->name('reject');
         Route::post('/{member}/suspend', [MemberController::class, 'suspend'])->name('suspend');
     
@@ -338,6 +340,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         // Financial reports
+        Route::get('/financial', [ReportController::class, 'financialIndex'])->name('financial.index');
         Route::get('/financial/balance-sheet', [ReportController::class, 'balanceSheet'])->name('financial.balance-sheet');
         Route::get('/financial/income-statement', [ReportController::class, 'incomeStatement'])->name('financial.income-statement');
         Route::get('/financial/cash-flow', [ReportController::class, 'cashFlow'])->name('financial.cash-flow');

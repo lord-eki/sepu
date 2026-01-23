@@ -26,9 +26,11 @@ watch(() => page.props.flash, (flash: any) => {
 const deleteConfirm = ref(false)
 const processingToggle = ref(false)
 const processingDelete = ref(false)
+const toggleConfirm = ref(false)
+
 
 const toggleStatus = () => {
-  if (props.user.id === page.props.auth.user?.id) return
+  // if (props.user.id === page.props.auth.user?.id) return
   processingToggle.value = true
   router.patch(route('system-users.toggle-status', props.user.id), {}, {
     preserveState: true,
@@ -57,7 +59,7 @@ const fmtCurrency = (v: number) => new Intl.NumberFormat('en-KE', { style: 'curr
 
     <!-- Toast -->
     <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0 scale-95">
-      <div v-if="toast.visible" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md">
+      <div v-if="toast.visible" class="fixed top-6 left-1/2 -translate-x-1/2 z-9999 w-full max-w-md">
         <div :class="toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'" class="text-white px-5 py-4 rounded-2xl shadow-xl">
           {{ toast.message }}
         </div>
@@ -85,7 +87,7 @@ const fmtCurrency = (v: number) => new Intl.NumberFormat('en-KE', { style: 'curr
           <Link :href="route('system-users.edit', user.id)" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B1F3A] text-white">
             <Edit2 class="h-4 w-4" /> Edit
           </Link>
-          <button @click="toggleStatus" :disabled="processingToggle" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 text-white">
+          <button @click="toggleConfirm = true" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 text-white">
             <ToggleLeft class="h-4 w-4" /> {{ user.is_active ? 'Deactivate' : 'Activate' }}
           </button>
           <button @click="deleteConfirm = true" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 text-white">
@@ -144,7 +146,41 @@ const fmtCurrency = (v: number) => new Intl.NumberFormat('en-KE', { style: 'curr
         </div>
       </div>
 
-      <!-- Delete Modal -->
+      <!-- Activate / Deactivate Modal -->
+      <div v-if="toggleConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
+          <h3 class="text-lg font-semibold">
+            {{ user.is_active ? 'Deactivate User' : 'Activate User' }}
+          </h3>
+
+          <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
+            Are you sure you want to
+            <span class="font-semibold">
+              {{ user.is_active ? 'deactivate' : 'activate' }}
+            </span>
+            this user?
+          </p>
+
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              @click="toggleConfirm = false"
+              class="px-4 py-2 rounded-xl border"
+            >
+              Cancel
+            </button>
+
+            <button
+              @click="() => { toggleConfirm = false; toggleStatus() }"
+              :disabled="processingToggle"
+              class="px-4 py-2 rounded-xl bg-orange-600 text-white"
+            >
+              {{ processingToggle ? 'Processing...' : 'Confirm' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+<!-- Delete Modal -->
       <div v-if="deleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
         <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
           <h3 class="text-lg font-semibold">Confirm Action</h3>
