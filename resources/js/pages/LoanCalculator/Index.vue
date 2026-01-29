@@ -27,7 +27,7 @@
         <div class="bg-white shadow rounded-2xl border border-gray-200 mb-6">
           <div class="px-4 py-3 border-b border-gray-100 flex gap-3 items-center">
             <button
-              :class="['px-3 py-2 rounded-md text-sm font-medium', activeTab === 'calculator' ? 'bg-blue-50 text-blue-900' : 'text-gray-600 hover:bg-gray-50']"
+              :class="['px-3 py-2 rounded-md text-sm font-medium', activeTab === 'calculator' ? 'bg-blue-50 text-[#0a2342]' : 'text-gray-600 hover:bg-gray-50']"
               @click="activeTab = 'calculator'">
               Calculator
             </button>
@@ -47,7 +47,7 @@
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Left: Choose scope -->
                 <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                  <h4 class="text-sm font-semibold text-blue-900 mb-3">Edit Scope</h4>
+                  <h4 class="text-sm font-semibold text-[#0a2342] mb-3">Edit Scope</h4>
                   <p class="text-sm text-gray-600 mb-4">Choose whether to edit global defaults or a specific product.</p>
 
                   <div class="space-y-4">
@@ -79,7 +79,7 @@
                 <!-- Right: Form -->
                 <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
                   <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-sm font-semibold text-blue-900">Loan Setup & Parameters</h4>
+                    <h4 class="text-sm font-semibold text-[#0a2342]">Loan Setup & Parameters</h4>
                     <span v-if="setupSaved" class="text-green-600 text-sm font-medium">✔ Saved</span>
                   </div>
 
@@ -147,7 +147,7 @@
                 <!-- Calculator Form -->
                 <div class="bg-white shadow-lg rounded-2xl border border-gray-200">
                   <div class="px-6 py-4 border-b border-gray-100 bg-blue-50 rounded-t-2xl">
-                    <h3 class="text-lg font-semibold text-blue-900">Loan Details</h3>
+                    <h3 class="text-lg font-semibold text-[#0a2342]">Loan Details</h3>
                     <p class="text-sm text-gray-600">Enter your loan requirements</p>
                   </div>
 
@@ -169,7 +169,7 @@
 
                     <!-- Loan Product Info -->
                     <div v-if="selectedProduct" class="bg-blue-50 rounded-lg p-4 space-y-2">
-                      <h4 class="text-sm font-semibold text-blue-900">Product Details</h4>
+                      <h4 class="text-sm font-semibold text-[#0a2342]">Product Details</h4>
                       <div class="grid grid-cols-2 gap-4 text-sm text-blue-700">
                         <div><span class="font-medium">Interest Rate:</span> {{ selectedProduct.interest_rate }}% p.a.</div>
                         <div><span class="font-medium">Processing Fee:</span> {{ selectedProduct.processing_fee_rate }}%</div>
@@ -215,7 +215,7 @@
 
                     <!-- Calculate Button -->
                     <button type="submit" :disabled="loading || !isFormValid"
-                      class="w-full bg-blue-900 hover:bg-blue-800 hover:cursor-pointer disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200 flex items-center justify-center">
+                      class="w-full bg-[#0a2342] hover:bg-blue-800 hover:cursor-pointer disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200 flex items-center justify-center">
                       <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -233,7 +233,7 @@
                   <!-- Loan Summary -->
                   <div v-if="calculation" id="loan-summary" class="bg-white shadow-lg rounded-2xl border border-gray-200">
                     <div class="px-6 py-4 border-b border-gray-100 bg-blue-50 rounded-t-2xl">
-                      <h3 class="text-lg font-semibold text-blue-900">Loan Summary</h3>
+                      <h3 class="text-lg font-semibold text-[#0a2342]">Loan Summary</h3>
                     </div>
 
                     <div class="p-6">
@@ -245,14 +245,14 @@
                           </p>
                         </div>
                         <div class="bg-blue-50 rounded-lg p-4">
-                          <h4 class="text-sm font-medium text-blue-900 mb-2">Total Interest</h4>
+                          <h4 class="text-sm font-medium text-[#0a2342] mb-2">Total Interest</h4>
                           <p class="text-xl font-bold text-blue-800">
                             KSh {{ formatNumber(calculation.loan_details.total_interest) }}
                           </p>
                         </div>
-                        <div class="bg-purple-50 rounded-lg p-4">
-                          <h4 class="text-sm font-medium text-purple-900 mb-2">Total Repayment</h4>
-                          <p class="text-lg font-bold text-purple-800">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                          <h4 class="text-sm font-medium text-blue-900 mb-2">Total Repayment</h4>
+                          <p class="text-lg font-bold text-blue-800">
                             KSh {{ formatNumber(calculation.loan_details.total_repayment) }}
                           </p>
                         </div>
@@ -323,7 +323,7 @@
               <div v-if="calculation && showSchedule" ref="scheduleSection" class="mt-8 bg-white shadow-lg rounded-2xl border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-blue-50 rounded-t-2xl">
                   <div>
-                    <h3 class="text-lg font-semibold text-blue-900">Repayment Schedule</h3>
+                    <h3 class="text-lg font-semibold text-[#0a2342]">Repayment Schedule</h3>
                     <p class="text-sm text-gray-600">Monthly payment breakdown</p>
                   </div>
                   <button @click="closeSchedule" class="text-gray-500 hover:text-gray-700">

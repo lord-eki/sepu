@@ -104,13 +104,21 @@ const updatePassword = () => {
                         <Button :disabled="form.processing">Save password</Button>
 
                         <Transition
-                            enter-active-class="transition ease-in-out"
-                            enter-from-class="opacity-0"
-                            leave-active-class="transition ease-in-out"
+                            enter-active-class="transition ease-out duration-300"
+                            enter-from-class="opacity-0 translate-y-1"
+                            enter-to-class="opacity-100 translate-y-0"
+                            leave-active-class="transition ease-in duration-200"
+                            leave-from-class="opacity-100"
                             leave-to-class="opacity-0"
-                        >
-                            <p v-show="form.recentlySuccessful" class="text-sm text-neutral-600">Saved.</p>
-                        </Transition>
+                            >
+                            <p
+                                v-show="form.recentlySuccessful"
+                                class="text-sm font-semibold text-green-900 bg-green-50 border border-green-200 px-3 py-2 rounded-md"
+                            >
+                                ✓ Password updated successfully
+                            </p>
+                            </Transition>
+
                     </div>
                 </form>
             </div>
