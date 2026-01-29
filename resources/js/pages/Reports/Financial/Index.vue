@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, Link, router } from '@inertiajs/vue3'
+import { Head, Link } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 const breadcrumbs = [
@@ -13,7 +13,7 @@ const breadcrumbs = [
   <Head title="Financial Reports" />
 
   <AppLayout :breadcrumbs="breadcrumbs" title="Financial Reports">
-    <div class="report-grid">
+    <div class="report-grid mx-5">
 
       <Link :href="route('reports.financial.balance-sheet')" class="report-card">
         <h3>Balance Sheet</h3>
@@ -40,63 +40,88 @@ const breadcrumbs = [
 </template>
 
 <style scoped>
-/* Grid layout */
+/* =========================
+   GRID LAYOUT
+========================= */
 .report-grid {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
+/* Tablet & Desktop */
 @media (min-width: 640px) {
   .report-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 1024px) {
-  .report-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-/* Card styling */
+/* =========================
+   CARD STYLING
+========================= */
 .report-card {
-  background-color: #ffffff;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: box-shadow 0.2s ease;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border-radius: 1.25rem;
+  padding: 2.25rem;
+  min-height: 180px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+
   text-decoration: none;
   cursor: pointer;
   color: inherit;
 }
 
+/* Hover effect */
 .report-card:hover {
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  transform: translateY(-6px);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-/* Dark mode */
+/* =========================
+   DARK MODE
+========================= */
 .dark .report-card {
-  background-color: #1e293b; /* slate-900 */
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.6);
 }
 
+/* =========================
+   TEXT STYLING
+========================= */
 .report-card h3 {
-  font-weight: 600;
-  color: #1e3a8a; /* blue-900 */
-  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #1e3a8a;
+  margin: 0;
 }
 
 .dark .report-card h3 {
-  color: #f97316; /* orange-400 */
+  color: #fb923c;
 }
 
 .report-card p {
-  font-size: 0.875rem; /* 14px */
-  color: #6b7280;       /* gray-500 */
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #64748b;
   margin: 0;
 }
 
 .dark .report-card p {
-  color: #d1d5db;       /* gray-300 */
+  color: #cbd5e1;
 }
 </style>

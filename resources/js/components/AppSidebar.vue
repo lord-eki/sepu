@@ -205,8 +205,8 @@ const adminNavItems: NavItem[] = [
   children: [
     {
       title: 'Financial Reports',
-      href: route('reports.financial.balance-sheet'),
-      routeName: 'reports.financial.balance-sheet',
+      href: route('reports.financial.index'),
+      routeName: 'reports.financial.index',
       icon: Calculator,
     },
     {

@@ -7,12 +7,12 @@ const props = defineProps({
   liabilities: Array,
   equity: Array,
   totals: Object,
-  asOfDate: String,
+  date: String,
 })
 
 const breadcrumbs = [
   { title: 'Reports', href: route('reports.index') },
-  { title: 'Financial Overview', href: route('reports.financial') },
+  { title: 'Financial Overview', href: route('reports.financial.index') },
   { title: 'Balance Sheet' },
 ]
 
@@ -30,7 +30,7 @@ const exportData = (format: string) => {
       <div class="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 class="text-2xl sm:text-3xl font-semibold text-gray-800">Balance Sheet</h1>
-          <p class="text-gray-600">Financial position of the SACCO as of {{ asOfDate }}</p>
+          <p class="text-gray-600">Financial position of the SACCO as of {{ date }}</p>
         </div>
 
         <div class="flex gap-3">
