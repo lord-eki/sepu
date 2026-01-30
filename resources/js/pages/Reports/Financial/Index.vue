@@ -13,7 +13,7 @@ const breadcrumbs = [
   <Head title="Financial Reports" />
 
   <AppLayout :breadcrumbs="breadcrumbs" title="Financial Reports">
-    <div class="report-grid mx-5">
+    <div class="report-grid m-5">
 
       <Link :href="route('reports.financial.balance-sheet')" class="report-card">
         <h3>Balance Sheet</h3>
