@@ -5,7 +5,7 @@ import { route } from 'ziggy-js'
 import { BarChart3, TrendingUp, Wallet, Scale } from 'lucide-vue-next'
 
 const breadcrumbs = [
-  { title: 'Reports', href: '#' },
+  { title: 'Reports', href: '/reports' },
   { title: 'Financial Reports' },
 ]
 

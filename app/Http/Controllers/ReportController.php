@@ -227,6 +227,12 @@ class ReportController extends Controller
     /**
      * Member Reports
      */
+
+    public function memberIndex()
+    {
+        return Inertia::render('Reports/Members/Index');
+    }
+
     public function memberRegister(Request $request)
     {
         $status = $request->input('status');
@@ -234,11 +240,21 @@ class ReportController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        $query = Member::with(['user', 'accounts'])
+        $query = Member::with([
+                'user:id,phone,email',
+                'accounts'
+            ])
             ->select([
-                'id', 'user_id', 'membership_id', 'first_name', 'last_name', 
-                'id_number', 'phone', 'email', 'county', 'occupation', 
-                'membership_status', 'membership_date'
+                'id',
+                'user_id',
+                'membership_id',
+                'first_name',
+                'last_name',
+                'id_number',
+                'county',
+                'occupation',
+                'membership_status',
+                'membership_date',
             ]);
 
         if ($status) {
@@ -253,16 +269,19 @@ class ReportController extends Controller
             $query->whereBetween('membership_date', [$startDate, $endDate]);
         }
 
-        $members = $query->orderBy('membership_date', 'desc')->paginate(100);
+        $members = $query
+            ->orderByDesc('membership_date')
+            ->paginate(100)
+            ->withQueryString();
 
-        // Calculate summary statistics
         $summary = [
             'total_members' => $members->total(),
             'active_members' => Member::where('membership_status', 'active')->count(),
             'inactive_members' => Member::where('membership_status', 'inactive')->count(),
             'suspended_members' => Member::where('membership_status', 'suspended')->count(),
-            'new_members_this_month' => Member::whereMonth('membership_date', Carbon::now()->month)
-                ->whereYear('membership_date', Carbon::now()->year)->count(),
+            'new_members_this_month' => Member::whereMonth('membership_date', now()->month)
+                ->whereYear('membership_date', now()->year)
+                ->count(),
         ];
 
         return Inertia::render('Reports/Members/Register', [
@@ -406,6 +425,11 @@ class ReportController extends Controller
     /**
      * Loan Reports
      */
+
+    public function loanIndex()
+    {
+        return Inertia::render('Reports/Loans/Index');
+    }
     public function loanPortfolio(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfYear()->format('Y-m-d'));
@@ -469,13 +493,14 @@ class ReportController extends Controller
             ->orderBy('days_in_arrears', 'desc')
             ->get();
 
-        $arrearsAnalysis = [
+        // Use a collection to allow map()
+        $arrearsAnalysis = collect([
             '1-30_days' => $loans->whereBetween('days_in_arrears', [1, 30]),
             '31-60_days' => $loans->whereBetween('days_in_arrears', [31, 60]),
             '61-90_days' => $loans->whereBetween('days_in_arrears', [61, 90]),
             '91-180_days' => $loans->whereBetween('days_in_arrears', [91, 180]),
             'over_180_days' => $loans->where('days_in_arrears', '>', 180),
-        ];
+        ]);
 
         $summary = [
             'total_loans_in_arrears' => $loans->count(),
@@ -496,6 +521,7 @@ class ReportController extends Controller
             'summary' => $summary,
         ]);
     }
+
 
     public function loanDisbursement(Request $request)
     {

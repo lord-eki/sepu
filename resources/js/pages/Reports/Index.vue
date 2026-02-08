@@ -2,95 +2,117 @@
 import { Head, Link } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { ref } from 'vue'
+import type { BreadcrumbItem } from '@/types'
 
 // Lucide Icons
-import { Landmark, Users, Banknote, Receipt, FileBadge, Settings } from 'lucide-vue-next'
+import {
+  Landmark,
+  Users,
+  Banknote,
+  Receipt,
+  FileBadge,
+  Settings
+} from 'lucide-vue-next'
 
-const breadcrumbs = [{ title: 'Reports' }]
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Reports' }
+]
 
 const reportCards = ref([
   {
     title: 'Financial Reports',
-    description: 'Balance sheet, income statement, cash flow, and trial balance.',
+    description: 'Balance sheet, income statement, cash flow & trial balance.',
     icon: Landmark,
-    route: route('reports.financial.balance-sheet'),
-    color: 'from-blue-500 to-indigo-600'
+    route: route('reports.financial.index'),
   },
   {
     title: 'Member Reports',
-    description: 'Member register, shares, savings, and loans.',
+    description: 'Member register, shares, savings & loans.',
     icon: Users,
-    route: route('reports.members.register'),
-    color: 'from-emerald-500 to-green-600'
+    route: route('reports.membersReport.index'),
   },
   {
     title: 'Loan Reports',
-    description: 'Portfolio, arrears, disbursement, and collections.',
+    description: 'Portfolio, arrears, disbursements & collections.',
     icon: Banknote,
-    route: route('reports.loans.portfolio'),
-    color: 'from-purple-500 to-indigo-600'
+    route: route('reports.loansReport.index'),
   },
   {
     title: 'Transaction Reports',
-    description: 'Daily, monthly and annual transactions.',
+    description: 'Daily, monthly & annual transactions.',
     icon: Receipt,
     route: route('reports.transactions.daily'),
-    color: 'from-orange-500 to-red-600'
   },
   {
     title: 'Regulatory Reports',
     description: 'Compliance and statutory reporting.',
     icon: FileBadge,
     route: route('reports.regulatory.statutory'),
-    color: 'from-pink-500 to-rose-600'
   },
   {
     title: 'Custom Reports',
-    description: 'Build and export custom reports based on filters.',
+    description: 'Build and export custom reports using filters.',
     icon: Settings,
     route: route('reports.custom.builder'),
-    color: 'from-sky-500 to-cyan-600'
   }
 ])
 </script>
 
 <template>
-  <AppLayout :breadcrumbs="breadcrumbs">
-    <Head title="Reports" />
 
-    <div class="p-6 space-y-8">
-      <h1 class="text-2xl sm:text-3xl font-semibold text-gray-800">Reports</h1>
-      <p class="text-gray-600">
-        Access and generate detailed reports across financial, member, loan and transaction data.
-      </p>
+  <Head title="Reports" />
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-          v-for="card in reportCards"
-          :key="card.title"
-          class="group bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6 border border-gray-100"
-        >
-          <div
-            class="w-14 h-14 flex items-center justify-center rounded-xl bg-gradient-to-br text-white mb-4"
-            :class="card.color"
-          >
-            <component :is="card.icon" class="w-8 h-8" />
-          </div>
+  <AppLayout :breadcrumbs="breadcrumbs" title="Reports">
+    <div class="px-6 py-6 space-y-8">
 
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">{{ card.title }}</h2>
-          <p class="text-gray-500 mb-4">{{ card.description }}</p>
-
-          <Link
-            :href="card.route"
-            class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
-          >
-            View Report
-            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
+      <!-- Header -->
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0a2342] dark:text-blue-400">
+          Reports
+        </h1>
+        <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 max-w-3xl">
+          Access, analyze, and export reports across financial, member, loan, and transaction data.
+        </p>
       </div>
+
+      <!-- Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Link v-for="card in reportCards" :key="card.title" :href="card.route" class="group relative overflow-hidden rounded-3xl
+                 border border-gray-200 dark:border-gray-700
+                 bg-white dark:bg-gray-900
+                 p-6 shadow-sm hover:shadow-xl
+                 transition-all duration-300 hover:-translate-y-1">
+        <!-- Gradient Hover Glow -->
+        <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition
+                   bg-gradient-to-br from-orange-500/10 via-transparent to-blue-500/10" />
+
+        <!-- Icon -->
+        <div class="relative flex h-14 w-14 items-center justify-center rounded-2xl
+                   bg-orange-50 dark:bg-orange-500/10 mb-4">
+          <component :is="card.icon" class="h-7 w-7 text-orange-600 dark:text-orange-400" />
+        </div>
+
+        <!-- Text -->
+        <div class="relative">
+          <h2 class="text-lg font-semibold text-[#0a2342] dark:text-gray-100
+                     group-hover:text-orange-600 dark:group-hover:text-orange-400
+                     transition">
+            {{ card.title }}
+          </h2>
+
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            {{ card.description }}
+          </p>
+        </div>
+
+        <!-- Arrow -->
+        <span class="absolute bottom-5 right-5 text-gray-300 dark:text-gray-600
+                   group-hover:text-orange-500 transition">
+          →
+        </span>
+        </Link>
+      </div>
+
     </div>
   </AppLayout>
 </template>
