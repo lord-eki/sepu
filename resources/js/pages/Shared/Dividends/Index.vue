@@ -32,7 +32,7 @@
     </div>
 
     <!-- Header -->
-    <div class="bg-header text-white py-5 mx-4 px-4 sm:px-8 rounded-3xl shadow-lg dark:bg-[#0a122d]">
+    <div class="bg-header text-white py-8 mx-4 px-4 sm:px-8 rounded-3xl shadow-lg dark:bg-[#0a122d]">
       <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Dividends</h2>
       <p class="mt-2 text-sm sm:text-base opacity-90">
         Track, approve, and distribute member dividends with ease.

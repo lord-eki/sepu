@@ -1,132 +1,104 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { ref, computed } from 'vue'
+import { Head, router } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import { CalendarDays } from 'lucide-vue-next'
+import type { BreadcrumbItem } from '@/types'
+import { route } from 'ziggy-js'
 
-const props = defineProps({
-  accounts: Array,     // [{code, name, debit, credit}]
-  totals: Object,      // { debit: number, credit: number }
-  start_date: String,
-  end_date: String,
-})
+const props = defineProps<{
+  accounts: { name: string; debit: number; credit: number }[]
+  totals: {
+    debits: number
+    credits: number
+    difference: number
+  }
+  date: string
+}>()
 
-const breadcrumbs = [
-  { title: 'Reports', href: route('reports.index') },
-  { title: 'Financial Reports', href: route('reports.financial') },
+const selectedDate = ref(props.date)
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Financial Reports', href: route('reports.financial.index') },
   { title: 'Trial Balance' },
 ]
 
-const filter = ref({
-  start_date: props.start_date,
-  end_date: props.end_date,
-})
-
-const exportReport = (format: string) => {
-  router.visit(route('reports.financial.trial-balance'), {
-    method: 'get',
-    data: { ...filter.value, export: format },
-    preserveScroll: true,
-  })
+function applyDateFilter() {
+  router.get(
+    route('reports.financial.trial-balance'),
+    { date: selectedDate.value },
+    { preserveState: true, replace: true }
+  )
 }
 
-const formatted = (val: number) =>
-  val?.toLocaleString(undefined, { minimumFractionDigits: 2 })
-
-const balanceDiff = computed(
-  () => (props.totals.debit || 0) - (props.totals.credit || 0)
-)
+function money(value: number) {
+  return new Intl.NumberFormat('en-KE', {
+    style: 'currency',
+    currency: 'KES',
+  }).format(value ?? 0)
+}
 </script>
 
 <template>
-  <AppLayout :breadcrumbs="breadcrumbs">
-    <Head title="Trial Balance" />
 
-    <div class="p-6 space-y-6">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h1 class="text-2xl font-bold text-gray-800">Trial Balance</h1>
+  <Head title="Trial Balance" />
 
-        <div class="flex gap-2">
-          <button
-            @click="exportReport('csv')"
-            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Export CSV
-          </button>
-          <button
-            @click="exportReport('pdf')"
-            class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-          >
-            Export PDF
-          </button>
-        </div>
+  <AppLayout title="Trial Balance" :breadcrumbs="breadcrumbs">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 mx-6 mt-6">
+      <div>
+        <h2 class="text-2xl font-extrabold text-[#0a2342] dark:text-blue-400">
+          Trial Balance
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Debits and Credits as at selected date
+        </p>
       </div>
 
-      <!-- Filter -->
-      <div class="flex flex-wrap gap-3 items-end">
-        <div>
-          <label class="text-sm text-gray-600">Start Date</label>
-          <input v-model="filter.start_date" type="date" class="border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label class="text-sm text-gray-600">End Date</label>
-          <input v-model="filter.end_date" type="date" class="border rounded px-3 py-2" />
-        </div>
-        <button
-          @click="router.visit(route('reports.financial.trial-balance'), { method: 'get', data: filter.value })"
-          class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-        >
-          Filter
-        </button>
+      <!-- Date Picker -->
+      <div class="flex items-center gap-2">
+        <CalendarDays class="h-5 w-5 text-orange-500" />
+        <input type="date" v-model="selectedDate" @change="applyDateFilter" class="rounded-xl border border-gray-300 dark:border-gray-700
+                 bg-white dark:bg-gray-900 px-3 py-2 text-sm
+                 text-gray-700 dark:text-gray-200
+                 focus:outline-none focus:ring-2 focus:ring-orange-500" />
       </div>
+    </div>
 
-      <!-- Table -->
-      <div class="overflow-x-auto bg-white rounded-xl shadow border border-gray-100">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
-            <tr>
-              <th class="px-4 py-3 text-left">Account Code</th>
-              <th class="px-4 py-3 text-left">Account Name</th>
-              <th class="px-4 py-3 text-right">Debit (KES)</th>
-              <th class="px-4 py-3 text-right">Credit (KES)</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100 text-sm">
-            <tr v-for="(acc, i) in props.accounts" :key="i">
-              <td class="px-4 py-2 font-mono">{{ acc.code }}</td>
-              <td class="px-4 py-2">{{ acc.name }}</td>
-              <td class="px-4 py-2 text-right text-gray-800">
-                {{ formatted(acc.debit || 0) }}
-              </td>
-              <td class="px-4 py-2 text-right text-gray-800">
-                {{ formatted(acc.credit || 0) }}
-              </td>
-            </tr>
-          </tbody>
+    <!-- Table Card -->
+    <div
+      class="overflow-x-auto rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-md mx-6">
+      <table class="min-w-full text-left text-sm text-gray-700 dark:text-gray-300">
+        <thead class="bg-blue-50 dark:bg-[#0a2342]">
+          <tr>
+            <th class="px-6 py-3 font-semibold text-[#0a2342] dark:text-blue-400">Account</th>
+            <th class="px-6 py-3 font-semibold text-[#0a2342] dark:text-blue-400">Debit</th>
+            <th class="px-6 py-3 font-semibold text-[#0a2342] dark:text-blue-400">Credit</th>
+          </tr>
+        </thead>
 
-          <tfoot class="bg-gray-50 font-semibold text-gray-900">
-            <tr>
-              <td colspan="2" class="px-4 py-2 text-right">Totals:</td>
-              <td class="px-4 py-2 text-right">{{ formatted(props.totals.debit) }}</td>
-              <td class="px-4 py-2 text-right">{{ formatted(props.totals.credit) }}</td>
-            </tr>
-            <tr>
-              <td colspan="2" class="px-4 py-2 text-right">Difference:</td>
-              <td colspan="2" class="px-4 py-2 text-right">
-                <span :class="balanceDiff === 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ formatted(balanceDiff) }}
-                </span>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr v-for="account in accounts" :key="account.name"
+            class="hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors">
+            <td class="px-6 py-3">{{ account.name }}</td>
+            <td class="px-6 py-3 font-medium">{{ money(account.debit) }}</td>
+            <td class="px-6 py-3 font-medium">{{ money(account.credit) }}</td>
+          </tr>
+        </tbody>
 
-      <p v-if="balanceDiff === 0" class="text-green-600 font-medium">
-        ✅ Trial Balance is Balanced.
-      </p>
-      <p v-else class="text-red-600 font-medium">
-        ⚠️ Trial Balance is Not Balanced — Please check entries.
-      </p>
+        <!-- Totals Row -->
+        <tfoot class="bg-orange-50 dark:bg-gray-800 font-bold text-[#0a2342] dark:text-orange-400">
+          <tr>
+            <td class="px-6 py-3">Totals</td>
+            <td class="px-6 py-3">{{ money(totals.debits) }}</td>
+            <td class="px-6 py-3">{{ money(totals.credits) }}</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-3" colspan="2">Difference</td>
+            <td class="px-6 py-3">{{ money(totals.difference) }}</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </AppLayout>
 </template>

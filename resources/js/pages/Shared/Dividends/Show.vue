@@ -32,10 +32,10 @@
     </div>
 
     <!-- Header -->
-    <div class="flex flex-col md:flex-row justify-between mx-4 items-center gap-4 
-            max-w-7xl px-4 sm:px-6 lg:px-8 mb-4 
+    <div class="flex flex-col md:flex-row justify-between mx-6 items-center gap-4 
+            max-w-7xl px-5 sm:px-8 lg:px-10 mb-4 
             bg-gradient-to-r from-[#0A1A2F] via-[#F97316] to-white 
-            rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+            rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 py-8">
       <!-- Title + Status -->
       <div class="flex flex-col gap-1">
         <h1 class="text-2xl sm:text-3xl font-bold text-white dark:text-white">
