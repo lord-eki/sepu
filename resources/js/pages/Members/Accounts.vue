@@ -61,7 +61,7 @@ const formatAccountLabel = (type: string) => {
       <Head title="Accounts" />
 
       <!-- Header -->
-      <div class="rounded-xl bg-gradient-to-r from-blue-900 to-orange-500 p-6 shadow-md text-white">
+      <div class="rounded-xl bg-gradient-to-r from-[#0a2342] to-orange-500 p-6 shadow-md text-white">
         <div class="flex items-center justify-between">
           <!-- Accounts -->
           <div>
@@ -75,7 +75,7 @@ const formatAccountLabel = (type: string) => {
 
           <!-- Account Holder -->
           <div class="text-right self-start">
-            <p class="text-sm font-bold text-blue-900 opacity-75">Name</p>
+            <p class="text-sm font-bold text-[#0a2342] opacity-75">Name</p>
             <h2 class="text-base sm:text-lg font-medium text-white">
               {{ memberName }}
             </h2>
@@ -87,14 +87,14 @@ const formatAccountLabel = (type: string) => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- My Accounts -->
         <Card
-          class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-blue-900 transition-all duration-300">
+          class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-[#0a2342] transition-all duration-300">
           <CardHeader>
-            <CardTitle class="text-blue-900">My Accounts</CardTitle>
+            <CardTitle class="text-[#0a2342]">My Accounts</CardTitle>
           </CardHeader>
           <CardContent class="flex flex-col sm:flex-row justify-between gap-4">
             <div>
               <p class="text-sm text-gray-500">Total Accounts</p>
-              <p class="text-lg font-medium sm:text-xl text-blue-900">
+              <p class="text-lg font-medium sm:text-xl text-[#0a2342]">
                 {{ props.accounts.length }}
               </p>
             </div>
@@ -111,12 +111,12 @@ const formatAccountLabel = (type: string) => {
         <Card
           class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-orange-500 transition-all duration-300">
           <CardHeader>
-            <CardTitle class="text-blue-900 flex items-center justify-between">
+            <CardTitle class="text-[#0a2342] flex items-center justify-between">
               Total Balance
             </CardTitle>
           </CardHeader>
           <CardContent class="flex justify-between mr-5 items-center">
-            <p class="text-lg font-medium sm:text-xl text-blue-900">
+            <p class="text-lg font-medium sm:text-xl text-[#0a2342]">
               <span :class="totalBalanceVisible.value ? '' : 'blur-sm select-none'">
                 KES {{ formattedTotalBalance }}
                 <p class="text-sm font-normal text-gray-800">
@@ -143,12 +143,12 @@ const formatAccountLabel = (type: string) => {
       >
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
           <div>
-            <h2 class="text-base sm:text-lg font-medium text-blue-900">
+            <h2 class="text-base sm:text-lg font-medium text-[#0a2342]">
               <span class="font-normal">Acc. No:</span> {{ account.account_number }} - {{ formatAccountLabel(account.account_type) }}
             </h2>
             <p class="text-sm sm:text-base text-gray-500 flex items-center gap-3">
               Balance:
-              <span class="font-medium text-blue-900">
+              <span class="font-medium text-[#0a2342]">
                 <span :class="balanceVisibility[account.id] ? '' : 'blur-sm select-none'" class="text-base sm:text-lg">
                   KES {{ Number(account.balance).toLocaleString() }}
                 </span>
@@ -169,7 +169,7 @@ const formatAccountLabel = (type: string) => {
               :href="route('members.accounts.deposit.show', { member: account.member_id, account: account.id })"
             >
               <Button
-                class="bg-blue-800 hover:bg-blue-900 hover:cursor-pointer font-normal text-white max-sm:text-xs shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition"
+                class="bg-[#0a2342] hover:bg-[hsl(209,40%,17%)] hover:cursor-pointer font-normal text-white max-sm:text-xs shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition"
               >
                 <ArrowDownCircle class="w-3 sm:w-4 h-3 sm:h-4" />
                 Deposit

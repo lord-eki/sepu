@@ -346,16 +346,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/financial/cash-flow', [ReportController::class, 'cashFlow'])->name('financial.cash-flow');
         Route::get('/financial/trial-balance', [ReportController::class, 'trialBalance'])->name('financial.trial-balance');
         // Member reports
+        Route::get('/members/report', [ReportController::class, 'memberIndex'])->name('membersReport.index');
         Route::get('/members/register', [ReportController::class, 'memberRegister'])->name('members.register');
         Route::get('/members/shares', [ReportController::class, 'memberShares'])->name('members.shares');
         Route::get('/members/savings', [ReportController::class, 'memberSavings'])->name('members.savings');
         Route::get('/members/loans', [ReportController::class, 'memberLoans'])->name('members.loans');
         // Loan reports
+        Route::get('/loans/report', [ReportController::class, 'loanIndex'])->name('loansReport.index');
         Route::get('/loans/portfolio', [ReportController::class, 'loanPortfolio'])->name('loans.portfolio');
         Route::get('/loans/arrears', [ReportController::class, 'loanArrears'])->name('loans.arrears');
         Route::get('/loans/disbursement', [ReportController::class, 'loanDisbursement'])->name('loans.disbursement');
         Route::get('/loans/collection', [ReportController::class, 'loanCollection'])->name('loans.collection');
         // Transaction reports
+        Route::get('/transactions/report', [ReportController::class, 'TransactionIndex'])->name('TransactionsReport.index');
         Route::get('/transactions/daily', [ReportController::class, 'dailyTransactions'])->name('transactions.daily');
         Route::get('/transactions/monthly', [ReportController::class, 'monthlyTransactions'])->name('transactions.monthly');
         Route::get('/transactions/annual', [ReportController::class, 'annualTransactions'])->name('transactions.annual');

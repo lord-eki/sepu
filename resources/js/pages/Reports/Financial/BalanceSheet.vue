@@ -1,151 +1,192 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, router } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import { CalendarDays } from 'lucide-vue-next'
+import type { BreadcrumbItem } from '@/types'
+import { route } from 'ziggy-js'
 
-const props = defineProps({
-  assets: Array,
-  liabilities: Array,
-  equity: Array,
-  totals: Object,
-  date: String,
-})
+const props = defineProps<{
+  assets: Record<string, any>
+  liabilities: Record<string, any>
+  equity: Record<string, any>
+  totals: {
+    total_assets: number
+    total_liabilities: number
+    total_equity: number
+  }
+  date: string
+}>()
 
-const breadcrumbs = [
-  { title: 'Reports', href: route('reports.index') },
-  { title: 'Financial Overview', href: route('reports.financial.index') },
+const selectedDate = ref(props.date)
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Financial Reports', href: route('reports.financial.index') },
   { title: 'Balance Sheet' },
 ]
 
-const exportData = (format: string) => {
-  window.open(route('reports.financial.balance-sheet') + `?export=${format}`, '_blank')
+function applyDateFilter() {
+  router.get(
+    route('reports.financial.balance-sheet'),
+    { date: selectedDate.value },
+    { preserveState: true, replace: true }
+  )
+}
+
+function money(value: number) {
+  return new Intl.NumberFormat('en-KE', {
+    style: 'currency',
+    currency: 'KES',
+  }).format(value ?? 0)
 }
 </script>
 
 <template>
-  <AppLayout :breadcrumbs="breadcrumbs">
-    <Head title="Balance Sheet" />
 
-    <div class="p-6 space-y-8">
-      <!-- Header -->
-      <div class="flex justify-between items-center flex-wrap gap-4">
+  <Head title="Balance Sheet" />
+
+  <AppLayout title="Balance Sheet" :breadcrumbs="breadcrumbs">
+    <!-- Header -->
+    <div class="flex flex-col gap-4 mx-6 mt-6 mb-10">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl sm:text-3xl font-semibold text-gray-800">Balance Sheet</h1>
-          <p class="text-gray-600">Financial position of the SACCO as of {{ date }}</p>
+          <h2 class="text-2xl font-extrabold text-[#0a2342] dark:text-blue-400">
+            Balance Sheet
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Statement of financial position as at the selected date
+          </p>
         </div>
 
-        <div class="flex gap-3">
-          <button
-            @click="exportData('csv')"
-            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow"
-          >
-            Export CSV
-          </button>
-          <button
-            @click="exportData('pdf')"
-            class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg shadow"
-          >
-            Export PDF
-          </button>
+        <!-- Date Picker -->
+        <div class="flex items-center gap-2">
+          <CalendarDays class="h-5 w-5 text-orange-500" />
+          <input type="date" v-model="selectedDate" @change="applyDateFilter" class="rounded-xl border border-gray-300 dark:border-gray-700
+                   bg-white dark:bg-gray-900 px-4 py-2 text-sm
+                   text-gray-700 dark:text-gray-200
+                   focus:outline-none focus:ring-2 focus:ring-orange-500" />
         </div>
       </div>
 
-      <!-- Assets Section -->
-      <section class="bg-white rounded-2xl shadow p-6 border border-gray-100">
-        <h2 class="text-lg font-semibold text-gray-700 mb-4">Assets</h2>
-        <table class="min-w-full text-sm text-left text-gray-600">
-          <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
-            <tr>
-              <th class="py-3 px-4">Account</th>
-              <th class="py-3 px-4 text-right">Amount (KES)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="a in assets" :key="a.id" class="border-b hover:bg-gray-50">
-              <td class="py-3 px-4">{{ a.name }}</td>
-              <td class="py-3 px-4 text-right font-medium text-gray-800">
-                {{ new Intl.NumberFormat().format(a.balance) }}
-              </td>
-            </tr>
-            <tr class="font-semibold text-gray-800 border-t">
-              <td class="py-3 px-4">Total Assets</td>
-              <td class="py-3 px-4 text-right">
-                {{ new Intl.NumberFormat().format(totals.total_assets) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+      <!-- Accounting Equation -->
+      <div class="rounded-xl border border-dashed border-blue-200 dark:border-blue-800
+                  bg-gray-50 dark:bg-gray-800 px-4 py-6 text-sm sm:text-base
+                  text-[#0a2342] dark:text-blue-300">
+        <span class="font-semibold">Assets</span>
+        =
+        <span class="font-semibold text-orange-500">Liabilities</span>
+        +
+        <span class="font-semibold">Equity</span>
+      </div>
+    </div>
 
-      <!-- Liabilities Section -->
-      <section class="bg-white rounded-2xl shadow p-6 border border-gray-100">
-        <h2 class="text-lg font-semibold text-gray-700 mb-4">Liabilities</h2>
-        <table class="min-w-full text-sm text-left text-gray-600">
-          <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
-            <tr>
-              <th class="py-3 px-4">Account</th>
-              <th class="py-3 px-4 text-right">Amount (KES)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="l in liabilities" :key="l.id" class="border-b hover:bg-gray-50">
-              <td class="py-3 px-4">{{ l.name }}</td>
-              <td class="py-3 px-4 text-right font-medium text-gray-800">
-                {{ new Intl.NumberFormat().format(l.balance) }}
-              </td>
-            </tr>
-            <tr class="font-semibold text-gray-800 border-t">
-              <td class="py-3 px-4">Total Liabilities</td>
-              <td class="py-3 px-4 text-right">
-                {{ new Intl.NumberFormat().format(totals.total_liabilities) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mx-6">
+      <!-- ASSETS -->
+      <div class="rounded-3xl border border-gray-200 dark:border-gray-700
+                  bg-white dark:bg-gray-900 shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700
+                    bg-gray-50 dark:bg-gray-800 rounded-t-3xl">
+          <h3 class="text-lg font-bold text-[#0a2342] dark:text-blue-400">
+            Assets
+          </h3>
+        </div>
 
-      <!-- Equity Section -->
-      <section class="bg-white rounded-2xl shadow p-6 border border-gray-100">
-        <h2 class="text-lg font-semibold text-gray-700 mb-4">Equity</h2>
-        <table class="min-w-full text-sm text-left text-gray-600">
-          <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
-            <tr>
-              <th class="py-3 px-4">Account</th>
-              <th class="py-3 px-4 text-right">Amount (KES)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="e in equity" :key="e.id" class="border-b hover:bg-gray-50">
-              <td class="py-3 px-4">{{ e.name }}</td>
-              <td class="py-3 px-4 text-right font-medium text-gray-800">
-                {{ new Intl.NumberFormat().format(e.balance) }}
-              </td>
-            </tr>
-            <tr class="font-semibold text-gray-800 border-t">
-              <td class="py-3 px-4">Total Equity</td>
-              <td class="py-3 px-4 text-right">
-                {{ new Intl.NumberFormat().format(totals.total_equity) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+        <div class="p-6 space-y-6">
+          <div v-for="group in assets" :key="group.label">
+            <h4 class="text-xs font-semibold uppercase tracking-wide
+                       text-orange-500 mb-3">
+              {{ group.label }}
+            </h4>
 
-      <!-- Totals Summary -->
-      <section class="text-right">
-        <p class="text-sm text-gray-500">Assets = Liabilities + Equity</p>
-        <p
-          class="text-lg font-semibold mt-2"
-          :class="totals.total_assets === totals.total_liabilities + totals.total_equity
-            ? 'text-green-600'
-            : 'text-rose-600'"
-        >
-          {{
-            totals.total_assets === totals.total_liabilities + totals.total_equity
-              ? 'Balanced ✅'
-              : 'Unbalanced ⚠️'
-          }}
-        </p>
-      </section>
+            <div class="space-y-2">
+              <div v-for="item in group.accounts" :key="item.name" class="flex justify-between items-center text-sm
+                          text-gray-700 dark:text-gray-300">
+                <span>{{ item.name }}</span>
+                <span class="font-medium">{{ money(item.balance) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Assets -->
+        <div class="flex justify-between items-center px-6 py-4
+                    bg-orange-50 dark:bg-gray-800
+                    border-t-2 border-orange-400
+                    font-bold text-base text-[#0a2342] dark:text-orange-400">
+          <span>Total Assets</span>
+          <span>{{ money(totals.total_assets) }}</span>
+        </div>
+      </div>
+
+      <!-- LIABILITIES & EQUITY -->
+      <div class="rounded-3xl border border-gray-200 dark:border-gray-700
+                  bg-white dark:bg-gray-900 shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700
+                    bg-gray-50 dark:bg-gray-800 rounded-t-3xl">
+          <h3 class="text-lg font-bold text-[#0a2342] dark:text-blue-400">
+            Liabilities & Equity
+          </h3>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Liabilities -->
+          <div v-for="group in liabilities" :key="group.label">
+            <h4 class="text-xs font-semibold uppercase tracking-wide
+                       text-orange-500 mb-3">
+              {{ group.label }}
+            </h4>
+
+            <div class="space-y-2">
+              <div v-for="item in group.accounts" :key="item.name" class="flex justify-between items-center text-sm
+                          text-gray-700 dark:text-gray-300">
+                <span>{{ item.name }}</span>
+                <span class="font-medium">{{ money(item.balance) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Liabilities -->
+          <div class="flex justify-between items-center pt-3
+                      border-t border-gray-200 dark:border-gray-700
+                      font-semibold text-sm text-[#0a2342] dark:text-blue-300">
+            <span>Total Liabilities</span>
+            <span>{{ money(totals.total_liabilities) }}</span>
+          </div>
+
+          <!-- Equity -->
+          <div>
+            <h4 class="text-xs font-semibold uppercase tracking-wide
+                       text-orange-500 mb-3">
+              Equity
+            </h4>
+
+            <div class="space-y-2">
+              <div v-for="item in equity" :key="item.name" class="flex justify-between items-center text-sm
+                          text-gray-700 dark:text-gray-300">
+                <span>{{ item.name }}</span>
+                <span class="font-medium">{{ money(item.balance) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Equity -->
+          <div class="flex justify-between items-center pt-3
+                      border-t border-gray-200 dark:border-gray-700
+                      font-semibold text-sm text-[#0a2342] dark:text-blue-300">
+            <span>Total Equity</span>
+            <span>{{ money(totals.total_equity) }}</span>
+          </div>
+        </div>
+
+        <!-- Total L + E -->
+        <div class="flex justify-between items-center px-6 py-4
+                    bg-[#0a2342] dark:bg-gray-800
+                    text-white font-bold text-base rounded-b-3xl">
+          <span>Total Liabilities & Equity</span>
+          <span>{{ money(totals.total_liabilities + totals.total_equity) }}</span>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>

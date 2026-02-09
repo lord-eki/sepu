@@ -137,10 +137,10 @@ class ReportController extends Controller
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfYear()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-
+    
         $start = Carbon::parse($startDate)->startOfDay();
         $end = Carbon::parse($endDate)->endOfDay();
-
+    
         // Operating Activities
         $operatingActivities = [
             'net_income' => $this->getNetIncome($start, $end),
@@ -149,24 +149,43 @@ class ReportController extends Controller
             'member_deposits' => $this->getMemberDepositsFlow($start, $end),
             'member_withdrawals' => $this->getMemberWithdrawalsFlow($start, $end),
         ];
-
+    
         // Investing Activities
         $investingActivities = [
-            'equipment_purchases' => $this->getEquipmentPurchases($start, $end),
-            'investments' => $this->getInvestmentFlow($start, $end),
+            'equipment_purchases' => DB::table('payment_vouchers')
+                ->where('voucher_type', 'equipment')
+                ->where('status', 'approved')
+                ->whereBetween('approval_date', [$start, $end])
+                ->sum('amount'),
+    
+            'investments' => DB::table('payment_vouchers')
+                ->where('voucher_type', 'investment')
+                ->where('status', 'approved')
+                ->whereBetween('approval_date', [$start, $end])
+                ->sum('amount'),
         ];
-
+    
         // Financing Activities
         $financingActivities = [
-            'share_capital' => $this->getShareCapitalFlow($start, $end),
-            'dividend_payments' => $this->getDividendPayments($start, $end),
+            'share_capital' => DB::table('payment_vouchers')
+                ->where('voucher_type', 'share_capital')
+                ->where('status', 'approved')
+                ->whereBetween('approval_date', [$start, $end])
+                ->sum('amount'),
+    
+            'dividend_payments' => DB::table('payment_vouchers')
+                ->where('voucher_type', 'dividend')
+                ->where('status', 'approved')
+                ->whereBetween('approval_date', [$start, $end])
+                ->sum('amount'),
         ];
-
+    
+        // Calculate totals
         $netOperatingCash = collect($operatingActivities)->sum();
         $netInvestingCash = collect($investingActivities)->sum();
         $netFinancingCash = collect($financingActivities)->sum();
         $netCashFlow = $netOperatingCash + $netInvestingCash + $netFinancingCash;
-
+    
         return Inertia::render('Reports/Financial/CashFlow', [
             'operating_activities' => $operatingActivities,
             'investing_activities' => $investingActivities,
@@ -181,6 +200,7 @@ class ReportController extends Controller
             'end_date' => $endDate,
         ]);
     }
+    
 
     public function trialBalance(Request $request)
     {
@@ -207,6 +227,12 @@ class ReportController extends Controller
     /**
      * Member Reports
      */
+
+    public function memberIndex()
+    {
+        return Inertia::render('Reports/Members/Index');
+    }
+
     public function memberRegister(Request $request)
     {
         $status = $request->input('status');
@@ -214,11 +240,21 @@ class ReportController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        $query = Member::with(['user', 'accounts'])
+        $query = Member::with([
+                'user:id,phone,email',
+                'accounts'
+            ])
             ->select([
-                'id', 'user_id', 'membership_id', 'first_name', 'last_name', 
-                'id_number', 'phone', 'email', 'county', 'occupation', 
-                'membership_status', 'membership_date'
+                'id',
+                'user_id',
+                'membership_id',
+                'first_name',
+                'last_name',
+                'id_number',
+                'county',
+                'occupation',
+                'membership_status',
+                'membership_date',
             ]);
 
         if ($status) {
@@ -233,16 +269,19 @@ class ReportController extends Controller
             $query->whereBetween('membership_date', [$startDate, $endDate]);
         }
 
-        $members = $query->orderBy('membership_date', 'desc')->paginate(100);
+        $members = $query
+            ->orderByDesc('membership_date')
+            ->paginate(100)
+            ->withQueryString();
 
-        // Calculate summary statistics
         $summary = [
             'total_members' => $members->total(),
             'active_members' => Member::where('membership_status', 'active')->count(),
             'inactive_members' => Member::where('membership_status', 'inactive')->count(),
             'suspended_members' => Member::where('membership_status', 'suspended')->count(),
-            'new_members_this_month' => Member::whereMonth('membership_date', Carbon::now()->month)
-                ->whereYear('membership_date', Carbon::now()->year)->count(),
+            'new_members_this_month' => Member::whereMonth('membership_date', now()->month)
+                ->whereYear('membership_date', now()->year)
+                ->count(),
         ];
 
         return Inertia::render('Reports/Members/Register', [
@@ -386,6 +425,11 @@ class ReportController extends Controller
     /**
      * Loan Reports
      */
+
+    public function loanIndex()
+    {
+        return Inertia::render('Reports/Loans/Index');
+    }
     public function loanPortfolio(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfYear()->format('Y-m-d'));
@@ -449,13 +493,14 @@ class ReportController extends Controller
             ->orderBy('days_in_arrears', 'desc')
             ->get();
 
-        $arrearsAnalysis = [
+        // Use a collection to allow map()
+        $arrearsAnalysis = collect([
             '1-30_days' => $loans->whereBetween('days_in_arrears', [1, 30]),
             '31-60_days' => $loans->whereBetween('days_in_arrears', [31, 60]),
             '61-90_days' => $loans->whereBetween('days_in_arrears', [61, 90]),
             '91-180_days' => $loans->whereBetween('days_in_arrears', [91, 180]),
             'over_180_days' => $loans->where('days_in_arrears', '>', 180),
-        ];
+        ]);
 
         $summary = [
             'total_loans_in_arrears' => $loans->count(),
@@ -476,6 +521,7 @@ class ReportController extends Controller
             'summary' => $summary,
         ]);
     }
+
 
     public function loanDisbursement(Request $request)
     {
@@ -566,6 +612,11 @@ class ReportController extends Controller
     /**
      * Transaction Reports
      */
+    public function TransactionIndex()
+    {
+        return Inertia::render('Reports/Transactions/Index');
+    }
+
     public function dailyTransactions(Request $request)
     {
         $date = $request->input('date', Carbon::now()->format('Y-m-d'));

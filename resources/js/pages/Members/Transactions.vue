@@ -54,7 +54,7 @@ function downloadStatement() {
       <Head title="Transactions" />
 
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row bg-blue-900 py-5 px-6 rounded-2xl sm:items-center sm:justify-between gap-4 shadow-lg">
+      <div class="flex flex-col sm:flex-row bg-[#0a2342] py-5 px-6 rounded-2xl sm:items-center sm:justify-between gap-4 shadow-lg">
        <div>
           <h1 class="text-xl sm:text-2xl font-semibold text-white">
             Transactions
@@ -75,7 +75,7 @@ function downloadStatement() {
             <CardTitle class="text-[#081642]">Total Amount</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-lg font-semibold text-blue-900">
+            <p class="text-lg font-semibold text-[#0a2342]">
               KES {{ Number(totalAmount).toLocaleString() }}
             </p>
           </CardContent>
@@ -196,7 +196,7 @@ function downloadStatement() {
             v-html="link.label"
             class="px-3 py-1.5 rounded-lg text-sm border transition"
             :class="{
-              'bg-blue-900 text-white border-blue-900 shadow': link.active,
+              'bg-[#0a2342] text-white border-[#0a2342] shadow': link.active,
               'text-gray-600 hover:bg-gray-100 border-gray-300': !link.active
             }"
           />

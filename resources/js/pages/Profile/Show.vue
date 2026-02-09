@@ -174,7 +174,7 @@ function submit() {
         <!-- Profile Card -->
         <div
           class="bg-white/90 backdrop-blur-xl rounded-2xl max-sm:mb-6 border border-slate-100 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div class="bg-gradient-to-r from-blue-900 to-indigo-800 p-8 text-center text-white rounded-t-2xl">
+          <div class="bg-gradient-to-r from-[#0a2342] to-blue-800 p-8 text-center text-white rounded-t-2xl">
             <div class="relative group">
               <img v-if="previewUrl" :src="previewUrl" alt="Preview"
                 class="w-28 h-28 mx-auto rounded-full object-cover border-4 border-white shadow-md transition-transform group-hover:scale-105" />
@@ -224,10 +224,10 @@ function submit() {
         <div
           class="col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-100 shadow-lg p-8 transition-all duration-300">
           <div class="flex flex-wrap justify-between items-center mb-6">
-            <h3 class="text-xl font-semibold text-blue-900">Personal Information</h3>
+            <h3 class="text-xl font-semibold text-[#0a2342]">Personal Information</h3>
             <div class="flex gap-3">
               <Button v-if="!isEditing" @click="isEditing = true"
-                class="bg-blue-900 hover:bg-blue-800 text-white rounded-md px-4 py-2 flex items-center gap-2 shadow-sm">
+                class="bg-[#0a2342] hover:bg-blue-900 text-white rounded-md px-4 py-2 flex items-center gap-2 shadow-sm">
                 <Pencil class="w-4 h-4" /> Edit
               </Button>
               <Button v-if="isEditing" @click="isEditing = false"
@@ -283,7 +283,7 @@ function submit() {
 
             <!-- Address -->
             <section>
-              <h3 class="text-lg font-semibold text-blue-900 mb-4">Address</h3>
+              <h3 class="text-lg font-semibold text-[#0a2342] mb-4">Address</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div v-for="field in [
     { key: 'physical_address', label: 'Physical Address' },
@@ -316,7 +316,7 @@ function submit() {
 
             <!-- Emergency -->
             <section>
-              <h3 class="text-lg font-semibold text-blue-900 mb-4">Emergency Contact</h3>
+              <h3 class="text-lg font-semibold text-[#0a2342] mb-4">Emergency Contact</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div v-for="field in [
     { key: 'emergency_contact_name', label: 'Contact Name' },

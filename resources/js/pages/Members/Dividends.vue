@@ -27,7 +27,7 @@ const formattedTotalAmount = computed(() =>
       <Head title="Dividends" />
 
       <!-- Header -->
-      <div class="bg-blue-900 shadow-lg rounded-2xl px-6 py-5 flex items-center justify-between">
+      <div class="bg-[#0a2342] shadow-lg rounded-2xl px-6 py-5 flex items-center justify-between">
         <div>
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
             Dividends
