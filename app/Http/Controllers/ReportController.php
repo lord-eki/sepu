@@ -612,6 +612,11 @@ class ReportController extends Controller
     /**
      * Transaction Reports
      */
+    public function TransactionIndex()
+    {
+        return Inertia::render('Reports/Transactions/Index');
+    }
+
     public function dailyTransactions(Request $request)
     {
         $date = $request->input('date', Carbon::now()->format('Y-m-d'));

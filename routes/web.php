@@ -358,6 +358,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/loans/disbursement', [ReportController::class, 'loanDisbursement'])->name('loans.disbursement');
         Route::get('/loans/collection', [ReportController::class, 'loanCollection'])->name('loans.collection');
         // Transaction reports
+        Route::get('/transactions/report', [ReportController::class, 'TransactionIndex'])->name('TransactionsReport.index');
         Route::get('/transactions/daily', [ReportController::class, 'dailyTransactions'])->name('transactions.daily');
         Route::get('/transactions/monthly', [ReportController::class, 'monthlyTransactions'])->name('transactions.monthly');
         Route::get('/transactions/annual', [ReportController::class, 'annualTransactions'])->name('transactions.annual');
