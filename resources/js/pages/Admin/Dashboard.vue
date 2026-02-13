@@ -305,8 +305,6 @@ const props = defineProps([
   'stats', 'recentActivities', 'pendingApprovals', 'systemHealth'
 ])
 
-console.log("het", props.recentActivities);
-
 const formatMoney = (num) => {
   if (num == null) return 'Ksh 0';
   return 'Ksh ' + Number(num).toLocaleString();

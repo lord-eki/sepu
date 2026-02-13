@@ -18,8 +18,7 @@ defineProps<{
 }>()
 
 const breadcrumbs = [
-  { title: 'Reports', href: route('reports.index') },
-  { title: 'Regulatory Reports', href: route('reports.regulatory.index') },
+  { title: 'Regulatory Reports', href: route('reports.regulatoryReport.index') },
   { title: 'Statutory Reports' },
 ]
 

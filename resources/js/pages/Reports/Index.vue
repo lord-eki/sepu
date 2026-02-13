@@ -47,7 +47,7 @@ const reportCards = ref([
     title: 'Regulatory Reports',
     description: 'Compliance and statutory reporting.',
     icon: FileBadge,
-    route: route('reports.regulatory.statutory'),
+    route: route('reports.regulatoryReport.index'),
   },
   {
     title: 'Custom Reports',

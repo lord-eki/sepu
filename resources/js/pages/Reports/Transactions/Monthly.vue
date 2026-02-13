@@ -23,8 +23,7 @@ function changeMonth(e: Event) {
 }
 
 const breadcrumbs = [
-  { title: 'Reports', href: route('reports.index') },
-  { title: 'Transaction Reports', href: route('reports.transactions.index') },
+  { title: 'Transaction Reports', href: route('reports.transactionsReport.index') },
   { title: 'Monthly Transactions' },
 ]
 </script>

@@ -795,6 +795,10 @@ class ReportController extends Controller
 /**
  * Regulatory Reports
  */
+public function RegulatoryIndex()
+{
+    return Inertia::render('Reports/Regulatory/Index');
+}
 public function statutoryReports(Request $request)
 {
     $year = $request->input('year', Carbon::now()->year);

@@ -223,14 +223,14 @@ const adminNavItems: NavItem[] = [
       },
       {
         title: 'Transaction Reports',
-        href: route('reports.transactions.daily'),
-        routeName: 'reports.transactions.daily',
+        href: route('reports.transactionsReport.index'),
+        routeName: 'reports.transactionsReport.index',
         icon: ArrowRightLeft,
       },
       {
         title: 'Regulatory Reports',
-        href: route('reports.regulatory.statutory'),
-        routeName: 'reports.regulatory.statutory',
+        href: route('reports.regulatoryReport.index'),
+        routeName: 'reports.regulatoryReport.index',
         icon: Shield,
       },
       {
