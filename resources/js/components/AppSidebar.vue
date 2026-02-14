@@ -200,48 +200,56 @@ const adminNavItems: NavItem[] = [
     icon: ArrowRightLeft,
   },
   {
-    title: 'Reports',
-    icon: FileText,
-    children: [
-      {
-        title: 'Financial Reports',
-        href: route('reports.financial.index'),
-        routeName: 'reports.financial.index',
-        icon: Calculator,
-      },
-      {
-        title: 'Member Reports',
-        href: route('reports.membersReport.index'),
-        routeName: 'reports.membersReport.index',
-        icon: Users,
-      },
-      {
-        title: 'Loan Reports',
-        href: route('reports.loansReport.index'),
-        routeName: 'reports.loansReport.index',
-        icon: BriefcaseConveyorBelt,
-      },
-      {
-        title: 'Transaction Reports',
-        href: route('reports.transactionsReport.index'),
-        routeName: 'reports.transactionsReport.index',
-        icon: ArrowRightLeft,
-      },
-      {
-        title: 'Regulatory Reports',
-        href: route('reports.regulatoryReport.index'),
-        routeName: 'reports.regulatoryReport.index',
-        icon: Shield,
-      },
-      {
-        title: 'Custom Reports',
-        href: route('reports.custom.builder'),
-        routeName: 'reports.custom.builder',
-        icon: Folder,
-      },
-    ],
-  },
+  title: 'Reports',
+  icon: FileText,
+  children: [
 
+    // ✅ Add this
+    {
+      title: 'Reports Dashboard',
+      href: route('reports.index'),
+      routeName: 'reports.index',
+      icon: FileText,
+    },
+
+    {
+      title: 'Financial Reports',
+      href: route('reports.financial.index'),
+      routeName: 'reports.financial.index',
+      icon: Calculator,
+    },
+    {
+      title: 'Member Reports',
+      href: route('reports.membersReport.index'),
+      routeName: 'reports.membersReport.index',
+      icon: Users,
+    },
+    {
+      title: 'Loan Reports',
+      href: route('reports.loansReport.index'),
+      routeName: 'reports.loansReport.index',
+      icon: BriefcaseConveyorBelt,
+    },
+    {
+      title: 'Transaction Reports',
+      href: route('reports.transactionsReport.index'),
+      routeName: 'reports.transactionsReport.index',
+      icon: ArrowRightLeft,
+    },
+    {
+      title: 'Regulatory Reports',
+      href: route('reports.regulatoryReport.index'),
+      routeName: 'reports.regulatoryReport.index',
+      icon: Shield,
+    },
+    {
+      title: 'Custom Reports',
+      href: route('reports.custom.builder'),
+      routeName: 'reports.custom.builder',
+      icon: Folder,
+    },
+  ],
+},
   {
     title: 'Schedule',
     icon: ClipboardList,
