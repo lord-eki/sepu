@@ -44,92 +44,217 @@ const breadcrumbs = [
 </script>
 
 <template>
-
     <Head title="Loan Portfolio" />
 
     <AppLayout title="Loan Portfolio" :breadcrumbs="breadcrumbs">
 
-        <!-- Header + Date Filter -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mx-5 mt-5 mb-8">
+        <!-- HEADER -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mx-6 mt-6 mb-10">
+
             <div>
-                <h2 class="text-2xl font-bold text-[#0a2342] dark:text-orange-400">Loan Portfolio</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    Overview of loans by product and status
+                <h2 class="text-3xl font-extrabold text-[#0B1F3A] dark:text-orange-400 tracking-tight">
+                    Loan Portfolio
+                </h2>
+                <p class="text-gray-600 dark:text-gray-300 mt-2 text-sm">
+                    Overview of loans by product, performance and risk
                 </p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <!-- Date Filter -->
+            <div class="flex items-center gap-3 bg-white dark:bg-[#0B1F3A] 
+                        border border-orange-200 dark:border-[#1f3a63]
+                        rounded-2xl px-4 py-3 shadow-sm">
+
                 <CalendarDays class="h-5 w-5 text-orange-500" />
-                <input type="date" v-model="startDate" @change="applyDateFilter"
-                    class="rounded-xl border border-blue-900 dark:border-orange-500 bg-white dark:bg-blue-950 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                <span class="text-gray-500 dark:text-gray-400">-</span>
-                <input type="date" v-model="endDate" @change="applyDateFilter"
-                    class="rounded-xl border border-blue-900 dark:border-orange-500 bg-white dark:bg-blue-950 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+
+                <input type="date"
+                    v-model="startDate"
+                    @change="applyDateFilter"
+                    class="rounded-lg bg-transparent px-3 py-2 text-sm 
+                           text-gray-700 dark:text-gray-200 
+                           border border-transparent
+                           focus:outline-none focus:ring-2 focus:ring-orange-500" />
+
+                <span class="text-gray-400">-</span>
+
+                <input type="date"
+                    v-model="endDate"
+                    @change="applyDateFilter"
+                    class="rounded-lg bg-transparent px-3 py-2 text-sm 
+                           text-gray-700 dark:text-gray-200 
+                           border border-transparent
+                           focus:outline-none focus:ring-2 focus:ring-orange-500" />
             </div>
         </div>
 
-        <!-- Summary Stats -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mx-5 mb-8">
-            <div
-                class="p-5 rounded-2xl bg-gray-50 dark:bg-[#0a2342] border border-blue-200 dark:border-orange-600 shadow hover:shadow-lg transition">
-                <div class="text-sm text-blue-900 dark:text-orange-300">Total Loans</div>
-                <div class="mt-2 text-xl font-bold text-[#0a2342] dark:text-white">{{ summary.total_loans }}</div>
+
+        <!-- SUMMARY CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mx-6 mb-12">
+
+            <!-- CARD -->
+            <div class="p-6 rounded-2xl 
+                        bg-gradient-to-br from-white to-orange-50
+                        dark:from-[#0B1F3A] dark:to-[#122C4F]
+                        border border-orange-200 dark:border-[#1f3a63]
+                        shadow-sm hover:shadow-xl hover:-translate-y-1
+                        transition-all duration-300">
+
+                <div class="text-xs uppercase tracking-wide text-orange-500 font-semibold">
+                    Total Loans
+                </div>
+                <div class="mt-3 text-xl font-bold text-[#0B1F3A] dark:text-white">
+                    {{ summary.total_loans }}
+                </div>
             </div>
-            <div
-                class="p-5 rounded-2xl bg-gray-50 dark:bg-[#0a2342] border border-blue-200 dark:border-orange-600 shadow hover:shadow-lg transition">
-                <div class="text-sm text-blue-900 dark:text-orange-300">Total Disbursed</div>
-                <div class="mt-2 text-xl font-bold text-green-600">{{ money(summary.total_disbursed) }}</div>
+
+            <div class="p-6 rounded-2xl 
+                        bg-gradient-to-br from-white to-orange-50
+                        dark:from-[#0B1F3A] dark:to-[#122C4F]
+                        border border-orange-200 dark:border-[#1f3a63]
+                        shadow-sm hover:shadow-xl hover:-translate-y-1
+                        transition-all duration-300">
+
+                <div class="text-xs uppercase tracking-wide text-orange-500 font-semibold">
+                    Total Disbursed
+                </div>
+                <div class="mt-3 text-xl font-bold text-green-600">
+                    {{ money(summary.total_disbursed) }}
+                </div>
             </div>
-            <div
-                class="p-5 rounded-2xl bg-gray-50 dark:bg-[#0a2342] border border-blue-200 dark:border-orange-600 shadow hover:shadow-lg transition">
-                <div class="text-sm text-blue-900 dark:text-orange-300">Total Outstanding</div>
-                <div class="mt-2 text-xl font-bold text-orange-600">{{ money(summary.total_outstanding) }}</div>
+
+            <div class="p-6 rounded-2xl 
+                        bg-gradient-to-br from-white to-orange-50
+                        dark:from-[#0B1F3A] dark:to-[#122C4F]
+                        border border-orange-200 dark:border-[#1f3a63]
+                        shadow-sm hover:shadow-xl hover:-translate-y-1
+                        transition-all duration-300">
+
+                <div class="text-xs uppercase tracking-wide text-orange-500 font-semibold">
+                    Total Outstanding
+                </div>
+                <div class="mt-3 text-xl font-bold text-orange-500">
+                    {{ money(summary.total_outstanding) }}
+                </div>
             </div>
-            <div
-                class="p-5 rounded-2xl bg-gray-50 dark:bg-[#0a2342] border border-blue-200 dark:border-orange-600 shadow hover:shadow-lg transition">
-                <div class="text-sm text-blue-900 dark:text-orange-300">Average Loan Size</div>
-                <div class="mt-2 text-xl font-bold text-green-600">{{ money(summary.average_loan_size) }}</div>
+
+            <div class="p-6 rounded-2xl 
+                        bg-gradient-to-br from-white to-orange-50
+                        dark:from-[#0B1F3A] dark:to-[#122C4F]
+                        border border-orange-200 dark:border-[#1f3a63]
+                        shadow-sm hover:shadow-xl hover:-translate-y-1
+                        transition-all duration-300">
+
+                <div class="text-xs uppercase tracking-wide text-orange-500 font-semibold">
+                    Average Loan Size
+                </div>
+                <div class="mt-3 text-xl font-bold text-green-600">
+                    {{ money(summary.average_loan_size) }}
+                </div>
             </div>
-            <div
-                class="p-5 rounded-2xl bg-gray-50 dark:bg-[#0a2342] border border-blue-200 dark:border-orange-600 shadow hover:shadow-lg transition">
-                <div class="text-sm text-blue-900 dark:text-orange-300">Portfolio at Risk</div>
-                <div class="mt-2 text-xl font-bold text-red-600">{{ money(summary.portfolio_at_risk) }}</div>
+
+            <div class="p-6 rounded-2xl 
+                        bg-gradient-to-br from-white to-orange-50
+                        dark:from-[#0B1F3A] dark:to-[#122C4F]
+                        border border-orange-200 dark:border-[#1f3a63]
+                        shadow-sm hover:shadow-xl hover:-translate-y-1
+                        transition-all duration-300">
+
+                <div class="text-xs uppercase tracking-wide text-orange-500 font-semibold">
+                    Portfolio at Risk
+                </div>
+                <div class="mt-3 text-xl font-bold text-red-600">
+                    {{ money(summary.portfolio_at_risk) }}
+                </div>
             </div>
+
         </div>
 
-        <!-- Portfolio by Product -->
-        <div class="mx-5 mb-8">
-            <h3 class="text-lg font-semibold text-[#0a2342] dark:text-orange-400 mb-4">Portfolio by Product</h3>
-            <div v-if="portfolio_by_product.length === 0" class="text-gray-500 dark:text-gray-300 italic">
+
+        <!-- PORTFOLIO BY PRODUCT -->
+        <div class="mx-6 mb-12">
+            <h3 class="text-lg font-semibold text-[#0B1F3A] dark:text-orange-400 mb-5">
+                Portfolio by Product
+            </h3>
+
+            <div v-if="portfolio_by_product.length === 0"
+                class="text-gray-500 dark:text-gray-400 italic">
                 No products found for the selected date range.
             </div>
+
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div v-for="product in portfolio_by_product" :key="product.name"
-                    class="p-5 rounded-2xl bg-gray-50 dark:bg-[#0a2342] border border-blue-200 dark:border-orange-600 shadow hover:shadow-lg transition">
-                    <div class="text-sm text-blue-900 dark:text-orange-300">{{ product.name }}</div>
-                    <div class="mt-2 font-bold text-[#0a2342] dark:text-white">Loans: {{ product.count }}</div>
-                    <div class="text-gray-700 dark:text-gray-300">Disbursed: {{ money(product.total_disbursed) }}</div>
-                    <div class="text-gray-700 dark:text-gray-300">Outstanding: {{ money(product.total_outstanding) }}
+
+                <div v-for="product in portfolio_by_product"
+                    :key="product.name"
+                    class="relative p-6 rounded-2xl
+                           bg-white dark:bg-[#0B1F3A]
+                           border border-orange-200 dark:border-[#1f3a63]
+                           shadow-sm hover:shadow-xl hover:-translate-y-1
+                           transition-all duration-300">
+
+                    <!-- Accent Bar -->
+                    <div class="absolute top-0 left-0 w-2 h-full bg-orange-500 rounded-l-2xl"></div>
+
+                    <div class="text-sm font-semibold text-[#0B1F3A] dark:text-orange-400">
+                        {{ product.name }}
+                    </div>
+
+                    <div class="mt-3 text-sm dark:text-gray-300">
+                        Loans: <span class="font-semibold">{{ product.count }}</span>
+                    </div>
+
+                    <div class="text-sm dark:text-gray-300">
+                        Disbursed: {{ money(product.total_disbursed) }}
+                    </div>
+
+                    <div class="text-sm dark:text-gray-300">
+                        Outstanding: {{ money(product.total_outstanding) }}
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- Portfolio by Status -->
-        <div>
-            <h3 class="text-lg font-semibold text-[#0a2342] dark:text-orange-400 mx-5 mb-4">Portfolio by Status</h3>
-            <div v-if="portfolio_by_status.length === 0" class="text-gray-500 mx-5 dark:text-gray-300 italic">
+
+        <!-- PORTFOLIO BY STATUS -->
+        <div class="mx-6 mb-10">
+            <h3 class="text-lg font-semibold text-[#0B1F3A] dark:text-orange-400 mb-5">
+                Portfolio by Status
+            </h3>
+
+            <div v-if="portfolio_by_status.length === 0"
+                class="text-gray-500 dark:text-gray-400 italic">
                 No statuses found for the selected date range.
             </div>
+
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div v-for="status in portfolio_by_status" :key="status.key"
-                    class="p-5 rounded-2xl bg-gray-50 dark:bg-[#0a2342] border border-blue-200 dark:border-orange-600 shadow hover:shadow-lg transition">
-                    <div class="text-sm text-blue-900 dark:text-orange-300">{{ status.key.toUpperCase() }}</div>
-                    <div class="mt-2 font-bold text-[#0a2342] dark:text-white">Loans: {{ status.count }}</div>
-                    <div class="text-gray-700 dark:text-gray-300">Disbursed: {{ money(status.total_disbursed) }}</div>
-                    <div class="text-gray-700 dark:text-gray-300">Outstanding: {{ money(status.total_outstanding) }}
+
+                <div v-for="status in portfolio_by_status"
+                    :key="status.key"
+                    class="relative p-6 rounded-2xl
+                           bg-white dark:bg-[#0B1F3A]
+                           border border-orange-200 dark:border-[#1f3a63]
+                           shadow-sm hover:shadow-xl hover:-translate-y-1
+                           transition-all duration-300">
+
+                    <div class="absolute top-0 left-0 w-2 h-full bg-orange-500 rounded-l-2xl"></div>
+
+                    <div class="text-sm font-semibold text-[#0B1F3A] dark:text-orange-400">
+                        {{ status.key.toUpperCase() }}
+                    </div>
+
+                    <div class="mt-3 text-sm dark:text-gray-300">
+                        Loans: <span class="font-semibold">{{ status.count }}</span>
+                    </div>
+
+                    <div class="text-sm dark:text-gray-300">
+                        Disbursed: {{ money(status.total_disbursed) }}
+                    </div>
+
+                    <div class="text-sm dark:text-gray-300">
+                        Outstanding: {{ money(status.total_outstanding) }}
                     </div>
                 </div>
+
             </div>
         </div>
 

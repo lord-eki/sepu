@@ -41,7 +41,7 @@ const reportCards = ref([
     title: 'Transaction Reports',
     description: 'Daily, monthly & annual transactions.',
     icon: Receipt,
-    route: route('reports.transactions.daily'),
+    route: route('reports.transactionsReport.index'),
   },
   {
     title: 'Regulatory Reports',

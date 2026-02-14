@@ -8,7 +8,7 @@ import {
   ArrowRightLeft,
 } from 'lucide-vue-next'
 
-defineProps<{
+const props = defineProps<{
   summary?: {
     today: number
     today_amount: number
@@ -18,6 +18,16 @@ defineProps<{
     this_year_amount: number
   }
 }>()
+
+// Always have a summary object
+const summary = props.summary ?? {
+  today: 0,
+  today_amount: 0,
+  this_month: 0,
+  this_month_amount: 0,
+  this_year: 0,
+  this_year_amount: 0,
+}
 
 function money(value: number) {
   return new Intl.NumberFormat('en-KE', {
@@ -37,7 +47,7 @@ const breadcrumbs = [
 
   <AppLayout title="Transaction Reports" :breadcrumbs="breadcrumbs">
     <!-- Header -->
-    <div class="mb-8">
+    <div class="mb-8 mx-5 mt-5">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
         Transaction Reports
       </h2>
@@ -48,12 +58,11 @@ const breadcrumbs = [
 
     <!-- Summary Cards -->
     <div
-      v-if="summary"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mx-5 gap-6 mb-10"
     >
       <div class="p-5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
         <div class="flex items-center gap-3">
-          <ArrowRightLeft class="h-6 w-6 text-orange-500" />
+          <ArrowRightLeft class="h-6 w-6 text-blue-500" />
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">Today</p>
             <p class="font-bold text-gray-900 dark:text-gray-100">
@@ -98,7 +107,7 @@ const breadcrumbs = [
     </div>
 
     <!-- Report Links -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 mx-5 gap-6">
       <!-- Daily -->
       <Link
         :href="route('reports.transactions.daily')"

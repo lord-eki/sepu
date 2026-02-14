@@ -20,30 +20,57 @@ function navigateTo(routeName: string) {
 </script>
 
 <template>
-
     <Head title="Loan Reports" />
 
     <AppLayout title="Loan Reports" :breadcrumbs="breadcrumbs">
 
-        <div class="mb-8 mx-5 mt-5">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <!-- Header Section -->
+        <div class="mb-10 mx-6 mt-6">
+            <h2 class="text-3xl font-extrabold text-[#0B1F3A] dark:text-orange-400 tracking-tight">
                 Loan Reports
             </h2>
-            <p class="text-gray-600 dark:text-gray-300 mt-2 text-base">
-                Access detailed loan reports for your SACCO
+            <p class="text-gray-600 dark:text-gray-300 mt-3 text-base max-w-2xl">
+                Access comprehensive loan analytics, portfolio summaries, arrears tracking, 
+                and repayment performance reports for your SACCO.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 m-6 gap-6">
-            <div v-for="report in reportLinks" :key="report.title" @click="navigateTo(report.route)"
-                class="cursor-pointer rounded-2xl border border-blue-200 bg-gray-50 dark:bg-[#0a2342] p-6 sm:p-10 hover:scale-105 hover:shadow-xl transition-transform duration-200">
-                <h3 class="text-lg font-bold text-[#0a2342] dark:text-orange-400 mb-2">
+        <!-- Cards Section -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 mx-6 mb-10">
+
+            <div 
+                v-for="report in reportLinks" 
+                :key="report.title"
+                @click="navigateTo(report.route)"
+                class="group cursor-pointer rounded-2xl p-8 
+                       bg-gradient-to-br from-white to-orange-50 
+                       dark:from-[#0B1F3A] dark:to-[#122C4F]
+                       border border-orange-200 dark:border-[#1f3a63]
+                       shadow-sm hover:shadow-2xl 
+                       hover:-translate-y-1 
+                       transition-all duration-300 ease-in-out"
+            >
+
+                <!-- Title -->
+                <h3 class="text-xl font-semibold text-[#0B1F3A] 
+                           dark:text-orange-400 
+                           group-hover:text-orange-500 
+                           transition-colors duration-300">
                     {{ report.title }}
                 </h3>
-                <p class="text-sm text-orange-500 dark:text-gray-300">
+
+                <!-- Description -->
+                <p class="mt-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                     {{ report.description }}
                 </p>
+
+                <!-- Accent line -->
+                <div class="mt-6 h-1 w-12 bg-orange-500 rounded-full 
+                            group-hover:w-20 transition-all duration-300">
+                </div>
+
             </div>
         </div>
+
     </AppLayout>
 </template>
