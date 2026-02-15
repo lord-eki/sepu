@@ -371,6 +371,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Custom reports
         Route::get('/custom/builder', [ReportController::class, 'customBuilder'])->name('custom.builder');
         Route::post('/custom/generate', [ReportController::class, 'generateCustom'])->name('custom.generate');
+
+        // Exports
+        Route::post('/export', [ReportController::class, 'exportReport'])->name('financial.export');
+
     });
 
     // NOTIFICATIONS ROUTES
