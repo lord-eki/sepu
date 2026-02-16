@@ -40,6 +40,18 @@ function money(value: number) {
     currency: 'KES',
   }).format(value ?? 0)
 }
+
+function exportReport(format: string) {
+  const url = route('reports.export')
+
+  window.location.href =
+    url +
+    `?report_type=income_statement` +
+    `&format=${format}` +
+    `&start_date=${startDate.value}` +
+    `&end_date=${endDate.value}`
+}
+
 </script>
 
 <template>
@@ -80,6 +92,30 @@ function money(value: number) {
                  focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
       </div>
+      <!-- Export Buttons -->
+    <div class="flex gap-2">
+      <button
+        @click="exportReport('excel')"
+        class="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition"
+      >
+        Excel
+      </button>
+
+      <button
+        @click="exportReport('csv')"
+        class="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
+      >
+        CSV
+      </button>
+
+      <button
+        @click="exportReport('pdf')"
+        class="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+      >
+        PDF
+      </button>
+    </div>
+
     </div>
 
     <!-- Main Cards -->

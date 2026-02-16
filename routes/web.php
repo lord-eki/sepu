@@ -373,7 +373,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/custom/generate', [ReportController::class, 'generateCustom'])->name('custom.generate');
 
         // Exports
-        Route::post('/export', [ReportController::class, 'exportReport'])->name('financial.export');
         Route::get('/export', [ReportController::class, 'exportReport'])->name('export');
 
 

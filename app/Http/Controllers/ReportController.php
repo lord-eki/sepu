@@ -1013,27 +1013,19 @@ public function generateCustom(Request $request)
 public function exportReport(Request $request)
 {
     $reportType = $request->input('report_type');
-    $format     = $request->input('format', 'excel');
-
-    $start = $request->input('start_date');
-    $end   = $request->input('end_date');
-    $asOf  = $request->input('date');
-
-    // Build data from backend
-    $data = $this->buildReportData($reportType, $start, $end, $asOf);
-
+    $format = $request->input('format', 'excel');
+    $data = $request->input('data', []);
+    
     switch ($format) {
         case 'pdf':
             return $this->exportToPDF($reportType, $data);
-
         case 'csv':
             return $this->exportToCSV($reportType, $data);
-
+        case 'excel':
         default:
             return $this->exportToExcel($reportType, $data);
     }
 }
-
 
 
 /**

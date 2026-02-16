@@ -48,7 +48,7 @@ async function exportReport(format: 'pdf' | 'excel' | 'csv') {
     exporting.value = true
 
     const response = await axios.post(
-      route('reports.financial.export'),
+      route('reports.export'),
       {
         report_type: 'balance_sheet',
         format: format,
