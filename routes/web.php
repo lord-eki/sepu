@@ -374,6 +374,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Exports
         Route::post('/export', [ReportController::class, 'exportReport'])->name('financial.export');
+        Route::get('/export', [ReportController::class, 'exportReport'])->name('export');
+
 
     });
 
