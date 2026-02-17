@@ -29,11 +29,12 @@ function goTo(routeName: string) {
 </script>
 
 <template>
+
   <Head title="Regulatory Reports" />
 
   <AppLayout title="Regulatory Reports" :breadcrumbs="breadcrumbs">
     <!-- Intro -->
-    <div class="mb-8">
+    <div class="mb-8 mt-5 mx-5">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
         Regulatory & Compliance Reports
       </h2>
@@ -43,18 +44,11 @@ function goTo(routeName: string) {
     </div>
 
     <!-- Report Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <div
-        v-for="report in reports"
-        :key="report.title"
-        @click="goTo(report.route)"
-        class="cursor-pointer rounded-2xl border border-gray-200 dark:border-gray-700 
-               bg-white dark:bg-gray-900 p-6 shadow-sm hover:shadow-lg transition-all"
-      >
+    <div class="grid grid-cols-1 sm:grid-cols-2 mx-5                                                   gap-6">
+      <div v-for="report in reports" :key="report.title" @click="goTo(report.route)" class="cursor-pointer rounded-2xl border border-gray-200 dark:border-gray-700 
+               bg-white dark:bg-gray-900 p-6 shadow-sm hover:shadow-lg transition-all">
         <div class="flex items-start gap-4">
-          <div
-            class="p-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600"
-          >
+          <div class="p-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600">
             <component :is="report.icon" class="h-6 w-6" />
           </div>
 
@@ -71,10 +65,8 @@ function goTo(routeName: string) {
     </div>
 
     <!-- Compliance Notice -->
-    <div
-      class="mt-10 rounded-xl border border-yellow-200 dark:border-yellow-800 
-             bg-yellow-50 dark:bg-yellow-900/20 p-5"
-    >
+    <div class="mt-10 mx-5 rounded-xl border border-yellow-200 dark:border-yellow-800 
+             bg-yellow-50 dark:bg-yellow-900/20 p-5">
       <p class="text-sm text-yellow-800 dark:text-yellow-200">
         ⚠️ Regulatory reports should be reviewed before submission to regulators.
         Ensure all data is verified and approved.

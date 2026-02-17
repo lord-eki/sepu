@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import { CalendarDays } from 'lucide-vue-next'
 import type { BreadcrumbItem } from '@/types'
 import { route } from 'ziggy-js'
+import axios from 'axios'
 
 const props = defineProps<{
   assets: Record<string, any>
@@ -39,6 +40,42 @@ function money(value: number) {
     currency: 'KES',
   }).format(value ?? 0)
 }
+
+const exporting = ref(false)
+
+async function exportReport(format: 'pdf' | 'excel' | 'csv') {
+  try {
+    exporting.value = true
+
+    const response = await axios.post(
+      route('reports.export'),
+      {
+        report_type: 'balance_sheet',
+        format: format,
+        date: selectedDate.value,
+      },
+      {
+        responseType: 'blob',
+      }
+    )
+
+    const blob = new Blob([response.data])
+    const link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+
+    const fileName = `balance_sheet_${selectedDate.value}.${format === 'excel' ? 'xlsx' : format}`
+    link.setAttribute('download', fileName)
+
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Export failed:', error)
+  } finally {
+    exporting.value = false
+  }
+}
+
 </script>
 
 <template>
@@ -58,13 +95,31 @@ function money(value: number) {
           </p>
         </div>
 
-        <!-- Date Picker -->
-        <div class="flex items-center gap-2">
-          <CalendarDays class="h-5 w-5 text-orange-500" />
-          <input type="date" v-model="selectedDate" @change="applyDateFilter" class="rounded-xl border border-gray-300 dark:border-gray-700
+        <div class="flex gap-4">
+          <!-- Date Picker -->
+          <div class="flex items-center gap-2">
+            <CalendarDays class="h-5 w-5 text-orange-500" />
+            <input type="date" v-model="selectedDate" @change="applyDateFilter" class="rounded-xl border border-gray-300 dark:border-gray-700
                    bg-white dark:bg-gray-900 px-4 py-2 text-sm
                    text-gray-700 dark:text-gray-200
                    focus:outline-none focus:ring-2 focus:ring-orange-500" />
+          </div>
+          <div class="flex items-center gap-2">
+            <button @click="exportReport('excel')"
+              class="px-4 py-2 rounded-xl bg-green-700 text-white text-sm font-medium hover:bg-green-800 transition">
+              Excel
+            </button>
+
+            <button @click="exportReport('pdf')"
+              class="px-4 py-2 rounded-xl bg-red-700 text-white text-sm font-medium hover:bg-red-800 transition">
+              PDF
+            </button>
+
+            <button @click="exportReport('csv')"
+              class="px-4 py-2 rounded-xl bg-blue-800 text-white text-sm font-medium hover:bg-blue-900 transition">
+              CSV
+            </button>
+          </div>
         </div>
       </div>
 

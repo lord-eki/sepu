@@ -795,6 +795,10 @@ class ReportController extends Controller
 /**
  * Regulatory Reports
  */
+public function RegulatoryIndex()
+{
+    return Inertia::render('Reports/Regulatory/Index');
+}
 public function statutoryReports(Request $request)
 {
     $year = $request->input('year', Carbon::now()->year);
@@ -1022,6 +1026,7 @@ public function exportReport(Request $request)
             return $this->exportToExcel($reportType, $data);
     }
 }
+
 
 /**
  * Helper Methods for Balance Sheet
@@ -1481,6 +1486,57 @@ private function mapAccounts(array $data)
         })
         ->values();
 }
+
+
+private function buildReportData($reportType, $start, $end, $asOf)
+{
+    switch ($reportType) {
+
+        case 'trial_balance':
+            return $this->getTrialBalanceAccounts($asOf)
+                ->map(fn($acc) => [
+                    'Account' => $acc['account_name'],
+                    'Debit'   => $acc['debit'],
+                    'Credit'  => $acc['credit'],
+                ])->toArray();
+
+
+        case 'balance_sheet':
+            return [
+                ['Account' => 'Cash & Equivalents', 'Amount' => $this->getCashAndEquivalents($asOf)],
+                ['Account' => 'Loans Receivable', 'Amount' => $this->getLoansReceivable($asOf)],
+                ['Account' => 'Investments', 'Amount' => $this->getInvestments($asOf)],
+                ['Account' => 'Member Deposits', 'Amount' => $this->getMemberDeposits($asOf)],
+                ['Account' => 'Share Capital', 'Amount' => $this->getShareCapital($asOf)],
+                ['Account' => 'Retained Earnings', 'Amount' => $this->getRetainedEarnings($asOf)],
+            ];
+
+
+        case 'income_statement':
+            return [
+                ['Account' => 'Interest Income', 'Amount' => $this->getInterestIncome($start, $end)],
+                ['Account' => 'Loan Fees', 'Amount' => $this->getLoanFees($start, $end)],
+                ['Account' => 'Service Charges', 'Amount' => $this->getServiceCharges($start, $end)],
+                ['Account' => 'Staff Costs', 'Amount' => $this->getStaffCosts($start, $end)],
+                ['Account' => 'Administrative Expenses', 'Amount' => $this->getAdministrativeExpenses($start, $end)],
+                ['Account' => 'Net Income', 'Amount' => $this->getNetIncome($start, $end)],
+            ];
+
+
+        case 'cash_flow':
+            return [
+                ['Activity' => 'Loan Disbursements', 'Amount' => $this->getLoanDisbursements($start, $end)],
+                ['Activity' => 'Loan Repayments', 'Amount' => $this->getLoanRepayments($start, $end)],
+                ['Activity' => 'Member Deposits', 'Amount' => $this->getMemberDepositsFlow($start, $end)],
+                ['Activity' => 'Withdrawals', 'Amount' => $this->getMemberWithdrawalsFlow($start, $end)],
+                ['Activity' => 'Dividend Payments', 'Amount' => $this->getDividendPayments($start, $end)],
+            ];
+
+        default:
+            return [];
+    }
+}
+
 
 }
 

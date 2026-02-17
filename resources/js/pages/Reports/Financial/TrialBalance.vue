@@ -37,6 +37,15 @@ function money(value: number) {
     currency: 'KES',
   }).format(value ?? 0)
 }
+
+function exportReport(format: string) {
+  window.location.href = route('reports.export', {
+    report_type: 'trial_balance',
+    format: format,
+    date: selectedDate.value,
+  })
+}
+
 </script>
 
 <template>
@@ -55,14 +64,31 @@ function money(value: number) {
         </p>
       </div>
 
-      <!-- Date Picker -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-3 flex-wrap">
         <CalendarDays class="h-5 w-5 text-orange-500" />
+
         <input type="date" v-model="selectedDate" @change="applyDateFilter" class="rounded-xl border border-gray-300 dark:border-gray-700
-                 bg-white dark:bg-gray-900 px-3 py-2 text-sm
-                 text-gray-700 dark:text-gray-200
-                 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+              bg-white dark:bg-gray-900 px-3 py-2 text-sm
+              text-gray-700 dark:text-gray-200
+              focus:outline-none focus:ring-2 focus:ring-orange-500" />
+
+        <!-- Export Buttons -->
+        <button @click="exportReport('excel')"
+          class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-xl shadow">
+          Excel
+        </button>
+
+        <button @click="exportReport('csv')"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-xl shadow">
+          CSV
+        </button>
+
+        <button @click="exportReport('pdf')"
+          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-xl shadow">
+          PDF
+        </button>
       </div>
+
     </div>
 
     <!-- Table Card -->
