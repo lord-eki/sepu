@@ -60,34 +60,42 @@ const sections = [
 
 <template>
   <PublicLayout>
+
     <Head title="Terms of Service" />
 
-    <main class="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
+    <main
+      class="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
 
       <!-- Soft Background Accent -->
-      <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[120px] opacity-30"></div>
-      <div class="absolute bottom-0 -left-40 w-[500px] h-[500px] bg-orange-200 rounded-full blur-[120px] opacity-30"></div>
+      <div
+        class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[120px] opacity-30 dark:bg-blue-800/30">
+      </div>
+      <div
+        class="absolute bottom-0 -left-40 w-[500px] h-[500px] bg-orange-200 rounded-full blur-[120px] opacity-30 dark:bg-orange-700/30">
+      </div>
 
       <div class="relative max-w-5xl mx-auto px-6 py-10 sm:py-16 lg:py-24 space-y-20">
 
         <!-- Header -->
         <section class="text-center space-y-6">
-          <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
+          <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
             Terms of
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-500">
+            <span
+              class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-500 dark:from-blue-400 dark:to-orange-400">
               Service
             </span>
           </h1>
 
-          <p class="text-gray-600 sm:text-lg max-w-3xl mx-auto leading-relaxed">
+          <p class="text-gray-600 sm:text-lg max-w-3xl mx-auto leading-relaxed dark:text-gray-300">
             These terms govern your use of SEPU SACCO’s services. Please review
             them carefully to understand your rights and obligations as a member.
           </p>
         </section>
 
         <!-- Introduction -->
-        <section class="rounded-3xl bg-white/80 backdrop-blur-xl
-                        border border-gray-200 shadow-xl p-10 text-gray-600 leading-relaxed">
+        <section
+          class="rounded-3xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-xl
+                        border border-gray-200 dark:border-gray-700 shadow-xl p-10 text-gray-600 dark:text-gray-300 leading-relaxed">
           <p>
             By joining SEPU SACCO and using our services, you agree to abide by
             the following terms and conditions. These provisions are designed to
@@ -98,32 +106,22 @@ const sections = [
 
         <!-- Terms Sections -->
         <div class="space-y-10">
-          <section
-            v-for="(item, index) in sections"
-            :key="index"
-            class="group rounded-3xl bg-white/80 backdrop-blur-lg
-                   border border-gray-200 p-8 shadow-md
+          <section v-for="(item, index) in sections" :key="index" class="group rounded-3xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-lg
+                   border border-gray-200 dark:border-gray-700 p-8 shadow-md
                    hover:shadow-xl hover:-translate-y-1
-                   transition-all duration-500"
-          >
+                   transition-all duration-500">
             <div class="flex items-center gap-3 mb-4">
-              <component
-                :is="item.icon"
-                class="w-6 h-6 text-orange-500 group-hover:scale-110 transition"
-              />
-              <h2 class="text-xl font-semibold text-gray-900">
+              <component :is="item.icon" class="w-6 h-6 text-orange-500 group-hover:scale-110 transition" />
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
                 {{ item.title }}
               </h2>
             </div>
 
-            <p class="text-gray-600 leading-relaxed mb-4">
+            <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
               {{ item.intro }}
             </p>
 
-            <ul
-              v-if="item.points"
-              class="list-disc ml-6 space-y-2 text-gray-600"
-            >
+            <ul v-if="item.points" class="list-disc ml-6 space-y-2 text-gray-600 dark:text-gray-300">
               <li v-for="(point, i) in item.points" :key="i">
                 {{ point }}
               </li>
@@ -134,9 +132,12 @@ const sections = [
         <!-- Contact Section -->
         <section class="relative overflow-hidden rounded-3xl
                         bg-gradient-to-r from-blue-900 to-blue-800
+                        dark:from-blue-800 dark:to-blue-700
                         p-12 text-white shadow-2xl">
 
-          <div class="absolute -top-20 -right-20 w-64 h-64 bg-orange-400 rounded-full blur-3xl opacity-20"></div>
+          <div
+            class="absolute -top-20 -right-20 w-64 h-64 bg-orange-400 rounded-full blur-3xl opacity-20 dark:bg-orange-600/30">
+          </div>
 
           <div class="relative text-center space-y-6">
             <div class="flex items-center justify-center gap-2">
@@ -152,8 +153,7 @@ const sections = [
             <div class="space-y-2 text-gray-200 text-sm sm:text-base">
               <p>
                 Email:
-                <a href="mailto:support@sepusacco.co.ke"
-                   class="underline text-orange-400 hover:text-orange-300">
+                <a href="mailto:support@sepusacco.co.ke" class="underline text-orange-400 hover:text-orange-300">
                   support@sepusacco.co.ke
                 </a>
               </p>
@@ -164,7 +164,7 @@ const sections = [
         </section>
 
         <!-- Footer Note -->
-        <p class="text-xs text-center text-gray-500 italic">
+        <p class="text-xs text-center text-gray-500 dark:text-gray-400 italic">
           Last updated: July 2025
         </p>
 
