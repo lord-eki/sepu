@@ -38,8 +38,8 @@
 
           <div class="flex justify-between items-center">
             <div class="text-sm font-medium text-gray-500 dark:text-gray-300">{{ stat.title }}</div>
-            <div class="p-3 rounded-xl bg-gradient-to-br from-orange-400 to-orange-200 text-white shadow-lg">
-              <component :is="stat.icon" class="h-6 w-6" />
+            <div class="p-3 rounded-xl bg-gradient-to-br from-orange-400 to-orange-200 text-white shadow-sm">
+              <component :is="stat.icon" class="h-5 w-5" />
             </div>
           </div>
 
@@ -71,7 +71,7 @@
               <div v-for="item in approvalItems" :key="item.label" @click="$inertia.visit(item.link)"
                 class="cursor-pointer rounded-2xl p-4 border border-gray-200 dark:border-gray-700 hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition flex flex-col gap-2">
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600 dark:text-gray-300">{{ item.label }}</span>
+                  <span class="text-sm text-blue-900 dark:text-gray-300">{{ item.label }}</span>
                   <span class="font-bold text-orange-500">{{ item.value }}</span>
                 </div>
                 <div class="text-xs text-gray-400 dark:text-gray-300 mt-1">Click to review →</div>
@@ -172,7 +172,7 @@
             <div class="space-y-4 text-sm">
               <div class="flex justify-between">
                 <span class="text-gray-500 dark:text-gray-300">Database</span>
-                <span class="text-green-400 dark:text-green-500 font-semibold">{{ systemHealth.database_status }}</span>
+                <span class="text-green-600 dark:text-green-700 font-semibold">{{ systemHealth.database_status }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-500 dark:text-gray-300">Active Users</span>
