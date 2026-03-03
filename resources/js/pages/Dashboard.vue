@@ -86,222 +86,254 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
   <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }]">
     <Head title="Dashboard" />
 
-    <div class="min-h-screen bg-[#f5f7fb] p-5 sm:p-6 space-y-10">
-      <!-- Flash Message Box -->
-      <!-- Flash Message Box -->
-<div v-if="showFlash" class="fixed top-5 inset-x-5 sm:inset-x-20 z-50 transition">
-  <!-- add padding-right so text doesn't overlap close -->
-<Alert
-  :class="flashType === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'"
-  class="relative pr-10 sm:pr-12"
->
-  <AlertTitle v-if="flashType === 'success'" class="text-green-700">Success</AlertTitle>
-  <AlertTitle v-else class="text-red-700">Error</AlertTitle>
-  <AlertDescription class="text-sm">{{ flashMessage }}</AlertDescription>
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 space-y-10">
 
-  <!-- Close button -->
-  <button
-    @click="showFlash = false"
-    class="absolute top-2 right-2 sm:right-3 text-gray-500 hover:text-gray-700 text-lg"
-    aria-label="Close message"
-  >
-    ×
-  </button>
-</Alert>
+      <!-- ========== EXECUTIVE HEADER ========== -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#102F55] via-blue-900 to-orange-900 p-6 shadow-2xl">
 
-</div>
+        <!-- subtle glow -->
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-orange-500/20 rounded-full blur-3xl"></div>
 
+        <div class="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6 text-white">
 
-      <!-- Header Banner -->
-      <div class="relative bg-gradient-to-r from-[#0B2B40] to-[#133263] rounded-3xl p-6 text-white shadow-xl">
-        <div class="flex flex-col sm:flex-row items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold tracking-tight">SEPU <span class="text-orange-500">SACCO</span></h1>
-            <p class="text-blue-100 text-sm">Save & Grow Together</p>
+            <h1 class="text-3xl font-bold tracking-tight">
+              SEPU <span class="text-orange-400">SACCO</span>
+            </h1>
+            <p class="text-slate-200 mt-1 text-sm">
+              Welcome back, <span class="font-medium">{{ fullName }}</span>
+            </p>
+            <p class="text-slate-300 hidden text-xs mt-1">
+              Your consolidated financial overview
+            </p>
           </div>
-          <div class="flex flex-col items-center gap-2 mt-3 sm:mt-0">
-            <Handshake class="w-6 h-6 text-orange-400" />
-            <div class=" h-1.5 w-24 bg-orange-500 rounded-full"></div>
+
+          <div class="flex items-center gap-3">
+            <Button
+              size="sm"
+              class="bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20 text-white"
+              @click="toggleBalances"
+            >
+              {{ showBalances ? 'Hide Balances' : 'Show Balances' }}
+            </Button>
+
+            <div class="relative">
+              <button
+                @click="toggleNotifications"
+                class="relative p-2.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 transition"
+              >
+                <Bell class="h-4 w-4 text-white" />
+                <span
+                  class="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] rounded-full px-1 min-w-[16px]"
+                >
+                  {{ notifications?.length ?? 0 }}
+                </span>
+              </button>
+            </div>
           </div>
+
         </div>
       </div>
 
-      <!-- Welcome -->
-      <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 class="text-xl font-semibold text-[#0a2342]">Welcome, {{ fullName }}</h2>
-          <p class="text-sm text-gray-500">Here’s your financial snapshot</p>
-        </div>
-        <div class="flex items-center gap-3 mt-3 sm:mt-0">
-          <Button size="sm" variant="outline" class="border-[#0a2342] hover:text-blue-900 hover:cursor-pointer text-[#0a2342]" @click="toggleBalances">
-            {{ showBalances ? 'Hide Balances' : 'Show Balances' }}
-          </Button>
+      <!-- ========== KPI SECTION ========== -->
+      <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
 
-          <!-- Notifications -->
-          <div class="relative">
-            <button
-              class="relative p-2 rounded-full bg-[#0a2342] hover:bg-blue-900 hover:cursor-pointer transition"
-              @click="toggleNotifications"
-            >
-              <Bell class="h-4 w-4 text-white" />
-              <span
-                class="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] rounded-full px-1 min-w-[16px] text-center"
-              >
-                {{ notifications?.length ?? 0 }}
-              </span>
-            </button>
-
-            <div
-              v-if="showNotifications"
-              class="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden"
-            >
-              <div class="p-3 bg-[#0B2B40] text-white flex items-center justify-between">
-                <span class="font-medium">Notifications</span>
-                <button @click="showNotifications = false" class="text-orange-400 hover:text-white">✕</button>
-              </div>
-              <ul class="max-h-60 overflow-y-auto divide-y divide-gray-100">
-                <li
-                  v-for="n in notifications"
-                  :key="n.id"
-                  class="p-3 text-sm text-gray-700 hover:bg-orange-50 transition"
-                >
-                  <div class="font-medium">{{ n.message }}</div>
-                  <div class="text-xs text-gray-400">{{ fmtDate(n.created_at) }}</div>
-                </li>
-                <li v-if="!notifications?.length" class="p-6 text-sm text-gray-500 text-center">
-                  No notifications
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <!-- Account Stats -->
-      <section class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         <Card
           v-for="stat in [
-            { title: 'Share Deposits Balance', value: fmtMoney(stats.accounts.share_deposits_balance), icon: Wallet },
-            { title: 'Share Capital Balance', value: fmtMoney(stats.accounts.share_capital_balance), icon: BadgeDollarSign },
+            { title: 'Share Deposits', value: fmtMoney(stats.accounts.share_deposits_balance), icon: Wallet },
+            { title: 'Share Capital', value: fmtMoney(stats.accounts.share_capital_balance), icon: BadgeDollarSign },
             { title: 'Active Loans', value: stats.loans.active_loans, icon: TrendingUp }
           ]"
           :key="stat.title"
-          class="bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+          class="group bg-white/70 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500"
         >
           <CardHeader class="flex justify-between items-center">
-            <CardTitle class="text-sm font-medium text-gray-700">{{ stat.title }}</CardTitle>
-            <div class="p-2 rounded-xl bg-orange-100 text-orange-600">
+            <CardTitle class="text-sm font-medium text-slate-600">
+              {{ stat.title }}
+            </CardTitle>
+
+            <div class="p-2 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-lg group-hover:scale-110 transition">
               <component :is="stat.icon" class="h-5 w-5" />
             </div>
           </CardHeader>
+
           <CardContent>
-            <div class="text-lg font-semibold text-[#0a2342]">
+            <div class="text-2xl font-semibold tracking-tight text-slate-800">
               <span v-if="showBalances">{{ stat.value }}</span>
-              <span v-else class="text-gray-300">*******</span>
+              <span v-else class="text-slate-300">•••••••</span>
             </div>
           </CardContent>
         </Card>
+
       </section>
 
-
-      <!-- Loans & Transactions Tabs -->
+      <!-- ========== TABS ========== -->
       <section>
         <Tabs default-value="loans" class="w-full">
-          <TabsList class="bg-blue-50 p-1 rounded-xl flex gap-2">
-            <TabsTrigger value="loans" class="data-[state=active]:bg-[#0a2342] data-[state=active]:text-white px-4 py-2 rounded-lg">
-              <Landmark class="h-4 w-4 mr-1" /> Loans
+
+          <TabsList class="bg-blue-100 p-1 rounded-2xl w-fit">
+            <TabsTrigger
+              value="loans"
+              class="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-xl px-5 py-3"
+            >
+              <Landmark class="h-4 w-4 mr-2" />
+              Loans
             </TabsTrigger>
-            <TabsTrigger value="transactions" class="data-[state=active]:bg-[#0a2342] data-[state=active]:text-white px-4 py-2 rounded-lg">
-              <Receipt class="h-4 w-4 mr-1" /> Transactions
+
+            <TabsTrigger
+              value="transactions"
+              class="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-xl px-5 py-3"
+            >
+              <Receipt class="h-4 w-4 mr-2" />
+              Transactions
             </TabsTrigger>
           </TabsList>
 
-          <!-- Loans Tab -->
-          <TabsContent value="loans" class="mt-4">
-            <div v-if="activeLoans?.length" class="grid gap-4 md:grid-cols-2">
+          <!-- LOANS -->
+          <TabsContent value="loans" class="mt-6">
+
+            <!-- ===== IF LOANS EXIST ===== -->
+            <div v-if="activeLoans?.length" class="grid gap-6 lg:grid-cols-2">
+
               <Card
                 v-for="loan in activeLoans"
                 :key="loan.id"
-                class="bg-white border border-gray-100 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
+                class="bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500"
               >
                 <CardHeader class="flex justify-between items-start">
                   <div>
-                    <CardTitle class="text-base text-gray-800">{{ loan.loanProduct?.name || 'Loan' }}</CardTitle>
-                    <p class="text-xs text-gray-500">Status: <span class="capitalize">{{ loan.status }}</span></p>
+                    <CardTitle class="text-base font-semibold text-slate-800">
+                      {{ loan.loanProduct?.name || 'Loan Facility' }}
+                    </CardTitle>
+                    <p class="text-xs text-slate-500 mt-1 capitalize">
+                      {{ loan.status }}
+                    </p>
                   </div>
-                  <Badge variant="secondary" class="bg-orange-100 text-orange-700">Outstanding {{ fmtMoney(loan.outstanding_balance) }}</Badge>
+
+                  <Badge class="bg-orange-100 text-orange-700 rounded-full px-3">
+                    {{ fmtMoney(loan.outstanding_balance) }}
+                  </Badge>
                 </CardHeader>
-                <CardContent class="space-y-3">
-                  <div class="flex justify-between text-sm text-gray-600">
-                    <span class="flex items-center gap-2"><Clock class="h-4 w-4" /> Next payment</span>
+
+                <CardContent class="space-y-4">
+                  <div class="flex justify-between text-sm text-slate-600">
+                    <span>Next Payment</span>
                     <span>{{ fmtDate(loan.first_repayment_date) }}</span>
                   </div>
-                  <div class="flex justify-between text-sm text-gray-600">
-                    <span class="flex items-center gap-2"><TrendingUp class="h-4 w-4" /> Disbursed</span>
+
+                  <div class="flex justify-between text-sm text-slate-600">
+                    <span>Disbursed</span>
                     <span>{{ fmtMoney(loan.disbursed_amount || 0) }}</span>
                   </div>
-                  <div class="flex gap-2 pt-2">
+
+                  <div class="flex gap-3 pt-3">
                     <Button as-child size="sm">
                       <Link :href="route('loans.show', loan.id)">View</Link>
                     </Button>
-                    <Button as-child size="sm" class="bg-blue-200 hover:bg-blue-100 text-[#0a2342]">
-                      <Link :href="route('loans.repayments', loan.id)">Repay</Link>
+
+                    <Button
+                      as-child
+                      size="sm"
+                      class="bg-slate-100 hover:bg-slate-200 text-slate-800"
+                    >
+                      <Link :href="route('loans.repayments', loan.id)">
+                        Repay
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
               </Card>
+
             </div>
-            <Alert v-else class="mt-6 bg-orange-50 border-orange-200">
-              <Info class="h-4 w-4 text-orange-600" />
-              <AlertTitle>No Active Loans</AlertTitle>
-              <AlertDescription>Apply for a new loan from the loans page.</AlertDescription>
-            </Alert>
+
+            <!-- ===== IF NO LOANS ===== -->
+            <div
+              v-else
+              class="flex flex-col items-center justify-center text-center py-20 bg-white border border-dashed border-slate-300 rounded-3xl"
+            >
+              <div class="p-5 rounded-full bg-slate-100 mb-5">
+                <Landmark class="h-8 w-8 text-slate-400" />
+              </div>
+
+              <h3 class="text-lg font-semibold text-slate-800">
+                No Active Loans
+              </h3>
+
+              <p class="text-sm text-slate-500 mt-2 max-w-md">
+                You currently don’t have any active loan facilities.
+                Apply for a loan to access quick and affordable financing.
+              </p>
+
+              <Button
+                as-child
+                class="mt-6 bg-blue-900 hover:bg-blue-800 text-white px-6 rounded-xl"
+              >
+                <Link :href="route('my-loans')">
+                  Apply for a Loan
+                </Link>
+              </Button>
+            </div>
+
           </TabsContent>
 
-          <!-- Transactions Tab -->
+          <!-- TRANSACTIONS -->
           <TabsContent value="transactions" class="mt-6">
-            <div class="flex flex-col sm:flex-row sm:justify-between gap-3 mb-3">
-              <div class="text-sm text-gray-600">Showing latest {{ filteredTx.length }} transactions</div>
-              <Input v-model="txFilter" placeholder="Filter by type or amount" class="border-blue-300 focus:ring-blue-600" />
+
+            <div class="flex justify-between mb-4">
+              <Input
+                v-model="txFilter"
+                placeholder="Search transactions..."
+                class="max-w-xs rounded-xl border-slate-300 focus:ring-2 focus:ring-slate-400"
+              />
             </div>
-            <div class="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-md">
+
+            <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
               <table class="w-full text-sm">
-                <thead class="bg-blue-100 text-[#0a2342]">
+
+                <thead class="bg-slate-50 text-slate-600 uppercase text-xs tracking-wide">
                   <tr>
-                    <th class="p-3 text-left">Date</th>
-                    <th class="p-3 text-left">Type</th>
-                    <th class="p-3 text-left">Account</th>
-                    <th class="p-3 text-right">Amount</th>
-                    <th class="p-3 text-right">Direction</th>
+                    <th class="p-4 text-left">Date</th>
+                    <th class="p-4 text-left">Type</th>
+                    <th class="p-4 text-left">Account</th>
+                    <th class="p-4 text-right">Amount</th>
+                    <th class="p-4 text-right">Direction</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  <tr v-for="t in filteredTx" :key="t.id" class="border-t hover:bg-orange-50 transition">
-                    <td class="p-3">{{ fmtDate(t.created_at) }}</td>
-                    <td class="p-3 capitalize">{{ t.transaction_type.replace('_', ' ') }}</td>
-                    <td class="p-3 capitalize">{{ t.account?.account_type || '—' }}</td>
-                    <td class="p-3 text-right font-medium text-[#0a2342]">{{ fmtMoney(t.amount) }}</td>
-                    <td class="p-3 text-right">
+                  <tr
+                    v-for="t in filteredTx"
+                    :key="t.id"
+                    class="border-t hover:bg-slate-50 transition"
+                  >
+                    <td class="p-4">{{ fmtDate(t.created_at) }}</td>
+                    <td class="p-4 capitalize">{{ t.transaction_type.replace('_', ' ') }}</td>
+                    <td class="p-4 capitalize">{{ t.account?.account_type || '—' }}</td>
+                    <td class="p-4 text-right font-medium text-slate-800">
+                      {{ fmtMoney(t.amount) }}
+                    </td>
+                    <td class="p-4 text-right">
                       <Badge
-                        v-if="['deposit', 'loan_disbursement', 'dividend_payment', 'interest_payment'].includes(t.transaction_type)"
-                        class="inline-flex items-center gap-1 bg-green-100 text-green-800"
+                        v-if="['deposit','loan_disbursement','dividend_payment','interest_payment'].includes(t.transaction_type)"
+                        class="bg-emerald-100 text-emerald-700"
                       >
-                        <ArrowDownRight class="h-3.5 w-3.5" /> Credit
+                        Credit
                       </Badge>
-                      <Badge v-else class="inline-flex items-center gap-1 bg-red-100 text-red-800">
-                        <ArrowUpRight class="h-3.5 w-3.5" /> Debit
+                      <Badge v-else class="bg-rose-100 text-rose-700">
+                        Debit
                       </Badge>
                     </td>
                   </tr>
-                  <tr v-if="!filteredTx.length">
-                    <td colspan="5" class="p-6 text-center text-gray-500">No transactions found.</td>
-                  </tr>
                 </tbody>
+
               </table>
             </div>
+
           </TabsContent>
+
         </Tabs>
       </section>
+
     </div>
   </AppLayout>
 </template>

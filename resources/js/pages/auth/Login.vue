@@ -58,7 +58,7 @@ const submit = () => {
 
             <!-- Loading Overlay -->
             <div v-if="form.processing" class="absolute inset-0 z-50 flex items-center justify-center 
-            rounded-sm bg-white/20 dark:bg-gray-900/40 backdrop-blur-sm">
+            rounded-sm bg-white/20 h-full dark:bg-gray-900/40 backdrop-blur-sm">
                 <LoaderCircle class="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
             </div>
 

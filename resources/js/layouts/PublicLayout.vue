@@ -22,10 +22,10 @@ const isActive = (url: string) => page.url === url
         <Link href="/" class="flex items-center gap-3 group">
         <img src="/apple-touch-icon1.png" alt="SEPU Logo"
           class="w-12 sm:w-14 rounded-xl bg-blue-200/10 dark:bg-blue-100/20 p-1 shadow-md group-hover:scale-105 transition duration-300" />
-        <div class="flex flex-col items-center">
+        <div>
           <span class="font-bold text-xl sm:text-2xl tracking-wide 
-                         text-gray-800 dark:text-white">SEPU</span>
-          <span class="text-orange-500 leading-1 text-sm sm:text-base">SACCO</span>
+                         text-gray-800 dark:text-white p-1 shadow-lg rounded-lg shadow-orange-600">SEPU</span>
+          <span class="text-blue-900 font-bold text-xl sm:text-2xl p-1 rounded-lg shadow-lg shadow-orange-900">SACCO</span>
         </div>
         </Link>
 
