@@ -44,81 +44,91 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your username/email and password below to log in">
+    <AuthBase title="Welcome Back" description="Access your SEPU SACCO account">
 
         <Head title="Log in" />
 
-        <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
+        <!-- Status -->
+        <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600 dark:text-green-400">
             {{ status }}
         </div>
 
-        <!-- FORM WRAPPER -->
-        <form @submit.prevent="submit" class="relative flex flex-col gap-6">
-            <!-- LOADING OVERLAY -->
-            <div v-if="form.processing" class="absolute inset-0 z-50 flex items-center justify-center rounded-lg
-               bg-white/40
-               dark:bg-black/40">
-                <div class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-                    <LoaderCircle class="h-5 w-5 animate-spin" />
-                    Logging in…
-                </div>
+        <!-- FORM -->
+        <form @submit.prevent="submit" class="relative space-y-5">
+
+            <!-- Loading Overlay -->
+            <div v-if="form.processing" class="absolute inset-0 z-50 flex items-center justify-center 
+            rounded-sm bg-white/20 dark:bg-gray-900/40 backdrop-blur-sm">
+                <LoaderCircle class="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
             </div>
 
-            <div class="grid gap-6">
-                <!-- Username / Email -->
-                <div class="grid gap-2">
-                    <Label for="login">Username or Email</Label>
-                    <Input id="login" type="text" required autofocus autocomplete="username" v-model="form.login"
-                        placeholder="username or email@example.com" :disabled="form.processing" />
-                    <InputError :message="form.errors.login" />
-                </div>
+            <!-- Login -->
+            <div class="space-y-1.5">
+                <Label for="login" class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Username or Email
+                </Label>
+                <Input id="login" type="text" required autofocus autocomplete="username" v-model="form.login"
+                    placeholder="username or email@example.com" :disabled="form.processing" class="h-10 rounded-lg border border-gray-300 dark:border-gray-600
+                       bg-white/80 dark:bg-gray-800/60 px-3 text-sm placeholder-gray-400 dark:placeholder-gray-500
+                       text-gray-900 dark:text-gray-100
+                       focus:outline-none focus:ring-1 focus:ring-blue-500
+                       disabled:opacity-50 disabled:cursor-not-allowed" />
+                <InputError :message="form.errors.login" />
+            </div>
 
-                <!-- Password -->
-                <div class="grid gap-2">
-                    <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
-
-                        <TextLink v-if="canResetPassword" :href="route('password.request')"
-                            :class="form.processing ? 'pointer-events-none opacity-50' : ''" class="text-sm">
-                            Forgot password?
-                        </TextLink>
-                    </div>
-
-                    <div class="relative">
-                        <Input id="password" :type="showPassword ? 'text' : 'password'" required
-                            autocomplete="current-password" v-model="form.password" placeholder="Password"
-                            :disabled="form.processing" />
-
-                        <button type="button" @click="togglePassword" :disabled="form.processing" class="absolute inset-y-0 right-3 flex items-center
-                     text-muted-foreground hover:text-foreground
-                     transition disabled:opacity-50 disabled:pointer-events-none" tabindex="-1">
-                            <Eye v-if="!showPassword" class="h-5 w-5" />
-                            <EyeOff v-else class="h-5 w-5" />
-                        </button>
-                    </div>
-
-                    <InputError :message="form.errors.password" />
-                </div>
-
-                <!-- Remember me -->
+            <!-- Password -->
+            <div class="space-y-1.5">
                 <div class="flex items-center justify-between">
-                    <Label class="flex items-center space-x-3">
-                        <Checkbox v-model="form.remember" :disabled="form.processing" />
-                        <span>Remember me</span>
+                    <Label for="password" class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                        Password
                     </Label>
+
+                    <TextLink v-if="canResetPassword" :href="route('password.request')"
+                        class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                        Forgot password?
+                    </TextLink>
                 </div>
 
-                <!-- Submit -->
-                <Button type="submit" class="mt-4 w-full" :disabled="form.processing">
-                    <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    <span v-else>Log in</span>
-                </Button>
+                <div class="relative">
+                    <Input id="password" :type="showPassword ? 'text' : 'password'" required
+                        autocomplete="current-password" v-model="form.password" placeholder="Enter your password"
+                        :disabled="form.processing" class="h-10 rounded-lg border border-gray-300 dark:border-gray-600 pr-10
+                           bg-white/80 dark:bg-gray-800/60 px-3 text-sm placeholder-gray-400 dark:placeholder-gray-500
+                           text-gray-900 dark:text-gray-100
+                           focus:outline-none focus:ring-1 focus:ring-blue-500
+                           disabled:opacity-50 disabled:cursor-not-allowed" />
+
+                    <button type="button" @click="togglePassword" :disabled="form.processing"
+                        class="absolute inset-y-0 right-3 flex items-center text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
+                        tabindex="-1">
+                        <Eye v-if="!showPassword" class="h-4 w-4" />
+                        <EyeOff v-else class="h-4 w-4" />
+                    </button>
+                </div>
+
+                <InputError :message="form.errors.password" />
             </div>
 
-            <!-- Sign up -->
-            <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="route('register')" :class="form.processing ? 'pointer-events-none opacity-50' : ''">
+            <!-- Remember -->
+            <div class="flex items-center">
+                <Label class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                    <Checkbox v-model="form.remember" :disabled="form.processing" />
+                    <span>Remember me</span>
+                </Label>
+            </div>
+
+            <!-- Submit -->
+            <Button type="submit" :disabled="form.processing" class="w-full h-10 mt-5 rounded-lg text-sm font-semibold
+                   bg-blue-900 dark:bg-blue-700 text-white hover:bg-blue-800 dark:hover:bg-blue-600 transition">
+                <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin mr-1.5" />
+                <span v-else>Log in</span>
+            </Button>
+
+            <!-- Sign Up -->
+            <div class="text-center sm:text-base text-sm text-gray-500 dark:text-gray-400 pt-3">
+                Don’t have an account?
+                <TextLink :href="route('register')"
+                    class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                     Sign up
                 </TextLink>
             </div>

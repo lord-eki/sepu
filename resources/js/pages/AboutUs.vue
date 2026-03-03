@@ -39,117 +39,125 @@ const values = [
 
 <template>
   <PublicLayout>
+
     <Head title="About Us" />
 
-    <div class="bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950
-                py-16 sm:py-20 px-4 sm:px-6 lg:px-20 space-y-20 transition-colors">
+    <main class="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
 
-      <!-- Hero Section -->
-      <section class="text-center space-y-4">
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-blue-900 dark:text-white tracking-tight">
-          About <span class="text-orange-500">SEPU SACCO</span>
-        </h1>
-        <p class="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto text-lg sm:text-xl leading-relaxed">
-          Empowering our members through savings, affordable credit, and financial education —
-          building a secure and prosperous community, one member at a time.
-        </p>
-      </section>
+      <!-- Soft Background Accents -->
+      <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[120px] opacity-30 dark:bg-blue-800/30"></div>
+      <div class="absolute bottom-0 -left-40 w-[500px] h-[500px] bg-orange-200 rounded-full blur-[120px] opacity-30 dark:bg-orange-700/30"></div>
 
-      <!-- Mission & Vision -->
-      <section class="grid md:grid-cols-2 gap-10">
-        <div
-          class="rounded-3xl bg-white dark:bg-gray-900 p-10 shadow-xl hover:shadow-2xl
-                 transition-all border-t-4 border-orange-500"
-        >
-          <div class="flex items-center gap-3 mb-4">
-            <ShieldCheck class="w-8 h-8 text-orange-500" />
-            <h2 class="text-2xl font-bold text-blue-900 dark:text-white">Our Mission</h2>
-          </div>
-          <p class="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-            To provide reliable, innovative, and affordable financial solutions that promote savings,
-            responsible borrowing, and sustainable community development.
+      <div class="relative max-w-7xl mx-auto px-6 py-10 sm:py-16 lg:py-24 space-y-24">
+
+        <!-- HERO -->
+        <section class="text-center space-y-6 max-w-3xl mx-auto">
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            About
+            <span class="text-3xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-500 dark:from-blue-400 dark:to-orange-400">
+              SEPU SACCO
+            </span>
+          </h1>
+
+          <p class="text-gray-600 sm:text-lg leading-relaxed dark:text-gray-300">
+            Empowering our members through innovative savings solutions,
+            affordable credit, and financial education — building a secure
+            and prosperous community, one member at a time.
           </p>
-        </div>
+        </section>
 
-        <div
-          class="rounded-3xl bg-white dark:bg-gray-900 p-10 shadow-xl hover:shadow-2xl
-                 transition-all border-t-4 border-blue-900 dark:border-blue-500"
-        >
-          <div class="flex items-center gap-3 mb-4">
-            <BookOpen class="w-8 h-8 text-blue-900 dark:text-blue-400" />
-            <h2 class="text-2xl font-bold text-blue-900 dark:text-white">Our Vision</h2>
-          </div>
-          <p class="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-            To be the most trusted SACCO in transforming lives through inclusive, innovative,
-            and ethical financial services.
-          </p>
-        </div>
-      </section>
-
-      <!-- Core Values -->
-      <section>
-        <h2 class="text-3xl sm:text-4xl font-bold text-center text-blue-900 dark:text-white mb-12">
-          Our Core Values
-        </h2>
-
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div
-            v-for="(value, index) in values"
-            :key="index"
-            class="group bg-white dark:bg-gray-900 rounded-2xl shadow-md p-8
-                   border-l-4 hover:-translate-y-1 hover:shadow-lg
-                   transition-all duration-300"
-            :class="index % 2 === 0
-              ? 'border-orange-500'
-              : 'border-blue-900 dark:border-blue-500'"
-          >
-            <div class="flex items-center gap-3 mb-3">
-              <component
-                :is="value.icon"
-                class="w-6 h-6 text-orange-500 group-hover:scale-110 transition"
-              />
-              <h3 class="text-lg font-semibold text-blue-900 dark:text-white">
-                {{ value.title }}
-              </h3>
+        <!-- MISSION & VISION -->
+        <section class="grid md:grid-cols-2 gap-10">
+          <div class="group rounded-3xl bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl p-10
+                      border border-gray-200 dark:border-gray-700 shadow-xl
+                      hover:shadow-2xl hover:-translate-y-1
+                      transition-all duration-500">
+            <div class="flex items-center gap-3 mb-4">
+              <ShieldCheck class="w-8 h-8 text-orange-500 group-hover:scale-110 transition" />
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Our Mission</h2>
             </div>
-            <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{{ value.desc }}</p>
+            <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+              To provide reliable, innovative, and affordable financial solutions
+              that promote savings, responsible borrowing, and sustainable
+              community development.
+            </p>
           </div>
-        </div>
-      </section>
 
-      <!-- Join Section -->
-      <section
-        class="bg-gradient-to-r from-blue-900 to-blue-800 dark:from-gray-800 dark:to-gray-900
-               text-white rounded-3xl p-12 text-center shadow-xl transition-colors"
-      >
-        <h2 class="text-3xl font-bold mb-4">Join SEPU SACCO Today</h2>
-        <p class="max-w-2xl mx-auto text-base sm:text-lg mb-8 leading-relaxed text-gray-200 dark:text-gray-300">
-          Be part of a growing community that empowers your financial journey. Save smart,
-          borrow responsibly, and secure your future with SEPU SACCO.
-        </p>
+          <div class="group rounded-3xl bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl p-10
+                      border border-gray-200 dark:border-gray-700 shadow-xl
+                      hover:shadow-2xl hover:-translate-y-1
+                      transition-all duration-500">
+            <div class="flex items-center gap-3 mb-4">
+              <BookOpen class="w-8 h-8 text-blue-600 group-hover:scale-110 transition" />
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Our Vision</h2>
+            </div>
+            <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+              To be the most trusted SACCO transforming lives through inclusive,
+              innovative, and ethical financial services.
+            </p>
+          </div>
+        </section>
 
-        <div class="flex flex-wrap justify-center gap-5">
-          <Link
-            :href="route('register')"
-            class="bg-orange-500 hover:bg-orange-600 text-white
-                   px-8 py-3 rounded-full font-semibold shadow-lg
-                   transition-transform hover:scale-105"
-          >
-            Become a Member
-          </Link>
+        <!-- CORE VALUES -->
+        <section>
+          <h2 class="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-14">
+            Our Core Values
+          </h2>
 
-          <Link
-            :href="route('login')"
-            class="bg-white dark:bg-transparent text-blue-900 dark:text-white
-                   border border-orange-500 hover:bg-orange-50 dark:hover:bg-white/10
-                   px-8 py-3 rounded-full font-semibold shadow-lg
-                   transition-transform hover:scale-105"
-          >
-            Member Login
-          </Link>
-        </div>
-      </section>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div v-for="(value, index) in values" :key="index" 
+                 class="group rounded-2xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-lg
+                        border border-gray-200 dark:border-gray-700 p-8 shadow-md
+                        hover:shadow-xl hover:-translate-y-2
+                        transition-all duration-500">
+              <div class="flex items-center gap-3 mb-4">
+                <component :is="value.icon" class="w-6 h-6 text-orange-500 group-hover:scale-110 transition" />
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  {{ value.title }}
+                </h3>
+              </div>
 
-    </div>
+              <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                {{ value.desc }}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-900 to-blue-800
+                 dark:from-blue-800 dark:to-blue-900 p-14 text-center text-white shadow-2xl">
+          <div class="absolute -top-20 -right-20 w-64 h-64 bg-orange-400 rounded-full blur-3xl opacity-20 dark:bg-orange-700/30"></div>
+
+          <div class="relative space-y-6 max-w-2xl mx-auto">
+            <h2 class="text-3xl sm:text-4xl font-bold">
+              Join SEPU SACCO Today
+            </h2>
+
+            <p class="text-gray-200 dark:text-gray-300 leading-relaxed">
+              Be part of a growing financial community. Save smart,
+              borrow responsibly, and secure your future with confidence.
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-5 pt-4">
+              <Link :href="route('register')" class="px-8 py-3 rounded-xl font-semibold
+                       bg-orange-500 hover:bg-orange-600
+                       dark:bg-orange-600 dark:hover:bg-orange-500
+                       shadow-lg transition-all duration-300 hover:scale-105">
+                Become a Member
+              </Link>
+
+              <Link :href="route('login')" class="px-8 py-3 rounded-xl font-semibold
+                       bg-white text-blue-900 hover:bg-gray-100
+                       dark:bg-gray-700 dark:text-blue-400 dark:hover:bg-gray-600
+                       shadow-lg transition-all duration-300 hover:scale-105">
+                Member Login
+              </Link>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
   </PublicLayout>
 </template>

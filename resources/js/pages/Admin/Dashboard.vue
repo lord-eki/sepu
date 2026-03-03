@@ -3,296 +3,245 @@
 
     <Head title="Admin Dashboard" />
 
-    <div class="min-h-screen p-4 sm:p-6 bg-gradient-to-br 
-      from-gray-100 to-gray-200 
-      dark:from-gray-900 dark:to-gray-950">
+    <div
+      class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
 
-      <!-- TOP HEADER -->
-      <div class="rounded-3xl px-6 sm:px-8 py-8 mb-10 relative overflow-hidden backdrop-blur-xl
-        shadow-[0_8px_35px_rgba(0,0,0,0.15)]
-        bg-gradient-to-br from-[#091d39] via-[#0b2549] to-[#0e3264]
-        border border-white/10 dark:border-gray-700/20">
-        <div class="relative z-10">
-          <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-            SEPU <span class="text-orange-400">SACCO</span> — Admin Dashboard
-          </h1>
-
-          <p class="mt-2 text-gray-200 text-sm sm:text-base tracking-wide">
-            Smart insights, real-time operations & intelligent system overview.
-          </p>
+      <!-- TOP BAR -->
+      <div
+        class="relative px-8 py-6 bg-gradient-to-r from-blue-900 to-orange-500 rounded-b-3xl overflow-hidden dark:from-blue-800 dark:to-orange-600">
+        <div class="absolute inset-0 bg-white/10 backdrop-blur-sm dark:bg-gray-800/20"></div>
+        <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              SEPU <span class="text-orange-400 dark:text-orange-300">SACCO</span>
+            </h1>
+            <p class="text-sm md:text-base text-white/70 dark:text-white/60 mt-1">
+              Administrative Financial Overview
+            </p>
+          </div>
+          <div class="flex items-center gap-6">
+            <div class="text-sm text-white/80 dark:text-white/60">
+              {{ new Date().toDateString() }}
+            </div>
+            <div
+              class="w-10 h-10 rounded-full bg-white/20 dark:bg-gray-700/30 text-white flex items-center justify-center font-semibold shadow-lg">
+              A
+            </div>
+          </div>
         </div>
-
-        <!-- floating orb -->
-        <div class="absolute right-6 sm:right-10 top-6 w-24 sm:w-36 h-24 sm:h-36 
-          bg-orange-400/20 rounded-full blur-3xl"></div>
       </div>
 
+      <!-- KPI CARDS -->
+      <div class="px-8 py-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div v-for="stat in quickStats" :key="stat.title"
+          class="relative p-6 rounded-3xl bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
 
-      <!-- QUICK STATS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-7">
-        <div v-for="stat in quickStats" :key="stat.title" class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-white to-[#f3f4f6]
-          dark:from-[#0f1e33] dark:to-[#0a1628]
-          shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer
-          border border-gray-200 dark:border-gray-700 flex flex-col gap-4 backdrop-blur-sm">
           <div class="flex justify-between items-center">
-            <component :is="stat.icon" class="h-7 w-7 sm:h-8 sm:w-8 text-orange-500" />
-            <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
-              {{ stat.title }}
-            </span>
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-300">{{ stat.title }}</div>
+            <div class="p-3 rounded-xl bg-gradient-to-br from-orange-400 to-orange-200 text-white shadow-sm">
+              <component :is="stat.icon" class="h-5 w-5" />
+            </div>
           </div>
 
-          <h2 class="text-xl sm:text-2xl font-semibold text-[#0a2342] dark:text-white">
-            {{ stat.value }}
-          </h2>
+          <div class="mt-5">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ stat.value }}</h2>
+            <p class="text-xs text-gray-500 dark:text-gray-300 mt-1">{{ stat.sub }}</p>
+          </div>
 
-          <p class="text-xs sm:text-base text-gray-500 dark:text-gray-400">
-            {{ stat.sub }}
-          </p>
-        </div>
-      </div>
-
-      <!-- PENDING APPROVALS -->
-      <div class="mt-10 sm:mt-12">
-        <h2
-          class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center gap-2">
-          <FileWarning class="h-5 w-5 text-orange-500" />
-          Pending Approvals
-        </h2>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <div v-for="item in approvalItems" :key="item.label" class="group relative p-5 rounded-2xl shadow-lg 
-            bg-gradient-to-br from-white to-gray-100
-            dark:from-[#0f1e33] dark:to-[#0a1628]
-            border border-gray-200 dark:border-gray-700
-            hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer" @click="$inertia.visit(item.link)">
-
-            <!-- Tooltip (mobile-safe: positioned above instead of below) -->
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 
-                px-2 sm:px-3 py-1 text-[10px] sm:text-xs rounded-lg 
-                bg-black/80 text-white opacity-0 group-hover:opacity-100 
-                pointer-events-none transition-opacity whitespace-nowrap">
-              Click to see
-              {{
-    item.label === 'Member Activation'
-      ? 'members'
-      : item.label.toLowerCase()
-  }}
-              {{
-      item.label === 'Member Activation'
-        ? 'awaiting activation'
-        : 'awaiting approval'
-    }}
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                {{ item.label }}
-              </span>
-
-              <span :class="item.badge">
-                {{ item.value }}
-              </span>
-            </div>
-
-            <p v-if="item.label === 'Member activation'" class="text-xs mt-2 text-gray-500 dark:text-gray-400">
-              Awaiting activation
-            </p>
-
-            <p v-else class="text-xs mt-2 text-gray-500 dark:text-gray-400">
-              Awaiting approval
-            </p>
+          <div class="absolute -top-5 -right-5 w-16 h-16 bg-blue-100/40 dark:bg-blue-800/30 rounded-3xl blur-2xl"></div>
+          <div class="absolute -bottom-5 -left-5 w-16 h-16 bg-orange-100/40 dark:bg-orange-700/30 rounded-3xl blur-2xl">
           </div>
         </div>
       </div>
 
+      <!-- MAIN GRID -->
+      <div class="px-8 py-4 grid grid-cols-1 xl:grid-cols-3 gap-8">
 
+        <!-- LEFT: Pending & Activity -->
+        <div class="xl:col-span-2 space-y-8">
 
-      <!-- ACTIVITIES + SYSTEM -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mt-10 sm:mt-12 items-start">
-
-        <!-- RECENT ACTIVITY -->
-        <div class="lg:col-span-2 flex flex-col">
-          <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-            Recent Activities
-          </h2>
-
-          <div class="h-[300px] sm:h-[380px] overflow-y-auto rounded-2xl bg-white dark:bg-gray-800
-            border border-gray-200 dark:border-gray-700 shadow-lg backdrop-blur-lg 
-            divide-y divide-gray-100 dark:divide-gray-700 custom-scroll p-4">
-            <div
-                v-for="(item, i) in recentActivities"
-                :key="i"
-                class="flex justify-between items-center p-3 sm:p-4 rounded-xl transition"
-                :class="[
-                  item.status === 'pending'
-                    ? 'cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-900/20 mb-1 ring-1 ring-orange-100 dark:ring-orange-700/30'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/40'
-                ]"
-                @click="item.status === 'pending' && item.link ? $inertia.visit(item.link) : null"
-              >
-
-              <div class="flex items-start gap-3 sm:gap-4">
-                <ArrowRightCircle class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
-                <div>
-                  <p class="text-sm text-gray-800 dark:text-gray-200">
-                    {{ item.description }}
-                  </p>
-                  <!-- STATUS BADGE -->
-                  <span
-                    v-if="item.status"
-                    class="inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-full"
-                    :class="{
-                      'bg-orange-100 text-orange-700 dark:bg-orange-700/30 dark:text-orange-300': item.status === 'pending',
-                      'bg-green-100 text-green-700 dark:bg-green-700/30 dark:text-green-300': item.status === 'completed',
-                      'bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300': item.status === 'approved',
-                      'bg-red-100 text-red-700 dark:bg-red-700/30 dark:text-red-300': item.status === 'failed',
-                      'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300': item.status === 'reversed'
-                    }"
-                  >
-                    {{ item.status }}
-                  </span>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ new Date(item.time).toLocaleString() }}
-                  </span>
+          <!-- Pending Approvals -->
+          <div
+            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pending Approvals</h3>
+              <span class="text-xs text-gray-400 dark:text-gray-300 uppercase tracking-wide">Quick Review</span>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div v-for="item in approvalItems" :key="item.label" @click="$inertia.visit(item.link)"
+                class="cursor-pointer rounded-2xl p-4 border border-gray-200 dark:border-gray-700 hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition flex flex-col gap-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-blue-900 dark:text-gray-300">{{ item.label }}</span>
+                  <span class="font-bold text-orange-500">{{ item.value }}</span>
                 </div>
+                <div class="text-xs text-gray-400 dark:text-gray-300 mt-1">Click to review →</div>
               </div>
-
-              <span
-                  v-if="item.amount"
-                  class="text-sm font-bold"
-                  :class="{
-                    'text-orange-600 dark:text-orange-400': item.status === 'pending',
-                    'text-green-600 dark:text-green-400': item.status === 'completed',
-                    'text-red-600 dark:text-red-400': item.status === 'failed',
-                    'text-gray-700 dark:text-gray-300': item.status === 'reversed'
-                  }"
-                >
-                  Ksh {{ item.amount }}
-                </span>
-
             </div>
           </div>
+
+          <!-- Recent Activity -->
+<div
+  class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
+
+  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+    Recent Activity
+  </h3>
+
+  <div class="space-y-4 max-h-[450px] overflow-y-auto overflow-x-hidden custom-scroll">
+
+    <div
+      v-for="(item, i) in recentActivities"
+      :key="i"
+      @click="item.link ? $inertia.visit(item.link) : null"
+      class="flex justify-between items-start gap-4 p-4 rounded-xl border transition-all duration-300 cursor-pointer hover:shadow-md"
+      :class="[
+        item.status === 'pending'
+          ? 'border-orange-200 dark:border-orange-900 hover:bg-orange-50 dark:hover:bg-orange-900/20'
+          : item.status === 'approved'
+            ? 'border-green-200 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/20'
+            : item.status === 'rejected'
+              ? 'border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
+              : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/20'
+      ]"
+    >
+
+      <!-- LEFT CONTENT -->
+      <div class="min-w-0 flex-1">
+
+        <!-- Description -->
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 break-words">
+          {{ item.description }}
+        </p>
+
+        <!-- Meta Row -->
+        <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400 dark:text-gray-400">
+
+          <span>
+            {{ new Date(item.time).toLocaleString() }}
+          </span>
+
+          <!-- Status Badge -->
+          <span
+            v-if="item.status"
+            :class="[
+              'px-2 py-0.5 rounded-full font-semibold text-xs whitespace-nowrap',
+              item.status === 'pending'
+                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300'
+                : item.status === 'approved'
+                  ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300'
+                  : item.status === 'rejected'
+                    ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300'
+                    : ''
+            ]"
+          >
+            {{ item.status }}
+          </span>
+
+          <!-- Click to View -->
+          <span
+            v-if="item.status === 'pending'"
+            class="text-orange-500 dark:text-orange-300 font-semibold whitespace-nowrap"
+          >
+            Click to view →
+          </span>
+
         </div>
-
-        <!-- SYSTEM OVERVIEW -->
-          <div class="flex flex-col">
-            <!-- Header -->
-            <h2
-              class="flex items-center gap-2 mb-4 text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
-              <Settings class="h-5 w-5 text-orange-500" />
-              System Overview
-            </h2>
-
-            <!-- Card -->
-            <div
-              class="h-[300px] sm:h-[380px] overflow-y-auto rounded-2xl
-                    bg-white dark:bg-gray-900
-                    border border-gray-200 dark:border-gray-700
-                    shadow-xl backdrop-blur-xl
-                    divide-y divide-gray-100 dark:divide-gray-800
-                    p-5 sm:p-6 custom-scroll">
-
-              <!-- Database Status -->
-              <div class="flex items-center justify-between py-3">
-                <div class="flex items-center gap-3">
-                  <Database class="h-5 w-5 text-green-600" />
-                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Database Status
-                  </span>
-                </div>
-
-                <span
-                  class="px-3 py-1 text-xs font-semibold rounded-full
-                        bg-green-100 text-green-700
-                        dark:bg-green-900/40 dark:text-green-400">
-                  {{ systemHealth.database_status }}
-                </span>
-              </div>
-
-              <!-- Last Backup -->
-              <div class="flex items-center justify-between py-3">
-                <div class="flex items-center gap-3">
-                  <Clock class="h-5 w-5 text-blue-600" />
-                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Last Backup
-                  </span>
-                </div>
-
-                <span class="text-sm text-gray-600 dark:text-gray-400">
-                  {{ new Date(systemHealth.last_backup).toLocaleString() }}
-                </span>
-              </div>
-
-              <!-- Active Users -->
-              <div class="flex items-center justify-between py-3">
-                <div class="flex items-center gap-3">
-                  <Users class="h-5 w-5 text-indigo-600" />
-                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Active Users
-                  </span>
-                </div>
-
-                <span
-                  class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {{ systemHealth.active_users }}
-                </span>
-              </div>
-
-              <!-- System Errors -->
-              <div class="flex items-center justify-between py-3">
-                <div class="flex items-center gap-3">
-                  <AlertTriangle class="h-5 w-5 text-red-600" />
-                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    System Errors
-                  </span>
-                </div>
-
-                <span
-                  class="px-3 py-1 text-xs font-semibold rounded-full
-                        bg-red-100 text-red-700
-                        dark:bg-red-900/40 dark:text-red-400">
-                  {{ systemHealth.system_errors }}
-                </span>
-              </div>
-
-            </div>
-          </div>
 
       </div>
 
-
-      <!-- SETUP -->
-      <div class="mt-12 sm:mt-14">
-        <h2
-          class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-5 sm:mb-6 flex items-center gap-2">
-          <Settings class="h-5 w-5 text-orange-500" /> Setup & Configuration
-        </h2>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <div v-for="setup in setupItems" :key="setup.title" class="p-4 sm:p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-            rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition cursor-pointer"
-            @click="$inertia.visit(setup.link)">
-            <div class="flex justify-between">
-              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                {{ setup.title }}
-              </h3>
-              <component :is="setup.icon" class="h-6 w-6 text-orange-500" />
-            </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              {{ setup.desc }}
-            </p>
-          </div>
-        </div>
+      <!-- RIGHT SIDE (Amount) -->
+      <div class="flex-shrink-0 text-sm font-semibold text-gray-700 dark:text-gray-300 text-right whitespace-nowrap">
+        <span v-if="item.amount">
+          Ksh {{ Number(item.amount).toLocaleString() }}
+        </span>
       </div>
 
-      <!-- FOOTER -->
-      <footer class="text-center mt-10 text-xs text-gray-500 dark:text-gray-400 pb-4">
-        © {{ new Date().getFullYear() }} SEPU SACCO — Smart Cooperative Admin Suite.
-      </footer>
+    </div>
+
+  </div>
+</div>
+        </div>
+
+        <!-- RIGHT: System & Tools -->
+        <div class="space-y-8">
+
+          <!-- System Health -->
+          <div
+            class="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
+            <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">System Health</h3>
+            <div class="space-y-4 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-300">Database</span>
+                <span class="text-green-600 dark:text-green-700 font-semibold">{{ systemHealth.database_status }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-300">Active Users</span>
+                <span class="font-bold dark:text-white">{{ systemHealth.active_users }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-300">System Errors</span>
+                <span class="text-red-400 dark:text-red-500 font-semibold">{{ systemHealth.system_errors }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin Tools -->
+          <div
+            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Administrative Tools</h3>
+            <div class="space-y-4">
+              <div v-for="setup in setupItems" :key="setup.title" @click="$inertia.visit(setup.link)"
+                class="flex justify-between items-center p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 cursor-pointer transition hover:scale-[1.02]">
+                <span class="text-sm text-gray-600 dark:text-gray-300">{{ setup.title }}</span>
+                <component :is="setup.icon" class="h-5 w-5 text-orange-500 dark:text-orange-300" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div
+        class="text-center text-xs text-gray-400 dark:text-gray-500 pt-6 border-t border-gray-200 dark:border-gray-700">
+        © {{ new Date().getFullYear() }} SEPU SACCO — Administrative Suite
+      </div>
+
     </div>
   </AppLayout>
 </template>
 
+<style scoped>
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(248, 113, 24, 0.4);
+  border-radius: 9999px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>
 
 
 <script setup lang="ts">
@@ -402,34 +351,3 @@ const setupItems = [
 ]
 
 </script>
-
-<style scoped>
-.custom-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scroll::-webkit-scrollbar-thumb {
-  background-color: #f97316;
-  border-radius: 9999px;
-}
-
-.custom-scroll::-webkit-scrollbar-track {
-  background-color: #f5f7fb;
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>
