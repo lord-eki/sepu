@@ -19,14 +19,29 @@ const isActive = (url: string) => page.url === url
       <div class="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 sm:px-6">
 
         <!-- Logo -->
-        <Link href="/" class="flex items-center gap-3 group">
-        <img src="/apple-touch-icon1.png" alt="SEPU Logo"
-          class="w-12 sm:w-14 rounded-xl bg-blue-200/10 dark:bg-blue-100/20 p-1 shadow-md group-hover:scale-105 transition duration-300" />
-        <div>
-          <span class="font-bold text-xl sm:text-2xl tracking-wide 
-                         text-gray-800 dark:text-white p-1 shadow-lg rounded-lg shadow-orange-600">SEPU</span>
-          <span class="text-blue-900 font-bold text-xl sm:text-2xl p-1 rounded-lg shadow-lg shadow-orange-900">SACCO</span>
+        <Link href="/" class="flex items-center gap-3 group select-none">
+
+        <!-- Logo Image -->
+        <img src="/apple-touch-icon1.png" alt="SEPU Logo" class="w-12 sm:w-14 rounded-xl shadow-sm 
+         group-hover:scale-105 transition duration-300" />
+
+
+        <!-- Overlapping Brand -->
+        <div class="relative leading-none -top-1">
+
+          <span
+            class="block text-2xl sm:text-3xl font-extrabold
+                text-gray-800 dark:text-white shadow-lg shadow-orange-300 bg-gray-200/20 px-1 rounded-lg tracking-tight">
+            SEPU ~
+          </span>
+
+          <span class="absolute left-4 top-5 sm:top-6 italic text-lg sm:text-xl
+                font-bold text-orange-500 tracking-tight">
+            SACCO
+          </span>
+
         </div>
+
         </Link>
 
         <!-- Desktop Menu -->
