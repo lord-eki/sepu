@@ -158,7 +158,7 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
           </CardHeader>
 
           <CardContent>
-            <div class="text-2xl font-semibold tracking-tight text-slate-800">
+            <div class="text-xl sm:text-2xl font-semibold tracking-tight text-slate-800">
               <span v-if="showBalances">{{ stat.value }}</span>
               <span v-else class="text-slate-300">•••••••</span>
             </div>
@@ -171,10 +171,10 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
       <section>
         <Tabs default-value="loans" class="w-full">
 
-          <TabsList class="bg-blue-100 p-1 rounded-2xl w-fit">
+          <TabsList class="bg-blue-100 p-1 rounded-xl w-fit">
             <TabsTrigger
               value="loans"
-              class="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-xl px-5 py-3"
+              class="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-5 py-3"
             >
               <Landmark class="h-4 w-4 mr-2" />
               Loans
@@ -182,7 +182,7 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
 
             <TabsTrigger
               value="transactions"
-              class="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-xl px-5 py-3"
+              class="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-5 py-3"
             >
               <Receipt class="h-4 w-4 mr-2" />
               Transactions
@@ -255,18 +255,18 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
                 <Landmark class="h-8 w-8 text-slate-400" />
               </div>
 
-              <h3 class="text-lg font-semibold text-slate-800">
+              <h3 class="text-sm sm:text-base font-semibold text-slate-800">
                 No Active Loans
               </h3>
 
-              <p class="text-sm text-slate-500 mt-2 max-w-md">
+              <p class="max-sm:text-xs text-sm mx-2 text-slate-500 mt-2 max-w-md">
                 You currently don’t have any active loan facilities.
                 Apply for a loan to access quick and affordable financing.
               </p>
 
               <Button
                 as-child
-                class="mt-6 bg-blue-900 hover:bg-blue-800 text-white px-6 rounded-xl"
+                class="mt-6 max-sm:text-sm bg-blue-900 hover:bg-blue-800 text-white px-6 rounded-xl"
               >
                 <Link :href="route('my-loans')">
                   Apply for a Loan
@@ -287,10 +287,11 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
               />
             </div>
 
-            <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div class="overflow-x-auto">
               <table class="w-full text-sm">
 
-                <thead class="bg-slate-50 text-slate-600 uppercase text-xs tracking-wide">
+                <thead class="bg-slate-100 text-slate-600 uppercase text-xs tracking-wide">
                   <tr>
                     <th class="p-4 text-left">Date</th>
                     <th class="p-4 text-left">Type</th>
@@ -301,14 +302,20 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
                 </thead>
 
                 <tbody>
+                <!-- If transactions exist -->
+                <template v-if="filteredTx.length">
                   <tr
                     v-for="t in filteredTx"
                     :key="t.id"
                     class="border-t hover:bg-slate-50 transition"
                   >
                     <td class="p-4">{{ fmtDate(t.created_at) }}</td>
-                    <td class="p-4 capitalize">{{ t.transaction_type.replace('_', ' ') }}</td>
-                    <td class="p-4 capitalize">{{ t.account?.account_type || '—' }}</td>
+                    <td class="p-4 capitalize">
+                      {{ t.transaction_type.replace('_', ' ') }}
+                    </td>
+                    <td class="p-4 capitalize">
+                      {{ t.account?.account_type || '—' }}
+                    </td>
                     <td class="p-4 text-right font-medium text-slate-800">
                       {{ fmtMoney(t.amount) }}
                     </td>
@@ -324,9 +331,17 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
                       </Badge>
                     </td>
                   </tr>
-                </tbody>
+                </template>
 
+                <!-- If no transactions -->
+                <tr v-else>
+                  <td colspan="5" class="p-6 text-center text-slate-500 text-sm">
+                    No transactions
+                  </td>
+                </tr>
+              </tbody>
               </table>
+              </div>
             </div>
 
           </TabsContent>

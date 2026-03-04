@@ -61,7 +61,7 @@ const formatAccountLabel = (type: string) => {
       <Head title="Accounts" />
 
       <!-- Header -->
-      <div class="rounded-xl bg-gradient-to-r from-[#0a2342] to-orange-500 p-6 shadow-md text-white">
+      <div class="rounded-2xl bg-gradient-to-r from-blue-900 to-orange-500 p-6 shadow-md text-white">
         <div class="flex items-center justify-between">
           <!-- Accounts -->
           <div>
@@ -75,7 +75,7 @@ const formatAccountLabel = (type: string) => {
 
           <!-- Account Holder -->
           <div class="text-right self-start">
-            <p class="text-sm font-bold text-[#0a2342] opacity-75">Name</p>
+            <p class="text-sm font-bold text-blue-900 opacity-75">Acc. Name</p>
             <h2 class="text-base sm:text-lg font-medium text-white">
               {{ memberName }}
             </h2>
@@ -143,8 +143,8 @@ const formatAccountLabel = (type: string) => {
       >
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
           <div>
-            <h2 class="text-base sm:text-lg font-medium text-[#0a2342]">
-              <span class="font-normal">Acc. No:</span> {{ account.account_number }} - {{ formatAccountLabel(account.account_type) }}
+            <h2 class="text-base sm:text-lg font-medium text-blue-900">
+              <span class="font-normal text-gray-900">Account No:</span> {{ account.account_number }} - <span class="font-normal text-sm">{{ formatAccountLabel(account.account_type) }}</span>
             </h2>
             <p class="text-sm sm:text-base text-gray-500 flex items-center gap-3">
               Balance:
@@ -169,7 +169,7 @@ const formatAccountLabel = (type: string) => {
               :href="route('members.accounts.deposit.show', { member: account.member_id, account: account.id })"
             >
               <Button
-                class="bg-[#0a2342] hover:bg-[hsl(209,40%,17%)] hover:cursor-pointer font-normal text-white max-sm:text-xs shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition"
+                class="bg-blue-900 hover:bg-blue-800 hover:cursor-pointer font-normal text-white max-sm:text-xs shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition"
               >
                 <ArrowDownCircle class="w-3 sm:w-4 h-3 sm:h-4" />
                 Deposit

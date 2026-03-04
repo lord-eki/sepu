@@ -2,13 +2,13 @@
   <AppLayout :breadcrumbs="[{ title: 'Loan Calculator' }]">
     <div class="loan-calculator max-sm:px-3">
       <!-- Page Header -->
-      <div class="bg-gradient-to-r from-[#0B2B40] to-[#123A5A] shadow-md mt-2 sm:mx-6 rounded-xl px-6 py-5 sm:px-6">
+      <div class="bg-gradient-to-r from-orange-500 to-blue-900 shadow-md mt-2 sm:mx-6 rounded-xl px-6 py-5 sm:px-6">
         <div class="md:flex md:items-center md:justify-between">
           <div class="min-w-0 flex-1">
             <h2 class="text-2xl font-bold leading-7 text-white">
               Loan Calculator
             </h2>
-            <p class="mt-1 text-sm text-orange-300">
+            <p class="mt-1 text-sm text-gray-100">
               Calculate your loan repayment breakdown before applying
             </p>
           </div>

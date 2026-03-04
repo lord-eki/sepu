@@ -123,7 +123,7 @@ const currentLoanMessage = computed(() => {
     <div class="min-h-screen bg-[#f9fafb] p-6 space-y-10">
 
       <!-- HEADER -->
-      <header class="bg-gradient-to-r from-[#0B2B40] to-[#123A5A] text-white p-6 rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center">
+      <header class="bg-gradient-to-r from-blue-900 to-orange-400 text-white p-6 rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
           <h1 class="text-2xl font-bold tracking-tight">My Loans</h1>
           <p class="text-sm text-white">Track, manage, and apply for SEPU SACCO loans</p>
@@ -235,7 +235,7 @@ const currentLoanMessage = computed(() => {
       <section class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm text-left">
-            <thead class="bg-[#0B2B40] text-white uppercase text-xs tracking-wide">
+            <thead class="bg-blue-100 text-blue-900 uppercase text-xs tracking-wide">
               <tr>
                 <th class="px-6 py-3">Loan #</th>
                 <th class="px-6 py-3">Product</th>
@@ -289,7 +289,7 @@ const currentLoanMessage = computed(() => {
               <tr v-if="!props.loans.length">
                 <td colspan="7" class="px-6 py-10 text-center text-gray-500">
                   <div class="flex flex-col items-center space-y-2">
-                    <p class="text-lg font-semibold text-[#0B2B40]">No loans found</p>
+                    <p class="font-medium text-base text-[#0B2B40]">No loans</p>
                     <p class="text-sm text-gray-500">Once you apply for a loan, it will appear here.</p>
                   </div>
                 </td>

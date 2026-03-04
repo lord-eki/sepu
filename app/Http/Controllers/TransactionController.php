@@ -368,14 +368,15 @@ class TransactionController extends Controller
             DB::transaction(function () use ($transaction) {
                 $account = $transaction->account;
 
-                // Safety check at approval time
                 if ($transaction->transaction_type === 'withdrawal') {
-                    if ($account->balance < $transaction->amount) {
-                        throw new \Exception('Insufficient balance at approval time.');
+                    if ($account->available_balance < $transaction->amount) {
+                        throw new \Exception('Insufficient available balance at approval time.');
                     }
                     $account->balance -= $transaction->amount;
-                } else {
+                    $account->available_balance -= $transaction->amount;
+                } else { // deposit
                     $account->balance += $transaction->amount;
+                    $account->available_balance += $transaction->amount;
                 }
 
                 $account->save();
@@ -397,7 +398,6 @@ class TransactionController extends Controller
             ]);
         }
     }
-
 
    /**
     * Reject a pending transaction.

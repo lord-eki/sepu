@@ -21,27 +21,34 @@ const isActive = (url: string) => page.url === url
         <!-- Logo -->
         <Link href="/" class="flex items-center gap-3 group select-none">
 
-        <!-- Logo Image -->
-        <img src="/apple-touch-icon1.png" alt="SEPU Logo" class="w-12 sm:w-14 rounded-xl shadow-sm 
-         group-hover:scale-105 transition duration-300" />
+          <!-- Logo Image -->
+          <img src="/apple-touch-icon1.png" alt="SEPU Logo"
+            class="w-11 sm:w-13 md:w-14 rounded-xl shadow-sm 
+                  group-hover:scale-105 transition duration-300" />
 
+          <!-- Brand Text -->
+          <div class="leading-tight">
 
-        <!-- Overlapping Brand -->
-        <div class="relative leading-none -top-1">
+            <!-- Small Devices -->
+            <span class="block sm:hidden text-2xl font-extrabold tracking-wide
+                        text-gray-900 dark:text-white">
+              SEPU <span class="italic text-orange-500">-SACCO</span>
+            </span>
 
-          <span
-            class="block text-2xl sm:text-3xl font-extrabold
-                text-gray-800 dark:text-white shadow-lg shadow-orange-300 bg-gray-200/20 px-1 rounded-lg tracking-tight">
-            SEPU ~
-          </span>
+            <!-- Medium & Large Devices -->
+            <div class="hidden sm:block">
+              <span class="block text-lg md:text-xl font-extrabold tracking-tight
+                          text-gray-900 dark:text-white">
+                School Equipment Production Unit
+              </span>
 
-          <span class="absolute left-4 top-5 sm:top-6 italic text-lg sm:text-xl
-                font-bold text-orange-500 tracking-tight">
-            SACCO
-          </span>
+              <span class="block text-xs md:text-sm italic
+                          text-orange-600">
+                Savings and Credit Co-operative Organization
+              </span>
+            </div>
 
-        </div>
-
+          </div>
         </Link>
 
         <!-- Desktop Menu -->
