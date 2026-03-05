@@ -344,8 +344,10 @@ const formValid = computed(() =>
 );
 
 const submit = () => {
-  form.put(route("members.update", props.member.id), {
+  form.transform((data) => ({
+    ...data,
     _method: "PUT",
+  })).post(route("members.update", props.member.id), {
     preserveScroll: true,
   });
 };

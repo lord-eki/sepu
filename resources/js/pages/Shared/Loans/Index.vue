@@ -500,7 +500,7 @@ onMounted(async () => {
 const checkEligibility = () => {
   if (selectedMember.value) {
     openModal.value = false
-    router.visit(route('members.members.loan-eligibility', selectedMember.value))
+    router.visit(route('members.loan-eligibility', selectedMember.value))
   }
 }
 

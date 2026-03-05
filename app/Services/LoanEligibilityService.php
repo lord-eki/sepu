@@ -61,7 +61,7 @@ class LoanEligibilityService
     {
         // Check if member has made deposits in the last 3 months
         $savingsAccount = $member->accounts()
-            ->where('account_type', 'savings')
+            ->where('account_type', 'share_deposits')
             ->first();
 
         if (!$savingsAccount) {
@@ -82,7 +82,7 @@ class LoanEligibilityService
     private function meetsShareCapitalRequirement(Member $member): bool
     {
         $sharesAccount = $member->accounts()
-            ->where('account_type', 'shares')
+            ->where('account_type', 'share_capital')
             ->first();
 
         if (!$sharesAccount) {
@@ -236,7 +236,7 @@ class LoanEligibilityService
     private function getRequirements(Member $member, LoanProduct $loanProduct): array
     {
         $sharesAccount = $member->accounts()
-            ->where('account_type', 'shares')
+            ->where('account_type', 'share_capital')
             ->first();
 
         $currentShareCapital = $sharesAccount ? $sharesAccount->balance : 0;

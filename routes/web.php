@@ -110,6 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{member}/loans', [MemberController::class, 'loans'])->name('loans');
         Route::get('/{member}/dividends', [MemberController::class, 'dividends'])->name('dividends');
         Route::get('/{member}/guarantees', [MemberController::class, 'guarantees'])->name('guarantees');
+        
     
         // Next of kin
         Route::get('/{member}/next-of-kin', [MemberController::class, 'nextOfKin'])->name('next-of-kin');
@@ -123,6 +124,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
         
     });
+
+    //Shared routes
+    Route::post('members/loans/check-eligibility', [LoanController::class, 'checkEligibility'])
+            ->name('members.loans.check-eligibility');
+
+    Route::get('/members/{member}/loan-eligibility', [MemberController::class, 'loanEligibility'])
+            ->name('members.loan-eligibility');
     
 
     // SYSTEM USERS ROUTES (Admin only)

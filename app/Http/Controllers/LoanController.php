@@ -630,7 +630,6 @@ class LoanController extends Controller
     public function disburse(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'disbursed_amount' => 'required|numeric|min:1',
             'disbursement_method' => 'required|in:cash,mobile_money,bank_transfer',
             'disbursement_reference' => 'sometimes|string|max:100',
         ]);
@@ -661,7 +660,7 @@ class LoanController extends Controller
             // Get or create member's savings account
             $savingsAccount = Account::firstOrCreate([
                 'member_id' => $member->id,
-                'account_type' => 'savings',
+                'account_type' => 'share_deposits',
             ], [
                 'account_number' => $this->generateAccountNumber(),
                 'balance' => 0,
@@ -670,7 +669,15 @@ class LoanController extends Controller
             ]);
 
             // Calculate net disbursement (after fees)
-            $netDisbursement = $request->disbursed_amount - $loan->processing_fee - $loan->insurance_fee;
+            $grossAmount = $loan->approved_amount; // or principal
+            $processingFee = $loan->processing_fee;
+            $insuranceFee = $loan->insurance_fee;
+
+            $netDisbursement = $grossAmount - $processingFee - $insuranceFee;
+
+            if ($netDisbursement <= 0) {
+                throw new \Exception('Net disbursement cannot be zero or negative.');
+            }
 
             // Create disbursement transaction
             $transaction = Transaction::create([
@@ -691,7 +698,7 @@ class LoanController extends Controller
                 'metadata' => [
                     'loan_id' => $loan->id,
                     'loan_number' => $loan->loan_number,
-                    'gross_amount' => $request->disbursed_amount,
+                    'gross_amount' => $grossAmount,
                     'processing_fee' => $loan->processing_fee,
                     'insurance_fee' => $loan->insurance_fee,
                     'net_amount' => $netDisbursement,
@@ -707,7 +714,7 @@ class LoanController extends Controller
 
             // Update loan status
             $loan->update([
-                'disbursed_amount' => $request->disbursed_amount,
+                'disbursed_amount' => $grossAmount,
                 'status' => 'disbursed',
                 'disbursement_date' => now(),
                 'disbursed_by' => Auth::id(),
@@ -724,7 +731,7 @@ class LoanController extends Controller
                 'voucher_type' => 'loan_disbursement',
                 'payee_name' => $member->first_name.' '.$member->last_name,
                 'payee_phone' => $member->user->phone,
-                'amount' => $request->disbursed_amount,
+                'amount' => $grossAmount,
                 'purpose' => 'Loan disbursement',
                 'description' => "Disbursement for loan {$loan->loan_number}",
                 'loan_id' => $loan->id,

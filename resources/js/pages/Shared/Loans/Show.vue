@@ -637,128 +637,136 @@
 
 
    <!-- DISBURSEMENT MODAL -->
-  <TransitionRoot as="template" :show="showDisbursementModal">
-    <Dialog as="div" class="relative z-40" @close="closeDisbursementModal">
-      <TransitionChild
-        enter="ease-out duration-300"
-        enter-from="opacity-0"
-        enter-to="opacity-100"
-        leave="ease-in duration-200"
-        leave-from="opacity-100"
-        leave-to="opacity-0"
-      >
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-      </TransitionChild>
+<TransitionRoot as="template" :show="showDisbursementModal">
+  <Dialog as="div" class="relative z-40" @close="closeDisbursementModal">
+    <TransitionChild
+      enter="ease-out duration-300"
+      enter-from="opacity-0"
+      enter-to="opacity-100"
+      leave="ease-in duration-200"
+      leave-from="opacity-100"
+      leave-to="opacity-0"
+    >
+      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+    </TransitionChild>
 
-      <div class="fixed inset-0 z-40 overflow-y-auto">
-        <div class="flex min-h-full items-center justify-center p-4 text-center">
-          <TransitionChild
-            enter="ease-out duration-300"
-            enter-from="opacity-0 scale-95"
-            enter-to="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leave-from="opacity-100 scale-100"
-            leave-to="opacity-0 scale-95"
+    <div class="fixed inset-0 z-40 overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4 text-center">
+        <TransitionChild
+          enter="ease-out duration-300"
+          enter-from="opacity-0 scale-95"
+          enter-to="opacity-100 scale-100"
+          leave="ease-in duration-200"
+          leave-from="opacity-100 scale-100"
+          leave-to="opacity-0 scale-95"
+        >
+          <DialogPanel
+            class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left shadow-2xl border border-slate-200 transition-all"
           >
-            <DialogPanel
-              class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-2xl transition-all border border-slate-200"
-            >
-              <DialogTitle class="text-2xl font-semibold text-[#0B2B40] mb-4">
-                Disburse Loan
-              </DialogTitle>
+            <DialogTitle class="text-2xl font-semibold text-[#0B2B40] mb-6">
+              Disburse Loan
+            </DialogTitle>
 
-              <div class="space-y-5 text-base">
-                <!-- Disbursed Amount -->
-                <div>
-                  <label class="block text-base font-medium text-slate-600 mb-1">
-                    Disbursed Amount
-                  </label>
-                  <input
-                    v-model.number="disbursementForm.disbursed_amount"
-                    type="number"
-                    min="0"
-                    class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-base"
-                    :class="{ 'border-red-300': validationErrors.disbursed_amount }"
-                    aria-describedby="disbursed-error"
-                  />
-                  <p
-                    v-if="validationErrors.disbursed_amount"
-                    id="disbursed-error"
-                    class="text-sm text-red-600 mt-1"
-                  >
-                    {{ firstError(validationErrors.disbursed_amount) }}
-                  </p>
-                </div>
-
-                <!-- Disbursement Method -->
-                <div>
-                  <label class="block text-base font-medium text-slate-600 mb-1">
-                    Disbursement Method
-                  </label>
-                  <select
-                    v-model="disbursementForm.disbursement_method"
-                    class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-base"
-                    :class="{ 'border-red-300': validationErrors.disbursement_method }"
-                  >
-                    <option disabled value="">Select Method</option>
-                    <option value="cash">Cash</option>
-                    <option value="mpesa">Mpesa</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="mobile_money">Mobile Money</option>
-                  </select>
-                  <p
-                    v-if="validationErrors.disbursement_method"
-                    class="text-sm text-red-600 mt-1"
-                  >
-                    {{ firstError(validationErrors.disbursement_method) }}
-                  </p>
-                </div>
-
-                <!-- Reference -->
-                <div>
-                  <label class="block text-base font-medium text-slate-600 mb-1">
-                    Reference
-                  </label>
-                  <input
-                    v-model="disbursementForm.disbursement_reference"
-                    type="text"
-                    class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-base"
-                    :class="{ 'border-red-300': validationErrors.disbursement_reference }"
-                  />
-                  <p
-                    v-if="validationErrors.disbursement_reference"
-                    class="text-sm text-red-600 mt-1"
-                  >
-                    {{ firstError(validationErrors.disbursement_reference) }}
-                  </p>
-                </div>
+            <!-- Loan Breakdown -->
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3 mb-6">
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-600">Approved Amount</span>
+                <span class="font-semibold">
+                  {{ formatCurrency(loan.approved_amount) }}
+                </span>
               </div>
 
-              <!-- Buttons -->
-              <div class="mt-8 flex justify-end space-x-4">
-                <button
-                  type="button"
-                  @click="closeDisbursementModal"
-                  class="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-base font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  @click="disburseLoan"
-                  :disabled="loading.disburse"
-                  class="px-5 py-2.5 rounded-lg bg-blue-800 hover:bg-blue-900 text-white font-medium text-base disabled:opacity-50"
-                >
-                  <span v-if="!loading.disburse">Disburse</span>
-                  <span v-else>Disbursing…</span>
-                </button>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-600">Processing Fee</span>
+                <span class="text-red-600">
+                  - {{ formatCurrency(loan.processing_fee) }}
+                </span>
               </div>
-            </DialogPanel>
-          </TransitionChild>
-        </div>
+
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-600">Insurance Fee</span>
+                <span class="text-red-600">
+                  - {{ formatCurrency(loan.insurance_fee) }}
+                </span>
+              </div>
+
+              <div class="border-t pt-3 flex justify-between font-semibold text-base">
+                <span>Net Disbursement</span>
+                <span class="text-green-700">
+                  {{
+                    formatCurrency(
+                      loan.approved_amount -
+                      loan.processing_fee -
+                      loan.insurance_fee
+                    )
+                  }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Disbursement Method -->
+            <div class="mb-5">
+              <label class="block text-sm font-medium text-slate-600 mb-1">
+                Disbursement Method
+              </label>
+              <select
+                v-model="disbursementForm.disbursement_method"
+                class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-sm"
+                :class="{ 'border-red-300': validationErrors.disbursement_method }"
+              >
+                <option disabled value="">Select Method</option>
+                <option value="cash">Cash</option>
+                <option value="mobile_money">Mobile Money</option>
+                <option value="bank_transfer">Bank Transfer</option>
+              </select>
+
+              <p
+                v-if="validationErrors.disbursement_method"
+                class="text-xs text-red-600 mt-1"
+              >
+                {{ firstError(validationErrors.disbursement_method) }}
+              </p>
+            </div>
+
+            <!-- Reference -->
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">
+                Reference (Optional)
+              </label>
+              <input
+                v-model="disbursementForm.disbursement_reference"
+                type="text"
+                class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-sm"
+              />
+            </div>
+
+            <!-- Buttons -->
+            <div class="mt-8 flex justify-end space-x-3">
+              <button
+                type="button"
+                @click="closeDisbursementModal"
+                class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                @click="disburseLoan"
+                :disabled="loading.disburse"
+                class="px-5 py-2 rounded-lg bg-[#0B2B40] hover:bg-blue-950 text-white text-sm font-medium disabled:opacity-50"
+              >
+                <span v-if="!loading.disburse">Confirm Disbursement</span>
+                <span v-else>Processing…</span>
+              </button>
+            </div>
+
+          </DialogPanel>
+        </TransitionChild>
       </div>
-    </Dialog>
-  </TransitionRoot>
+    </div>
+  </Dialog>
+</TransitionRoot>
 
 
   </AppLayout>
@@ -981,23 +989,35 @@ const rejectLoan = async () => {
 
 const disburseLoan = async () => {
   resetValidation()
-  if (!disbursementForm.disbursed_amount || disbursementForm.disbursed_amount <= 0) {
-    validationErrors.disbursed_amount = ['Disbursed amount must be greater than zero.']
-    return
-  }
+
   if (!disbursementForm.disbursement_method) {
     validationErrors.disbursement_method = ['Select a disbursement method.']
     return
   }
+
   loading.disburse = true
+
   try {
-    const response = await axios.post(`/loans/${props.loan.id}/disburse`, disbursementForm)
+    const response = await axios.post(
+      `/loans/${props.loan.id}/disburse`,
+      {
+        disbursement_method: disbursementForm.disbursement_method,
+        disbursement_reference: disbursementForm.disbursement_reference
+      }
+    )
+
     showToast(response.data.message || 'Loan disbursed successfully', 'success')
+
     showDisbursementModal.value = false
     router.reload()
+
   } catch (err) {
     const res = err.response
-    if (res?.data?.errors) Object.assign(validationErrors, res.data.errors)
+
+    if (res?.data?.errors) {
+      Object.assign(validationErrors, res.data.errors)
+    }
+
     showToast(res?.data?.message || 'Failed to disburse loan', 'error')
   } finally {
     loading.disburse = false

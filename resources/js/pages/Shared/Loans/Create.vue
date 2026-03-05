@@ -87,7 +87,7 @@
           <!-- Only show back button for non-member users -->
           <div v-if="!isMemberRole" class="flex justify-end">
             <button type="button" @click="resetMemberSelection"
-              class="inline-flex items-center gap-2 bg-[rgba(7,40,75,0.95)] hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 rounded-lg shadow text-sm transition">
+              class="inline-flex items-center gap-2 bg-blue-900/90 hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 rounded-lg shadow text-sm transition">
               <ArrowLeft class="w-4 h-4" />
               <span>Go Back to Member Selection</span>
             </button>
@@ -102,7 +102,7 @@
 
           <!-- Member Information (card) -->
           <section class="bg-white text-gray-900 shadow-xl rounded-2xl overflow-hidden border border-gray-100">
-            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+            <div class="px-6 py-3 bg-blue-900/90">
               <h3 class="text-base sm:text-lg font-semibold text-white">Member Information</h3>
             </div>
             <div class="p-6">
@@ -133,7 +133,7 @@
 
           <!-- Loan Product -->
           <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+            <div class="px-6 py-3 bg-blue-900/90">
               <h3 class="text-base sm:text-lg font-semibold text-white">Loan Product</h3>
             </div>
             <div class="p-6">
@@ -176,7 +176,7 @@
 
           <!-- Loan Details -->
           <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+            <div class="px-6 py-3 bg-blue-900/90">
               <h3 class="text-base sm:text-lg font-semibold text-white">Loan Details</h3>
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -213,7 +213,7 @@
 
           <!-- Disbursement -->
           <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+            <div class="px-6 py-3 bg-blue-900/90">
               <h3 class="text-base sm:text-lg font-semibold text-white">Disbursement Method</h3>
             </div>
             <div class="p-6 space-y-4">
@@ -268,7 +268,7 @@
 
           <!-- Guarantors -->
           <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+            <div class="px-6 py-3 bg-blue-900/90">
               <h3 class="text-base sm:text-lg font-semibold text-white">Guarantors</h3>
             </div>
             <div class="p-6 space-y-4">
@@ -316,7 +316,7 @@
 
           <!-- Support Documents -->
           <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="px-6 py-3 bg-[rgba(7,40,75,0.95)]">
+            <div class="px-6 py-3 bg-blue-900/90">
               <h3 class="text-base sm:text-lg font-semibold text-white">Support Documents</h3>
             </div>
             <div class="p-6 space-y-4">
@@ -332,7 +332,7 @@
               <!-- File Upload Control -->
               <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <button type="button" @click="showDocTypeSelector = true"
-                  class="inline-flex items-center gap-2 bg-[rgba(7,40,75,0.95)] hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 w-fit rounded-lg shadow">
+                  class="inline-flex items-center gap-2 bg-blue-900/90 hover:bg-[rgba(7,40,75,0.85)] text-white px-4 py-2 w-fit rounded-lg shadow">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
@@ -508,7 +508,7 @@
               <button type="button" @click="showConfirm = false"
                 class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:cursor-pointer hover:bg-gray-100">Cancel</button>
               <button type="button" @click="confirmSubmit"
-                class="px-4 py-2 rounded-lg bg-[rgba(7,40,75,0.95)] text-white hover:cursor-pointer hover:bg-blue-800 shadow">Yes,
+                class="px-4 py-2 rounded-lg bg-blue-900/90 text-white hover:cursor-pointer hover:bg-blue-800 shadow">Yes,
                 Submit</button>
             </div>
           </div>
