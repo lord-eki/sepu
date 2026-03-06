@@ -714,7 +714,7 @@ class LoanController extends Controller
 
             // Update loan status
             $loan->update([
-                'disbursed_amount' => $grossAmount,
+                'disbursed_amount' => $netDisbursement,
                 'status' => 'disbursed',
                 'disbursement_date' => now(),
                 'disbursed_by' => Auth::id(),

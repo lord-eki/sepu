@@ -251,7 +251,7 @@ const currentLoanMessage = computed(() => {
                 <td class="px-6 py-4">{{ loan.loan_number }}</td>
                 <td class="px-6 py-4">{{ loan.loan_product?.name }}</td>
                 <td class="px-6 py-4 font-medium text-gray-700">
-                  KES {{ Number(loan.applied_amount).toLocaleString() }}
+                  KES {{ Number(loan.approved_amount || loan.applied_amount).toLocaleString() }}
                 </td>
                 <td class="px-6 py-4 font-medium text-gray-700">
                   KES {{
@@ -262,7 +262,7 @@ const currentLoanMessage = computed(() => {
                 </td>
                 <td class="px-6 py-4">{{ formatDate(getNextRepaymentDate(loan)) }}</td>
                 <td class="px-6 py-4">
-                  <span
+                  <spangit 
                     class="px-3 py-1 text-xs rounded-full font-medium capitalize"
                     :class="{
                       'text-green-700 bg-green-100': ['completed', 'approved'].includes(loan.status),
