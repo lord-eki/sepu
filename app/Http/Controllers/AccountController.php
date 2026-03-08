@@ -18,6 +18,9 @@ use Inertia\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+use Carbon\Carbon;
+
+
 
 class AccountController extends Controller
 {
@@ -526,21 +529,25 @@ class AccountController extends Controller
     // Individual Account's statement
     public function myStatement($memberId, $accountId)
     {
-        $memberIdLoggedIn = Auth::user()->member->id ?? null;
+        // Get logged-in member
+        $loggedInMemberId = Auth::user()->member->id ?? null;
 
-        if ($memberIdLoggedIn != $memberId) {
-            abort(403); 
+        if ($loggedInMemberId != $memberId) {
+            abort(403, "You cannot view other members' accounts.");
         }
 
-        // Default period: last 30 days
-        $from = request()->query('from') ?? now()->subDays(30)->toDateString();
-        $to = request()->query('to') ?? now()->toDateString();
+        // Get period from query or default to last 30 days
+        $from = request()->query('from') ?? Carbon::now()->subDays(30)->toDateString();
+        $to   = request()->query('to') ?? Carbon::now()->toDateString();
 
+        // Fetch account with filtered transactions
         $account = Account::where('id', $accountId)
             ->where('member_id', $memberId)
-            ->with(['member', 'transactions' => function($q) use ($from, $to) {
-                $q->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
-                ->orderBy('created_at', 'desc'); 
+            ->with(['member', 'transactions' => function($query) use ($from, $to) {
+                $query->whereBetween('created_at', [
+                    $from . ' 00:00:00',
+                    $to . ' 23:59:59'
+                ])->orderBy('created_at', 'desc');
             }])
             ->firstOrFail();
 
@@ -554,6 +561,9 @@ class AccountController extends Controller
         ]);
     }
 
+    /**
+     * Generate PDF of the statement for the selected period
+     */
     public function statementPdf(Request $request, $accountId)
     {
         $request->validate([
@@ -563,32 +573,27 @@ class AccountController extends Controller
 
         $memberId = Auth::user()->member->id ?? null;
 
+        $from = $request->from ?? Carbon::now()->subDays(30)->toDateString();
+        $to = $request->to ?? Carbon::now()->toDateString();
+
         $account = Account::where('id', $accountId)
             ->where('member_id', $memberId)
-            ->with(['member', 'transactions' => function($q) use ($request) {
-                if ($request->from && $request->to) {
-                    $q->whereBetween('created_at', [
-                        $request->from . ' 00:00:00',
-                        $request->to . ' 23:59:59'
-                    ]);
-                }
-                $q->orderBy('created_at', 'desc');
+            ->with(['member', 'transactions' => function($q) use ($from, $to) {
+                $q->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+                  ->orderBy('created_at', 'desc');
             }])
             ->firstOrFail();
-
-        $from = $request->from ?? $account->transactions->last()?->created_at->toDateString() ?? now()->toDateString();
-        $to = $request->to ?? $account->transactions->first()?->created_at->toDateString() ?? now()->toDateString();
 
         $pdf = Pdf::loadView('accounts.pdf.statement', [
             'account' => $account,
             'transactions' => $account->transactions,
             'period' => ['from' => $from, 'to' => $to],
-        ])->setPaper('A4', 'portrait')
+        ])
+        ->setPaper('A4', 'portrait')
         ->setOption('isHtml5ParserEnabled', true);
 
         return $pdf->stream("statement-{$account->account_number}.pdf");
     }
-
     /**
      * Get account transactions
      */

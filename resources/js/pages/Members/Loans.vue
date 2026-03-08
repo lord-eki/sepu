@@ -262,7 +262,7 @@ const currentLoanMessage = computed(() => {
                 </td>
                 <td class="px-6 py-4">{{ formatDate(getNextRepaymentDate(loan)) }}</td>
                 <td class="px-6 py-4">
-                  <spangit 
+                  <span
                     class="px-3 py-1 text-xs rounded-full font-medium capitalize"
                     :class="{
                       'text-green-700 bg-green-100': ['completed', 'approved'].includes(loan.status),

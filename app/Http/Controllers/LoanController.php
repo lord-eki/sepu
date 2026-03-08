@@ -237,9 +237,9 @@ class LoanController extends Controller
                 'status' => 'pending',
                 'application_date' => now(),
                 'documents' => $request->documents ?? [],
-                'outstanding_balance' => $request->applied_amount,
-                'principal_balance' => $request->applied_amount,
-                'interest_balance' => $totalRepayable - $request->applied_amount,
+                'outstanding_balance' => 0,
+                'principal_balance' => 0,
+                'interest_balance' => 0,
                 'penalty_balance' => 0,
                 'days_in_arrears' => 0,
             ]);
@@ -720,6 +720,9 @@ class LoanController extends Controller
                 'disbursed_by' => Auth::id(),
                 'first_repayment_date' => now()->addMonth(),
                 'maturity_date' => now()->addMonths($loan->term_months),
+                'outstanding_balance' => $netDisbursement,
+                'principal_balance' => $loan->approved_amount,
+                'interest_balance' => $loan->total_repayable - $loan->approved_amount,
             ]);
 
             // Generate repayment schedule
