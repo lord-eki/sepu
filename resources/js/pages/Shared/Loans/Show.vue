@@ -4,53 +4,36 @@
     { title: 'Loan Details' }
   ]">
     <!-- HEAD -->
+
     <Head title="Loan Details" />
 
     <!-- Flash Toast -->
-      <transition
-      enter-active-class="transition ease-out duration-300"
-      enter-from-class="opacity-0 -translate-y-3"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition ease-in duration-200"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-3"
-    >
-      <div
-      v-if="visible"
-      :class="[
-        'fixed top-6 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full shadow-xl rounded-xl px-5 py-3 flex gap-4 items-start text-white',
-        type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-600'
-      ]"
-      role="status"
-      aria-live="polite"
-    >
-      <div class="flex-shrink-0 mt-0.5">
-        <div
-          v-if="type === 'success'"
-          class="h-7 w-7 rounded-full bg-white/20 text-white flex items-center justify-center font-medium"
-        >
-          ✓
+    <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-3"
+      enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-3">
+      <div v-if="visible" :class="[
+    'fixed top-6 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full shadow-xl rounded-xl px-5 py-3 flex gap-4 items-start text-white',
+    type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-600'
+  ]" role="status" aria-live="polite">
+        <div class="flex-shrink-0 mt-0.5">
+          <div v-if="type === 'success'"
+            class="h-7 w-7 rounded-full bg-white/20 text-white flex items-center justify-center font-medium">
+            ✓
+          </div>
+          <div v-else-if="type === 'error'"
+            class="h-7 w-7 rounded-full bg-white/20 text-white flex items-center justify-center font-medium">
+            ✕
+          </div>
         </div>
-        <div
-          v-else-if="type === 'error'"
-          class="h-7 w-7 rounded-full bg-white/20 text-white flex items-center justify-center font-medium"
-        >
+
+        <div class="flex-1">
+          <p class="text-sm font-medium">{{ message }}</p>
+        </div>
+
+        <button @click="close" class="text-white/80 hover:text-white" aria-label="Close notification">
           ✕
-        </div>
+        </button>
       </div>
-
-      <div class="flex-1">
-        <p class="text-sm font-medium">{{ message }}</p>
-      </div>
-
-      <button
-        @click="close"
-        class="text-white/80 hover:text-white"
-        aria-label="Close notification"
-      >
-        ✕
-      </button>
-    </div>
 
     </transition>
 
@@ -68,25 +51,26 @@
           <h2 class="font-semibold text-xl text-[#0B2B40]">
             Loan Details — <span class="text-orange-600">{{ loan.loan_number }}</span>
           </h2>
-          <p class="text-xs text-slate-500 mt-1">Loan ID: <span class="font-semibold text-slate-700">{{ loan.loan_number }}</span></p>
+          <p class="text-xs text-slate-500 mt-1">Loan ID: <span class="font-semibold text-slate-700">{{ loan.loan_number
+              }}</span></p>
         </div>
       </div>
 
       <div class="flex items-center flex-wrap gap-3">
         <Link v-if="canEdit" :href="route('loans.edit', loan.id)"
           class="inline-flex items-center gap-2 bg-[#0B2B40] hover:bg-blue-950 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6M4 21v-7a4 4 0 014-4h7" />
-          </svg>
-          Edit
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6M4 21v-7a4 4 0 014-4h7" />
+        </svg>
+        Edit
         </Link>
 
         <Link :href="isMemberRole ? route('my-loans') : route('loans.index')"
           class="inline-flex items-center gap-2 border border-[#0B2B40]/30 text-[#0B2B40] bg-white hover:bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
         </Link>
       </div>
     </div>
@@ -135,18 +119,18 @@
 
               <Link v-if="canViewSchedule" :href="route('loans.schedule', loan.id)"
                 class="inline-flex items-center px-4 py-2 bg-[#0B2B40] rounded-lg border border-slate-200 text-sm font-medium text-white hover:bg-[#2a3a44]">
-                <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                </svg> View Schedule
+              <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+              </svg> View Schedule
               </Link>
 
               <Link v-if="canViewRepayments" :href="route('loans.repayments', loan.id)"
                 class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium bg-orange-500 text-white hover:bg-orange-600">
-                <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2" />
-                </svg> Repayments
+              <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2" />
+              </svg> Repayments
               </Link>
             </div>
           </div>
@@ -174,17 +158,20 @@
 
                   <div>
                     <label class="block text-sm font-medium text-slate-500">Applied Amount</label>
-                    <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.applied_amount) }}</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.applied_amount) }}
+                    </p>
                   </div>
 
                   <div v-if="loan.approved_amount">
                     <label class="block text-sm font-medium text-slate-500">Approved Amount</label>
-                    <p class="mt-1 text-sm font-semibold text-blue-800">KES {{ formatCurrency(loan.approved_amount) }}</p>
+                    <p class="mt-1 text-sm font-semibold text-blue-800">KES {{ formatCurrency(loan.approved_amount) }}
+                    </p>
                   </div>
 
                   <div v-if="loan.disbursed_amount">
                     <label class="block text-sm font-medium text-slate-500">Disbursed Amount</label>
-                    <p class="mt-1 text-sm font-semibold text-blue-800">KES {{ formatCurrency(loan.disbursed_amount) }}</p>
+                    <p class="mt-1 text-sm font-semibold text-blue-800">KES {{ formatCurrency(loan.disbursed_amount) }}
+                    </p>
                   </div>
 
                   <div>
@@ -250,7 +237,8 @@
                   </div>
 
                   <div>
-                    <h4 class="text-lg font-medium text-slate-900">{{ loan.member.first_name }} {{ loan.member.last_name }}</h4>
+                    <h4 class="text-lg font-medium text-slate-900">{{ loan.member.first_name }} {{ loan.member.last_name
+                      }}</h4>
                     <p class="text-sm text-slate-500">{{ loan.member.membership_id }}</p>
                     <p class="text-sm text-slate-500">{{ loan.member.user?.phone || '-' }}</p>
                   </div>
@@ -259,7 +247,8 @@
                 <div class="mt-4 grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-slate-500">Membership Status</label>
-                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                    <span
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
                       {{ (loan.member.membership_status || '').toUpperCase() }}
                     </span>
                   </div>
@@ -270,8 +259,9 @@
                 </div>
 
                 <div class="mt-4">
-                  <Link :href="route('members.show', loan.member.id)" class="inline-flex items-center px-3 py-2 border border-slate-200 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50">
-                    View Member Profile
+                  <Link :href="route('members.show', loan.member.id)"
+                    class="inline-flex items-center px-3 py-2 border border-slate-200 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50">
+                  View Member Profile
                   </Link>
                 </div>
               </div>
@@ -280,12 +270,14 @@
 
           <!-- Guarantors + Sidebar -->
           <div class="space-y-6">
-            <div v-if="loan.guarantors && loan.guarantors.length > 0" class="bg-white border border-slate-200 shadow-sm rounded-xl">
+            <div v-if="loan.guarantors && loan.guarantors.length > 0"
+              class="bg-white border border-slate-200 shadow-sm rounded-xl">
               <div class="px-6 py-4 border-b border-slate-100">
                 <h3 class="text-lg font-semibold text-[#0B2B40]">Guarantors</h3>
               </div>
               <div class="p-6 space-y-4">
-                <div v-for="guarantor in loan.guarantors" :key="guarantor.id" class="border border-slate-100 rounded-lg p-4">
+                <div v-for="guarantor in loan.guarantors" :key="guarantor.id"
+                  class="border border-slate-100 rounded-lg p-4">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                       <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
@@ -295,14 +287,16 @@
                         </svg>
                       </div>
                       <div>
-                        <h4 class="font-medium text-slate-900">{{ guarantor.guarantor_member.first_name }} {{ guarantor.guarantor_member.last_name }}</h4>
+                        <h4 class="font-medium text-slate-900">{{ guarantor.guarantor_member.first_name }} {{
+    guarantor.guarantor_member.last_name }}</h4>
                         <p class="text-sm text-slate-500">{{ guarantor.guarantor_member.membership_id }}</p>
                       </div>
                     </div>
 
                     <div class="text-right">
                       <p class="font-medium text-slate-900">KES {{ formatCurrency(guarantor.guaranteed_amount) }}</p>
-                      <span :class="getGuarantorStatusClass(guarantor.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1">
+                      <span :class="getGuarantorStatusClass(guarantor.status)"
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1">
                         {{ (guarantor.status || '').toUpperCase() }}
                       </span>
                     </div>
@@ -316,7 +310,8 @@
             </div>
 
             <!-- Balance Information -->
-            <div v-if="loan.status === 'disbursed' || loan.status === 'active'" class="bg-white shadow-sm sm:rounded-lg border">
+            <div v-if="loan.status === 'disbursed' || loan.status === 'active'"
+              class="bg-white shadow-sm sm:rounded-lg border">
               <div class="px-6 py-4 border-b border-slate-100">
                 <h3 class="text-lg font-medium text-slate-900">Balance Information</h3>
               </div>
@@ -327,11 +322,13 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-slate-500">Principal Balance</label>
-                  <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.principal_balance) }}</p>
+                  <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.principal_balance) }}
+                  </p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-slate-500">Interest Balance</label>
-                  <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.interest_balance) }}</p>
+                  <p class="mt-1 text-sm font-semibold text-slate-900">KES {{ formatCurrency(loan.interest_balance) }}
+                  </p>
                 </div>
                 <div v-if="loan.penalty_balance > 0">
                   <label class="block text-sm font-medium text-slate-500">Penalty Balance</label>
@@ -381,7 +378,8 @@
                       <div class="relative pb-8">
                         <div class="relative flex space-x-3">
                           <div>
-                            <span class="h-8 w-8 rounded-full bg-blue-900 flex items-center justify-center ring-8 ring-white">
+                            <span
+                              class="h-8 w-8 rounded-full bg-blue-900 flex items-center justify-center ring-8 ring-white">
                               <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -390,7 +388,8 @@
                           </div>
                           <div class="min-w-0 flex-1">
                             <div>
-                              <p class="text-sm text-slate-500">Application submitted on {{ formatDate(loan.application_date) }}</p>
+                              <p class="text-sm text-slate-500">Application submitted on {{
+    formatDate(loan.application_date) }}</p>
                             </div>
                           </div>
                         </div>
@@ -401,9 +400,11 @@
                       <div class="relative pb-8">
                         <div class="relative flex space-x-3">
                           <div>
-                            <span class="h-8 w-8 rounded-full bg-orange-600 flex items-center justify-center ring-8 ring-white">
+                            <span
+                              class="h-8 w-8 rounded-full bg-orange-600 flex items-center justify-center ring-8 ring-white">
                               <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M5 13l4 4L19 7" />
                               </svg>
                             </span>
                           </div>
@@ -423,7 +424,8 @@
                       <div class="relative">
                         <div class="relative flex space-x-3">
                           <div>
-                            <span class="h-8 w-8 rounded-full bg-blue-800 flex items-center justify-center ring-8 ring-white">
+                            <span
+                              class="h-8 w-8 rounded-full bg-blue-800 flex items-center justify-center ring-8 ring-white">
                               <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" />
@@ -454,97 +456,214 @@
 
     <!-- APPROVAL MODAL -->
     <TransitionRoot as="template" :show="showApprovalModal">
-      <Dialog as="div" class="relative z-40" @close="closeApprovalModal">
-        <TransitionChild
-          enter="ease-out duration-300"
-          enter-from="opacity-0"
-          enter-to="opacity-100"
-          leave="ease-in duration-200"
-          leave-from="opacity-100"
-          leave-to="opacity-0"
-        >
+          <Dialog as="div" class="relative z-40" @close="closeApprovalModal">
+
+            <!-- Overlay -->
+            <TransitionChild
+              enter="ease-out duration-300"
+              enter-from="opacity-0"
+              enter-to="opacity-100"
+              leave="ease-in duration-200"
+              leave-from="opacity-100"
+              leave-to="opacity-0"
+            >
+              <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+            </TransitionChild>
+
+            <div class="fixed inset-0 z-40 overflow-y-auto">
+              <div class="flex min-h-full items-center justify-center p-4 text-center">
+
+                <!-- Modal Animation -->
+                <TransitionChild
+                  enter="ease-out duration-300"
+                  enter-from="opacity-0 scale-95"
+                  enter-to="opacity-100 scale-100"
+                  leave="ease-in duration-200"
+                  leave-from="opacity-100 scale-100"
+                  leave-to="opacity-0 scale-95"
+                >
+
+                  <DialogPanel
+                  v-if="loan" class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left shadow-2xl border border-slate-200 transition-all"
+                  >
+
+                    <!-- Title -->
+                    <DialogTitle class="text-2xl font-semibold text-[#0B2B40] mb-6">
+                      Approve Loan Application
+                    </DialogTitle>
+
+                    <!-- Loan Summary -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+
+                      <div class="bg-slate-50 rounded-lg p-3">
+                        <p class="text-xs text-slate-500">Applied Amount</p>
+                        <p class="text-lg font-semibold">
+                          KES {{ formatCurrency(loan?.applied_amount ?? 0) }}
+                        </p>
+                      </div>
+
+                      <div class="bg-slate-50 rounded-lg p-3">
+                        <p class="text-xs text-slate-500">Loan Term</p>
+                        <p class="text-lg font-semibold">
+                          {{ loan?.term_months ?? 0 }} Months
+                        </p>
+                      </div>
+
+                    </div>
+
+
+                    <!-- Approved Amount -->
+                    <div class="mb-5">
+
+                      <label class="block text-sm font-medium text-slate-600 mb-1">
+                        Approved Amount
+                      </label>
+
+                      <input
+                        v-model.number="approvalForm.approved_amount"
+                        type="number"
+                        class="w-full rounded-lg border border-slate-300 p-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Enter approved amount"
+                        :class="{ 'border-red-300': validationErrors.approved_amount }"
+                      />
+
+                      <p
+                        v-if="validationErrors.approved_amount"
+                        class="text-sm text-red-600 mt-1"
+                      >
+                        {{ firstError(validationErrors.approved_amount) }}
+                      </p>
+
+                    </div>
+
+
+                    <!-- Loan Breakdown Preview -->
+                    <div v-if="approvalForm.approved_amount" class="bg-blue-50 p-5 rounded-xl border border-blue-100 mb-6 space-y-2">
+                      <p class="text-sm font-medium text-blue-900 mb-2">Loan Breakdown Preview</p>
+
+                      <div class="flex justify-between text-sm">
+                        <span class="text-slate-600">Processing Fee</span>
+                        <span class="text-red-600">- {{ formatCurrency(processingFeePreview) }}</span>
+                      </div>
+
+                      <div class="flex justify-between text-sm">
+                        <span class="text-slate-600">Insurance Fee</span>
+                        <span class="text-red-600">- {{ formatCurrency(insuranceFeePreview) }}</span>
+                      </div>
+
+                      <div class="border-t pt-3 flex justify-between font-semibold text-sm">
+                        <span>Net Disbursement</span>
+                        <span class="text-green-700">{{ formatCurrency(netDisbursementPreview) }}</span>
+                      </div>
+
+                      <div class="border-t pt-3 flex justify-between font-semibold text-sm">
+                        <span>Estimated Monthly Repayment</span>
+                        <span class="text-[#0B2B40]">{{ formatCurrency(monthlyPreview) }}</span>
+                      </div>
+                    </div>
+
+
+                    <!-- Approval Notes -->
+                    <div class="mb-5">
+
+                      <label class="block text-sm font-medium text-slate-600 mb-1">
+                        Approval Notes
+                      </label>
+
+                      <textarea
+                        v-model="approvalForm.approval_notes"
+                        rows="3"
+                        class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        :class="{ 'border-red-300': validationErrors.approval_notes }"
+                        placeholder="Optional approval notes"
+                      ></textarea>
+
+                      <p
+                        v-if="validationErrors.approval_notes"
+                        class="text-sm text-red-600 mt-1"
+                      >
+                        {{ firstError(validationErrors.approval_notes) }}
+                      </p>
+
+                    </div>
+
+
+                    <!-- Buttons -->
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+
+                      <button
+                        type="button"
+                        @click="closeApprovalModal"
+                        class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        @click="approveLoan"
+                        :disabled="loading.approve"
+                        class="px-5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium disabled:opacity-50"
+                      >
+                        <span v-if="!loading.approve">Approve Loan</span>
+                        <span v-else>Approving...</span>
+                      </button>
+
+                    </div>
+
+                  </DialogPanel>
+
+                </TransitionChild>
+              </div>
+            </div>
+
+          </Dialog>
+        </TransitionRoot>
+    <!-- REJECTION MODAL -->
+    <TransitionRoot as="template" :show="showRejectionModal">
+      <Dialog as="div" class="relative z-40" @close="closeRejectModal">
+        <TransitionChild enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
+          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
           <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
         </TransitionChild>
 
         <div class="fixed inset-0 z-40 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4 text-center">
-            <TransitionChild
-              enter="ease-out duration-300"
-              enter-from="opacity-0 scale-95"
-              enter-to="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leave-from="opacity-100 scale-100"
-              leave-to="opacity-0 scale-95"
-            >
+            <TransitionChild enter="ease-out duration-300" enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100" leave="ease-in duration-200" leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95">
               <DialogPanel
-                class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-2xl transition-all border border-slate-200"
-              >
+                class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-2xl transition-all border border-slate-200">
                 <DialogTitle class="text-2xl font-semibold text-[#0B2B40] mb-4">
-                  Approve Loan
+                  Reject Loan
                 </DialogTitle>
 
                 <div class="space-y-5 text-base">
-                  <!-- Approved Amount -->
+                  <!-- Rejection Reason -->
                   <div>
                     <label class="block text-base font-medium text-slate-600 mb-1">
-                      Approved Amount
+                      Rejection Reason
                     </label>
-                    <input
-                      v-model.number="approvalForm.approved_amount"
-                      type="number"
-                      min="0"
-                      class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 p-2 text-base"
-                      :class="{ 'border-red-300': validationErrors.approved_amount }"
-                      aria-describedby="approval-amount-error"
-                    />
-                    <p
-                      v-if="validationErrors.approved_amount"
-                      id="approval-amount-error"
-                      class="text-sm text-red-600 mt-1"
-                    >
-                      {{ firstError(validationErrors.approved_amount) }}
-                    </p>
-                  </div>
-
-                  <!-- Approval Notes -->
-                  <div>
-                    <label class="block text-base font-medium text-slate-600 mb-1">
-                      Approval Notes
-                    </label>
-                    <textarea
-                      v-model="approvalForm.approval_notes"
-                      rows="4"
-                      class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 p-2 text-base"
-                      :class="{ 'border-red-300': validationErrors.approval_notes }"
-                      aria-describedby="approval-notes-error"
-                    ></textarea>
-                    <p
-                      v-if="validationErrors.approval_notes"
-                      id="approval-notes-error"
-                      class="text-sm text-red-600 mt-1"
-                    >
-                      {{ firstError(validationErrors.approval_notes) }}
+                    <textarea v-model="rejectionForm.rejection_reason" rows="4"
+                      class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-red-600 focus:border-red-600 p-2 text-base"
+                      :class="{ 'border-red-300': validationErrors.rejection_reason }"
+                      aria-describedby="reject-error"></textarea>
+                    <p v-if="validationErrors.rejection_reason" id="reject-error" class="text-sm text-red-600 mt-1">
+                      {{ firstError(validationErrors.rejection_reason) }}
                     </p>
                   </div>
                 </div>
 
                 <!-- Buttons -->
                 <div class="mt-8 flex justify-end space-x-4">
-                  <button
-                    type="button"
-                    @click="closeApprovalModal"
-                    class="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-base font-medium"
-                  >
+                  <button type="button" @click="closeRejectModal"
+                    class="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-base font-medium">
                     Cancel
                   </button>
-                  <button
-                    type="button"
-                    @click="approveLoan"
-                    :disabled="loading.approve"
-                    class="px-5 py-2.5 rounded-lg bg-orange-600 text-white hover:bg-orange-700 text-base font-medium disabled:opacity-50"
-                  >
-                    <span v-if="!loading.approve">Approve</span>
-                    <span v-else>Approving…</span>
+                  <button type="button" @click="rejectLoan" :disabled="loading.reject"
+                    class="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-base font-medium disabled:opacity-50">
+                    <span v-if="!loading.reject">Reject</span>
+                    <span v-else>Rejecting…</span>
                   </button>
                 </div>
               </DialogPanel>
@@ -555,225 +674,117 @@
     </TransitionRoot>
 
 
-   <!-- REJECTION MODAL -->
-  <TransitionRoot as="template" :show="showRejectionModal">
-    <Dialog as="div" class="relative z-40" @close="closeRejectModal">
-      <TransitionChild
-        enter="ease-out duration-300"
-        enter-from="opacity-0"
-        enter-to="opacity-100"
-        leave="ease-in duration-200"
-        leave-from="opacity-100"
-        leave-to="opacity-0"
-      >
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-      </TransitionChild>
+    <!-- DISBURSEMENT MODAL -->
+    <TransitionRoot as="template" :show="showDisbursementModal">
+      <Dialog as="div" class="relative z-40" @close="closeDisbursementModal">
+        <TransitionChild enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
+          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
+          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        </TransitionChild>
 
-      <div class="fixed inset-0 z-40 overflow-y-auto">
-        <div class="flex min-h-full items-center justify-center p-4 text-center">
-          <TransitionChild
-            enter="ease-out duration-300"
-            enter-from="opacity-0 scale-95"
-            enter-to="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leave-from="opacity-100 scale-100"
-            leave-to="opacity-0 scale-95"
-          >
-            <DialogPanel
-              class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-2xl transition-all border border-slate-200"
-            >
-              <DialogTitle class="text-2xl font-semibold text-[#0B2B40] mb-4">
-                Reject Loan
-              </DialogTitle>
+        <div class="fixed inset-0 z-40 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4 text-center">
+            <TransitionChild enter="ease-out duration-300" enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100" leave="ease-in duration-200" leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95">
+              <DialogPanel
+                class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left shadow-2xl border border-slate-200 transition-all">
+                <DialogTitle class="text-2xl font-semibold text-[#0B2B40] mb-6">
+                  Disburse Loan
+                </DialogTitle>
 
-              <div class="space-y-5 text-base">
-                <!-- Rejection Reason -->
-                <div>
-                  <label class="block text-base font-medium text-slate-600 mb-1">
-                    Rejection Reason
+                <!-- Loan Breakdown -->
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3 mb-6">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-slate-600">Approved Amount</span>
+                    <span class="font-semibold">
+                      {{ formatCurrency(loan.approved_amount) }}
+                    </span>
+                  </div>
+
+                  <div class="flex justify-between text-sm">
+                    <span class="text-slate-600">Processing Fee</span>
+                    <span class="text-red-600">
+                      - {{ formatCurrency(loan.processing_fee) }}
+                    </span>
+                  </div>
+
+                  <div class="flex justify-between text-sm">
+                    <span class="text-slate-600">Insurance Fee</span>
+                    <span class="text-red-600">
+                      - {{ formatCurrency(loan.insurance_fee) }}
+                    </span>
+                  </div>
+
+                  <div class="border-t pt-3 flex justify-between font-semibold text-base">
+                    <span>Net Disbursement</span>
+                    <span class="text-green-700">
+                      {{
+    formatCurrency(
+      loan.approved_amount -
+      loan.processing_fee -
+      loan.insurance_fee
+    )
+  }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Disbursement Method -->
+                <div class="mb-5">
+                  <label class="block text-sm font-medium text-slate-600 mb-1">
+                    Disbursement Method
                   </label>
-                  <textarea
-                    v-model="rejectionForm.rejection_reason"
-                    rows="4"
-                    class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-red-600 focus:border-red-600 p-2 text-base"
-                    :class="{ 'border-red-300': validationErrors.rejection_reason }"
-                    aria-describedby="reject-error"
-                  ></textarea>
-                  <p
-                    v-if="validationErrors.rejection_reason"
-                    id="reject-error"
-                    class="text-sm text-red-600 mt-1"
-                  >
-                    {{ firstError(validationErrors.rejection_reason) }}
+                  <select v-model="disbursementForm.disbursement_method"
+                    class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-sm"
+                    :class="{ 'border-red-300': validationErrors.disbursement_method }">
+                    <option disabled value="">Select Method</option>
+                    <option value="cash">Cash</option>
+                    <option value="mobile_money">Mobile Money</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                  </select>
+
+                  <p v-if="validationErrors.disbursement_method" class="text-xs text-red-600 mt-1">
+                    {{ firstError(validationErrors.disbursement_method) }}
                   </p>
                 </div>
-              </div>
 
-              <!-- Buttons -->
-              <div class="mt-8 flex justify-end space-x-4">
-                <button
-                  type="button"
-                  @click="closeRejectModal"
-                  class="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-base font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  @click="rejectLoan"
-                  :disabled="loading.reject"
-                  class="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-base font-medium disabled:opacity-50"
-                >
-                  <span v-if="!loading.reject">Reject</span>
-                  <span v-else>Rejecting…</span>
-                </button>
-              </div>
-            </DialogPanel>
-          </TransitionChild>
+                <!-- Reference -->
+                <div>
+                  <label class="block text-sm font-medium text-slate-600 mb-1">
+                    Reference (Optional)
+                  </label>
+                  <input v-model="disbursementForm.disbursement_reference" type="text"
+                    class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-sm" />
+                </div>
+
+                <!-- Buttons -->
+                <div class="mt-8 flex justify-end space-x-3">
+                  <button type="button" @click="closeDisbursementModal"
+                    class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium">
+                    Cancel
+                  </button>
+
+                  <button type="button" @click="disburseLoan" :disabled="loading.disburse"
+                    class="px-5 py-2 rounded-lg bg-[#0B2B40] hover:bg-blue-950 text-white text-sm font-medium disabled:opacity-50">
+                    <span v-if="!loading.disburse">Confirm Disbursement</span>
+                    <span v-else>Processing…</span>
+                  </button>
+                </div>
+
+              </DialogPanel>
+            </TransitionChild>
+          </div>
         </div>
-      </div>
-    </Dialog>
-  </TransitionRoot>
-
-
-   <!-- DISBURSEMENT MODAL -->
-<TransitionRoot as="template" :show="showDisbursementModal">
-  <Dialog as="div" class="relative z-40" @close="closeDisbursementModal">
-    <TransitionChild
-      enter="ease-out duration-300"
-      enter-from="opacity-0"
-      enter-to="opacity-100"
-      leave="ease-in duration-200"
-      leave-from="opacity-100"
-      leave-to="opacity-0"
-    >
-      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-    </TransitionChild>
-
-    <div class="fixed inset-0 z-40 overflow-y-auto">
-      <div class="flex min-h-full items-center justify-center p-4 text-center">
-        <TransitionChild
-          enter="ease-out duration-300"
-          enter-from="opacity-0 scale-95"
-          enter-to="opacity-100 scale-100"
-          leave="ease-in duration-200"
-          leave-from="opacity-100 scale-100"
-          leave-to="opacity-0 scale-95"
-        >
-          <DialogPanel
-            class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left shadow-2xl border border-slate-200 transition-all"
-          >
-            <DialogTitle class="text-2xl font-semibold text-[#0B2B40] mb-6">
-              Disburse Loan
-            </DialogTitle>
-
-            <!-- Loan Breakdown -->
-            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3 mb-6">
-              <div class="flex justify-between text-sm">
-                <span class="text-slate-600">Approved Amount</span>
-                <span class="font-semibold">
-                  {{ formatCurrency(loan.approved_amount) }}
-                </span>
-              </div>
-
-              <div class="flex justify-between text-sm">
-                <span class="text-slate-600">Processing Fee</span>
-                <span class="text-red-600">
-                  - {{ formatCurrency(loan.processing_fee) }}
-                </span>
-              </div>
-
-              <div class="flex justify-between text-sm">
-                <span class="text-slate-600">Insurance Fee</span>
-                <span class="text-red-600">
-                  - {{ formatCurrency(loan.insurance_fee) }}
-                </span>
-              </div>
-
-              <div class="border-t pt-3 flex justify-between font-semibold text-base">
-                <span>Net Disbursement</span>
-                <span class="text-green-700">
-                  {{
-                    formatCurrency(
-                      loan.approved_amount -
-                      loan.processing_fee -
-                      loan.insurance_fee
-                    )
-                  }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Disbursement Method -->
-            <div class="mb-5">
-              <label class="block text-sm font-medium text-slate-600 mb-1">
-                Disbursement Method
-              </label>
-              <select
-                v-model="disbursementForm.disbursement_method"
-                class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-sm"
-                :class="{ 'border-red-300': validationErrors.disbursement_method }"
-              >
-                <option disabled value="">Select Method</option>
-                <option value="cash">Cash</option>
-                <option value="mobile_money">Mobile Money</option>
-                <option value="bank_transfer">Bank Transfer</option>
-              </select>
-
-              <p
-                v-if="validationErrors.disbursement_method"
-                class="text-xs text-red-600 mt-1"
-              >
-                {{ firstError(validationErrors.disbursement_method) }}
-              </p>
-            </div>
-
-            <!-- Reference -->
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">
-                Reference (Optional)
-              </label>
-              <input
-                v-model="disbursementForm.disbursement_reference"
-                type="text"
-                class="block w-full rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 p-2 text-sm"
-              />
-            </div>
-
-            <!-- Buttons -->
-            <div class="mt-8 flex justify-end space-x-3">
-              <button
-                type="button"
-                @click="closeDisbursementModal"
-                class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                @click="disburseLoan"
-                :disabled="loading.disburse"
-                class="px-5 py-2 rounded-lg bg-[#0B2B40] hover:bg-blue-950 text-white text-sm font-medium disabled:opacity-50"
-              >
-                <span v-if="!loading.disburse">Confirm Disbursement</span>
-                <span v-else>Processing…</span>
-              </button>
-            </div>
-
-          </DialogPanel>
-        </TransitionChild>
-      </div>
-    </div>
-  </Dialog>
-</TransitionRoot>
+      </Dialog>
+    </TransitionRoot>
 
 
   </AppLayout>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -804,8 +815,9 @@ function closeDisbursementModal() { showDisbursementModal.value = false }
 
 // forms & validation
 const approvalForm = reactive({
-  approved_amount: props.loan.applied_amount || 0,
-  approval_notes: ''
+  approved_amount: '',
+  interest_rate: '',
+  months: ''
 })
 const rejectionForm = reactive({
   rejection_reason: ''
@@ -824,6 +836,34 @@ const loading = reactive({ approve: false, reject: false, disburse: false })
 function resetValidation() {
   for (const k in validationErrors) delete validationErrors[k]
 }
+
+
+
+// computed previews for approval modal
+const processingFeePreview = computed(() => {
+  if (!approvalForm.approved_amount || !loan.value?.loanProduct) return 0
+  return (approvalForm.approved_amount * loan.value.loanProduct.processing_fee_rate) / 100
+})
+
+const insuranceFeePreview = computed(() => {
+  if (!approvalForm.approved_amount || !loan.value?.loanProduct) return 0
+  return (approvalForm.approved_amount * loan.value.loanProduct.insurance_rate) / 100
+})
+
+const netDisbursementPreview = computed(() => {
+  if (!approvalForm.approved_amount) return 0
+  return approvalForm.approved_amount - processingFeePreview.value - insuranceFeePreview.value
+})
+
+const monthlyPreview = computed(() => {
+  if (!approvalForm.approved_amount || !loan.value?.loanProduct) return 0
+  const P = approvalForm.approved_amount
+  const r = loan.value.loanProduct.interest_rate / 100 / 12
+  const n = loan.value.term_months
+  if (r === 0) return P / n
+  return (P * r) / (1 - Math.pow(1 + r, -n))
+})
+
 
 // permissions computed
 const canEdit = computed(() => {
@@ -943,27 +983,42 @@ function firstError(err) {
 
 // Actions (with validation)
 const approveLoan = async () => {
+
   resetValidation()
-  // client-side checks
-  if (!approvalForm.approved_amount || approvalForm.approved_amount <= 0) {
-    validationErrors.approved_amount = ['Approved amount must be greater than zero.']
-    return
-  }
-  loading.approve = true
+
+  loading.value = true
+
   try {
-    const response = await axios.post(`/loans/${props.loan.id}/approve`, approvalForm)
-    showToast(response.data.message || 'Loan approved successfully', 'success')
+
+    const { data } = await axios.post(
+      route('loans.approve', props.loan.id),
+      approvalForm
+    )
+
+    alert(data.message)
+
     showApprovalModal.value = false
-    router.reload()
-  } catch (err) {
-    const res = err.response
+
+    router.reload({ only: ['loan'] })
+
+  } catch (error) {
+
+    const res = error.response
+
     if (res?.data?.errors) {
       Object.assign(validationErrors, res.data.errors)
     }
-    showToast(res?.data?.message || 'Failed to approve loan', 'error')
+
+    if (res?.data?.message) {
+      alert(res.data.message)
+    }
+
   } finally {
-    loading.approve = false
+
+    loading.value = false
+
   }
+
 }
 
 const rejectLoan = async () => {
@@ -986,6 +1041,14 @@ const rejectLoan = async () => {
     loading.reject = false
   }
 }
+
+
+watch(showApprovalModal, (val) => {
+  if (!val) {
+    approvalForm.approved_amount = null
+    approvalForm.approval_notes = ''
+  }
+})
 
 const disburseLoan = async () => {
   resetValidation()
