@@ -276,43 +276,63 @@ class AccountController extends Controller
         ]);
     }
 
-    /**
+   /**
      * Process deposit
      */
     public function deposit(DepositRequest $request, Account $account): RedirectResponse
     {
         try {
-            if ($account->account_type !== 'share_deposits') {
-                return back()->withErrors(['error' => 'Deposits can only be made to Share Deposits account']);
+
+            // Allow deposits for share_deposits and share_capital only
+            if (!in_array($account->account_type, ['share_deposits', 'share_capital'])) {
+                return back()->withErrors([
+                    'error' => 'Deposits are only allowed for Share Deposits or Share Capital accounts'
+                ]);
             }
 
             DB::beginTransaction();
 
-            // Create a pending transaction
+            // Determine transaction type
+            $transactionType = $account->account_type === 'share_capital'
+                ? 'share_capital_contribution'
+                : 'deposit';
+
+            // Default description
+            $description = $request->description ??
+                ($account->account_type === 'share_capital'
+                    ? 'Share capital contribution'
+                    : 'Monthly share deposit');
+
+            // Create pending transaction
             $transaction = Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $account->id,
                 'member_id' => $account->member_id,
-                'transaction_type' => 'deposit',
+                'transaction_type' => $transactionType,
                 'amount' => $request->amount,
                 'balance_before' => $account->balance,
                 'balance_after' => $account->balance, // will update after approval
-                'description' => $request->description ?? "Monthly share deposit",
+                'description' => $description,
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference,
-                'status' => 'pending', // <--- IMPORTANT
+                'status' => 'pending',
                 'processed_by' => null,
                 'processed_at' => null,
             ]);
 
             DB::commit();
 
-            return redirect()->route('accounts.show', $account)
+            return redirect()
+                ->route('accounts.show', $account)
                 ->with('success', 'Deposit submitted and is awaiting verification');
 
         } catch (\Exception $e) {
+
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to submit deposit: ' . $e->getMessage()]);
+
+            return back()->withErrors([
+                'error' => 'Failed to submit deposit: ' . $e->getMessage()
+            ]);
         }
     }
 

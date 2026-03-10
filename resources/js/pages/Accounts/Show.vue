@@ -43,11 +43,15 @@
             </p>
           </div>
           <div v-if="account.member" class="flex space-x-3">
-            <!-- Only for share deposits -->
-            <Link v-if="account.account_type === 'share_deposits'" :href="route('accounts.deposit.show', account.id)"
-              class="inline-flex items-center px-4 py-2 bg-blue-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-blue-900 transition">
-            Deposit
-            </Link>
+            <!-- Deposit for Share Deposits AND Share Capital -->
+              <Link 
+                  v-if="['share_deposits','share_capital'].includes(account.account_type)"
+                  :href="route('accounts.deposit.show', account.id)"
+                  class="inline-flex items-center px-4 py-2 bg-blue-800 rounded-lg font-semibold text-xs text-white uppercase tracking-wider shadow-md hover:bg-blue-900 transition">
+
+                  {{ account.account_type === 'share_capital' ? 'Add Capital' : 'Deposit' }}
+
+                </Link>
 
             <!-- Edit button -->
             <Link :href="route('accounts.edit', account.id)"

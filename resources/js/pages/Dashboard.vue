@@ -321,7 +321,13 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
                     </td>
                     <td class="p-4 text-right">
                       <Badge
-                        v-if="['deposit','loan_disbursement','dividend_payment','interest_payment'].includes(t.transaction_type)"
+                        v-if="[
+                          'deposit',
+                          'loan_disbursement',
+                          'dividend_payment',
+                          'interest_payment',
+                          'share_capital_contribution'
+                        ].includes(t.transaction_type)"
                         class="bg-emerald-100 text-emerald-700"
                       >
                         Credit

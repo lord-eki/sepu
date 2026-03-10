@@ -207,9 +207,8 @@ class TransactionController extends Controller
         $transaction = Transaction::with(['account', 'member', 'processedBy', 'loanRepayment'])
             ->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => $transaction
+        return Inertia::render('Transactions/Show', [
+            'transaction' => $transaction
         ]);
     }
 
@@ -817,6 +816,7 @@ class TransactionController extends Controller
         return [
             'deposit' => 'Deposit',
             'withdrawal' => 'Withdrawal',
+            'share_capital_contribution' => 'Share Capital',
             'transfer' => 'Transfer',
             'loan_disbursement' => 'Loan Disbursement',
             'loan_repayment' => 'Loan Repayment',
