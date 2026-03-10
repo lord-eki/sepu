@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\RoleSwitchController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DividendController;
 use App\Http\Controllers\LoanCalculatorController;
@@ -13,7 +15,6 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentVoucherController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SystemUserController;
@@ -303,6 +304,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{budget}/utilization', [BudgetController::class, 'utilization'])->name('utilization');
     });
 
+    // CHART OF ACCOUNTS ROUTES
+    Route::prefix('finance')->name('finance.')->group(function () {
+        Route::resource('chart-of-accounts', ChartOfAccountController::class)->names([
+            'index'   => 'coa.index',
+            'create'  => 'coa.create',
+            'store'   => 'coa.store',
+            'show'    => 'coa.show',
+            'edit'    => 'coa.edit',
+            'update'  => 'coa.update',
+            'destroy' => 'coa.destroy',
+        ]);
+        Route::post('chart-of-accounts/{chartOfAccount}/toggle-active', [ChartOfAccountController::class, 'toggleActive'])
+            ->name('coa.toggle-active');
+        Route::get('api/postable-accounts', [ChartOfAccountController::class, 'postableAccounts'])
+            ->name('coa.postable-accounts');
+    });
+
     // PAYMENT VOUCHERS ROUTES
     Route::prefix('vouchers')->name('vouchers.')->group(function () {
         Route::get('/', [PaymentVoucherController::class, 'index'])->name('index');
@@ -549,7 +567,6 @@ Route::post('/member/profile/photo', [ProfileController::class, 'updatePhoto'])
 // Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
 
 
-// Standard resource routes (index, create, store, show, edit, update, destroy)
 Route::resource('transactions', TransactionController::class);
 
 // Custom actions for transactions
@@ -594,7 +611,7 @@ Route::post('/members/assign-usernames', [MemberController::class, 'assignUserna
     ->name('members.assignUsernames');
 
 
-// TEMPORARY — REMOVE BEFORE PRODUCTION
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/members/bulk-delete', [MemberController::class, 'bulkDelete'])->name('members.bulkDelete');
 });
@@ -624,8 +641,6 @@ Route::prefix('schedule')->name('schedule.')->group(function () {
     Route::get('loan-disbursement/export', [ScheduleController::class, 'exportLoanDisbursement'])
         ->name('loan-disbursement.export');
 
-    Route::get('loan-repayment/export', [ScheduleController::class, 'exportLoanRepayment'])
-        ->name('loan-repayment.export');
+    // Route::get('loan-repayment/export', [ScheduleController::class, 'exportLoanRepayment'])
+    //     ->name('loan-repayment.export');
 });
-
-
