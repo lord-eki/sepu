@@ -1,54 +1,37 @@
 <template>
-  <AppLayout
-    :breadcrumbs="[
-      { title: 'Loan Products', href: route('loan-products.index') },
-      { title: 'Create Product' },
-    ]"
-  >
+  <AppLayout :breadcrumbs="[
+    { title: 'Loan Products', href: route('loan-products.index') },
+    { title: 'Create Product' },
+  ]">
     <!-- Flash Messages -->
-    <transition
-    enter-active-class="transition ease-out duration-300"
-    enter-from-class="opacity-0 -translate-y-2"
-    enter-to-class="opacity-100 translate-y-0"
-    leave-active-class="transition ease-in duration-200"
-    leave-from-class="opacity-100"
-    leave-to-class="opacity-0 -translate-y-2"
-    >
-    <div
-        v-if="showFlash"
-        class="relative mb-4 p-4 mx-auto rounded-xl flex justify-between items-center"
-        :class="flash.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-    >
+    <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-2">
+      <div v-if="showFlash" class="relative mb-4 p-4 mx-auto rounded-xl flex justify-between items-center"
+        :class="flash.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
         <div class="pr-8">
-        {{ flash.success || flash.error }}
+          {{ flash.success || flash.error }}
         </div>
 
         <!-- Close Button -->
-        <button
-        @click="showFlash = false"
-        class="absolute top-2 right-3 text-lg text-current hover:opacity-70"
-        aria-label="Close"
-        >
-        X
+        <button @click="showFlash = false" class="absolute top-2 right-3 text-lg text-current hover:opacity-70"
+          aria-label="Close">
+          X
         </button>
-    </div>
+      </div>
     </transition>
 
     <!-- Header -->
-    <div
-      class="flex justify-between items-center bg-[#0B2B40] text-white m-4 p-5 rounded-xl mb-6"
-    >
+    <div class="flex justify-between items-center bg-[#0B2B40] text-white m-4 p-5 rounded-xl mb-6">
       <div>
         <h1 class="text-xl font-semibold">Create Loan Product</h1>
         <p class="text-sm opacity-90">
           Add a new loan product to your SACCO system
         </p>
       </div>
-      <Link
-        :href="route('loan-products.index')"
-        class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition"
-      >
-        <span class="max-sm:hidden">←</span> Back
+      <Link :href="route('loan-products.index')"
+        class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition">
+      <span class="max-sm:hidden">←</span> Back
       </Link>
     </div>
 
@@ -62,35 +45,18 @@
         <div class="p-4 grid sm:grid-cols-2 gap-4">
           <div>
             <label class="text-sm font-medium text-gray-700">Product Name *</label>
-            <input
-              v-model="form.name"
-              type="text"
-              class="input"
-              required
-              placeholder="e.g. Personal Loan"
-            />
+            <input v-model="form.name" type="text" class="input" required placeholder="e.g. Personal Loan" />
             <p v-if="form.errors.name" class="error">{{ form.errors.name }}</p>
           </div>
           <div>
             <label class="text-sm font-medium text-gray-700">Code *</label>
-            <input
-              v-model="form.code"
-              type="text"
-              class="input"
-              required
-              placeholder="e.g. PL001"
-            />
+            <input v-model="form.code" type="text" class="input" required placeholder="e.g. PL001" />
             <p v-if="form.errors.code" class="error">{{ form.errors.code }}</p>
           </div>
           <div class="sm:col-span-2">
             <label class="text-sm font-medium text-gray-700">Description *</label>
-            <textarea
-              v-model="form.description"
-              rows="3"
-              required
-              class="input"
-              placeholder="Short product description"
-            ></textarea>
+            <textarea v-model="form.description" rows="3" required class="input"
+              placeholder="Short product description"></textarea>
             <p v-if="form.errors.description" class="error">{{ form.errors.description }}</p>
           </div>
         </div>
@@ -104,13 +70,8 @@
         <div class="p-4 grid sm:grid-cols-2 gap-4">
           <div v-for="field in requiredNumericFields" :key="field.key">
             <label class="text-sm font-medium text-gray-700">{{ field.label }} *</label>
-            <input
-              v-model.number="form[field.key]"
-              type="number"
-              required
-              class="input"
-              :placeholder="field.placeholder"
-            />
+            <input v-model.number="form[field.key]" type="float" required class="input"
+              :placeholder="field.placeholder" />
             <p v-if="form.errors[field.key]" class="error">{{ form.errors[field.key] }}</p>
           </div>
 
@@ -127,94 +88,72 @@
       </details>
 
       <!-- ELIGIBILITY -->
-    <details class="border rounded-lg overflow-hidden">
-    <summary class="bg-blue-50 px-4 py-3 cursor-pointer font-semibold text-[#0B2B40]">
-        Eligibility Criteria
-    </summary>
-    <div class="p-4 grid sm:grid-cols-2 gap-4">
-        <div>
-        <label class="text-sm font-medium text-gray-700">Min Membership (Months)</label>
-        <input
-            v-model.number="form.eligibility_criteria.minimum_membership_months"
-            type="number"
-            class="input"
-            required
-            min="0"
-        />
-        <p v-if="form.errors['eligibility_criteria.minimum_membership_months']" class="error">
-            {{ form.errors['eligibility_criteria.minimum_membership_months'] }}
-        </p>
-        </div>
+      <details class="border rounded-lg overflow-hidden">
+        <summary class="bg-blue-50 px-4 py-3 cursor-pointer font-semibold text-[#0B2B40]">
+          Eligibility Criteria
+        </summary>
+        <div class="p-4 grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-medium text-gray-700">Min Membership (Months)</label>
+            <input v-model.number="form.eligibility_criteria.minimum_membership_months" type="number" class="input"
+              required min="0" />
+            <p v-if="form.errors['eligibility_criteria.minimum_membership_months']" class="error">
+              {{ form.errors['eligibility_criteria.minimum_membership_months'] }}
+            </p>
+          </div>
 
-        <div>
-        <label class="text-sm font-medium text-gray-700">Min Shares Balance (Ksh)</label>
-        <input
-            v-model.number="form.eligibility_criteria.minimum_shares_balance"
-            type="number"
-            class="input"
-            required
-            min="0"
-        />
-        <p v-if="form.errors['eligibility_criteria.minimum_shares_balance']" class="error">
-            {{ form.errors['eligibility_criteria.minimum_shares_balance'] }}
-        </p>
-        </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700">Min Shares Balance (Ksh)</label>
+            <input v-model.number="form.eligibility_criteria.minimum_shares_balance" type="number" class="input"
+              required min="0" />
+            <p v-if="form.errors['eligibility_criteria.minimum_shares_balance']" class="error">
+              {{ form.errors['eligibility_criteria.minimum_shares_balance'] }}
+            </p>
+          </div>
 
-        <div>
-        <label class="text-sm font-medium text-gray-700">Max Loan:Shares Ratio</label>
-        <input
-            v-model.number="form.eligibility_criteria.maximum_loan_to_shares_ratio"
-            type="number"
-            class="input"
-            required
-            min="0"
-            step="0.01"
-        />
-        <p v-if="form.errors['eligibility_criteria.maximum_loan_to_shares_ratio']" class="error">
-            {{ form.errors['eligibility_criteria.maximum_loan_to_shares_ratio'] }}
-        </p>
-        </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700">Max Loan:Shares Ratio</label>
+            <input v-model.number="form.eligibility_criteria.maximum_loan_to_shares_ratio" type="number" class="input"
+              required min="0" step="0.01" />
+            <p v-if="form.errors['eligibility_criteria.maximum_loan_to_shares_ratio']" class="error">
+              {{ form.errors['eligibility_criteria.maximum_loan_to_shares_ratio'] }}
+            </p>
+          </div>
 
-        <div>
-        <label class="text-sm font-medium text-gray-700">Max Salary Deduction Ratio</label>
-        <input
-            v-model.number="form.eligibility_criteria.maximum_salary_deduction_ratio"
-            type="number"
-            class="input"
-            required
-            min="0"
-            step="0.01"
-        />
-        <p v-if="form.errors['eligibility_criteria.maximum_salary_deduction_ratio']" class="error">
-            {{ form.errors['eligibility_criteria.maximum_salary_deduction_ratio'] }}
-        </p>
-        </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700">Max Salary Deduction Ratio</label>
+            <input v-model.number="form.eligibility_criteria.maximum_salary_deduction_ratio" type="number" class="input"
+              required min="0" step="0.01" />
+            <p v-if="form.errors['eligibility_criteria.maximum_salary_deduction_ratio']" class="error">
+              {{ form.errors['eligibility_criteria.maximum_salary_deduction_ratio'] }}
+            </p>
+          </div>
 
-        <div>
-        <label class="text-sm font-medium text-gray-700">Clean Credit History</label>
-        <select v-model="form.eligibility_criteria.clean_credit_history" class="input" required>
-            <option value="">Select</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-        </select>
-        <p v-if="form.errors['eligibility_criteria.clean_credit_history']" class="error">
-            {{ form.errors['eligibility_criteria.clean_credit_history'] }}
-        </p>
-        </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700">Clean Credit History</label>
+            <select v-model="form.eligibility_criteria.clean_credit_history" class="input" required>
+              <option disabled value="">Select</option>
+              <option :value="true">Yes</option>
+              <option :value="false">No</option>
+            </select>
+            <p v-if="form.errors['eligibility_criteria.clean_credit_history']" class="error">
+              {{ form.errors['eligibility_criteria.clean_credit_history'] }}
+            </p>
+          </div>
 
-        <div>
-        <label class="text-sm font-medium text-gray-700">Regular Deposits Required</label>
-        <select v-model="form.eligibility_criteria.regular_deposits_required" class="input" required>
-            <option value="">Select</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-        </select>
-        <p v-if="form.errors['eligibility_criteria.regular_deposits_required']" class="error">
-            {{ form.errors['eligibility_criteria.regular_deposits_required'] }}
-        </p>
+          <div>
+            <label class="text-sm font-medium text-gray-700">Regular Deposits Required</label>
+            <select v-model="form.eligibility_criteria.regular_deposits_required" class="input" required>
+              <option disabled value="">Select</option>
+              <option :value="true">Yes</option>
+              <option :value="false">No</option>
+            </select>
+            <p v-if="form.errors['eligibility_criteria.regular_deposits_required']" class="error">
+              {{ form.errors['eligibility_criteria.regular_deposits_required'] }}
+            </p>
+          </div>
         </div>
-    </div>
-    </details>
+      </details>
 
 
       <!-- REQUIRED DOCUMENTS -->
@@ -223,13 +162,8 @@
           Required Documents *
         </summary>
         <div class="p-4">
-          <textarea
-            v-model="form.required_documents"
-            rows="3"
-            required
-            class="input"
-            placeholder='e.g. Payslip, National ID, Bank Statement (separated by comma)'
-          ></textarea>
+          <textarea v-model="form.required_documents" rows="3" required class="input"
+            placeholder='e.g. Payslip, National ID, Bank Statement (separated by comma)'></textarea>
           <p v-if="form.errors.required_documents" class="error">
             {{ form.errors.required_documents }}
           </p>
@@ -245,8 +179,9 @@
           <div>
             <label class="text-sm font-medium text-gray-700">Requires Guarantor?</label>
             <select v-model="form.requires_guarantor" class="input">
-              <option value="true">Yes</option>
-              <option value="false">No</option>
+              <option disabled value="">Select</option>
+              <option :value="true">Yes</option>
+              <option :value="false">No</option>
             </select>
           </div>
           <div>
@@ -256,8 +191,9 @@
           <div>
             <label class="text-sm font-medium text-gray-700">Active Status</label>
             <select v-model="form.is_active" class="input">
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
+              <option disabled value="">Select</option>
+              <option :value="true">Active</option>
+              <option :value="false">Inactive</option>
             </select>
           </div>
         </div>
@@ -265,11 +201,9 @@
 
       <!-- Submit Button -->
       <div class="pt-4 flex justify-end">
-        <button
-          type="submit"
+        <button type="submit"
           class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="form.processing || !isFormValid"
-        >
+          :disabled="form.processing || !isFormValid">
           {{ form.processing ? "Saving..." : "Create Product" }}
         </button>
       </div>
@@ -410,15 +344,18 @@ function submit() {
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
+
 .input:focus {
   border-color: #fb923c;
   box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.4);
 }
+
 .error {
   color: #dc2626;
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
+
 details[open] summary {
   background-color: #dbeafe;
 }

@@ -110,7 +110,7 @@
             <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-blue-200 text-xs text-gray-900 uppercase">
+                        <thead class="bg-slate-100 text-xs text-gray-900 uppercase">
                             <tr>
                                 <th class="px-4 py-3 text-left">#</th>
                                 <th class="px-4 py-3 text-left">Txn ID</th>
