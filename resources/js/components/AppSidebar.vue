@@ -26,6 +26,10 @@ import {
   Package,
   UserCog,
   Shield,
+  Banknote,
+  BookMarked,
+  Scale,
+  ReceiptText,
 } from 'lucide-vue-next';
 import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
@@ -200,104 +204,74 @@ const adminNavItems: NavItem[] = [
     icon: ArrowRightLeft,
   },
   {
-  title: 'Reports',
-  icon: FileText,
-  children: [
-
-    // ✅ Add this
-    {
-      title: 'Reports Dashboard',
-      href: route('reports.index'),
-      routeName: 'reports.index',
-      icon: FileText,
-    },
-
-    {
-      title: 'Financial Reports',
-      href: route('reports.financial.index'),
-      routeName: 'reports.financial.index',
-      icon: Calculator,
-    },
-    {
-      title: 'Member Reports',
-      href: route('reports.membersReport.index'),
-      routeName: 'reports.membersReport.index',
-      icon: Users,
-    },
-    {
-      title: 'Loan Reports',
-      href: route('reports.loansReport.index'),
-      routeName: 'reports.loansReport.index',
-      icon: BriefcaseConveyorBelt,
-    },
-    {
-      title: 'Transaction Reports',
-      href: route('reports.transactionsReport.index'),
-      routeName: 'reports.transactionsReport.index',
-      icon: ArrowRightLeft,
-    },
-    {
-      title: 'Regulatory Reports',
-      href: route('reports.regulatoryReport.index'),
-      routeName: 'reports.regulatoryReport.index',
-      icon: Shield,
-    },
-    {
-      title: 'Custom Reports',
-      href: route('reports.custom.builder'),
-      routeName: 'reports.custom.builder',
-      icon: Folder,
-    },
-  ],
-},
-  {
-    title: 'Schedule',
-    icon: ClipboardList,
+    title: 'Finance',
+    icon: Banknote,
     children: [
+
       {
-        title: 'Loan Disbursement',
-        href: route('schedule.loan-disbursement'),
-        routeName: 'schedule.loan-disbursement',
-        icon: HandCoins,
-      },
-      {
-        title: 'Loan Repayment',
-        href: route('schedule.loan-repayment'),
-        routeName: 'schedule.loan-repayment',
-        icon: ArrowRightLeft,
-      },
-      {
-        title: 'Monthly Deposit',
-        href: route('schedule.monthly-deposit'),
-        routeName: 'schedule.monthly-deposit',
-        icon: Calculator,
-      },
-      {
-        title: 'Dividend Repayment',
-        href: route('schedule.dividend-payment'),
-        routeName: 'schedule.dividend-repayment',
-        icon: HandCoins,
+        title: 'Chart of Accounts',
+        href: route('chart-of-accounts.index'),
+        routeName: 'chart-of-accounts.index',
+        icon: BookMarked,
       },
     ],
   },
-
   {
-    title: 'System Users',
-    icon: UserCog,
+    title: 'Reports',
+    icon: FileText,
     children: [
+
+
       {
-        title: 'All Users',
-        href: route('system-users.index'),
-        routeName: 'system-users.index',
+        title: 'Reports Dashboard',
+        href: route('reports.index'),
+        routeName: 'reports.index',
+        icon: FileText,
+      },
+
+      {
+        title: 'Financial Reports',
+        href: route('reports.financial.index'),
+        routeName: 'reports.financial.index',
+        icon: Calculator,
+      },
+      {
+        title: 'Member Reports',
+        href: route('reports.membersReport.index'),
+        routeName: 'reports.membersReport.index',
         icon: Users,
       },
       {
-        title: 'Roles & Permissions',
-        href: route('system-users.roles'),
-        routeName: 'system-users.roles',
+        title: 'Loan Reports',
+        href: route('reports.loansReport.index'),
+        routeName: 'reports.loansReport.index',
+        icon: BriefcaseConveyorBelt,
+      },
+      {
+        title: 'Transaction Reports',
+        href: route('reports.transactionsReport.index'),
+        routeName: 'reports.transactionsReport.index',
+        icon: ArrowRightLeft,
+      },
+      {
+        title: 'Regulatory Reports',
+        href: route('reports.regulatoryReport.index'),
+        routeName: 'reports.regulatoryReport.index',
         icon: Shield,
       },
+      {
+        title: 'Custom Reports',
+        href: route('reports.custom.builder'),
+        routeName: 'reports.custom.builder',
+        icon: Folder,
+      },
     ],
+  },
+  {
+    title: 'Schedule',
+    icon: ClipboardList,
+    href: route('schedule.index'),
+    routeName: 'schedule.index',
   },
   {
     title: 'Notifications',

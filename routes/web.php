@@ -629,26 +629,48 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 
 Route::prefix('schedule')->name('schedule.')->group(function () {
-    // Loan Disbursement
-    Route::get('loan-disbursement', [ScheduleController::class, 'loanDisbursement'])
-        ->name('loan-disbursement');
 
-    // Loan Repayment
-    Route::get('loan-repayment', [ScheduleController::class, 'loanRepayment'])
-        ->name('loan-repayment');
+    Route::get('/', [ScheduleController::class,'index'])->name('index');
 
-    // Monthly Deposit
-    Route::get('monthly-deposit', [ScheduleController::class, 'monthlyDeposit'])
-        ->name('monthly-deposit');
+    // Monthly deposits
+    Route::get('/monthly-deposit', [ScheduleController::class,'monthlyDeposit'])->name('monthly-deposit');
+    Route::post('/monthly-deposit/preview', [ScheduleController::class,'previewMonthlyDeposits'])->name('monthly-deposit.preview');
+    Route::post('/monthly-deposit/run', [ScheduleController::class,'runMonthlyDeposits'])->name('monthly-deposit.run');
 
-    // Dividend Payment
-    Route::get('dividend-payment', [ScheduleController::class, 'dividendPayment'])
-        ->name('dividend-payment');
+    // Loan repayments
+    Route::get('/loan-repayment', [ScheduleController::class,'loanRepayment'])->name('loan-repayment');
+    Route::post('/loan-repayment/run', [ScheduleController::class,'runLoanRepayments'])->name('loan-repayment.run');
 
-    // Exports
-    Route::get('loan-disbursement/export', [ScheduleController::class, 'exportLoanDisbursement'])
-        ->name('loan-disbursement.export');
+    // Loan disbursement
+    Route::get('/loan-disbursement', [ScheduleController::class,'loanDisbursement'])->name('loan-disbursement');
+    Route::post('/loan-disbursement/run', [ScheduleController::class,'runLoanDisbursements'])->name('loan-disbursement.run');
+    Route::get('/loan-disbursement/export', [ScheduleController::class,'exportLoanDisbursement'])->name('loan-disbursement.export');
 
-    // Route::get('loan-repayment/export', [ScheduleController::class, 'exportLoanRepayment'])
-    //     ->name('loan-repayment.export');
+    // Dividends
+    Route::get('/dividend-payment', [ScheduleController::class,'dividendPayment'])->name('dividend-payment');
+    Route::post('/dividend-payment/run', [ScheduleController::class,'runDividendPayments'])->name('dividend-payment.run');
+
+});
+
+
+Route::prefix('chart-of-accounts')->name('chart-of-accounts.')->group(function () {
+
+    Route::get('/', [ChartOfAccountController::class, 'index'])->name('index');
+
+    Route::get('/create', [ChartOfAccountController::class, 'create'])->name('create');
+    Route::post('/', [ChartOfAccountController::class, 'store'])->name('store');
+
+    Route::get('/{chartOfAccount}', [ChartOfAccountController::class, 'show'])->name('show');
+
+    Route::get('/{chartOfAccount}/edit', [ChartOfAccountController::class, 'edit'])->name('edit');
+    Route::put('/{chartOfAccount}', [ChartOfAccountController::class, 'update'])->name('update');
+
+    Route::delete('/{chartOfAccount}', [ChartOfAccountController::class, 'destroy'])->name('destroy');
+
+    Route::post('/{chartOfAccount}/toggle-active', [ChartOfAccountController::class, 'toggleActive'])
+        ->name('toggle-active');
+
+    // API helper
+    Route::get('/api/postable', [ChartOfAccountController::class, 'postableAccounts'])
+        ->name('postable');
 });

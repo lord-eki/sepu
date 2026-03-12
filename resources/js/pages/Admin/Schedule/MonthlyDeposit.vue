@@ -1,170 +1,258 @@
-<template>
-  <AppLayout :breadcrumbs="breadcrumbs">
-
-    <Head title="Monthly Deposit Schedule" />
-
-    <div class="max-w-7xl mx-4 px-4 py-6 space-y-6">
-
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
-            Monthly Deposit Schedule
-          </h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">
-            Expected vs actual member deposits
-          </p>
-        </div>
-
-        <input type="month" v-model="selectedMonth" @change="changeMonth" class="rounded-lg border px-3 py-2
-                 bg-white dark:bg-slate-800
-                 text-slate-900 dark:text-white
-                 border-slate-300 dark:border-slate-600" />
-      </div>
-
-      <!-- Summary -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <SummaryCard label="Total Members" :value="summary.total_members" />
-        <SummaryCard label="Deposited" :value="summary.deposited_count" />
-        <SummaryCard label="Pending" :value="summary.pending_count" />
-        <SummaryCard label="Expected" :value="currency(summary.total_expected)" />
-        <SummaryCard label="Collection Rate" :value="summary.collection_rate + '%'" />
-      </div>
-
-      <!-- Weekly Progress -->
-      <div class="bg-white dark:bg-slate-800 rounded-xl border dark:border-slate-700 p-4">
-        <h3 class="font-semibold mb-3 text-slate-900 dark:text-white">
-          Weekly Deposit Progress
-        </h3>
-
-        <table class="w-full text-sm">
-          <thead class="bg-slate-100 dark:bg-slate-700">
-            <tr>
-              <th class="th">Week</th>
-              <th class="th">Deposits</th>
-              <th class="th">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="w in weeklyProgress" :key="w.week" class="tr">
-              <td>Week {{ w.week }}</td>
-              <td>{{ w.count }}</td>
-              <td>{{ currency(w.amount) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Deposit Schedule -->
-      <div class="bg-white dark:bg-slate-800 rounded-xl border dark:border-slate-700 overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-slate-100 dark:bg-slate-700">
-            <tr>
-              <th class="th">Member</th>
-              <th class="th">Membership ID</th>
-              <th class="th">Expected</th>
-              <th class="th">Deposited</th>
-              <th class="th">Variance</th>
-              <th class="th">Status</th>
-              <th class="th">Deposit Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="d in deposits" :key="d.member_id" class="tr">
-              <td>{{ d.member_name }}</td>
-              <td>{{ d.membership_id }}</td>
-              <td>{{ currency(d.expected_amount) }}</td>
-              <td>{{ currency(d.deposited_amount) }}</td>
-              <td :class="d.variance >= 0
-    ? 'text-green-600 dark:text-green-400'
-    : 'text-red-600 dark:text-red-400'">
-                {{ currency(d.variance) }}
-              </td>
-              <td>
-                <span class="px-2 py-1 text-xs rounded-full font-semibold" :class="d.status === 'deposited'
-    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'">
-                  {{ d.status }}
-                </span>
-              </td>
-              <td>{{ d.deposit_date ?? '-' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-    </div>
-  </AppLayout>
-</template>
-
 <script setup>
-import { ref } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
-import SummaryCard from '@/components/SummaryCard.vue'
+import { ref } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
-  deposits: Array,
-  summary: Object,
-  weeklyProgress: Array,
-  month: String,
+    rows: Array,
+    summary: Object,
+    month: String,
+    alreadyRun: Boolean
 })
 
-const breadcrumbs = [
-  { title: 'Schedule', href: '#' },
-  { title: 'Monthly Deposits' }
-]
-
 const selectedMonth = ref(props.month)
+const previewData = ref(null)
+const showPreview = ref(false)
 
-const changeMonth = () => {
-  router.get(route('schedule.monthly-deposit'), {
-    month: selectedMonth.value,
-  }, {
-    preserveState: true,
-    replace: true,
-  })
+function loadMonth() {
+    router.get(route('schedule.monthly-deposit'), {
+        month: selectedMonth.value
+    })
 }
 
-const currency = (v) =>
-  new Intl.NumberFormat('en-KE', {
-    style: 'currency',
-    currency: 'KES',
-  }).format(v || 0)
+function previewSchedule() {
+
+    axios.post(route('schedule.monthly-deposit.preview'), {
+        month: selectedMonth.value
+    }).then(res => {
+
+        previewData.value = res.data
+        showPreview.value = true
+
+    })
+}
+
+function runSchedule() {
+
+    if (!confirm("Run Monthly Deposit Schedule?")) return
+
+    axios.post(route('schedule.monthly-deposit.run'), {
+        month: selectedMonth.value,
+        entries: previewData.value.preview
+    }).then(() => {
+
+        router.reload()
+
+    })
+}
 </script>
 
-<style scoped>
-.th {
-  padding: 0.75rem 1rem;
-  /* py-3 px-4 */
-  text-align: left;
-  font-weight: 600;
-  /* font-semibold */
-  color: #334155;
-  /* slate-700 */
-}
 
-.dark .th {
-  color: #e2e8f0;
-  /* slate-200 */
-}
+<template>
+    <AppLayout :breadcrumbs="[
+        { title: 'Financial Schedules', href: route('schedule.index') },
+        { title: 'Monthly Deposits' }
+    ]">
 
-.tr {
-  border-top: 1px solid #e5e7eb;
-}
+        <Head title="Monthly Deposits Schedule" />
 
-.dark .tr {
-  border-top-color: #334155;
-  /* slate-700 */
-}
+        <div class="p-6 space-y-6">
 
-.tr:hover {
-  background-color: #f8fafc;
-  /* slate-50 */
-}
 
-.dark .tr:hover {
-  background-color: #334155;
-  /* slate-700 */
-}
-</style>
+            <!-- PAGE HEADER -->
+
+            <div class="flex justify-between items-center">
+
+                <h1 class="text-2xl font-bold">
+                    Monthly Deposits Schedule
+                </h1>
+
+                <div class="flex gap-3">
+
+                    <input type="month" v-model="selectedMonth" class="border rounded p-2" />
+
+                    <button @click="loadMonth" class="bg-gray-800 text-white px-4 py-2 rounded">
+                        Load
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- WARNING IF ALREADY RUN -->
+
+            <div v-if="alreadyRun" class="bg-yellow-100 border border-yellow-300 text-yellow-800 p-4 rounded">
+                This schedule has already been executed for this month.
+            </div>
+
+
+
+            <!-- SUMMARY CARDS -->
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+                <div class="bg-white shadow rounded p-4">
+                    <div class="text-gray-500 text-sm">Eligible Members</div>
+                    <div class="text-xl font-bold">{{ summary.total_members }}</div>
+                </div>
+
+                <div class="bg-white shadow rounded p-4">
+                    <div class="text-gray-500 text-sm">Already Deposited</div>
+                    <div class="text-xl font-bold">{{ summary.already_deposited }}</div>
+                </div>
+
+                <div class="bg-white shadow rounded p-4">
+                    <div class="text-gray-500 text-sm">Pending Deposits</div>
+                    <div class="text-xl font-bold">{{ summary.pending_deposits }}</div>
+                </div>
+
+                <div class="bg-white shadow rounded p-4">
+                    <div class="text-gray-500 text-sm">Total Amount</div>
+                    <div class="text-xl font-bold">
+                        KES {{ summary.total_amount }}
+                    </div>
+                </div>
+
+            </div>
+
+
+
+            <!-- MEMBERS TABLE -->
+
+            <div class="bg-white shadow rounded-lg overflow-x-auto">
+
+                <table class="min-w-full text-sm">
+
+                    <thead class="bg-gray-100">
+
+                        <tr>
+                            <th class="p-3 text-left">Member ID</th>
+                            <th class="p-3 text-left">Member Name</th>
+                            <th class="p-3 text-left">Account</th>
+                            <th class="p-3 text-left">Contribution</th>
+                            <th class="p-3 text-left">Deposited</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <tr v-for="member in rows" :key="member.member_id" class="border-t">
+
+                            <td class="p-3">
+                                {{ member.membership_number }}
+                            </td>
+
+                            <td class="p-3">
+                                {{ member.member_name }}
+                            </td>
+
+                            <td class="p-3">
+                                {{ member.account_number }}
+                            </td>
+
+                            <td class="p-3">
+                                KES {{ member.monthly_contribution }}
+                            </td>
+
+                            <td class="p-3">
+
+                                <span v-if="member.already_deposited" class="text-green-600 font-semibold">
+                                    Yes
+                                </span>
+
+                                <span v-else class="text-red-500">
+                                    No
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            <!-- ACTION BUTTONS -->
+
+            <div class="flex gap-4">
+
+                <button @click="previewSchedule" :disabled="alreadyRun"
+                    class="bg-blue-600 text-white px-5 py-2 rounded disabled:opacity-50">
+                    Preview Schedule
+                </button>
+
+            </div>
+
+
+
+            <!-- PREVIEW MODAL -->
+
+            <div v-if="showPreview" class="fixed inset-0 bg-black/40 flex items-center justify-center">
+
+                <div class="bg-white rounded-xl w-[700px] p-6">
+
+                    <h2 class="text-lg font-semibold mb-4">
+                        Schedule Preview
+                    </h2>
+
+                    <table class="w-full text-sm">
+
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-2">Member</th>
+                                <th class="p-2">Amount</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr v-for="item in previewData.preview" :key="item.member_id" class="border-t">
+
+                                <td class="p-2">
+                                    {{ item.member_name }}
+                                </td>
+
+                                <td class="p-2">
+                                    KES {{ item.amount }}
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="mt-4 text-right font-semibold">
+                        Total: KES {{ previewData.total_amount }}
+                    </div>
+
+
+                    <div class="flex justify-end gap-3 mt-6">
+
+                        <button @click="showPreview = false" class="px-4 py-2 border rounded">
+                            Cancel
+                        </button>
+
+                        <button @click="runSchedule" class="bg-green-600 text-white px-4 py-2 rounded">
+                            Run Schedule
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </AppLayout>
+</template>
