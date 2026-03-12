@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Link, usePage } from "@inertiajs/vue3"
+import { Link, usePage, Head } from "@inertiajs/vue3"
 import { ref, onMounted, computed } from "vue"
 import AppLayout from '@/layouts/AppLayout.vue'
 import axios from "axios"
@@ -121,7 +121,7 @@ const currentLoanMessage = computed(() => {
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/my-loans' }]">
     <div class="min-h-screen bg-[#f9fafb] p-6 space-y-10">
-
+      <Head title="My loans" />
       <!-- HEADER -->
       <header class="bg-gradient-to-r from-blue-900 to-orange-400 text-white p-6 rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>

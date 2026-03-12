@@ -674,3 +674,6 @@ Route::prefix('chart-of-accounts')->name('chart-of-accounts.')->group(function (
     Route::get('/api/postable', [ChartOfAccountController::class, 'postableAccounts'])
         ->name('postable');
 });
+
+
+Route::redirect('/settings', '/settings/profile');

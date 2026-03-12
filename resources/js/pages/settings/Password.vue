@@ -1,127 +1,140 @@
 <script setup lang="ts">
-import InputError from '@/components/InputError.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref } from 'vue'
+import { Head, useForm } from '@inertiajs/vue3'
 
-import HeadingSmall from '@/components/HeadingSmall.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { type BreadcrumbItem } from '@/types';
+import AppLayout from '@/layouts/AppLayout.vue'
+import SettingsLayout from '@/layouts/settings/Layout.vue'
 
-const breadcrumbItems: BreadcrumbItem[] = [
-    {
-        title: 'Password settings',
-        href: '/settings/password',
-    },
-];
+import HeadingSmall from '@/components/HeadingSmall.vue'
+import InputError from '@/components/InputError.vue'
 
-const passwordInput = ref<HTMLInputElement | null>(null);
-const currentPasswordInput = ref<HTMLInputElement | null>(null);
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+
+import { Lock } from 'lucide-vue-next'
+
+const passwordInput = ref<HTMLInputElement | null>(null)
+const currentPasswordInput = ref<HTMLInputElement | null>(null)
 
 const form = useForm({
-    current_password: '',
-    password: '',
-    password_confirmation: '',
-});
+  current_password: '',
+  password: '',
+  password_confirmation: '',
+})
 
 const updatePassword = () => {
-    form.put(route('password.update'), {
-        preserveScroll: true,
-        onSuccess: () => form.reset(),
-        onError: (errors: any) => {
-            if (errors.password) {
-                form.reset('password', 'password_confirmation');
-                if (passwordInput.value instanceof HTMLInputElement) {
-                    passwordInput.value.focus();
-                }
-            }
-
-            if (errors.current_password) {
-                form.reset('current_password');
-                if (currentPasswordInput.value instanceof HTMLInputElement) {
-                    currentPasswordInput.value.focus();
-                }
-            }
-        },
-    });
-};
+  form.put(route('password.update'), {
+    preserveScroll: true,
+    onSuccess: () => form.reset(),
+    onError: (errors: any) => {
+      if (errors.password) {
+        form.reset('password', 'password_confirmation')
+        passwordInput.value?.focus()
+      }
+      if (errors.current_password) {
+        form.reset('current_password')
+        currentPasswordInput.value?.focus()
+      }
+    },
+  })
+}
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Password settings" />
+  <AppLayout>
+    <Head title="Password Settings" />
 
-        <SettingsLayout>
-            <div class="space-y-6">
-                <HeadingSmall title="Update password" description="Ensure your account is using a long, random password to stay secure" />
+    <SettingsLayout>
+      <div class="max-w-xl mx-auto">
 
-                <form @submit.prevent="updatePassword" class="space-y-6">
-                    <div class="grid gap-2">
-                        <Label for="current_password">Current password</Label>
-                        <Input
-                            id="current_password"
-                            ref="currentPasswordInput"
-                            v-model="form.current_password"
-                            type="password"
-                            class="mt-1 block w-full"
-                            autocomplete="current-password"
-                            placeholder="Current password"
-                        />
-                        <InputError :message="form.errors.current_password" />
-                    </div>
+        <!-- Card Container -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md rounded-xl p-6 space-y-6">
 
-                    <div class="grid gap-2">
-                        <Label for="password">New password</Label>
-                        <Input
-                            id="password"
-                            ref="passwordInput"
-                            v-model="form.password"
-                            type="password"
-                            class="mt-1 block w-full"
-                            autocomplete="new-password"
-                            placeholder="New password"
-                        />
-                        <InputError :message="form.errors.password" />
-                    </div>
+          <HeadingSmall 
+            title="Update Password"
+            description="Use a strong password to keep your account secure"
+          />
 
-                    <div class="grid gap-2">
-                        <Label for="password_confirmation">Confirm password</Label>
-                        <Input
-                            id="password_confirmation"
-                            v-model="form.password_confirmation"
-                            type="password"
-                            class="mt-1 block w-full"
-                            autocomplete="new-password"
-                            placeholder="Confirm password"
-                        />
-                        <InputError :message="form.errors.password_confirmation" />
-                    </div>
+          <form @submit.prevent="updatePassword" class="space-y-5">
 
-                    <div class="flex items-center gap-4">
-                        <Button :disabled="form.processing">Save password</Button>
-
-                        <Transition
-                            enter-active-class="transition ease-out duration-300"
-                            enter-from-class="opacity-0 translate-y-1"
-                            enter-to-class="opacity-100 translate-y-0"
-                            leave-active-class="transition ease-in duration-200"
-                            leave-from-class="opacity-100"
-                            leave-to-class="opacity-0"
-                            >
-                            <p
-                                v-show="form.recentlySuccessful"
-                                class="text-sm font-semibold text-green-900 bg-green-50 border border-green-200 px-3 py-2 rounded-md"
-                            >
-                                ✓ Password updated successfully
-                            </p>
-                            </Transition>
-
-                    </div>
-                </form>
+            <!-- CURRENT PASSWORD -->
+            <div class="grid gap-1">
+              <Label for="current_password">Current Password</Label>
+              <div class="relative">
+                <Lock class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-300" />
+                <Input
+                  id="current_password"
+                  ref="currentPasswordInput"
+                  v-model="form.current_password"
+                  type="password"
+                  class="pl-9 shadow-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                  placeholder="Enter current password"
+                />
+              </div>
+              <InputError :message="form.errors.current_password" />
             </div>
-        </SettingsLayout>
-    </AppLayout>
+
+            <!-- NEW PASSWORD -->
+            <div class="grid gap-1">
+              <Label for="password">New Password</Label>
+              <div class="relative">
+                <Lock class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-300" />
+                <Input
+                  id="password"
+                  ref="passwordInput"
+                  v-model="form.password"
+                  type="password"
+                  class="pl-9 shadow-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                  placeholder="Enter new password"
+                />
+              </div>
+              <InputError :message="form.errors.password" />
+            </div>
+
+            <!-- CONFIRM PASSWORD -->
+            <div class="grid gap-1">
+              <Label for="password_confirmation">Confirm Password</Label>
+              <div class="relative">
+                <Lock class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-300" />
+                <Input
+                  id="password_confirmation"
+                  v-model="form.password_confirmation"
+                  type="password"
+                  class="pl-9 shadow-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                  placeholder="Confirm new password"
+                />
+              </div>
+              <InputError :message="form.errors.password_confirmation" />
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="flex items-center gap-4 pt-2">
+              <Button type="submit" :disabled="form.processing" class="min-w-[140px]">
+                <span v-if="form.processing">Saving...</span>
+                <span v-else>Update Password</span>
+              </Button>
+
+              <Transition
+                enter-active-class="transition duration-300"
+                enter-from-class="opacity-0 translate-y-1"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition duration-200"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+              >
+                <div
+                  v-if="form.recentlySuccessful"
+                  class="text-green-800 dark:text-green-300 text-sm bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 px-3 py-1 rounded-md"
+                >
+                  ✓ Password updated successfully
+                </div>
+              </Transition>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </SettingsLayout>
+  </AppLayout>
 </template>

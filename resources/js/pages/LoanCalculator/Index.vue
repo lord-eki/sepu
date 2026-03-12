@@ -1,5 +1,6 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Loan Calculator' }]">
+    <Head title="Calculator" />
     <div class="loan-calculator max-sm:px-3">
       <!-- Page Header -->
       <div class="bg-gradient-to-r from-orange-500 to-blue-900 shadow-md mt-2 sm:mx-6 rounded-xl px-6 py-5 sm:px-6">
@@ -369,7 +370,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { usePage, Head } from '@inertiajs/vue3'
 import axios from 'axios'
 import AppLayout from '@/layouts/AppLayout.vue'
 
