@@ -7,7 +7,23 @@ const props = defineProps({
     currentMonth: Number,
     currentYear: Number
 })
+
+/* Convert month number to name */
+function getMonthName(month) {
+    const months = [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+    ]
+    return months[(month ?? 1) - 1]
+}
+
+/* Format money */
+function formatMoney(amount) {
+    if (!amount) return "KES 0"
+    return "KES " + Number(amount).toLocaleString()
+}
 </script>
+
 
 <template>
     <AppLayout :breadcrumbs="[{ title: 'Financial Schedules' }]">
@@ -23,7 +39,7 @@ const props = defineProps({
                 </h1>
 
                 <div class="text-sm text-gray-500">
-                    Period: {{ currentMonth }}
+                    Period: {{ getMonthName(currentMonth) }} {{ currentYear }}
                 </div>
             </div>
 
@@ -34,45 +50,45 @@ const props = defineProps({
                 <!-- Monthly Deposits -->
                 <Link :href="route('schedule.monthly-deposit')"
                     class="bg-white shadow rounded-xl p-6 hover:shadow-lg transition">
-                <div class="text-blue-600 text-lg font-semibold">
-                    Monthly Deposits
-                </div>
-                <p class="text-sm text-gray-500 mt-2">
-                    Generate monthly member contribution transactions
-                </p>
+                    <div class="text-blue-600 text-lg font-semibold">
+                        Monthly Deposits
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">
+                        Generate monthly member contribution transactions
+                    </p>
                 </Link>
 
                 <!-- Loan Repayments -->
                 <Link :href="route('schedule.loan-repayment')"
                     class="bg-white shadow rounded-xl p-6 hover:shadow-lg transition">
-                <div class="text-green-600 text-lg font-semibold">
-                    Loan Repayments
-                </div>
-                <p class="text-sm text-gray-500 mt-2">
-                    Process monthly loan repayments
-                </p>
+                    <div class="text-green-600 text-lg font-semibold">
+                        Loan Repayments
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">
+                        Process monthly loan repayments
+                    </p>
                 </Link>
 
                 <!-- Loan Disbursements -->
                 <Link :href="route('schedule.loan-disbursement')"
                     class="bg-white shadow rounded-xl p-6 hover:shadow-lg transition">
-                <div class="text-purple-600 text-lg font-semibold">
-                    Loan Disbursements
-                </div>
-                <p class="text-sm text-gray-500 mt-2">
-                    Disburse approved loans to members
-                </p>
+                    <div class="text-purple-600 text-lg font-semibold">
+                        Loan Disbursements
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">
+                        Disburse approved loans to members
+                    </p>
                 </Link>
 
                 <!-- Dividend Payments -->
                 <Link :href="route('schedule.dividend-payment')"
                     class="bg-white shadow rounded-xl p-6 hover:shadow-lg transition">
-                <div class="text-yellow-600 text-lg font-semibold">
-                    Dividend Payments
-                </div>
-                <p class="text-sm text-gray-500 mt-2">
-                    Pay dividends to eligible members
-                </p>
+                    <div class="text-yellow-600 text-lg font-semibold">
+                        Dividend Payments
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">
+                        Pay dividends to eligible members
+                    </p>
                 </Link>
 
             </div>
@@ -103,14 +119,14 @@ const props = defineProps({
 
                         <tbody>
 
-                            <tr v-for="log in recentLogs" :key="log.id" class="border-t">
+                            <tr v-for="log in (recentLogs ?? [])" :key="log.id" class="border-t">
 
                                 <td class="p-3">
                                     {{ log.schedule_type }}
                                 </td>
 
                                 <td class="p-3">
-                                    {{ log.processing_month }}/{{ log.processing_year }}
+                                    {{ getMonthName(log.processing_month) }} {{ log.processing_year }}
                                 </td>
 
                                 <td class="p-3">
@@ -122,20 +138,24 @@ const props = defineProps({
                                 </td>
 
                                 <td class="p-3">
-                                    {{ log.total_records_processed }}
+                                    {{ log.total_records_processed ?? 0 }}
                                 </td>
 
                                 <td class="p-3">
-                                    {{ log.total_amount }}
+                                    {{ formatMoney(log.total_amount) }}
                                 </td>
 
                                 <td class="p-3">
 
-                                    <span v-if="log.status === 'Completed'" class="text-green-600 font-semibold">
+                                    <span
+                                        v-if="log.status === 'Completed'"
+                                        class="text-green-600 font-semibold">
                                         Completed
                                     </span>
 
-                                    <span v-else class="text-red-600 font-semibold">
+                                    <span
+                                        v-else
+                                        class="text-red-600 font-semibold">
                                         Failed
                                     </span>
 
@@ -143,7 +163,7 @@ const props = defineProps({
 
                             </tr>
 
-                            <tr v-if="recentLogs.length === 0">
+                            <tr v-if="(recentLogs ?? []).length === 0">
                                 <td colspan="7" class="text-center p-6 text-gray-400">
                                     No schedules executed yet
                                 </td>

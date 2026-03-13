@@ -16,11 +16,9 @@ const selectedYear = ref(props.year)
 const selectedMembers = ref([])
 
 function loadYear() {
-
     router.get(route('schedule.dividend-payments'), {
         year: selectedYear.value
     })
-
 }
 
 function toggleMember(id) {
@@ -45,7 +43,7 @@ function runDividend() {
 
     axios.post(route('schedule.dividend-payments.run'), {
 
-        dividend_id: props.dividend.id,
+        dividend_id: props.dividend?.id,
         year: selectedYear.value,
         entries: selectedMembers.value
 
@@ -113,35 +111,35 @@ function runDividend() {
                 <div class="bg-white shadow rounded p-4">
                     <div class="text-gray-500 text-sm">Dividend Rate</div>
                     <div class="text-xl font-bold">
-                        {{ summary.dividend_rate }}%
+                        {{ summary?.dividend_rate ?? 0 }}%
                     </div>
                 </div>
 
                 <div class="bg-white shadow rounded p-4">
                     <div class="text-gray-500 text-sm">Eligible Members</div>
                     <div class="text-xl font-bold">
-                        {{ summary.total_members }}
+                        {{ summary?.total_members ?? 0 }}
                     </div>
                 </div>
 
                 <div class="bg-white shadow rounded p-4">
                     <div class="text-gray-500 text-sm">Total Dividend</div>
                     <div class="text-xl font-bold">
-                        KES {{ summary.total_dividend }}
+                        KES {{ summary?.total_dividend ?? 0 }}
                     </div>
                 </div>
 
                 <div class="bg-white shadow rounded p-4">
                     <div class="text-gray-500 text-sm">Paid Members</div>
                     <div class="text-xl font-bold">
-                        {{ summary.paid_members }}
+                        {{ summary?.paid_members ?? 0 }}
                     </div>
                 </div>
 
                 <div class="bg-white shadow rounded p-4">
                     <div class="text-gray-500 text-sm">Pending Members</div>
                     <div class="text-xl font-bold">
-                        {{ summary.pending_members }}
+                        {{ summary?.pending_members ?? 0 }}
                     </div>
                 </div>
 
@@ -176,8 +174,12 @@ function runDividend() {
 
                             <td class="p-3">
 
-                                <input type="checkbox" :disabled="member.status === 'paid'"
-                                    :checked="selectedMembers.includes(member.id)" @click="toggleMember(member.id)" />
+                                <input
+                                    type="checkbox"
+                                    :disabled="member.status === 'paid'"
+                                    :checked="selectedMembers.includes(member.id)"
+                                    @click="toggleMember(member.id)"
+                                />
 
                             </td>
 
@@ -186,15 +188,15 @@ function runDividend() {
                             </td>
 
                             <td class="p-3">
-                                KES {{ member.share_capital }}
+                                KES {{ member.share_capital ?? 0 }}
                             </td>
 
                             <td class="p-3">
-                                KES {{ member.deposits }}
+                                KES {{ member.deposits ?? 0 }}
                             </td>
 
                             <td class="p-3 font-semibold">
-                                KES {{ member.dividend_amount }}
+                                KES {{ member.dividend_amount ?? 0 }}
                             </td>
 
                             <td class="p-3">
@@ -223,13 +225,15 @@ function runDividend() {
 
             <div class="flex gap-4">
 
-                <button @click="runDividend" :disabled="alreadyRun"
-                    class="bg-green-600 text-white px-6 py-2 rounded disabled:opacity-50">
+                <button
+                    @click="runDividend"
+                    :disabled="alreadyRun"
+                    class="bg-green-600 text-white px-6 py-2 rounded disabled:opacity-50"
+                >
                     Pay Selected Members
                 </button>
 
             </div>
-
 
         </div>
 
