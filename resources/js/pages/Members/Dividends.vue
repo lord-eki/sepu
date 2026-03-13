@@ -13,7 +13,7 @@ const props = defineProps<{
 // Smart stats
 const totalDividends = computed(() => props.dividends.length)
 const totalAmount = computed(() =>
-  props.dividends.reduce((sum, d) => sum + Number(d.amount || 0), 0)
+  props.dividends.reduce((sum, d) => sum + Number(d.dividend_amount || 0), 0)
 )
 const formattedTotalAmount = computed(() =>
   Number(totalAmount.value).toLocaleString()
@@ -93,15 +93,22 @@ const formattedTotalAmount = computed(() =>
           </thead>
           <tbody class="bg-white divide-y divide-gray-100">
             <tr v-for="d in props.dividends" :key="d.id" class="hover:bg-gray-50 transition">
+              <!-- Year -->
               <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                {{ d.dividend?.year || "-" }}
+                {{ d.dividend?.dividend_year || "-" }}
               </td>
+
+              <!-- Declared -->
               <td class="px-6 py-4 text-sm text-gray-600">
-                {{ d.dividend?.declared_at ? new Date(d.dividend.declared_at).toLocaleDateString() : "-" }}
+                {{ d.dividend?.approval_date ? new Date(d.dividend.approval_date).toLocaleDateString() : "-" }}
               </td>
+
+              <!-- Amount -->
               <td class="px-6 py-4 text-sm font-semibold text-gray-800">
-                KES {{ Number(d.amount).toLocaleString() }}
+                KES {{ Number(d.dividend_amount || 0).toLocaleString() }}
               </td>
+
+              <!-- Status -->
               <td class="px-6 py-4 text-sm">
                 <span :class="{
                   'px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800': d.status === 'paid',
@@ -133,6 +140,7 @@ const formattedTotalAmount = computed(() =>
           </tbody>
         </table>
       </div>
+
     </div>
   </AppLayout>
 </template>

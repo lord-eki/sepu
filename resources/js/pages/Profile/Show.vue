@@ -150,7 +150,7 @@ function submit() {
   <Head title="My Profile" />
 
   <AppLayout :breadcrumbs="[{ title: 'My Profile', href: '/member/profile' }]">
-    <div class="p-6 md:p-10 bg-gradient-to-b from-slate-50 to-white min-h-screen">
+    <div class="py-4 px-6 md:px-10 bg-gradient-to-b from-slate-50 to-white min-h-screen">
 
       <!-- Flash Message -->
       <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
