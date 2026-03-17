@@ -16,17 +16,18 @@ class Member extends Model
         'occupation', 'employer', 'monthly_income', 'physical_address',
         'postal_address', 'city', 'county', 'country', 'emergency_contact_name',
         'emergency_contact_phone', 'emergency_contact_relationship',
-        'membership_status', 'membership_date', 'profile_photo', 'documents'
+        'membership_status', 'membership_date', 'profile_photo', 'documents',
     ];
 
     protected $casts = [
-        'date_of_birth' => 'date',
+        'date_of_birth'   => 'date',
         'membership_date' => 'date',
-        'monthly_income' => 'decimal:2',
-        'documents' => 'array',
+        'monthly_income'  => 'decimal:2',
+        'documents'       => 'array',
     ];
 
-    // Relationships
+    // ── Relationships ────────────────────────────────────────────────────
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -62,13 +63,47 @@ class Member extends Model
         return $this->hasMany(MemberNextOfKin::class);
     }
 
-    // Accessor for full name
-    public function getFullNameAttribute()
+    /**
+     * ALL deposit commitments for this member — all statuses, all dates.
+     * Use this in the management UI to show the full history.
+     */
+    public function depositCommitments()
+    {
+        return $this->hasMany(MemberDepositCommitment::class);
+    }
+
+    /**
+     * Only commitments that are currently active AND within their effective
+     * date range.  This is what the schedule engine loads at run-time.
+     *
+     * Usage in ScheduleController:
+     *   $member->load('activeDepositCommitments.account');
+     *   foreach ($member->activeDepositCommitments as $c) {
+     *       // post $c->monthly_amount to $c->account
+     *   }
+     */
+    public function activeDepositCommitments()
+    {
+        $today = now()->toDateString();
+
+        return $this->hasMany(MemberDepositCommitment::class)
+                    ->where('is_active', true)
+                    ->where('effective_from', '<=', $today)
+                    ->where(function ($q) use ($today) {
+                        $q->whereNull('effective_to')
+                          ->orWhere('effective_to', '>=', $today);
+                    });
+    }
+
+    // ── Accessors ────────────────────────────────────────────────────────
+
+    public function getFullNameAttribute(): string
     {
         return trim($this->first_name . ' ' . $this->middle_name . ' ' . $this->last_name);
     }
 
-    // Scope for active members
+    // ── Scopes ───────────────────────────────────────────────────────────
+
     public function scopeActive($query)
     {
         return $query->where('membership_status', 'active');
