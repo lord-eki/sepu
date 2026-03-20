@@ -525,6 +525,27 @@
             </div>
           </div>
 
+          <!-- Deposit Commitments Tab -->
+          <div v-if="activeTab === 'deposit-commitments'">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Deposit Commitments
+              </h3>
+
+              <Link
+                :href="route('members.deposit-commitments.index', member.id)"
+                class="bg-[#0a2342] text-white px-4 py-2 rounded-xl text-sm hover:bg-orange-600 transition"
+              >
+                Manage Commitments
+              </Link>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-gray-700">
+              Set up automatic monthly deposits for this member.
+              You can define amount, account, and schedule.
+            </div>
+          </div>
+
           <!-- Next of Kin Tab -->
           <div v-if="activeTab === 'next-of-kin'">
             <div v-if="member.next_of_kin && member.next_of_kin.length > 0" class="space-y-4">
@@ -674,6 +695,7 @@ const tabs = [
   { id: 'accounts', name: 'Accounts' },
   { id: 'loans', name: 'Loans' },
   { id: 'transactions', name: 'Recent Transactions' },
+  { id: 'deposit-commitments', name: 'Deposit Commitments' },
   { id: 'next-of-kin', name: 'Next of Kin' },
   { id: 'documents', name: 'Documents' }
 ]
