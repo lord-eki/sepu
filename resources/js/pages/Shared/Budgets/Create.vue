@@ -145,8 +145,8 @@
                           class="w-full border-gray-300 rounded-lg p-1 focus:ring-blue-600 focus:border-blue-600"
                           required>
                           <option value="">Select</option>
-                          <option v-for="category in budget_categories" :key="category" :value="category">
-                            {{ category }}
+                          <option v-for="category in budget_accounts" :key="category" :value="category">
+                            {{ category.label }}
                           </option>
                         </select>
                       </td>
@@ -232,7 +232,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 const props = defineProps({
   suggested_year: Number,
   existing_budget: Boolean,
-  budget_categories: Array,
+  budget_accounts: Array,
   errors: Object
 })
 
