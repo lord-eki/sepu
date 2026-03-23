@@ -75,14 +75,12 @@
             <p v-if="form.errors[field.key]" class="error">{{ form.errors[field.key] }}</p>
           </div>
 
-          <div>
-            <label class="text-sm font-medium text-gray-700">Interest Method *</label>
-            <select v-model="form.interest_method" class="input" required>
-              <option value="">Select</option>
-              <option value="reducing_balance">Reducing Balance</option>
-              <option value="flat_rate">Flat Rate</option>
-            </select>
-            <p v-if="form.errors.interest_method" class="error">{{ form.errors.interest_method }}</p>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex flex-col justify-center">
+            <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">Interest Method</p>
+            <p class="text-sm font-medium text-[#0B2B40]">Reducing Balance (Fixed Installment)</p>
+            <p class="text-xs text-blue-600 mt-1">
+              Equivalent annual rate: <strong>{{ annualRate }}% p.a.</strong>
+            </p>
           </div>
         </div>
       </details>
@@ -162,8 +160,8 @@
           Required Documents *
         </summary>
         <div class="p-4">
-          <textarea v-model="form.required_documents" rows="3" required class="input"
-            placeholder='e.g. Payslip, National ID, Bank Statement (separated by comma)'></textarea>
+          <textarea v-model="rawDocs" rows="3" required class="input"
+            placeholder="e.g. Payslip, National ID, Bank Statement (separated by comma)"></textarea>
           <p v-if="form.errors.required_documents" class="error">
             {{ form.errors.required_documents }}
           </p>
@@ -225,7 +223,6 @@ const form = useForm({
   min_amount: "",
   max_amount: "",
   interest_rate: "",
-  interest_method: "",
   min_term_months: "",
   max_term_months: "",
   processing_fee_rate: "",
@@ -246,7 +243,8 @@ const form = useForm({
   is_active: true,
 });
 
-const showFlash = ref(!!(flash.success || flash.error));
+const showFlash = ref(!!(flash.success || flash.error))
+const rawDocs = ref("")   // textarea string; converted to array on submit;
 
 // Flash auto-hide
 watch(
@@ -264,7 +262,7 @@ watch(
 const requiredNumericFields = [
   { key: "min_amount", label: "Minimum Amount", placeholder: "e.g. 1000" },
   { key: "max_amount", label: "Maximum Amount", placeholder: "e.g. 50000" },
-  { key: "interest_rate", label: "Interest Rate (%)", placeholder: "e.g. 12" },
+  { key: "interest_rate", label: "Interest Rate (% per month)", placeholder: "e.g. 1.5" },
   { key: "min_term_months", label: "Min Term (Months)", placeholder: "e.g. 6" },
   { key: "max_term_months", label: "Max Term (Months)", placeholder: "e.g. 24" },
   { key: "processing_fee_rate", label: "Processing Fee Rate (%)", placeholder: "e.g. 1" },
@@ -281,7 +279,6 @@ const isFormValid = computed(() => {
     form.min_amount &&
     form.max_amount &&
     form.interest_rate &&
-    form.interest_method &&
     form.min_term_months &&
     form.max_term_months &&
     form.processing_fee_rate &&
@@ -296,27 +293,25 @@ const isFormValid = computed(() => {
     form.eligibility_criteria.regular_deposits_required !== "" &&
     form.requires_guarantor !== "" &&
     form.min_guarantors !== "" &&
-    form.required_documents &&
-    form.required_documents.length > 0 &&
+    rawDocs.value.trim().length > 0 &&
     form.is_active !== ""
   );
 });
 
 
+// Equivalent annual rate display
+const annualRate = computed(() => {
+  const r = parseFloat(form.interest_rate as any)
+  return r > 0 ? (r * 12).toFixed(1) : '0.0'
+})
+
 // Submit handler
 function submit() {
-  // Convert documents text to array
-  if (typeof form.required_documents === "string") {
-    try {
-      const parsed = JSON.parse(form.required_documents);
-      form.required_documents = Array.isArray(parsed) ? parsed : [];
-    } catch {
-      form.required_documents = form.required_documents
-        .split(",")
-        .map((d) => d.trim())
-        .filter(Boolean);
-    }
-  }
+  // Build required_documents array from the textarea string
+  form.required_documents = rawDocs.value
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean)
 
   form.post(route("loan-products.store"), {
     onError: (errors) => {

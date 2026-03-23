@@ -40,7 +40,6 @@ class LoanProductController extends Controller
             'min_amount' => 'required|numeric|min:0',
             'max_amount' => 'required|numeric|gt:min_amount',
             'interest_rate' => 'required|numeric|min:0|max:100',
-            'interest_method' => 'required|in:reducing_balance,flat_rate',
             'min_term_months' => 'required|integer|min:1',
             'max_term_months' => 'required|integer|gt:min_term_months',
             'processing_fee_rate' => 'required|numeric|min:0|max:100',

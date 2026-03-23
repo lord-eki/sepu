@@ -133,19 +133,11 @@
           </div>
 
 
-          <div>
-            <label class="label">Interest Method</label>
-            <select
-              v-model="form.interest_method"
-              class="input"
-              :class="{ 'border-red-500 bg-red-50': form.errors.interest_method }"
-            >
-              <option value="">Select</option>
-              <option value="reducing_balance">Reducing Balance</option>
-              <option value="flat_rate">Flat Rate</option>
-            </select>
-            <p v-if="form.errors.interest_method" class="error">
-              {{ form.errors.interest_method }}
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex flex-col justify-center">
+            <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">Interest Method</p>
+            <p class="text-sm font-medium text-[#0B2B40]">Reducing Balance (Fixed Installment)</p>
+            <p class="text-xs text-blue-600 mt-1">
+              Equivalent annual rate: <strong>{{ annualRate }}% p.a.</strong>
             </p>
           </div>
         </div>
@@ -257,7 +249,7 @@ const props = defineProps({
   loanProduct: Object,
 });
 
-import { reactive, ref } from 'vue';
+import { reactive, ref, computed } from 'vue';
 const flash = reactive({ success: '', error: '' });
 const showFlash = ref(false);
 
@@ -286,7 +278,7 @@ const form = useForm({
 const limitsAndRates = [
   { label: "Minimum Amount", key: "min_amount" },
   { label: "Maximum Amount", key: "max_amount" },
-  { label: "Interest Rate (%)", key: "interest_rate" },
+  { label: "Interest Rate (% per month)", key: "interest_rate" },
   { label: "Min Term (Months)", key: "min_term_months" },
   { label: "Max Term (Months)", key: "max_term_months" },
   { label: "Processing Fee Rate (%)", key: "processing_fee_rate" },
@@ -306,72 +298,12 @@ const eligibilityFields = [
 
 
 
-const limitsAndRates1 = [
-  {
-    label: "Minimum Amount",
-    model: form.min_amount,
-    error: form.errors.min_amount,
-  },
-  {
-    label: "Maximum Amount",
-    model: form.max_amount,
-    error: form.errors.max_amount,
-  },
-  {
-    label: "Interest Rate (%)",
-    model: form.interest_rate,
-    error: form.errors.interest_rate,
-  },
-  {
-    label: "Min Term (Months)",
-    model: form.min_term_months,
-    error: form.errors.min_term_months,
-  },
-  {
-    label: "Max Term (Months)",
-    model: form.max_term_months,
-    error: form.errors.max_term_months,
-  },
-  {
-    label: "Processing Fee Rate (%)",
-    model: form.processing_fee_rate,
-    error: form.errors.processing_fee_rate,
-  },
-  {
-    label: "Insurance Rate (%)",
-    model: form.insurance_rate,
-    error: form.errors.insurance_rate,
-  },
-  {
-    label: "Grace Period (Days)",
-    model: form.grace_period_days,
-    error: form.errors.grace_period_days,
-  },
-  {
-    label: "Penalty Rate (%)",
-    model: form.penalty_rate,
-    error: form.errors.penalty_rate,
-  },
-];
+// (duplicate field arrays removed)
 
-const eligibilityFields1 = [
-  {
-    label: "Min Membership (Months)",
-    model: form.eligibility_criteria.minimum_membership_months,
-  },
-  {
-    label: "Min Shares Balance (Ksh)",
-    model: form.eligibility_criteria.minimum_shares_balance,
-  },
-  {
-    label: "Max Loan:Shares Ratio",
-    model: form.eligibility_criteria.maximum_loan_to_shares_ratio,
-  },
-  {
-    label: "Max Salary Deduction Ratio",
-    model: form.eligibility_criteria.maximum_salary_deduction_ratio,
-  },
-];
+const annualRate = computed(() => {
+  const r = parseFloat(form.interest_rate)
+  return r > 0 ? (r * 12).toFixed(1) : '0.0'
+})
 
 function submit() {
   form.put(route('loan-products.update', props.loanProduct.id), {
