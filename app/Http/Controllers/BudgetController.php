@@ -81,7 +81,6 @@ class BudgetController extends Controller
 
     public function store(Request $request)
     {
-        dd($request);
         $request->validate([
             'budget_year'  => [
                 'required', 'integer',

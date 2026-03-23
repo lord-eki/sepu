@@ -141,12 +141,12 @@
                       class="border-b hover:bg-gray-50 transition">
                       <td class="px-3 py-2 text-gray-600">{{ index + 1 }}</td>
                       <td class="px-3 py-2">
-                        <select v-model="item.category"
+                        <select v-model="item.chart_of_account_id"
                           class="w-full border-gray-300 rounded-lg p-1 focus:ring-blue-600 focus:border-blue-600"
                           required>
                           <option value="">Select</option>
-                          <option v-for="category in budget_accounts" :key="category" :value="category">
-                            {{ category.label }}
+                          <option v-for="account in budget_accounts" :key="account.id" :value="account.id">
+                            {{ account.label }}
                           </option>
                         </select>
                       </td>
@@ -259,7 +259,7 @@ watch(() => form.budget_year, (newYear) => {
 
 const addBudgetItem = () => {
   form.budget_items.push({
-    category: '',
+    chart_of_account_id: '',
     item_name: '',
     description: '',
     budgeted_amount: 0
