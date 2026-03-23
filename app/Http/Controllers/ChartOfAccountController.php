@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountCategory;
 use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,18 +19,15 @@ class ChartOfAccountController extends Controller
         'header'       => 'Header / Group',
     ];
 
-    public const ACCOUNT_CATEGORIES = [
-        'current_asset'         => 'Current Asset',
-        'fixed_asset'           => 'Fixed Asset',
-        'current_liability'     => 'Current Liability',
-        'long_term_liability'   => 'Long-term Liability',
-        'member_equity'         => 'Member Equity',
-        'retained_earnings'     => 'Retained Earnings',
-        'operating_revenue'     => 'Operating Revenue',
-        'non_operating_revenue' => 'Non-operating Revenue',
-        'operating_expense'     => 'Operating Expense',
-        'non_operating_expense' => 'Non-operating Expense',
-    ];
+    public const ACCOUNT_CATEGORIES = [];
+
+    /**
+     * Returns all categories from the DB as an array of objects.
+     */
+    private function getCategories(): array
+    {
+        return AccountCategory::orderBy('label')->get(['id', 'key', 'label', 'is_system'])->toArray();
+    }
 
     // ── INDEX ────────────────────────────────────────────────────────────
 
@@ -79,18 +77,18 @@ class ChartOfAccountController extends Controller
             'stats'             => $stats,
             'filters'           => $request->only(['search', 'type', 'status']),
             'accountTypes'      => self::ACCOUNT_TYPES,
-            'accountCategories' => self::ACCOUNT_CATEGORIES,
+            'accountCategories' => $this->getCategories(),
         ]);
     }
 
-    // ── CREATE  ───────────────────────────────────────────────────
+    // ── CREATE ───────────────────────────────────────────────────────────
 
     public function create()
     {
         return Inertia::render('Finance/ChartOfAccounts/Create', [
             'parentAccounts'    => $this->getParentOptions(),
             'accountTypes'      => self::ACCOUNT_TYPES,
-            'accountCategories' => self::ACCOUNT_CATEGORIES,
+            'accountCategories' => $this->getCategories(),
         ]);
     }
 
@@ -100,7 +98,7 @@ class ChartOfAccountController extends Controller
             'account_code'      => 'required|string|max:20|unique:charts_of_accounts,account_code',
             'account_name'      => 'required|string|max:255',
             'account_type'      => 'required|in:' . implode(',', array_keys(self::ACCOUNT_TYPES)),
-            'account_category'  => 'required|in:' . implode(',', array_keys(self::ACCOUNT_CATEGORIES)),
+            'account_category'  => 'required|string|max:60|exists:account_categories,key',
             'normal_balance'    => 'required|in:debit,credit',
             'parent_account_id' => 'nullable|exists:charts_of_accounts,id',
             'description'       => 'nullable|string',
@@ -147,7 +145,7 @@ class ChartOfAccountController extends Controller
             'account'           => $this->formatAccount($chartOfAccount),
             'parentAccounts'    => $this->getParentOptions($chartOfAccount->id),
             'accountTypes'      => self::ACCOUNT_TYPES,
-            'accountCategories' => self::ACCOUNT_CATEGORIES,
+            'accountCategories' => $this->getCategories(),
         ]);
     }
 
@@ -163,7 +161,7 @@ class ChartOfAccountController extends Controller
             $rules = array_merge($rules, [
                 'account_code'      => "required|string|max:20|unique:charts_of_accounts,account_code,{$chartOfAccount->id}",
                 'account_type'      => 'required|in:' . implode(',', array_keys(self::ACCOUNT_TYPES)),
-                'account_category'  => 'required|in:' . implode(',', array_keys(self::ACCOUNT_CATEGORIES)),
+                'account_category'  => 'required|string|max:60|exists:account_categories,key',
                 'normal_balance'    => 'required|in:debit,credit',
                 'parent_account_id' => 'nullable|exists:charts_of_accounts,id',
                 'opening_balance'   => 'nullable|numeric|min:0',
@@ -225,9 +223,70 @@ class ChartOfAccountController extends Controller
     // ── JSON API ENDPOINTS ───────────────────────────────────────────────
 
     /**
-     * GET /api/chart-of-accounts/postable?type=expense
+     * GET /api/chart-of-accounts/next-code?parent_id=5
      *
-     * Postable leaf accounts for journal entry line dropdowns.
+     * Returns the next available 5-digit account code for a given parent (or root).
+     *
+     * Observed coding scheme (all codes are 5 digits):
+     *   Level 1 – root   : step 10000  →  10000, 20000, 30000, 40000, 50000
+     *   Level 2          : step  1000  →  11000, 12000, 13000  (under 10000)
+     *   Level 3          : step   100  →  11100, 11200, 11300  (under 11000)
+     *   Level 4+         : step     1  →  11201, 11202, 11203  (under 11200)
+     *
+     *      */
+    public function nextCode(Request $request)
+    {
+        $parentId = $request->query('parent_id');
+
+        if (!$parentId) {
+            // Root level — multiples of 10000, minimum 10000
+            $codes = ChartOfAccount::whereNull('parent_account_id')
+                ->pluck('account_code')
+                ->map(fn($c) => (int) preg_replace('/\D/', '', $c))
+                ->filter()
+                ->sort()
+                ->values();
+
+            $next = $codes->isEmpty()
+                ? 10000
+                : (int) (floor($codes->last() / 10000) + 1) * 10000;
+
+            return response()->json(['next_code' => str_pad((string) $next, 5, '0', STR_PAD_LEFT)]);
+        }
+
+        $parent = ChartOfAccount::find($parentId);
+
+        if (!$parent) {
+            return response()->json(['error' => 'Parent not found'], 404);
+        }
+
+        $parentCode = (int) preg_replace('/\D/', '', $parent->account_code);
+
+        // Step size :
+        //   level 1 → children step by 1000  (e.g. 10000 → 11000, 12000…)
+        //   level 2 → children step by 100   (e.g. 11000 → 11100, 11200…)
+        //   level 3+ → children step by 1    (e.g. 11200 → 11201, 11202…)
+        $step = match (true) {
+            $parent->level === 1 => 1000,
+            $parent->level === 2 => 100,
+            default              => 1,
+        };
+
+        // Find the highest existing child code
+        $maxChild = ChartOfAccount::where('parent_account_id', $parentId)
+            ->pluck('account_code')
+            ->map(fn($c) => (int) preg_replace('/\D/', '', $c))
+            ->max();
+
+        $next = $maxChild
+            ? $maxChild + $step
+            : $parentCode + $step;
+
+        return response()->json(['next_code' => str_pad((string) $next, 5, '0', STR_PAD_LEFT)]);
+    }
+
+    /**
+     * GET /api/chart-of-accounts/postable?type=expense
      */
     public function postableAccounts(Request $request)
     {
@@ -251,14 +310,6 @@ class ChartOfAccountController extends Controller
 
     /**
      * GET /api/chart-of-accounts/budget-lines
-     * GET /api/chart-of-accounts/budget-lines?type=expense
-     * GET /api/chart-of-accounts/budget-lines?types=expense,revenue
-     *
-     * All active postable (leaf) accounts for the budget-item form dropdown.
-     * Returns indented labels and full path hints so users see hierarchy context.
-     *
-     * This is the endpoint your budget Create/Edit forms should call to
-     * populate the "Account / Budget Line" dropdown 
      */
     public function budgetLineAccounts(Request $request)
     {
@@ -281,15 +332,14 @@ class ChartOfAccountController extends Controller
                 'account_type'   => $a->account_type,
                 'normal_balance' => $a->normal_balance,
                 'level'          => $a->level,
-                'label'          => $a->dropdown_label,  // indented for flat <select>
-                'full_path'      => $a->full_path_name,  // breadcrumb hint in UI
+                'label'          => $a->dropdown_label,
+                'full_path'      => $a->full_path_name,
             ])
         );
     }
 
     /**
      * GET /api/chart-of-accounts/tree
-     *
      */
     public function accountTree()
     {
@@ -300,6 +350,32 @@ class ChartOfAccountController extends Controller
             ->get();
 
         return response()->json($roots->map(fn($a) => $this->formatTree($a)));
+    }
+
+    /**
+     *
+     * Creates a new user-defined category 
+     */
+    public function storeCategory(Request $request)
+    {
+        $data = $request->validate([
+            'label' => 'required|string|max:120',
+        ]);
+
+        $key = \Str::slug($data['label'], '_');
+
+        // If the key already exists just return the existing record
+        $category = AccountCategory::firstOrCreate(
+            ['key' => $key],
+            ['label' => $data['label'], 'is_system' => false]
+        );
+
+        return response()->json([
+            'id'        => $category->id,
+            'key'       => $category->key,
+            'label'     => $category->label,
+            'is_system' => $category->is_system,
+        ], 201);
     }
 
     // ── PRIVATE HELPERS ──────────────────────────────────────────────────
@@ -340,9 +416,6 @@ class ChartOfAccountController extends Controller
         return $node;
     }
 
-    /**
-     * Flat indented list for parent-account <select> dropdowns.
-     */
     private function getParentOptions(?int $excludeId = null): array
     {
         return ChartOfAccount::active()
@@ -350,10 +423,11 @@ class ChartOfAccountController extends Controller
             ->orderBy('account_code')
             ->get(['id', 'account_code', 'account_name', 'level', 'account_type'])
             ->map(fn($a) => [
-                'id'    => $a->id,
-                'label' => str_repeat('　', max(0, ($a->level ?? 1) - 1)) . $a->account_code . ' – ' . $a->account_name,
-                'type'  => $a->account_type,
-                'level' => $a->level,
+                'id'           => $a->id,
+                'label'        => str_repeat('　', max(0, ($a->level ?? 1) - 1)) . $a->account_code . ' – ' . $a->account_name,
+                'type'         => $a->account_type,
+                'level'        => $a->level,
+                'account_code' => $a->account_code,
             ])
             ->toArray();
     }

@@ -12,7 +12,7 @@ use App\Http\Controllers\LoanCalculatorController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\LoanProductController;
 use App\Http\Controllers\MemberController;
-use App\Http\Controllers\MemberDepositCommitmentController; // NEW
+use App\Http\Controllers\MemberDepositCommitmentController; 
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentVoucherController;
 use App\Http\Controllers\ReportController;
@@ -312,10 +312,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ── Chart of Accounts ─────────────────────────────────────────────────
-    // Primary block — chart-of-accounts prefix.
     Route::prefix('chart-of-accounts')->name('chart-of-accounts.')->group(function () {
 
-        // CRUD pages
         Route::get('/',       [ChartOfAccountController::class, 'index'])->name('index');
         Route::get('/create', [ChartOfAccountController::class, 'create'])->name('create');
         Route::post('/',      [ChartOfAccountController::class, 'store'])->name('store');
@@ -328,22 +326,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{chartOfAccount}/toggle-active',
             [ChartOfAccountController::class, 'toggleActive'])->name('toggle-active');
 
-        // Used by budget item forms, journal entry pickers, tree-pickers etc.
-
-        // All postable leaf accounts — for journal entry line dropdowns
       
         Route::get('/api/postable',
             [ChartOfAccountController::class, 'postableAccounts'])->name('api.postable');
 
-        // Budget line accounts — with indented label + full ancestry path
      
-        Route::get('/api/budget-lines',
-            [ChartOfAccountController::class, 'budgetLineAccounts'])->name('api.budget-lines');
+        Route::get('/api/budget-lines',  [ChartOfAccountController::class, 'budgetLineAccounts'])->name('api.budget-lines');
 
-        // nested account tree 
-        // GET /chart-of-accounts/api/tree
-        Route::get('/api/tree',
-            [ChartOfAccountController::class, 'accountTree'])->name('api.tree');
+        Route::get('/api/tree', [ChartOfAccountController::class, 'accountTree'])->name('api.tree');
+        Route::get('/api/next-code' , [ChartOfAccountController::class , 'nextCode'])->name('api.next-code');
+        Route::post('/api/categories', [ChartOfAccountController::class , 'storeCategory'])->name('api.categories.store');
+
     });
 
   
