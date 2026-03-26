@@ -1,326 +1,291 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/loans' }]">
-
     <Head title="Loan Management" />
 
-    <div class="loan-page pt-4 pb-8">
-      <!-- Gradient header -->
-      <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-        <div
-          class="rounded-2xl overflow-hidden shadow-md border border-transparent transform-gpu transition-all duration-300">
-          <div class="bg-gradient-to-r from-[#06203a] to-[#0a2342] px-6 py-6 sm:py-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div class="flex items-center gap-4">
-                <div class="rounded-lg p-3 bg-white/6 shadow md:shadow-lg">
-                  <!-- icon -->
-                  <svg class="w-6 sm:w-7 h-6 sm:h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                      d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
+    <div class="bg-slate-100 min-h-screen">
 
-                <div>
-                  <h1 class="text-white font-semibold text-xl sm:text-2xl tracking-tight">Loan Management</h1>
-                  <p class="text-orange-200 max-sm:text-xs text-sm mt-0.5">Manage loan applications, approvals and
-                    disbursements</p>
-                </div>
-              </div>
+      <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-              <div class="flex max-sm:flex-col w-fit gap-2">
-                <!-- New Loan Application -->
-                <Link :href="route('loans.create')"
-                  class="inline-flex items-center gap-2 rounded-lg bg-white text-[#0a2342] px-4 py-2 text-sm font-medium shadow hover:scale-[1.01] transition">
-                New Loan Application
-                </Link>
+        <!-- HEADER (clean, not decorative) -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-semibold text-slate-900">Loan Management</h1>
+            <p class="text-sm text-slate-500">Manage applications, approvals and disbursements</p>
+          </div>
 
-                <!-- Check Eligibility -->
-                <button @click="openModal = true"
-                  class="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white hover:cursor-pointer px-4 py-2 text-sm font-medium shadow hover:bg-blue-700 transition">
-                  Check Eligibility
-                </button>
+          <div class="flex gap-2 flex-wrap">
+  <Link
+    :href="route('loans.create')"
+    class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-slate-800 transition"
+  >
+    New Loan
+  </Link>
 
-                <!-- Loan Calculator -->
-                <Link :href="route('loan-calculator.index')"
-                  class="inline-flex items-center gap-2 rounded-lg bg-orange-500 text-white px-4 py-2 text-sm font-medium shadow hover:opacity-95 transition">
-                Loan Calculator
-                </Link>
-              </div>
-            </div>
+  <button
+    @click="openModal = true"
+    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700 transition"
+  >
+    Eligibility
+  </button>
+
+  <Link
+    :href="route('loan-calculator.index')"
+    class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-orange-600 transition"
+  >
+    Calculator
+  </Link>
+</div>
+        </div>
+
+        <!-- STATS (tight + minimal) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div v-for="card in cards" :key="card.label"
+  class="p-4 rounded-xl border border-slate-200 shadow-sm
+         bg-gradient-to-br from-white via-orange-50 to-orange-100
+         hover:shadow-md transition"
+>
+            <p class="text-xs text-slate-500">{{ card.label }}</p>
+            <p class="text-lg font-semibold text-slate-900 mt-1">{{ card.value }}</p>
           </div>
         </div>
-      </header>
 
+        <!-- TOOLBAR -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-wrap gap-3 items-center">
 
-      <!-- Member Selection Modal -->
-      <div v-if="openModal" class="fixed inset-0 bg-black/50 flex justify-center items-center z-9999">
-        <div class="bg-white p-6 rounded-lg shadow-lg max-sm:w-[90%] w-96">
-          <h2 class="text-lg font-semibold mb-4 text-gray-700">Select Member</h2>
+          <input
+            v-model="filters.search"
+            placeholder="Search loans..."
+            class="border border-slate-200 px-3 py-2 rounded-lg text-sm w-64"
+          />
 
-          <select v-model="selectedMember"
-            class="w-full border border-gray-300 rounded-md p-2 mb-4 focus:ring focus:ring-blue-200">
-            <option disabled value="">-- Choose a member --</option>
-            <option v-for="member in members" :key="member.id" :value="member.id">
-              {{ member.name }}
-            </option>
+          <select v-model="filters.status" class="border border-slate-200 px-3 py-2 rounded-lg text-sm">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="disbursed">Disbursed</option>
           </select>
 
-          <div class="flex justify-end gap-2">
-            <button @click="openModal = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
-              Cancel
+          <input type="date" v-model="filters.date_from" class="border border-slate-200 px-3 py-2 rounded-lg text-sm" />
+          <input type="date" v-model="filters.date_to" class="border border-slate-200 px-3 py-2 rounded-lg text-sm" />
+
+          <div class="ml-auto flex gap-2">
+            <button
+              @click="applyFilters"
+              class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm"
+            >
+              Apply
             </button>
-            <button @click="checkEligibility" :disabled="!selectedMember"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
-              Continue
+
+            <button
+              @click="clearFilters"
+              class="border border-slate-300 px-4 py-2 rounded-lg text-sm"
+            >
+              Reset
             </button>
           </div>
         </div>
-      </div>
 
+        <!-- TABLE -->
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
 
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <!-- Summary cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <transition-group name="fade" tag="div" class="contents">
-            <div v-for="card in cards" :key="card.label" class="card-glass p-4 rounded-2xl shadow-lg border">
-              <div class="flex items-center gap-4">
-                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', card.bg]">
-                  <svg class="w-5  h-5  text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" :d="card.icon" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm text-gray-500">{{ card.label }}</p>
-                  <p class="text-xl font-bold text-gray-900">{{ card.value }}</p>
-                </div>
-              </div>
-            </div>
-          </transition-group>
-        </section>
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-500">
+              <tr>
+                <th class="text-left px-4 py-3 font-medium">Loan</th>
+                <th class="text-left px-4 py-3 font-medium">Member</th>
+                <th class="text-left px-4 py-3 font-medium">Amount</th>
+                <th class="text-left px-4 py-3 font-medium">Status</th>
+                <th class="text-left px-4 py-3 font-medium">Date</th>
+                <th class="text-right px-4 py-3 font-medium">Actions</th>
+              </tr>
+            </thead>
 
-        <!-- Filters -->
-        <section class="bg-white rounded-2xl p-6 shadow-sm border">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Filters</h3>
-            <div class="text-sm text-gray-500">Refine loan list</div>
-          </div>
+            <tbody>
+              <tr
+                v-for="loan in loans.data"
+                :key="loan.id"
+                class="border-t hover:bg-slate-50"
+              >
+                <td class="px-4 py-3 font-medium text-slate-900">
+                  {{ loan.loan_number }}
+                </td>
 
-          <form @submit.prevent="applyFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select v-model="filters.status" id="status"
-                class="mt-1 block w-full rounded-lg border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-orange-200">
-                <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="disbursed">Disbursed</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-
-            <div>
-              <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-              <input v-model="filters.search" id="search" type="text" placeholder="Loan number, member name..."
-                class="mt-1 block w-full rounded-lg border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-blue-50" />
-            </div>
-
-            <div>
-              <label for="date_from" class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-              <input v-model="filters.date_from" id="date_from" type="date"
-                class="mt-1 block w-full rounded-lg border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-blue-50" />
-            </div>
-
-            <div>
-              <label for="date_to" class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-              <input v-model="filters.date_to" id="date_to" type="date"
-                class="mt-1 block w-full rounded-lg border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-blue-50" />
-            </div>
-
-            <div class="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2 justify-start mt-2">
-              <button type="submit"
-                class="inline-flex items-center hover:cursor-pointer gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:scale-[1.01] transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>Apply&nbsp;<span class="max-sm:hidden">Filters</span></span>
-              </button>
-
-              <button type="button" @click="clearFilters"
-                class="inline-flex items-center hover:cursor-pointer gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg border hover:bg-gray-200 transition">
-                Clear
-              </button>
-
-              <button type="button" @click="openQuickExport"
-                class="ml-auto inline-flex items-center hover:cursor-pointer gap-2 bg-orange-100 text-[#0a2342] px-4 py-2 rounded-lg hover:bg-orange-200 transition">
-                <svg class="w-4 h-4 max-sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
-                </svg>
-                Export
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <!-- Loans table -->
-        <section class="bg-white rounded-2xl p-6 shadow-sm border">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Loan Applications</h3>
-            <div class="text-sm text-gray-500">Showing results</div>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm rounded-lg">
-              <thead class="bg-blue-50 sticky top-0">
-                <tr>
-                  <th class="px-4 py-3 text-left font-medium text-blue-900 tracking-wider">Loan Number</th>
-                  <th class="px-4 py-3 text-left font-medium text-blue-900 tracking-wider">Member</th>
-                  <th class="px-4 py-3 text-left font-medium text-blue-900 tracking-wider">Product</th>
-                  <th class="px-4 py-3 text-left font-medium text-blue-900 tracking-wider">Amount</th>
-                  <th class="px-4 py-3 text-left font-medium text-blue-900 tracking-wider">Status</th>
-                  <th class="px-4 py-3 text-left font-medium text-blue-900 tracking-wider">Date</th>
-                  <th class="px-4 py-3 text-left font-medium text-blue-900 tracking-wider">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody class="bg-white divide-y divide-gray-100">
-                <tr v-for="loan in loans.data" :key="loan.id" class="hover:bg-gray-50 transition-colors">
-                  <td class="px-4 py-3 font-medium text-gray-900">{{ loan.loan_number }}</td>
-                  <td class="px-4 py-3 text-gray-900">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-slate-900">
                     {{ loan.member.first_name }} {{ loan.member.last_name }}
-                    <div class="text-xs text-gray-500 mt-0.5">{{ loan.member.membership_id }}</div>
-                  </td>
-                  <td class="px-4 py-3">{{ loan.loan_product.name }}</td>
-                  <td class="px-4 py-3">
-                    <div class="font-medium">KES {{ formatCurrency(loan.applied_amount) }}</div>
-                    <div v-if="loan.approved_amount" class="text-xs text-green-600">Approved: KES {{
-    formatCurrency(loan.approved_amount) }}</div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <span
-                      :class="getStatusBadgeClass(loan.status) + ' inline-flex px-2 py-1 text-xs font-semibold rounded-full'">
-                      {{ formatStatus(loan.status) }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-gray-500">{{ formatDate(loan.application_date) }}</td>
-                  <td class="px-4 py-3">
-                    <div class="flex flex-wrap gap-2">
-                      <Link :href="route('loans.show', loan.id)" class="text-indigo-600 hover:text-indigo-900">View
-                      </Link>
-                      <Link v-if="canEdit(loan)" :href="route('loans.edit', loan.id)"
-                        class="text-[#0a2342] hover:text-[#0a2342]">Edit</Link>
-                      <button v-if="canApprove(loan)" @click="showApprovalModal(loan)"
-                        class="text-green-600 hover:text-green-900">Approve</button>
-                      <button v-if="canReject(loan)" @click="showRejectionModal(loan)"
-                        class="text-red-600 hover:text-red-900">Reject</button>
-                      <button v-if="canDisburse(loan)" @click="showDisbursementModal(loan)"
-                        class="text-purple-600 hover:text-purple-900">Disburse</button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                  </div>
+                  <div class="text-xs text-slate-500">
+                    {{ loan.member.membership_id }}
+                  </div>
+                </td>
 
-          <div class="mt-6">
+                <td class="px-4 py-3">
+                  <div>KES {{ formatCurrency(loan.applied_amount) }}</div>
+                  <div v-if="loan.approved_amount" class="text-xs text-green-600">
+                    Approved: {{ formatCurrency(loan.approved_amount) }}
+                  </div>
+                </td>
+
+                <td class="px-4 py-3">
+                 <span
+  class="text-xs px-2.5 py-1 rounded-full font-medium capitalize"
+  :class="{
+    'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200': loan.status === 'pending',
+
+    'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200': loan.status === 'approved',
+
+    'bg-blue-50 text-blue-700 ring-1 ring-blue-200': loan.status === 'disbursed',
+
+    'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200': loan.status === 'active',
+
+    'bg-gray-100 text-gray-700 ring-1 ring-gray-200': loan.status === 'completed',
+
+    'bg-red-50 text-red-700 ring-1 ring-red-200': loan.status === 'rejected'
+  }"
+>
+  {{ loan.status }}
+</span>
+                </td>
+
+                <td class="px-4 py-3 text-slate-500">
+                  {{ formatDate(loan.application_date) }}
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  <div class="flex justify-end gap-2">
+
+                    <Link
+                      :href="route('loans.show', loan.id)"
+                      class="px-3 py-1.5 border border-slate-300 rounded-md text-xs hover:bg-slate-100"
+                    >
+                      View
+                    </Link>
+
+                    <Link
+                      v-if="canEdit(loan)"
+                      :href="route('loans.edit', loan.id)"
+                      class="px-3 py-1.5 border border-slate-300 rounded-md text-xs hover:bg-slate-100"
+                    >
+                      Edit
+                    </Link>
+
+                    <button
+                      v-if="canApprove(loan)"
+                      @click="showApprovalModal(loan)"
+                      class="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs hover:bg-green-700"
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      v-if="canReject(loan)"
+                      @click="showRejectionModal(loan)"
+                      class="px-3 py-1.5 bg-red-600 text-white rounded-md text-xs hover:bg-red-700"
+                    >
+                      Reject
+                    </button>
+
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="p-4 border-t">
             <Pagination :data="loans" />
           </div>
-        </section>
-      </main>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Approval Modal (animated, blurred backdrop) -->
-    <transition name="modal">
-      <div v-if="showApproval" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click.self="closeApprovalModal"></div>
-        <div class="relative bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 transform-gpu scale-in">
-          <form @submit.prevent="approveLoan">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">Approve Loan Application</h3>
-                <p class="text-sm text-gray-500">Approve loan {{ selectedLoan?.loan_number }} for {{
-    selectedLoan?.member?.first_name }} {{ selectedLoan?.member?.last_name }}</p>
-              </div>
-            </div>
+    <!-- ELIGIBILITY MODAL -->
+<div
+  v-if="openModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+>   
+  <div class="bg-white w-full max-w-md rounded-xl shadow-xl p-6">
 
-            <div class="mt-4">
-              <label class="block text-sm font-medium text-gray-700">Approved Amount</label>
-              <input v-model="approvalForm.approved_amount" type="number" step="0.01" required
-                :max="selectedLoan?.applied_amount"
-                class="mt-1 block w-full rounded-md border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-green-100" />
-              <p class="text-xs text-gray-500 mt-1">Applied Amount: KES {{ formatCurrency(selectedLoan?.applied_amount)
-                }}</p>
-            </div>
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold text-slate-900">Check Eligibility</h2>
+      <button
+        @click="openModal = false"
+        class="text-slate-400 hover:text-slate-600"
+      >
+        ✕
+      </button>
+    </div>
 
-            <div class="mt-4">
-              <label class="block text-sm font-medium text-gray-700">Approval Notes</label>
-              <textarea v-model="approvalForm.approval_notes" rows="3"
-                class="mt-1 block w-full rounded-md border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-green-100"></textarea>
-            </div>
+    <!-- Body -->
+    <div class="space-y-4">
+      <select
+        v-model="selectedMember"
+        class="w-full border border-slate-200 rounded-lg p-2 text-sm"
+      >
+        <option disabled value="">Select a member</option>
+        <option
+          v-for="member in members"
+          :key="member.id"
+          :value="member.id"
+        >
+          {{ member.name }}
+        </option>
+      </select>
+    </div>
 
-            <div class="mt-6 flex gap-3">
-              <button type="submit"
-                class="ml-auto inline-flex items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500">
-                Approve Loan
-              </button>
-              <button type="button" @click="closeApprovalModal"
-                class="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold border">
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </transition>
+    <!-- Footer -->
+    <div class="flex justify-end gap-2 mt-6">
+      <button
+        @click="openModal = false"
+        class="px-4 py-2 border border-slate-300 rounded-lg text-sm"
+      >
+        Cancel
+      </button>
 
-    <!-- Rejection Modal -->
-    <transition name="modal">
-      <div v-if="showRejection" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click.self="closeRejectionModal"></div>
-        <div class="relative bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 transform-gpu scale-in">
-          <form @submit.prevent="rejectLoan">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">Reject Loan Application</h3>
-                <p class="text-sm text-gray-500">Reject loan {{ selectedLoan?.loan_number }} for {{
-    selectedLoan?.member?.first_name }} {{ selectedLoan?.member?.last_name }}</p>
-              </div>
-            </div>
+      <button
+        @click="checkEligibility"
+        :disabled="!selectedMember"
+        class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm disabled:opacity-50"
+      >
+        Continue
+      </button>
+    </div>
 
-            <div class="mt-4">
-              <label class="block text-sm font-medium text-gray-700">Rejection Reason</label>
-              <textarea v-model="rejectionForm.rejection_reason" rows="4" required
-                placeholder="Please provide a detailed reason for rejection..."
-                class="mt-1 block w-full rounded-md border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-red-100"></textarea>
-            </div>
-
-            <div class="mt-6 flex gap-3">
-              <button type="submit"
-                class="ml-auto inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
-                Reject Loan
-              </button>
-              <button type="button" @click="closeRejectionModal"
-                class="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold border">
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </transition>
+  </div>
+</div>
   </AppLayout>
 </template>
 
+<style scoped>
+/* Glassy card effect */
+.card-glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.82));
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.card-glass:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Modal scale-in animation */
+.scale-in {
+  animation: scaleIn 0.18s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes scaleIn {
+  from { transform: translateY(6px) scale(.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Fade transition for cards */
+.fade-enter-active, .fade-leave-active { transition: all 0.25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(6px); }
+.fade-enter-to, .fade-leave-from { opacity: 1; transform: translateY(0); }
+</style>
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
@@ -506,78 +471,3 @@ const checkEligibility = () => {
 
 </script>
 
-<style scoped>
-/* card glass effect */
-.card-glass {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.82));
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(10, 35, 66, 0.06);
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-
-.card-glass:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(10, 35, 66, 0.08);
-}
-
-/* small modal scale animation */
-.scale-in {
-  animation: scaleIn .18s cubic-bezier(.2, .8, .2, 1) both;
-}
-
-@keyframes scaleIn {
-  from {
-    transform: translateY(6px) scale(.98);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
-/* fade group */
-.fade-enter-active,
-.fade-leave-active {
-  transition: all .25s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.fade-enter-to,
-.fade-leave-from {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* modal transition */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity .18s ease, transform .18s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-  transform: translateY(8px) scale(.99);
-}
-
-.modal-enter-to,
-.modal-leave-from {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-/* page bg */
-.loan-page {
-  background-color: #f6f8fb;
-  /* subtle light background for depth */
-  min-height: 100vh;
-  padding-bottom: 3rem;
-}
-</style>

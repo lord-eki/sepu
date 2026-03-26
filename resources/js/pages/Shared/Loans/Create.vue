@@ -142,7 +142,7 @@
                 class="mt-2 block w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-400">
                 <option value="">Choose a loan product...</option>
                 <option v-for="product in loanProducts" :key="product.id" :value="product.id">
-                  {{ product.name }} - {{ product.interest_rate }}% p.a.
+                  {{ product.name }} - {{ product.interest_rate }}% per month
                 </option>
               </select>
 
@@ -151,7 +151,7 @@
                 <h4 class="font-semibold text-blue-900 mb-2">Product Details</h4>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div><span class="text-blue-700">Interest Rate:</span>
-                    <p class="font-medium">{{ selectedProduct.interest_rate }}% p.a.</p>
+                    <p class="font-medium">{{ selectedProduct.interest_rate }}% p.m</p>
                   </div>
                   <div><span class="text-blue-700">Amount Range:</span>
                     <p class="font-medium">KES {{ formatCurrency(selectedProduct.min_amount) }} - {{
@@ -203,6 +203,7 @@
                 <div class="mt-2 text-sm text-gray-700">
                   <div>Monthly Repayment: KES {{ formatCurrency(loanCalculation.monthlyRepayment.toFixed(2)) }}</div>
                   <div>Total Repayable: KES {{ formatCurrency(loanCalculation.totalRepayable.toFixed(2)) }}</div>
+                  <div>Interest: KES {{ formatCurrency(loanCalculation.interestAmount.toFixed(2)) }}</div>
                   <div>Processing Fee: KES {{ formatCurrency(loanCalculation.processingFee.toFixed(2)) }}</div>
                   <div>Insurance Fee: KES {{ formatCurrency(loanCalculation.insuranceFee.toFixed(2)) }}</div>
                   <div>Net Amount (after fees): KES {{ formatCurrency(loanCalculation.netAmount.toFixed(2)) }}</div>
@@ -602,13 +603,9 @@ let eligibilityDebounceTimer = null
 
 /* Watch relevant fields to recalculate repayment */
 watch(
-  [() => form.applied_amount, () => form.term_months, selectedProduct],
-  ([amount, term, product]) => {
-    if (product && amount && term) {
-      calculateRepayment(product, amount, term)
-    } else {
-      loanCalculation.value = null
-    }
+  [() => form.applied_amount, () => form.term_months, () => form.loan_product_id],
+  () => {
+    calculateRepayment()
   }
 )
 
@@ -655,39 +652,33 @@ watch(() => form.term_months, () => {
 })
 /* --------------------------------------------------------------- */
 
-const calculateRepayment = (product, amount, term) => {
-  // keep backward compatibility if function is called with different args
-  let prod = product || selectedProduct.value
-  let applied = amount ?? form.applied_amount
-  let months = term ?? form.term_months
-
-  if (!prod || !applied || !months) {
+const calculateRepayment = async () => {
+  if (!form.loan_product_id || !form.applied_amount || !form.term_months) {
     loanCalculation.value = null
     return
   }
 
-  const principal = parseFloat(applied)
-  const monthlyRate = prod.interest_rate / 100 / 12
-  const monthsInt = parseInt(months)
+  try {
+    const response = await axios.post(route('loan-calculator.calculate'), {
+      loan_product_id: form.loan_product_id,
+      principal_amount: form.applied_amount,
+      term_months: form.term_months
+    })
 
-  let monthlyRepayment
-  if (monthlyRate === 0) {
-    monthlyRepayment = principal / monthsInt
-  } else {
-    monthlyRepayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, monthsInt)) / (Math.pow(1 + monthlyRate, monthsInt) - 1)
-  }
+    const data = response.data.calculation
 
-  const totalRepayable = monthlyRepayment * monthsInt
-  const processingFee = principal * (prod.processing_fee_rate / 100)
-  const insuranceFee = principal * (prod.insurance_rate / 100)
-  const netAmount = principal - processingFee - insuranceFee
+    loanCalculation.value = {
+      monthlyRepayment: data.loan_details.monthly_payment,
+      totalRepayable: data.loan_details.total_repayment,
+      processingFee: data.loan_details.processing_fee,
+      insuranceFee: data.loan_details.insurance_fee,
+      netAmount: data.loan_details.net_disbursement,
+      interestAmount: data.loan_details.total_repayment - form.applied_amount
+    }
 
-  loanCalculation.value = {
-    monthlyRepayment,
-    totalRepayable,
-    processingFee,
-    insuranceFee,
-    netAmount
+  } catch (error) {
+    console.error('Loan calculation failed:', error)
+    loanCalculation.value = null
   }
 }
 
@@ -736,7 +727,11 @@ function handleSupportFiles(event) {
 }
 
 function removeSingleFile(type) {
-  uploadedFiles.multiple = uploadedFiles.multiple.filter(f => f.type !== type)
+  uploadedFiles.multiple.splice(
+  0,
+  uploadedFiles.multiple.length,
+  ...uploadedFiles.multiple.filter(f => f.type !== type)
+)
 }
 
 function removeSupportFiles() {
@@ -956,12 +951,12 @@ const submitApplication = () => {
   // If eligibility fails, show error and don't open confirm modal.
   // If check throws network error, we block submission and show message.
   if (!hasGuarantor.value) {
-    errorMessages = { general: "Please add at least one guarantor before submitting." };
+    errorMessages.value = { general: "Please add at least one guarantor before submitting." };
     return;
   }
 
   if (!allDocsUploaded.value) {
-    errorMessages = { general: `Please upload all ${requiredDocTypes.length} required documents before submitting.` };
+    errorMessages.value = { general: `Please upload all ${requiredDocTypes.length} required documents before submitting.` };
     return;
   }
 

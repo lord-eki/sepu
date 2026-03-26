@@ -1,5 +1,8 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: 'Loan Calculator' }]">
+   <AppLayout :breadcrumbs="[
+    { title: 'Loans', href: route('loans.index') },
+    { title: 'Loan Calculator' }
+  ]">
 
     <Head title="Calculator" />
     <div class="loan-calculator max-sm:px-3">

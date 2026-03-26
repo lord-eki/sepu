@@ -60,6 +60,30 @@ const checkEligibility = async () => {
     <div class="p-6 max-w-3xl lg:mx-[25%] space-y-8">
       <h1 class="text-xl sm:text-2xl font-bold text-blue-900">Loan Eligibility Check</h1>
 
+      <!-- Member Info -->
+<Card class="border border-blue-200 bg-blue-50">
+  <CardHeader>
+    <CardTitle class="text-blue-900">Selected Member</CardTitle>
+  </CardHeader>
+
+  <CardContent class="text-sm text-gray-800 space-y-1">
+    <p>
+      <strong>Name:</strong>
+      {{ props.member.first_name }} {{ props.member.last_name }}
+    </p>
+
+    <p>
+      <strong>Member ID:</strong>
+      {{ props.member.member_number ?? props.member.membership_id }}
+    </p>
+
+    <p v-if="props.member.phone">
+      <strong>Phone:</strong>
+      {{ props.member.phone }}
+    </p>
+  </CardContent>
+</Card>
+
       <!-- Form Card -->
       <Card class="border border-gray-200 shadow-sm">
         <CardHeader>
