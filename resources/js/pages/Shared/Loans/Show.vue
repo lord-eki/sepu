@@ -233,269 +233,172 @@
     </div>
 
     <!-- APPROVAL MODAL -->
-    <TransitionRoot as="template" :show="showApprovalModal">
-      <Dialog as="div" class="relative z-40" @close="closeApprovalModal">
+    <div v-if="showApprovalModal" class="fixed inset-0 z-50 flex items-center justify-center">
 
-        <TransitionChild enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
-          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-        </TransitionChild>
+      <!-- BACKDROP -->
+      <div class="absolute inset-0 bg-black/40" @click="closeApprovalModal"></div>
 
-        <div class="fixed inset-0 z-40 overflow-y-auto">
-          <div class="flex min-h-full items-center justify-center p-4">
+      <!-- MODAL -->
+      <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl">
 
-            <TransitionChild enter="ease-out duration-300" enter-from="opacity-0 scale-95"
-              enter-to="opacity-100 scale-100" leave="ease-in duration-200" leave-from="opacity-100 scale-100"
-              leave-to="opacity-0 scale-95">
+        <!-- HEADER -->
+        <div class="px-6 py-4 border-b">
+          <h2 class="text-lg font-semibold">Approve Loan</h2>
+          <p class="text-sm text-slate-500">Set approval amount & review breakdown</p>
+        </div>
 
-              <DialogPanel v-if="loan"
-                class="w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+        <!-- BODY -->
+        <div class="p-6 space-y-5">
 
-                <!-- HEADER -->
-                <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5 text-white">
-                  <DialogTitle class="text-xl font-semibold">
-                    Approve Loan Application
-                  </DialogTitle>
-                  <p class="text-sm text-orange-100">Review and set approval terms</p>
-                </div>
-
-                <!-- CONTENT -->
-                <div class="p-6 space-y-5">
-
-                  <!-- SUMMARY -->
-                  <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-50 rounded-xl p-4 border">
-                      <p class="text-xs text-slate-500">Applied Amount</p>
-                      <p class="font-semibold">
-                        KES {{ formatCurrency(loan?.applied_amount ?? 0) }}
-                      </p>
-                    </div>
-
-                    <div class="bg-slate-50 rounded-xl p-4 border">
-                      <p class="text-xs text-slate-500">Term</p>
-                      <p class="font-semibold">{{ loan?.term_months ?? 0 }} Months</p>
-                    </div>
-                  </div>
-
-                  <!-- INPUT -->
-                  <div>
-                    <label class="text-sm font-medium text-slate-600">Approved Amount</label>
-                    <input v-model.number="approvalForm.approved_amount" type="number"
-                      class="mt-1 w-full rounded-xl border p-3 focus:ring-2 focus:ring-orange-500"
-                      :class="{ 'border-red-300': validationErrors.approved_amount }" />
-
-                    <p v-if="validationErrors.approved_amount" class="text-sm text-red-600 mt-1">
-                      {{ firstError(validationErrors.approved_amount) }}
-                    </p>
-                  </div>
-
-                  <!-- BREAKDOWN -->
-                  <div v-if="approvalForm.approved_amount" class="rounded-2xl border bg-slate-50 p-4 space-y-2">
-
-                    <p class="font-semibold text-sm">Breakdown</p>
-
-                    <div class="flex justify-between text-sm">
-                      <span>Processing Fee</span>
-                      <span class="text-red-600">- {{ formatCurrency(processingFeePreview) }}</span>
-                    </div>
-
-                    <div class="flex justify-between text-sm">
-                      <span>Insurance Fee</span>
-                      <span class="text-red-600">- {{ formatCurrency(insuranceFeePreview) }}</span>
-                    </div>
-
-                    <div class="border-t pt-2 flex justify-between font-semibold">
-                      <span>Net Disbursement</span>
-                      <span class="text-green-600">
-                        {{ formatCurrency(netDisbursementPreview) }}
-                      </span>
-                    </div>
-
-                    <div class="flex justify-between font-semibold text-sm">
-                      <span>Monthly Repayment</span>
-                      <span class="text-orange-600">
-                        {{ formatCurrency(monthlyPreview) }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- NOTES -->
-                  <div>
-                    <label class="text-sm font-medium text-slate-600">Notes</label>
-                    <textarea v-model="approvalForm.approval_notes" rows="3"
-                      class="mt-1 w-full rounded-xl border p-3 focus:ring-2 focus:ring-orange-500"
-                      :class="{ 'border-red-300': validationErrors.approval_notes }" />
-                  </div>
-
-                </div>
-
-                <!-- ACTIONS -->
-                <div class="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">
-
-                  <button @click="closeApprovalModal" class="px-4 py-2 rounded-xl bg-white border hover:bg-slate-100">
-                    Cancel
-                  </button>
-
-                  <button @click="approveLoan" :disabled="loading.approve"
-                    class="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50">
-                    <span v-if="!loading.approve">Approve Loan</span>
-                    <span v-else>Processing…</span>
-                  </button>
-
-                </div>
-
-              </DialogPanel>
-
-            </TransitionChild>
+          <!-- INPUT -->
+          <div>
+            <label class="text-sm font-medium">Approved Amount</label>
+            <input v-model.number="approvalForm.approved_amount" type="number"
+              class="w-full mt-1 border rounded-xl p-3 focus:ring-2 focus:ring-orange-500" />
           </div>
+
+          <!-- BREAKDOWN -->
+          <div v-if="approvalForm.approved_amount" class="bg-slate-50 p-4 rounded-xl text-sm space-y-2">
+
+            <div class="flex justify-between">
+              <span>Processing Fee</span>
+              <span class="text-red-600">- {{ formatCurrency(processingFeePreview) }}</span>
+            </div>
+
+            <div class="flex justify-between">
+              <span>Insurance Fee</span>
+              <span class="text-red-600">- {{ formatCurrency(insuranceFeePreview) }}</span>
+            </div>
+
+            <div class="border-t pt-2 flex justify-between font-semibold">
+              <span>Net Disbursement</span>
+              <span class="text-green-600">{{ formatCurrency(netDisbursementPreview) }}</span>
+            </div>
+
+            <div class="flex justify-between">
+              <span>Monthly Payment</span>
+              <span class="text-orange-600">{{ formatCurrency(monthlyPreview) }}</span>
+            </div>
+
+            <div class="flex justify-between">
+              <span>Total Repayable</span>
+              <span class="font-semibold">{{ formatCurrency(totalRepayablePreview) }}</span>
+            </div>
+
+          </div>
+
+          <!-- NOTES -->
+          <textarea v-model="approvalForm.approval_notes" class="w-full border rounded-xl p-3"
+            placeholder="Optional notes"></textarea>
+
         </div>
 
-      </Dialog>
-    </TransitionRoot>
-    <!-- REJECTION MODAL -->
-    <TransitionRoot as="template" :show="showRejectionModal">
-      <Dialog as="div" class="relative z-40" @close="closeRejectModal">
+        <!-- FOOTER -->
+        <div class="px-6 py-4 border-t flex justify-end gap-3">
+          <button @click="closeApprovalModal" class="px-4 py-2 border rounded-xl">
+            Cancel
+          </button>
 
-        <TransitionChild enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
-          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-        </TransitionChild>
-
-        <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
-
-          <TransitionChild enter="ease-out duration-300" enter-from="opacity-0 scale-95"
-            enter-to="opacity-100 scale-100">
-
-            <DialogPanel class="w-full max-w-xl rounded-3xl bg-white shadow-2xl overflow-hidden">
-
-              <div class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-5">
-                <DialogTitle class="text-xl font-semibold">Reject Loan</DialogTitle>
-                <p class="text-sm text-red-100">Provide rejection reason</p>
-              </div>
-
-              <div class="p-6">
-                <label class="text-sm font-medium text-slate-600">Reason</label>
-
-                <textarea v-model="rejectionForm.rejection_reason" rows="4"
-                  class="mt-1 w-full rounded-xl border p-3 focus:ring-2 focus:ring-red-500"
-                  :class="{ 'border-red-300': validationErrors.rejection_reason }" />
-
-                <p v-if="validationErrors.rejection_reason" class="text-sm text-red-600 mt-1">
-                  {{ firstError(validationErrors.rejection_reason) }}
-                </p>
-              </div>
-
-              <div class="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">
-
-                <button @click="closeRejectModal" class="px-4 py-2 rounded-xl bg-white border hover:bg-slate-100">
-                  Cancel
-                </button>
-
-                <button @click="rejectLoan" :disabled="loading.reject"
-                  class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
-                  <span v-if="!loading.reject">Reject</span>
-                  <span v-else>Processing…</span>
-                </button>
-
-              </div>
-
-            </DialogPanel>
-
-          </TransitionChild>
+          <button @click="approveLoan" class="px-5 py-2 bg-orange-600 text-white rounded-xl">
+            Approve
+          </button>
         </div>
 
-      </Dialog>
-    </TransitionRoot>
-    <!-- DISBURSEMENT MODAL -->
-    <TransitionRoot as="template" :show="showDisbursementModal">
-      <Dialog as="div" class="relative z-40" @close="closeDisbursementModal">
+      </div>
+    </div>
 
-        <TransitionChild enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
-          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-        </TransitionChild>
 
-        <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
+    <!-- REJECT MODAL -->
+    <div v-if="showRejectionModal" class="fixed inset-0 z-50 flex items-center justify-center">
 
-          <TransitionChild enter="ease-out duration-300" enter-from="opacity-0 scale-95"
-            enter-to="opacity-100 scale-100">
+      <div class="absolute inset-0 bg-black/40" @click="closeRejectModal"></div>
 
-            <DialogPanel class="w-full max-w-2xl rounded-3xl bg-white shadow-2xl overflow-hidden">
+      <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl">
 
-              <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-5">
-                <DialogTitle class="text-xl font-semibold">Disburse Loan</DialogTitle>
-                <p class="text-sm text-blue-100">Confirm payout details</p>
-              </div>
+        <div class="px-6 py-4 border-b">
+          <h2 class="text-lg font-semibold text-red-600">Reject Loan</h2>
+        </div>
 
-              <div class="p-6 space-y-5">
+        <div class="p-6">
+          <textarea v-model="rejectionForm.rejection_reason" class="w-full border rounded-xl p-3"
+            placeholder="Reason..." />
+        </div>
 
-                <!-- SUMMARY -->
-                <div class="bg-slate-50 rounded-xl p-4 border space-y-2 text-sm">
+        <div class="px-6 py-4 border-t flex justify-end gap-3">
+          <button @click="closeRejectModal" class="px-4 py-2 border rounded-xl">
+            Cancel
+          </button>
 
-                  <div class="flex justify-between">
-                    <span>Approved</span>
-                    <span class="font-semibold">{{ formatCurrency(loan.approved_amount) }}</span>
-                  </div>
+          <button @click="rejectLoan" class="px-5 py-2 bg-red-600 text-white rounded-xl">
+            Reject
+          </button>
+        </div>
 
-                  <div class="flex justify-between text-red-600">
-                    <span>Fees</span>
-                    <span>
-                      - {{ formatCurrency(loan.processing_fee + loan.insurance_fee) }}
-                    </span>
-                  </div>
+      </div>
+    </div>
 
-                  <div class="border-t pt-2 flex justify-between font-semibold">
-                    <span>Net Disbursement</span>
-                    <span class="text-green-600">
-                      {{ formatCurrency(
+    <!-- DISBURSE MODAL -->
+    <div v-if="showDisbursementModal" class="fixed inset-0 z-50 flex items-center justify-center">
+
+      <div class="absolute inset-0 bg-black/40" @click="closeDisbursementModal"></div>
+
+      <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-xl">
+
+        <div class="px-6 py-4 border-b">
+          <h2 class="text-lg font-semibold">Disburse Loan</h2>
+        </div>
+
+        <div class="p-6 space-y-4 text-sm">
+
+          <div class="bg-slate-50 p-4 rounded-xl space-y-2">
+
+            <div class="flex justify-between">
+              <span>Approved</span>
+              <span>{{ formatCurrency(loan.approved_amount) }}</span>
+            </div>
+
+            <div class="flex justify-between text-red-600">
+              <span>Fees</span>
+              <span>- {{ formatCurrency(loan.processing_fee + loan.insurance_fee) }}</span>
+            </div>
+
+            <div class="flex justify-between font-semibold border-t pt-2">
+              <span>Net Disbursement</span>
+              <span class="text-green-600">
+                {{ formatCurrency(
     loan.approved_amount -
     loan.processing_fee -
     loan.insurance_fee
   ) }}
-                    </span>
-                  </div>
+              </span>
+            </div>
 
-                </div>
+          </div>
 
-                <!-- METHOD -->
-                <div>
-                  <label class="text-sm font-medium">Method</label>
-                  <select v-model="disbursementForm.disbursement_method"
-                    class="mt-1 w-full rounded-xl border p-2 focus:ring-2 focus:ring-blue-500">
-                    <option value="">Select</option>
-                    <option value="cash">Cash</option>
-                    <option value="mobile_money">Mobile Money</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                  </select>
-                </div>
+          <select v-model="disbursementForm.disbursement_method" class="w-full border rounded-xl p-2">
+            <option value="">Select Method</option>
+            <option value="cash">Cash</option>
+            <option value="mobile_money">Mobile Money</option>
+            <option value="bank_transfer">Bank Transfer</option>
+          </select>
 
-                <!-- REF -->
-                <input v-model="disbursementForm.disbursement_reference" class="w-full rounded-xl border p-2"
-                  placeholder="Reference (optional)" />
+          <input v-model="disbursementForm.disbursement_reference" class="w-full border rounded-xl p-2"
+            placeholder="Reference (optional)" />
 
-              </div>
-
-              <div class="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">
-
-                <button @click="closeDisbursementModal" class="px-4 py-2 rounded-xl bg-white border hover:bg-slate-100">
-                  Cancel
-                </button>
-
-                <button @click="disburseLoan" :disabled="loading.disburse"
-                  class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50">
-                  <span v-if="!loading.disburse">Confirm</span>
-                  <span v-else>Processing…</span>
-                </button>
-
-              </div>
-
-            </DialogPanel>
-
-          </TransitionChild>
         </div>
 
-      </Dialog>
-    </TransitionRoot>
+        <div class="px-6 py-4 border-t flex justify-end gap-3">
+          <button @click="closeDisbursementModal" class="px-4 py-2 border rounded-xl">
+            Cancel
+          </button>
+
+          <button @click="disburseLoan" class="px-5 py-2 bg-blue-600 text-white rounded-xl">
+            Confirm
+          </button>
+        </div>
+
+      </div>
+    </div>
   </AppLayout>
 </template>
 
@@ -558,26 +461,27 @@ function resetValidation() {
 
 // computed previews for approval modal
 const processingFeePreview = computed(() => {
-  if (!approvalForm.approved_amount || !loan.value?.loanProduct) return 0
-  return (approvalForm.approved_amount * loan.value?.loanProduct?.processing_fee_rate) / 100
+  if (!approvalForm.approved_amount) return 0
+  return (approvalForm.approved_amount * (loan.value.processing_fee_rate || 0)) / 100
 })
-
 const insuranceFeePreview = computed(() => {
-  if (!approvalForm.approved_amount || !loan.value?.loanProduct) return 0
-  return (approvalForm.approved_amount * loan.value?.loanProduct.insurance_rate) / 100
+  if (!approvalForm.approved_amount) return 0
+  return (approvalForm.approved_amount * (loan.value.insurance_rate || 0)) / 100
 })
-
 const netDisbursementPreview = computed(() => {
   if (!approvalForm.approved_amount) return 0
   return approvalForm.approved_amount - processingFeePreview.value - insuranceFeePreview.value
 })
 
 const monthlyPreview = computed(() => {
-  if (!approvalForm.approved_amount || !loan.value?.loanProduct) return 0
+  if (!approvalForm.approved_amount) return 0
+
   const P = approvalForm.approved_amount
-  const r = loan.value?.loanProduct.interest_rate / 100 / 12
-  const n = loan.value?.term_months
+  const r = (loan.value.interest_rate || 0) / 100 / 12
+  const n = loan.value.term_months || 1
+
   if (r === 0) return P / n
+
   return (P * r) / (1 - Math.pow(1 + r, -n))
 })
 
