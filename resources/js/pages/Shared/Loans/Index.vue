@@ -1,112 +1,110 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/loans' }]">
+
     <Head title="Loan Management" />
 
-    <div class="bg-slate-100 min-h-screen">
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
 
       <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- HEADER (clean, not decorative) -->
+        <!-- HEADER -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 class="text-2xl font-semibold text-slate-900">Loan Management</h1>
-            <p class="text-sm text-slate-500">Manage applications, approvals and disbursements</p>
+            <h1 class="text-3xl font-bold text-slate-900">Loan Management</h1>
+            <p class="text-sm text-slate-500 mt-1">
+              Manage applications, approvals and disbursements
+            </p>
           </div>
 
-          <div class="flex gap-2 flex-wrap">
-  <Link
-    :href="route('loans.create')"
-    class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-slate-800 transition"
-  >
-    New Loan
-  </Link>
+          <div class="flex gap-2 flex-wrap bg-gray-900 px-2 py-1 rounded-3xl">
+            <Link :href="route('loans.create')"
+              class=" text-white px-4 py-3 rounded-xl text-base shadow hover:bg-blue-900 transition">
+            + New Loan
+            </Link>
 
-  <button
-    @click="openModal = true"
-    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700 transition"
-  >
-    Eligibility
-  </button>
+            <button @click="openModal = true"
+              class=" text-white px-4 py-3 rounded-xl text-base shadow hover:bg-indigo-900 transition">
+              Check Eligibility
+            </button>
 
-  <Link
-    :href="route('loan-calculator.index')"
-    class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-orange-600 transition"
-  >
-    Calculator
-  </Link>
-</div>
+            <Link :href="route('loan-calculator.index')"
+              class="text-white px-4 py-3 rounded-xl text-base shadow hover:bg-orange-600 transition">
+            Loan Calculator
+            </Link>
+          </div>
         </div>
 
-        <!-- STATS (tight + minimal) -->
+        <!-- STATS -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div v-for="card in cards" :key="card.label"
-  class="p-4 rounded-xl border border-slate-200 shadow-sm
-         bg-gradient-to-br from-white via-orange-50 to-orange-100
-         hover:shadow-md transition"
->
-            <p class="text-xs text-slate-500">{{ card.label }}</p>
-            <p class="text-lg font-semibold text-slate-900 mt-1">{{ card.value }}</p>
+          <div v-for="(card, index) in cards" :key="card.label"
+            class="relative p-5 rounded-2xl overflow-hidden text-white shadow-sm hover:shadow-lg transition group"
+            :class="card.bg">
+
+            <!-- RADIAL GLOW -->
+            <div
+              class="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl opacity-60 group-hover:scale-110 transition">
+            </div>
+
+            <!-- SHINE EFFECT -->
+            <div class="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/20 opacity-40"></div>
+
+            <!-- CONTENT -->
+            <div class="relative z-10">
+              <p class="text-lg text-gray-900">{{ card.label }}</p>
+              <p class="text-blue-950 text-2xl font-bold mt-2">{{ card.value }}</p>
+            </div>
+
           </div>
         </div>
 
         <!-- TOOLBAR -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-wrap gap-3 items-center">
+        <div
+          class="bg-white/80 backdrop-blur border border-slate-200 rounded-2xl p-4 flex flex-wrap gap-3 items-center shadow-sm">
 
-          <input
-            v-model="filters.search"
-            placeholder="Search loans..."
-            class="border border-slate-200 px-3 py-2 rounded-lg text-sm w-64"
-          />
+          <input v-model="filters.search" placeholder="Search loans..."
+            class="border border-slate-200 px-3 py-2 rounded-xl text-sm w-64 focus:ring-2 focus:ring-slate-300 outline-none" />
 
-          <select v-model="filters.status" class="border border-slate-200 px-3 py-2 rounded-lg text-sm">
+          <select v-model="filters.status" class="border border-slate-200 px-3 py-2 rounded-xl text-sm">
             <option value="">All Status</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="disbursed">Disbursed</option>
           </select>
 
-          <input type="date" v-model="filters.date_from" class="border border-slate-200 px-3 py-2 rounded-lg text-sm" />
-          <input type="date" v-model="filters.date_to" class="border border-slate-200 px-3 py-2 rounded-lg text-sm" />
+          <input type="date" v-model="filters.date_from" class="border border-slate-200 px-3 py-2 rounded-xl text-sm" />
+          <input type="date" v-model="filters.date_to" class="border border-slate-200 px-3 py-2 rounded-xl text-sm" />
 
           <div class="ml-auto flex gap-2">
-            <button
-              @click="applyFilters"
-              class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm"
-            >
+            <button @click="applyFilters"
+              class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-slate-800">
               Apply
             </button>
 
-            <button
-              @click="clearFilters"
-              class="border border-slate-300 px-4 py-2 rounded-lg text-sm"
-            >
+            <button @click="clearFilters"
+              class="border border-slate-300 px-3 py-1.5 rounded-lg text-sm hover:bg-slate-100">
               Reset
             </button>
           </div>
         </div>
 
         <!-- TABLE -->
-        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
 
           <table class="w-full text-sm">
-            <thead class="bg-slate-50 text-slate-500">
+            <thead class="bg-blue-100 text-blue-900">
               <tr>
-                <th class="text-left px-4 py-3 font-medium">Loan</th>
-                <th class="text-left px-4 py-3 font-medium">Member</th>
-                <th class="text-left px-4 py-3 font-medium">Amount</th>
-                <th class="text-left px-4 py-3 font-medium">Status</th>
-                <th class="text-left px-4 py-3 font-medium">Date</th>
-                <th class="text-right px-4 py-3 font-medium">Actions</th>
+                <th class="text-left px-4 py-3 font-medium">LOAN</th>
+                <th class="text-left px-4 py-3 font-medium">MEMBER</th>
+                <th class="text-left px-4 py-3 font-medium">AMOUNT</th>
+                <th class="text-left px-4 py-3 font-medium">STATUS</th>
+                <th class="text-left px-4 py-3 font-medium">DATE</th>
+                <th class="text-right px-4 py-3 font-medium">ACTIONS</th>
               </tr>
             </thead>
 
             <tbody>
-              <tr
-                v-for="loan in loans.data"
-                :key="loan.id"
-                class="border-t hover:bg-slate-50"
-              >
-                <td class="px-4 py-3 font-medium text-slate-900">
+              <tr v-for="loan in loans.data" :key="loan.id" class="border-t hover:bg-slate-50/70 transition">
+                <td class="px-4 py-3 font-semibold text-slate-900">
                   {{ loan.loan_number }}
                 </td>
 
@@ -114,37 +112,30 @@
                   <div class="font-medium text-slate-900">
                     {{ loan.member.first_name }} {{ loan.member.last_name }}
                   </div>
-                  <div class="text-xs text-slate-500">
+                  <div class="text-xs text-slate-400">
                     {{ loan.member.membership_id }}
                   </div>
                 </td>
 
                 <td class="px-4 py-3">
                   <div>KES {{ formatCurrency(loan.applied_amount) }}</div>
-                  <div v-if="loan.approved_amount" class="text-xs text-green-600">
+                  <div v-if="loan.approved_amount" class="text-xs text-emerald-600">
                     Approved: {{ formatCurrency(loan.approved_amount) }}
                   </div>
                 </td>
 
+                <!-- STATUS -->
                 <td class="px-4 py-3">
-                 <span
-  class="text-xs px-2.5 py-1 rounded-full font-medium capitalize"
-  :class="{
+                  <span class="text-xs px-2.5 py-1 rounded-full font-medium capitalize" :class="{
     'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200': loan.status === 'pending',
-
     'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200': loan.status === 'approved',
-
     'bg-blue-50 text-blue-700 ring-1 ring-blue-200': loan.status === 'disbursed',
-
     'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200': loan.status === 'active',
-
     'bg-gray-100 text-gray-700 ring-1 ring-gray-200': loan.status === 'completed',
-
     'bg-red-50 text-red-700 ring-1 ring-red-200': loan.status === 'rejected'
-  }"
->
-  {{ loan.status }}
-</span>
+  }">
+                    {{ loan.status }}
+                  </span>
                 </td>
 
                 <td class="px-4 py-3 text-slate-500">
@@ -154,34 +145,23 @@
                 <td class="px-4 py-3 text-right">
                   <div class="flex justify-end gap-2">
 
-                    <Link
-                      :href="route('loans.show', loan.id)"
-                      class="px-3 py-1.5 border border-slate-300 rounded-md text-xs hover:bg-slate-100"
-                    >
-                      View
+                    <Link :href="route('loans.show', loan.id)"
+                      class="border border-slate-300 px-3 py-1.5 rounded-md text-xs hover:bg-slate-100">
+                    View
                     </Link>
 
-                    <Link
-                      v-if="canEdit(loan)"
-                      :href="route('loans.edit', loan.id)"
-                      class="px-3 py-1.5 border border-slate-300 rounded-md text-xs hover:bg-slate-100"
-                    >
-                      Edit
+                    <Link v-if="canEdit(loan)" :href="route('loans.edit', loan.id)"
+                      class="border border-slate-300 px-3 py-1.5 rounded-md text-xs hover:bg-slate-100">
+                    Edit
                     </Link>
 
-                    <button
-                      v-if="canApprove(loan)"
-                      @click="showApprovalModal(loan)"
-                      class="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs hover:bg-green-700"
-                    >
+                    <button v-if="canApprove(loan)" @click="showApprovalModal(loan)"
+                      class="bg-emerald-600 text-white px-3 py-1.5 rounded-md text-xs hover:bg-emerald-700">
                       Approve
                     </button>
 
-                    <button
-                      v-if="canReject(loan)"
-                      @click="showRejectionModal(loan)"
-                      class="px-3 py-1.5 bg-red-600 text-white rounded-md text-xs hover:bg-red-700"
-                    >
+                    <button v-if="canReject(loan)" @click="showRejectionModal(loan)"
+                      class="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs hover:bg-red-700">
                       Reject
                     </button>
 
@@ -199,64 +179,37 @@
       </div>
     </div>
 
-    <!-- ELIGIBILITY MODAL -->
-<div
-  v-if="openModal"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
->   
-  <div class="bg-white w-full max-w-md rounded-xl shadow-xl p-6">
+    <!-- MODAL -->
+    <div v-if="openModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
 
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-lg font-semibold text-slate-900">Check Eligibility</h2>
-      <button
-        @click="openModal = false"
-        class="text-slate-400 hover:text-slate-600"
-      >
-        ✕
-      </button>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">Check Eligibility</h2>
+          <button @click="openModal = false">✕</button>
+        </div>
+
+        <select v-model="selectedMember" class="w-full border border-slate-200 rounded-xl p-2 text-sm">
+          <option disabled value="">Select a member</option>
+          <option v-for="m in members" :key="m.id" :value="m.id">
+            {{ m.name }}
+          </option>
+        </select>
+
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="openModal = false" class="border border-slate-300 px-4 py-2 rounded-lg text-sm">
+            Cancel
+          </button>
+
+          <button @click="checkEligibility" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm">
+            Continue
+          </button>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Body -->
-    <div class="space-y-4">
-      <select
-        v-model="selectedMember"
-        class="w-full border border-slate-200 rounded-lg p-2 text-sm"
-      >
-        <option disabled value="">Select a member</option>
-        <option
-          v-for="member in members"
-          :key="member.id"
-          :value="member.id"
-        >
-          {{ member.name }}
-        </option>
-      </select>
-    </div>
-
-    <!-- Footer -->
-    <div class="flex justify-end gap-2 mt-6">
-      <button
-        @click="openModal = false"
-        class="px-4 py-2 border border-slate-300 rounded-lg text-sm"
-      >
-        Cancel
-      </button>
-
-      <button
-        @click="checkEligibility"
-        :disabled="!selectedMember"
-        class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm disabled:opacity-50"
-      >
-        Continue
-      </button>
-    </div>
-
-  </div>
-</div>
   </AppLayout>
 </template>
-
 <style scoped>
 /* Glassy card effect */
 .card-glass {
@@ -273,18 +226,38 @@
 
 /* Modal scale-in animation */
 .scale-in {
-  animation: scaleIn 0.18s cubic-bezier(.2,.8,.2,1) both;
+  animation: scaleIn 0.18s cubic-bezier(.2, .8, .2, 1) both;
 }
 
 @keyframes scaleIn {
-  from { transform: translateY(6px) scale(.98); opacity: 0; }
-  to { transform: translateY(0) scale(1); opacity: 1; }
+  from {
+    transform: translateY(6px) scale(.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 /* Fade transition for cards */
-.fade-enter-active, .fade-leave-active { transition: all 0.25s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(6px); }
-.fade-enter-to, .fade-leave-from { opacity: 1; transform: translateY(0); }
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
 </style>
 <script setup>
 import { ref, reactive, computed } from 'vue'
@@ -322,12 +295,19 @@ const rejectionForm = reactive({
 })
 
 const applyFilters = () => {
-  router.get(route('loans.index'), filters, {
+  const cleanedFilters = {}
+
+  Object.keys(filters).forEach(key => {
+    if (filters[key] !== '' && filters[key] !== null) {
+      cleanedFilters[key] = filters[key]
+    }
+  })
+
+  router.get(route('loans.index'), cleanedFilters, {
     preserveState: true,
     preserveScroll: true
   })
 }
-
 const clearFilters = () => {
   Object.keys(filters).forEach(key => {
     filters[key] = ''
@@ -440,10 +420,26 @@ const openQuickExport = () => {
 
 // cards computed from summary prop
 const cards = computed(() => ([
-  { label: 'Total Applications', value: props.summary?.total_loans ?? 0, bg: 'bg-gradient-to-tr from-[#0a2342] to-[#0f3b5a]', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-  { label: 'Pending', value: props.summary?.pending_loans ?? 0, bg: 'bg-yellow-400', icon: 'M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-  { label: 'Active Loans', value: props.summary?.disbursed_loans ?? 0, bg: 'bg-green-500', icon: 'M5 13l4 4L19 7M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z' },
-  { label: 'Overdue', value: props.summary?.overdue_loans ?? 0, bg: 'bg-red-500', icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
+  {
+    label: 'Total Applications',
+    value: props.summary?.total_loans ?? 0,
+    bg: 'bg-gradient-to-br from-blue-600 via-blue-400 to-blue-700'
+  },
+  {
+    label: 'Pending',
+    value: props.summary?.pending_loans ?? 0,
+    bg: 'bg-gradient-to-br from-yellow-300 via-orange-400 to-yellow-200'
+  },
+  {
+    label: 'Active Loans',
+    value: props.summary?.disbursed_loans ?? 0,
+    bg: 'bg-gradient-to-br from-indigo-400 via-indigo-200 to-blue-700'
+  },
+  {
+    label: 'Overdue',
+    value: props.summary?.overdue_loans ?? 0,
+    bg: 'bg-gradient-to-br from-rose-400 via-rose-200 to-rose-500'
+  }
 ]))
 
 
@@ -470,4 +466,3 @@ const checkEligibility = () => {
 }
 
 </script>
-
