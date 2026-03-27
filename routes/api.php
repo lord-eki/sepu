@@ -7,6 +7,8 @@ use App\Http\Controllers\LoanController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\LoanSetupController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -42,3 +44,9 @@ Route::get('/export/members', [MemberController::class, 'exportMembers'])->name(
 Route::get('/export/transactions', [TransactionController::class, 'exportTransactions'])->name('export.transactions');
 Route::get('/export/loans', [LoanController::class, 'exportLoans'])->name('export.loans');
 Route::get('/export/dividends/{dividend}', [DividendController::class, 'exportDividend'])->name('export.dividend');
+
+Route::prefix('loan-setup')->group(function () {
+    Route::get('/defaults', [LoanSetupController::class, 'getDefaults']);
+    Route::post('/defaults', [LoanSetupController::class, 'saveDefaults']);
+    Route::post('/product', [LoanSetupController::class, 'saveProduct']);
+});

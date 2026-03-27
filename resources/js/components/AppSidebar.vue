@@ -273,6 +273,24 @@ const adminNavItems: NavItem[] = [
     href: route('schedule.index'),
     routeName: 'schedule.index',
   },
+   {
+    title: 'System Users',
+    icon: UserCog,
+    children: [
+      {
+        title: 'All Users',
+        href: route('system-users.index'),
+        routeName: 'system-users.index',
+        icon: Users,
+      },
+      {
+        title: 'Roles & Permissions',
+        href: route('system-users.roles'),
+        routeName: 'system-users.roles',
+        icon: Shield,
+      },
+    ],
+  },
   {
     title: 'Notifications',
     href: route('notifications.index'),
