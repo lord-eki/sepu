@@ -62,55 +62,29 @@ class LoanCalculatorController extends Controller
         ]);
     }
 
-    /**
-     * Core calculation logic matching the Excel "AUTOMATED CALCULATOR" model.
-     *
-     * How the Excel works:
-     * ─────────────────────────────────────────────────────────────────────
-     *  • interest_rate stored on the product is the MONTHLY rate (e.g. 1.5 = 1.5 % / month).
-     *  • Each month the borrower pays back an equal slice of principal:
-     *        principal_per_month = principal / term_months
-     *  • The INSTALLMENT column shows the true reducing-balance payment for that month:
-     *        installment(n) = principal_per_month + opening_balance(n) × monthly_rate
-     *  • M. INTEREST is the fixed monthly interest figure used for billing:
-     *        m_interest = total_reducing_interest / term_months
-     *      where total_reducing_interest = Σ [opening_balance(n) × monthly_rate]
-     *      This equals: principal × monthly_rate × (term_months + 1) / 2
-     *  • ACTUAL INSTALLMENT (the amount the member actually pays every month):
-     *        actual_installment = principal_per_month + m_interest   ← constant
-     * ─────────────────────────────────────────────────────────────────────
-     */
+ 
     private function calculateLoan(LoanProduct $loanProduct, float $principalAmount, int $termMonths): array
     {
-        // interest_rate on the model is stored as a monthly percentage (e.g. 1.5 for 1.5 %/month)
         $monthlyRate         = $loanProduct->interest_rate / 100;
         $processingFeeRate   = $loanProduct->processing_fee_rate / 100;
         $insuranceRate       = $loanProduct->insurance_rate / 100;
 
-        // ── Fees (one-time, deducted from disbursement) ──────────────────
         $processingFee = $principalAmount * $processingFeeRate;
         $insuranceFee  = $principalAmount * $insuranceRate;
         $totalFees     = $processingFee + $insuranceFee;
         $netDisbursement = $principalAmount - $totalFees;
 
-        // ── Principal slice (equal every month) ──────────────────────────
         $principalPerMonth = $principalAmount / $termMonths;
 
-        // ── Total interest (sum of reducing-balance interest payments) ───
-        // Σ [(P - (n-1)×P/N) × r]  for n = 1..N
-        // = P × r × (N+1)/2
+
         $totalInterest = $principalAmount * $monthlyRate * ($termMonths + 1) / 2;
 
-        // ── M. INTEREST: fixed monthly interest charge ───────────────────
         $mInterest = $totalInterest / $termMonths;
 
-        // ── ACTUAL INSTALLMENT: what the member pays each month ──────────
         $actualInstallment = $principalPerMonth + $mInterest;
 
-        // ── Total repayment ──────────────────────────────────────────────
-        $totalRepayment = $actualInstallment * $termMonths; // = principal + totalInterest
+        $totalRepayment = $actualInstallment * $termMonths; 
 
-        // ── Amortization schedule ────────────────────────────────────────
         $schedule = $this->generateSchedule(
             $principalAmount,
             $principalPerMonth,
@@ -121,7 +95,6 @@ class LoanCalculatorController extends Controller
             $loanProduct->grace_period_days ?? 0
         );
 
-        // ── Payment dates ────────────────────────────────────────────────
         $graceDays         = $loanProduct->grace_period_days ?? 0;
         $firstPaymentDate  = now()->addDays($graceDays)->addMonth()->format('Y-m-d');
         $lastPaymentDate   = now()->addDays($graceDays)->addMonths($termMonths)->format('Y-m-d');
@@ -130,17 +103,17 @@ class LoanCalculatorController extends Controller
             'loan_product' => [
                 'name'              => $loanProduct->name,
                 'code'              => $loanProduct->code,
-                'interest_rate'     => $loanProduct->interest_rate,   // monthly %
+                'interest_rate'     => $loanProduct->interest_rate,   
                 'grace_period_days' => $graceDays,
             ],
             'loan_details' => [
                 'principal_amount'    => round($principalAmount, 2),
                 'term_months'         => $termMonths,
-                'monthly_rate'        => round($monthlyRate * 100, 4),    // e.g. 1.5
-                'annual_rate'         => round($monthlyRate * 12 * 100, 4), // e.g. 18
+                'monthly_rate'        => round($monthlyRate * 100, 4),    
+                'annual_rate'         => round($monthlyRate * 12 * 100, 4), 
                 'principal_per_month' => round($principalPerMonth, 2),
-                'm_interest'          => round($mInterest, 2),            // fixed monthly interest
-                'monthly_payment'     => round($actualInstallment, 2),    // ACTUAL INSTALLMENT
+                'm_interest'          => round($mInterest, 2),            
+                'monthly_payment'     => round($actualInstallment, 2),    
                 'total_interest'      => round($totalInterest, 2),
                 'total_repayment'     => round($totalRepayment, 2),
                 'processing_fee'      => round($processingFee, 2),
@@ -161,8 +134,6 @@ class LoanCalculatorController extends Controller
     }
 
     /**
-     * Generate the amortization schedule matching Excel columns:
-     *   MONTH | OPENING BALANCE | PRINCIPAL | INTEREST (reducing) | INSTALLMENT (reducing) | M. INTEREST | ACTUAL INSTALLMENT
      */
     private function generateSchedule(
         float $principal,
@@ -180,17 +151,13 @@ class LoanCalculatorController extends Controller
         $currentDate      = now()->addDays($graceDays)->addMonth();
 
         for ($month = 1; $month <= $termMonths; $month++) {
-            // Reducing-balance interest for this month
             $interestThisMonth = $openingBalance * $monthlyRate;
 
-            // Reducing-balance installment (varies)
             $reducingInstallment = $principalPerMonth + $interestThisMonth;
 
-            // Closing balance after principal repayment
             $closingBalance = $openingBalance - $principalPerMonth;
 
-            // Running totals
-            $cumulInterest  += $mInterest;          // based on fixed m_interest (matches Excel TOTALS)
+            $cumulInterest  += $mInterest;          
             $cumulPrincipal += $principalPerMonth;
 
             $schedule[] = [
@@ -198,13 +165,9 @@ class LoanCalculatorController extends Controller
                 'payment_date'         => $currentDate->format('Y-m-d'),
                 'opening_balance'      => round($openingBalance, 2),
                 'principal_amount'     => round($principalPerMonth, 2),
-                // INTEREST column: actual reducing-balance interest for the month
                 'interest_amount'      => round($interestThisMonth, 2),
-                // INSTALLMENT column: reducing-balance total (principal + reducing interest)
                 'installment'          => round($reducingInstallment, 2),
-                // M. INTEREST column: fixed average interest
                 'm_interest'           => round($mInterest, 2),
-                // ACTUAL INSTALLMENT column: what the member actually pays
                 'payment_amount'       => round($actualInstallment, 2),
                 'closing_balance'      => round(max(0, $closingBalance), 2),
                 'cumulative_interest'  => round($cumulInterest, 2),

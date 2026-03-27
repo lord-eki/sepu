@@ -441,7 +441,6 @@ class LoanController extends Controller
     /**
      * Loan Schedule
      */
-
     public function schedule($id)
     {
         $loan = Loan::with(['member', 'loanProduct', 'repayments'])->findOrFail($id);
@@ -451,7 +450,7 @@ class LoanController extends Controller
             return Inertia::render('Shared/Loans/Schedule', [
                 'loan' => $loan,
                 'repayments' => [],
-                'message' => 'No repayment schedule generated for this loan yet.'
+                'message' => 'No repayment schedule generated for this loan yet.',
             ]);
         }
 
@@ -460,8 +459,6 @@ class LoanController extends Controller
             'repayments' => $loan->repayments,
         ]);
     }
-
-
 
     /**
      * Approve a loan application
@@ -627,6 +624,9 @@ class LoanController extends Controller
     /**
      * Disburse an approved loan
      */
+    /**
+     * Disburse an approved loan
+     */
     public function disburse(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -657,37 +657,30 @@ class LoanController extends Controller
             $oldValues = $loan->toArray();
             $member = $loan->member;
 
-            // Get or create member's savings account
-            $savingsAccount = Account::firstOrCreate([
-                'member_id' => $member->id,
-                'account_type' => 'share_deposits',
-            ], [
-                'account_number' => $this->generateAccountNumber(),
-                'balance' => 0,
-                'available_balance' => 0,
-                'is_active' => true,
-            ]);
-
-            // Calculate net disbursement (after fees)
-            $grossAmount = $loan->approved_amount; // or principal
+            // Calculate net disbursement after fees
+            $grossAmount = $loan->approved_amount;
             $processingFee = $loan->processing_fee;
             $insuranceFee = $loan->insurance_fee;
-
             $netDisbursement = $grossAmount - $processingFee - $insuranceFee;
 
             if ($netDisbursement <= 0) {
                 throw new \Exception('Net disbursement cannot be zero or negative.');
             }
 
-            // Create disbursement transaction
+            // Load member's share_deposits account for transaction reference 
+            $savingsAccount = Account::where('member_id', $member->id)
+                ->where('account_type', 'share_deposits')
+                ->first();
+
+            // Create disbursement transaction record 
             $transaction = Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
-                'account_id' => $savingsAccount->id,
+                'account_id' => $savingsAccount?->id,
                 'member_id' => $member->id,
                 'transaction_type' => 'loan_disbursement',
                 'amount' => $netDisbursement,
-                'balance_before' => $savingsAccount->balance,
-                'balance_after' => $savingsAccount->balance + $netDisbursement,
+                'balance_before' => $savingsAccount?->balance ?? 0,
+                'balance_after' => $savingsAccount?->balance ?? 0, // balance unchanged
                 'description' => "Loan disbursement for loan {$loan->loan_number}",
                 'reference_number' => $request->disbursement_reference,
                 'payment_method' => $request->disbursement_method,
@@ -699,20 +692,13 @@ class LoanController extends Controller
                     'loan_id' => $loan->id,
                     'loan_number' => $loan->loan_number,
                     'gross_amount' => $grossAmount,
-                    'processing_fee' => $loan->processing_fee,
-                    'insurance_fee' => $loan->insurance_fee,
+                    'processing_fee' => $processingFee,
+                    'insurance_fee' => $insuranceFee,
                     'net_amount' => $netDisbursement,
                 ],
             ]);
 
-            // Update account balance
-            $savingsAccount->update([
-                'balance' => $savingsAccount->balance + $netDisbursement,
-                'available_balance' => $savingsAccount->available_balance + $netDisbursement,
-                'last_transaction_at' => now(),
-            ]);
-
-            // Update loan status
+            // Update loan status — savings account balance 
             $loan->update([
                 'disbursed_amount' => $netDisbursement,
                 'status' => 'disbursed',

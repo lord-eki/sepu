@@ -128,16 +128,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{member}/documents',                     [MemberController::class, 'uploadDocuments'])->name('upload-documents');
         Route::delete('/{member}/documents/{document}',        [MemberController::class, 'deleteDocument'])->name('delete-document');
 
-        // ── Monthly Deposit Commitments (NEW) ───────────────────────────────
-        // Defines how much each member commits to deposit per month per
-        // account type.  The schedule engine reads these rows at runtime
-        // instead of using a hard-coded fixed amount.
-        //
-        // GET    /members/{member}/deposit-commitments                        → list
-        // POST   /members/{member}/deposit-commitments                        → create
-        // PUT    /members/{member}/deposit-commitments/{commitment}            → update amount / dates
-        // DELETE /members/{member}/deposit-commitments/{commitment}            → delete
-        // PATCH  /members/{member}/deposit-commitments/{commitment}/toggle     → activate / deactivate
+       
         Route::get('/{member}/deposit-commitments',
             [MemberDepositCommitmentController::class, 'index'])->name('deposit-commitments.index');
 
@@ -154,13 +145,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             [MemberDepositCommitmentController::class, 'toggle'])->name('deposit-commitments.toggle');
     });
 
-    // Loan eligibility — outside prefix to avoid route-model-binding conflict
+    // Loan eligibility 
     Route::post('members/loans/check-eligibility', [LoanController::class, 'checkEligibility'])
         ->name('members.loans.check-eligibility');
     Route::get('/members/{member}/loan-eligibility', [MemberController::class, 'loanEligibility'])
         ->name('members.loan-eligibility');
 
-    // ── System Users (Admin only) ─────────────────────────────────────────
+    // ── System Users ─────────────────────────────────────────
     Route::middleware('role:admin')->prefix('system-users')->name('system-users.')->group(function () {
         Route::get('/',                               [SystemUserController::class, 'index'])->name('index');
         Route::get('/create',                         [SystemUserController::class, 'create'])->name('create');
