@@ -469,14 +469,13 @@ class LoanController extends Controller
     public function approve(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'approved_amount' => 'required|numeric|min:1',
-            'approval_notes' => 'sometimes|string|max:1000',
+            'approved_amount' => 'required|numeric|min:1'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
+                'message' => 'Validation failed, check all fields',
                 'errors' => $validator->errors(),
             ], 422);
         }

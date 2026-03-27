@@ -10,7 +10,7 @@
     <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-3"
       enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
       leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-3">
-      <div v-if="visible" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-lg
+      <div v-if="visible" class="fixed top-6 left-1/2 -translate-x-1/2 z-9999 w-[92%] max-w-lg
                bg-white/90 backdrop-blur-xl border border-slate-200
                shadow-xl rounded-2xl px-5 py-3 flex gap-3 items-start">
         <div class="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold"
@@ -147,6 +147,20 @@
               </div>
 
               <div class="p-4 bg-slate-100 rounded-xl">
+                <p class="text-slate-500">Purpose</p>
+                <p class="font-semibold text-gray-700">
+                   {{ loan.purpose }}
+                </p>
+              </div>
+
+              <div class="p-4 bg-slate-100 rounded-xl">
+                <p class="text-slate-500">Disbursed</p>
+                <p class="font-semibold text-blue-700">
+                  KES {{ formatCurrency(loan.disbursed_amount) }}
+                </p>
+              </div>
+
+              <div class="p-4 bg-slate-100 rounded-xl">
                 <p class="text-slate-500">Interest</p>
                 <p class="font-semibold">{{ loan.interest_rate }}%</p>
               </div>
@@ -250,11 +264,28 @@
         <!-- BODY -->
         <div class="p-6 space-y-5">
 
+        
           <!-- INPUT -->
-          <div>
-            <label class="text-sm font-medium">Approved Amount</label>
-            <input v-model.number="approvalForm.approved_amount" type="number"
-              class="w-full mt-1 border rounded-xl p-3 focus:ring-2 focus:ring-orange-500" />
+<div>
+  <label class="text-sm font-medium">Approved Amount (Amount Member Receives)</label>
+  <input
+    v-model.number="approvalForm.approved_amount"
+    type="number"
+    class="w-full mt-1 border rounded-xl p-3"
+    :class="{'border-red-500': validationErrors.approved_amount}"
+    @input="validateApprovedAmount"
+    placeholder="Enter approved amount" required
+  />
+  <p v-if="validationErrors.approved_amount" class="text-red-600 text-xs mt-1">
+    {{ validationErrors.approved_amount }}
+  </p>
+</div>
+
+          <div class="mt-3 text-sm">
+            <span class="text-slate-500">Calculated Approved Amount:</span>
+            <span class="font-semibold text-blue-700 ml-2">
+              {{ formatCurrency(approvalForm.approved_amount) }}
+            </span>
           </div>
 
           <!-- BREAKDOWN -->
@@ -282,7 +313,7 @@
 
             <div class="flex justify-between">
               <span>Total Repayable</span>
-              <span class="font-semibold">{{ formatCurrency(totalRepayablePreview) }}</span>
+              <span class="font-semibold">{{ formatCurrency(totalRepaymentPreview) }}</span>
             </div>
 
           </div>
@@ -299,8 +330,13 @@
             Cancel
           </button>
 
-          <button @click="approveLoan" class="px-5 py-2 bg-orange-600 text-white rounded-xl">
-            Approve
+          <button
+            @click="approveLoan"
+            :disabled="loading.approve"
+            class="px-5 py-2 bg-orange-600 text-white rounded-xl flex items-center gap-2 disabled:opacity-60"
+          >
+            <span v-if="loading.approve" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            {{ loading.approve ? 'Approving...' : 'Approve' }}
           </button>
         </div>
 
@@ -320,7 +356,7 @@
         </div>
 
         <div class="p-6">
-          <textarea v-model="rejectionForm.rejection_reason" class="w-full border rounded-xl p-3"
+          <textarea v-model="rejectionForm.rejection_reason" required class="w-full border rounded-xl p-3"
             placeholder="Reason..." />
         </div>
 
@@ -329,9 +365,14 @@
             Cancel
           </button>
 
-          <button @click="rejectLoan" class="px-5 py-2 bg-red-600 text-white rounded-xl">
-            Reject
-          </button>
+          <button
+              @click="rejectLoan"
+              :disabled="loading.reject"
+              class="px-5 py-2 bg-red-600 text-white rounded-xl flex items-center gap-2 disabled:opacity-60"
+            >
+              <span v-if="loading.reject" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+              {{ loading.reject ? 'Rejecting...' : 'Reject' }}
+            </button>
         </div>
 
       </div>
@@ -359,7 +400,14 @@
 
             <div class="flex justify-between text-red-600">
               <span>Fees</span>
-              <span>- {{ formatCurrency(loan.processing_fee + loan.insurance_fee) }}</span>
+              <span>
+  - {{
+    formatCurrency(
+      (Number(loan.processing_fee) || 0) +
+      (Number(loan.insurance_fee) || 0)
+    )
+  }}
+</span>
             </div>
 
             <div class="flex justify-between font-semibold border-t pt-2">
@@ -392,10 +440,15 @@
             Cancel
           </button>
 
-          <button @click="disburseLoan" class="px-5 py-2 bg-blue-600 text-white rounded-xl">
-            Confirm
-          </button>
-        </div>
+          <button
+              @click="disburseLoan"
+              :disabled="loading.disburse"
+              class="px-5 py-2 bg-blue-600 text-white rounded-xl flex items-center gap-2 disabled:opacity-60"
+            >
+              <span v-if="loading.disburse" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+              {{ loading.disburse ? 'Processing...' : 'Confirm' }}
+            </button>
+                    </div>
 
       </div>
     </div>
@@ -409,6 +462,7 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 import AppLayout from '@/layouts/AppLayout.vue'
 import axios from 'axios'
 
+// Props
 const props = defineProps({
   loan: Object,
   auth: Object,
@@ -417,31 +471,51 @@ const props = defineProps({
   duration: { type: Number, default: 5000 }
 })
 
+// Computed
 const loan = computed(() => props.loan)
 const isMemberRole = computed(() => props.auth.user.role === 'member')
 
-// modal controls
+// Modal controls
 const showApprovalModal = ref(false)
 const showRejectionModal = ref(false)
 const showDisbursementModal = ref(false)
 
-function openApprovalModal() { resetValidation(); approvalForm.approved_amount = props.loan.applied_amount || 0; showApprovalModal.value = true }
-function openRejectModal() { resetValidation(); showRejectionModal.value = true }
-function openDisbursementModal() { resetValidation(); disbursementForm.disbursed_amount = props.loan.approved_amount || 0; showDisbursementModal.value = true }
+function openApprovalModal() {
+  resetValidation()
+  const applied = props.loan.applied_amount || 0
+  const rate = ((props.loan.processing_fee_rate || 0) + (props.loan.insurance_rate || 0)) / 100
+  const net = applied * (1 - rate)
+  approvalForm.approved_amount = applied
+  approvalForm.approved_amount = net
+  showApprovalModal.value = true
+}
+
+function openRejectModal() {
+  resetValidation()
+  showRejectionModal.value = true
+}
+
+function openDisbursementModal() {
+  resetValidation()
+  disbursementForm.disbursed_amount = props.loan.approved_amount || 0
+  showDisbursementModal.value = true
+}
 
 function closeApprovalModal() { showApprovalModal.value = false }
 function closeRejectModal() { showRejectionModal.value = false }
 function closeDisbursementModal() { showDisbursementModal.value = false }
 
-// forms & validation
+// Forms & validation
 const approvalForm = reactive({
-  approved_amount: '',
-  interest_rate: '',
-  months: ''
+  approved_amount: 0,
+  net_amount: 0,
+  approval_notes: ''
 })
+
 const rejectionForm = reactive({
   rejection_reason: ''
 })
+
 const disbursementForm = reactive({
   disbursed_amount: props.loan.approved_amount || 0,
   disbursement_method: '',
@@ -449,138 +523,90 @@ const disbursementForm = reactive({
 })
 
 const validationErrors = reactive({})
-
-// loading states
 const loading = reactive({ approve: false, reject: false, disburse: false })
 
 function resetValidation() {
   for (const k in validationErrors) delete validationErrors[k]
 }
 
-
-
-// computed previews for approval modal
-const processingFeePreview = computed(() => {
-  if (!approvalForm.approved_amount) return 0
-  return (approvalForm.approved_amount * (loan.value.processing_fee_rate || 0)) / 100
-})
-const insuranceFeePreview = computed(() => {
-  if (!approvalForm.approved_amount) return 0
-  return (approvalForm.approved_amount * (loan.value.insurance_rate || 0)) / 100
-})
-const netDisbursementPreview = computed(() => {
-  if (!approvalForm.approved_amount) return 0
-  return approvalForm.approved_amount - processingFeePreview.value - insuranceFeePreview.value
-})
-
+// Computed previews for approval modal
+const totalFeeRate = computed(() => ((loan.value.loan_product.processing_fee_rate || 0) + (loan.value.loan_product.insurance_rate || 0)) / 100)
+const processingFeePreview = computed(() => approvalForm.approved_amount ? (approvalForm.approved_amount * (loan.value.loan_product.processing_fee_rate ?? 0)) / 100 : 0)
+const insuranceFeePreview = computed(() => approvalForm.approved_amount ? (approvalForm.approved_amount * (loan.value.loan_product.insurance_rate ?? 0)) / 100 : 0)
+const netDisbursementPreview = computed(() => approvalForm.approved_amount ? approvalForm.approved_amount - processingFeePreview.value - insuranceFeePreview.value : 0)
 const monthlyPreview = computed(() => {
-  if (!approvalForm.approved_amount) return 0
-
-  const P = approvalForm.approved_amount
-  const r = (loan.value.interest_rate || 0) / 100 / 12
+  const P = approvalForm.approved_amount || 0
   const n = loan.value.term_months || 1
+  const r = loan.value.loan_product?.interest_rate / 100 || 0 // monthly rate as decimal
 
-  if (r === 0) return P / n
+  if (!P || n === 0) return 0
 
-  return (P * r) / (1 - Math.pow(1 + r, -n))
+  // ── Principal slice
+  const principalPerMonth = P / n
+
+  // ── Total reducing-balance interest
+  const totalInterest = P * r * ((n + 1) / 2)
+
+  // ── Fixed monthly interest
+  const mInterest = totalInterest / n
+
+  // ── Actual installment (principal + fixed monthly interest)
+  return principalPerMonth + mInterest
+})
+
+const totalRepaymentPreview = computed(() => {
+  const n = loan.value.term_months || 1
+  return monthlyPreview.value * n
 })
 
 
-// permissions computed
-const canEdit = computed(() => {
-  return props.loan.status === 'pending' && ['admin', 'loan_officer', 'management'].includes(props.auth.user.role)
-})
+// Permissions
+const canEdit = computed(() => props.loan.status === 'pending' && ['admin', 'loan_officer', 'management'].includes(props.auth.user.role))
+const canApprove = computed(() => props.loan.status === 'pending' && ['admin', 'management'].includes(props.auth.user.role))
+const canReject = computed(() => ['pending', 'approved'].includes(props.loan.status) && ['admin', 'management'].includes(props.auth.user.role))
+const canDisburse = computed(() => props.loan.status === 'approved' && ['admin', 'accountant'].includes(props.auth.user.role))
+const canViewSchedule = computed(() => ['disbursed', 'active', 'completed'].includes(props.loan.status))
+const canViewRepayments = computed(() => ['disbursed', 'active', 'completed'].includes(props.loan.status))
+const hasQuickActions = computed(() => canApprove.value || canReject.value || canDisburse.value || canViewSchedule.value || canViewRepayments.value)
 
-const canApprove = computed(() => {
-  return props.loan.status === 'pending' && ['admin', 'management'].includes(props.auth.user.role)
-})
-
-const canReject = computed(() => {
-  return ['pending', 'approved'].includes(props.loan.status) && ['admin', 'management'].includes(props.auth.user.role)
-})
-
-const canDisburse = computed(() => {
-  return props.loan.status === 'approved' && ['admin', 'accountant'].includes(props.auth.user.role)
-})
-
-const canViewSchedule = computed(() => {
-  return ['disbursed', 'active', 'completed'].includes(props.loan.status)
-})
-
-const canViewRepayments = computed(() => {
-  return ['disbursed', 'active', 'completed'].includes(props.loan.status)
-})
-
-const hasQuickActions = computed(() => {
-  return canApprove.value || canReject.value || canDisburse.value || canViewSchedule.value || canViewRepayments.value
-})
-
-// helpers
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0)
-}
-
-const formatDate = (date) => {
-  if (!date) return '-'
-  try { return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' }) }
-  catch { return date }
-}
-
+// Helpers
+const formatCurrency = (amount) => new Intl.NumberFormat('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0)
+const formatDate = (date) => { if (!date) return '-'; try { return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' }) } catch { return date } }
 const formatStatus = (status = '') => status.replace('_', ' ').toUpperCase()
 
-const getStatusBannerClass = (status) => {
-  const classes = {
-    'pending': 'bg-yellow-50 text-yellow-800 border border-yellow-200',
-    'approved': 'bg-green-50 text-green-800 border border-green-200',
-    'disbursed': 'bg-blue-50 text-blue-800 border border-blue-200',
-    'active': 'bg-blue-100 text-blue-800 border border-blue-200',
-    'completed': 'bg-green-50 text-slate-800 border border-green-200',
-    'rejected': 'bg-red-50 text-red-800 border border-red-200',
-    'defaulted': 'bg-gray-50 text-gray-800 border border-gray-200'
-  }
-  return classes[status] || 'bg-slate-50 text-slate-800 border border-slate-200'
-}
+const getStatusBannerClass = (status) => ({
+  'pending': 'bg-yellow-50 text-yellow-800 border border-yellow-200',
+  'approved': 'bg-green-50 text-green-800 border border-green-200',
+  'disbursed': 'bg-blue-50 text-blue-800 border border-blue-200',
+  'active': 'bg-blue-100 text-blue-800 border border-blue-200',
+  'completed': 'bg-green-50 text-slate-800 border border-green-200',
+  'rejected': 'bg-red-50 text-red-800 border border-red-200',
+  'defaulted': 'bg-gray-50 text-gray-800 border border-gray-200'
+}[status] || 'bg-slate-50 text-slate-800 border border-slate-200')
 
-const getStatusIcon = (status) => 'svg'
+const getStatusDescription = (status) => ({
+  'pending': 'This loan application is awaiting review and approval.',
+  'approved': 'This loan has been approved and is ready for disbursement.',
+  'disbursed': 'This loan has been disbursed to the member.',
+  'active': 'This loan is active with ongoing repayments.',
+  'completed': 'This loan has been fully repaid.',
+  'rejected': 'This loan application has been rejected.',
+  'cancelled': 'This loan application has been cancelled.'
+}[status] || 'Unknown status')
 
-const getStatusDescription = (status) => {
-  const descriptions = {
-    'pending': 'This loan application is awaiting review and approval.',
-    'approved': 'This loan has been approved and is ready for disbursement.',
-    'disbursed': 'This loan has been disbursed to the member.',
-    'active': 'This loan is active with ongoing repayments.',
-    'completed': 'This loan has been fully repaid.',
-    'rejected': 'This loan application has been rejected.',
-    'cancelled': 'This loan application has been cancelled.'
-  }
-  return descriptions[status] || 'Unknown status'
-}
+const getGuarantorStatusClass = (status) => ({
+  'pending': 'bg-yellow-100 text-yellow-800',
+  'accepted': 'bg-emerald-100 text-emerald-800',
+  'rejected': 'bg-red-100 text-red-800'
+}[status] || 'bg-slate-100 text-slate-800')
 
-const getGuarantorStatusClass = (status) => {
-  const classes = {
-    'pending': 'bg-yellow-100 text-yellow-800',
-    'accepted': 'bg-emerald-100 text-emerald-800',
-    'rejected': 'bg-red-100 text-red-800'
-  }
-  return classes[status] || 'bg-slate-100 text-slate-800'
-}
-
-// Toast state
+// Toast
 const visible = ref(Boolean(props.message))
 const message = ref(props.message || '')
 const type = ref(props.type || 'success')
 let toastTimer = null
-
-const toastAppearance = computed(() => {
-  return type.value === 'success'
-    ? 'bg-white/95 border border-slate-200'
-    : 'bg-white/95 border border-red-200'
-})
-
-const close = () => {
-  visible.value = false
-  if (toastTimer) { clearTimeout(toastTimer); toastTimer = null }
-}
+const toastAppearance = computed(() => type.value === 'success' ? 'bg-white/95 border border-slate-200' : 'bg-white/95 border border-red-200')
+const close = () => { visible.value = false; if (toastTimer) { clearTimeout(toastTimer); toastTimer = null } }
 
 if (visible.value && props.duration > 0) {
   toastTimer = setTimeout(() => { visible.value = false; toastTimer = null }, props.duration)
@@ -594,7 +620,7 @@ function showToast(txt = '', t = 'success', duration = props.duration) {
   if (duration > 0) toastTimer = setTimeout(() => { visible.value = false; toastTimer = null }, duration)
 }
 
-// returns first message from array or string
+// Error helper
 function firstError(err) {
   if (!err) return ''
   if (Array.isArray(err)) return err[0]
@@ -602,44 +628,32 @@ function firstError(err) {
   return String(err)
 }
 
-// Actions (with validation)
+// Actions
 const approveLoan = async () => {
-
   resetValidation()
-
-  loading.approve = true
-
-  try {
-
-    const { data } = await axios.post(
-      route('loans.approve', props.loan.id),
-      approvalForm
-    )
-
-    alert(data.message)
-
-    showApprovalModal.value = false
-
-    router.reload({ only: ['loan'] })
-
-  } catch (error) {
-
-    const res = error.response
-
-    if (res?.data?.errors) {
-      Object.assign(validationErrors, res.data.errors)
-    }
-
-    if (res?.data?.message) {
-      alert(res.data.message)
-    }
-
-  } finally {
-
-    loading.approve = false
-
+  if (approvalForm.approved_amount > props.loan.applied_amount) {
+    validationErrors.approved_amount = ['Cannot approve more than applied amount']
+    return
   }
-
+  const rate = totalFeeRate.value
+  const maxNet = props.loan.applied_amount * (1 - rate)
+  if (approvalForm.net_amount > maxNet) {
+    validationErrors.net_amount = ['Net exceeds allowed disbursement']
+    return
+  }
+  loading.approve = true
+  try {
+    const { data } = await axios.post(route('loans.approve', props.loan.id), approvalForm)
+    showToast(data.message || 'Loan approved', 'success')
+    showApprovalModal.value = false
+    router.reload({ only: ['loan'] })
+  } catch (error) {
+    const res = error.response
+    if (res?.data?.errors) Object.assign(validationErrors, res.data.errors)
+    showToast(res?.data?.message || 'Approval failed', 'error')
+  } finally {
+    loading.approve = false
+  }
 }
 
 const rejectLoan = async () => {
@@ -663,6 +677,35 @@ const rejectLoan = async () => {
   }
 }
 
+const disburseLoan = async () => {
+  resetValidation()
+  if (!disbursementForm.disbursement_method) {
+    validationErrors.disbursement_method = ['Select a disbursement method.']
+    return
+  }
+  loading.disburse = true
+  try {
+    const response = await axios.post(`/loans/${props.loan.id}/disburse`, {
+      disbursement_method: disbursementForm.disbursement_method,
+      disbursement_reference: disbursementForm.disbursement_reference
+    })
+    showToast(response.data.message || 'Loan disbursed successfully', 'success')
+    showDisbursementModal.value = false
+    router.reload()
+  } catch (err) {
+    const res = err.response
+    if (res?.data?.errors) Object.assign(validationErrors, res.data.errors)
+    showToast(res?.data?.message || 'Failed to disburse loan', 'error')
+  } finally {
+    loading.disburse = false
+  }
+}
+
+// Watches
+watch(() => approvalForm.net_amount, (net) => {
+  if (!net) { approvalForm.approved_amount = 0; return }
+  approvalForm.approved_amount = net / (1 - totalFeeRate.value)
+})
 
 watch(showApprovalModal, (val) => {
   if (!val) {
@@ -670,41 +713,4 @@ watch(showApprovalModal, (val) => {
     approvalForm.approval_notes = ''
   }
 })
-
-const disburseLoan = async () => {
-  resetValidation()
-
-  if (!disbursementForm.disbursement_method) {
-    validationErrors.disbursement_method = ['Select a disbursement method.']
-    return
-  }
-
-  loading.disburse = true
-
-  try {
-    const response = await axios.post(
-      `/loans/${props.loan.id}/disburse`,
-      {
-        disbursement_method: disbursementForm.disbursement_method,
-        disbursement_reference: disbursementForm.disbursement_reference
-      }
-    )
-
-    showToast(response.data.message || 'Loan disbursed successfully', 'success')
-
-    showDisbursementModal.value = false
-    router.reload()
-
-  } catch (err) {
-    const res = err.response
-
-    if (res?.data?.errors) {
-      Object.assign(validationErrors, res.data.errors)
-    }
-
-    showToast(res?.data?.message || 'Failed to disburse loan', 'error')
-  } finally {
-    loading.disburse = false
-  }
-}
 </script>

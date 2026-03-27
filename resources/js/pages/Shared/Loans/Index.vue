@@ -16,19 +16,19 @@
             </p>
           </div>
 
-          <div class="flex gap-2 flex-wrap bg-gray-900 px-2 py-1 rounded-3xl">
+          <div class="flex gap-2 flex-wrap bg-blue-900 px-2 py-1 rounded-xl">
             <Link :href="route('loans.create')"
-              class=" text-white px-4 py-3 rounded-xl text-base shadow hover:bg-blue-900 transition">
+              class=" text-white px-4 py-3 rounded-xl text-base shadow hover:bg-blue-500 transition">
             + New Loan
             </Link>
 
             <button @click="openModal = true"
-              class=" text-white px-4 py-3 rounded-xl text-base shadow hover:bg-indigo-900 transition">
+              class=" text-white px-4 py-3 rounded-xl text-base shadow hover:bg-indigo-500 transition">
               Check Eligibility
             </button>
 
             <Link :href="route('loan-calculator.index')"
-              class="text-white px-4 py-3 rounded-xl text-base shadow hover:bg-orange-600 transition">
+              class="text-white px-4 py-3 rounded-xl text-base shadow hover:bg-orange-500 transition">
             Loan Calculator
             </Link>
           </div>
@@ -62,7 +62,7 @@
           class="bg-white/80 backdrop-blur border border-slate-200 rounded-2xl p-4 flex flex-wrap gap-3 items-center shadow-sm">
 
           <input v-model="filters.search" placeholder="Search loans..."
-            class="border border-slate-200 px-3 py-2 rounded-xl text-sm w-64 focus:ring-2 focus:ring-slate-300 outline-none" />
+            class="border border-slate-300 px-3 py-2 rounded-xl text-sm w-64 focus:ring-2 focus:ring-slate-300 outline-none" />
 
           <select v-model="filters.status" class="border border-slate-200 px-3 py-2 rounded-xl text-sm">
             <option value="">All Status</option>
@@ -91,7 +91,7 @@
         <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
 
           <table class="w-full text-sm">
-            <thead class="bg-blue-100 text-blue-900">
+            <thead class="bg-blue-100 text-blue-950">
               <tr>
                 <th class="text-left px-4 py-3 font-medium">LOAN</th>
                 <th class="text-left px-4 py-3 font-medium">MEMBER</th>

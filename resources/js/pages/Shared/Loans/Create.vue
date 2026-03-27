@@ -284,9 +284,14 @@
                     <label class="block text-sm font-medium text-gray-700">Select Member *</label>
                     <select v-model="guarantor.member_id" required
                       class="mt-2 block w-full rounded-lg border border-gray-300 p-3">
-                      <option value="">Choose a member...</option>
-                      <option v-for="member in members" :key="member.id" :value="member.id">
+                      <option 
+                        v-for="member in members" 
+                        :key="member.id" 
+                        :value="member.id"
+                        :disabled="member.id == form.member_id"
+                      >
                         {{ member.first_name }} {{ member.last_name }} - {{ member.membership_id }}
+                        <span v-if="member.id == form.member_id"> (Applicant)</span>
                       </option>
                     </select>
                   </div>
@@ -634,6 +639,18 @@ if (isMemberRole.value && props.auth.user.member) {
 /* helpers */
 const onMemberChange = () => {
   selectedMember.value = props.members.find(m => m.id == form.member_id)
+
+  // RESET DOCUMENTS
+  uploadedFiles.multiple = []
+  uploadedFiles.combined = null
+  selectedDocType.value = null
+  if (supportFileInput.value) {
+    supportFileInput.value.value = ''
+  }
+
+  // (optional but recommended)
+  form.guarantors = []
+
   triggerEligibilityCheckDebounced()
 }
 
@@ -735,9 +752,8 @@ function removeSingleFile(type) {
 }
 
 function removeSupportFiles() {
-  uploadedFiles.multiple = []
+  uploadedFiles.multiple.splice(0)
 }
-
 
 /* human readable filesize */
 function humanFileSize(bytes) {
@@ -870,6 +886,10 @@ const remainingDocCount = computed(() => {
   return requiredDocTypes.length - uploadedFiles.multiple.length;
 });
 
+const hasSelfGuarantor = computed(() => {
+  return form.guarantors.some(g => g.member_id == form.member_id)
+})
+
 const allDocsUploaded = computed(() => remainingDocCount.value === 0);
 
 const hasGuarantor = computed(() => form.guarantors.some(g => g.member_id));
@@ -896,6 +916,7 @@ const canSubmit = computed(() => {
       (disbursementMethod.value === 'cheque' && !!disbursementDetails.payee)
     )
 
+
   const hasDocuments =
     (uploadedFiles.combined !== null) ||
     (Array.isArray(uploadedFiles.multiple) && uploadedFiles.multiple.length > 0)
@@ -904,7 +925,13 @@ const canSubmit = computed(() => {
   // If eligibility.checking is true, we conservatively disallow submit (to avoid race).
   const eligibilityOk = eligibility.eligible === true && !eligibility.checking
 
-  return hasBasicInfo && hasDisbursement && hasDocuments && eligibilityOk && hasGuarantor.value && allDocsUploaded.value
+  return hasBasicInfo &&
+       hasDisbursement &&
+       hasDocuments &&
+       eligibilityOk &&
+       hasGuarantor.value &&
+       allDocsUploaded.value &&
+       !hasSelfGuarantor.value
 })
 
 /* feedback helper */
@@ -955,6 +982,10 @@ const submitApplication = () => {
     return;
   }
 
+  if (hasSelfGuarantor.value) {
+    showMessage('error', 'Applicant cannot be their own guarantor.')
+    return
+  }
   if (!allDocsUploaded.value) {
     errorMessages.value = { general: `Please upload all ${requiredDocTypes.length} required documents before submitting.` };
     return;

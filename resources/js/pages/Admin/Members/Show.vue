@@ -529,14 +529,14 @@
           <div v-if="activeTab === 'deposit-commitments'">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg font-semibold text-gray-900">
-                Deposit Commitments
+                Finance Setup
               </h3>
 
               <Link
                 :href="route('members.deposit-commitments.index', member.id)"
                 class="bg-[#0a2342] text-white px-4 py-2 rounded-xl text-sm hover:bg-orange-600 transition"
               >
-                Manage Commitments
+                Manage
               </Link>
             </div>
 
@@ -695,7 +695,7 @@ const tabs = [
   { id: 'accounts', name: 'Accounts' },
   { id: 'loans', name: 'Loans' },
   { id: 'transactions', name: 'Recent Transactions' },
-  { id: 'deposit-commitments', name: 'Deposit Commitments' },
+  { id: 'deposit-commitments', name: 'Finance Setup' },
   { id: 'next-of-kin', name: 'Next of Kin' },
   { id: 'documents', name: 'Documents' }
 ]

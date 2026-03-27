@@ -15,7 +15,7 @@ const props = defineProps({
 const page = usePage()
 const user = computed(() => page.props.auth.user)
 const role = computed(() => user.value?.role)
-console.log(role.value)
+
 
 // Safe number parser
 const toNumber = (val: any) => {

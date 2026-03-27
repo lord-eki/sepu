@@ -1,5 +1,10 @@
 <template>
-  <AppLayout>
+  <AppLayout
+    :breadcrumbs="[
+      { title: 'Members', href: route('members.index') },
+      { title: 'Finance setup' }
+    ]"
+  >
     <Head title="Deposit Commitments" />
 
     <div class="p-6 space-y-6 w-full">
@@ -61,11 +66,8 @@
 
                 <td class="px-4 py-3">{{ c.effective_from }}</td>
 
-                <td class="px-4 py-3">
-                  {{ c.effective_to || '-' }}
-                </td>
+                <td class="px-4 py-3">{{ c.effective_to || '-' }}</td>
 
-                <!-- STATUS -->
                 <td class="px-4 py-3">
                   <span
                     class="px-3 py-1 rounded-full text-xs font-semibold"
@@ -77,14 +79,15 @@
                   </span>
                 </td>
 
-                <!-- ACTIONS -->
                 <td class="px-4 py-3 text-right space-x-2">
                   <button @click="editItem(c)" class="text-blue-600 hover:underline">
                     Edit
                   </button>
+
                   <button @click="toggle(c)" class="text-yellow-600 hover:underline">
                     Toggle
                   </button>
+
                   <button @click="deleteItem(c)" class="text-red-600 hover:underline">
                     Delete
                   </button>
@@ -110,10 +113,9 @@
             {{ editing ? 'Edit Commitment' : 'New Commitment' }}
           </h2>
 
-          <!-- FORM GRID -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            <!-- Account -->
+            <!-- ACCOUNT -->
             <div>
               <label class="text-sm text-gray-600">Savings Account</label>
               <select v-model="form.account_id" class="w-full border rounded-lg p-2 mt-1">
@@ -124,7 +126,7 @@
               </select>
             </div>
 
-            <!-- Type -->
+            <!-- TYPE -->
             <div>
               <label class="text-sm text-gray-600">Account Type</label>
               <select v-model="form.account_type" class="w-full border rounded-lg p-2 mt-1">
@@ -135,28 +137,28 @@
               </select>
             </div>
 
-            <!-- Amount -->
+            <!-- AMOUNT -->
             <div>
-              <label class="text-sm text-gray-600">Monthly Amount (KES)</label>
+              <label class="text-sm text-gray-600">Monthly Amount</label>
               <input v-model="form.monthly_amount" type="number"
                 class="w-full border rounded-lg p-2 mt-1" />
             </div>
 
-            <!-- Deduction Day -->
+            <!-- DAY -->
             <div>
-              <label class="text-sm text-gray-600">Deduction Day (1–28)</label>
+              <label class="text-sm text-gray-600">Deduction Day</label>
               <input v-model="form.deduction_day" type="number" min="1" max="28"
                 class="w-full border rounded-lg p-2 mt-1" />
             </div>
 
-            <!-- Effective From -->
+            <!-- FROM -->
             <div>
               <label class="text-sm text-gray-600">Effective From</label>
               <input v-model="form.effective_from" type="date"
                 class="w-full border rounded-lg p-2 mt-1" />
             </div>
 
-            <!-- Effective To -->
+            <!-- TO -->
             <div>
               <label class="text-sm text-gray-600">Effective To</label>
               <input v-model="form.effective_to" type="date"
@@ -165,16 +167,15 @@
 
           </div>
 
-          <!-- Notes -->
+          <!-- NOTES -->
           <div>
             <label class="text-sm text-gray-600">Notes</label>
             <textarea v-model="form.notes"
               class="w-full border rounded-lg p-2 mt-1"
-              rows="3"
-              placeholder="Optional notes..."></textarea>
+              rows="3"></textarea>
           </div>
 
-          <!-- BUTTONS -->
+          <!-- ACTIONS -->
           <div class="flex justify-end gap-3 pt-3 border-t">
             <button
               @click="showForm = false"
@@ -197,3 +198,90 @@
     </div>
   </AppLayout>
 </template>
+
+<script setup>
+import { ref } from "vue"
+import { Head, router } from "@inertiajs/vue3"
+import AppLayout from "@/layouts/AppLayout.vue";
+
+const props = defineProps({
+  member: Object,
+  commitments: Array,
+  savingsAccounts: Array,
+  accountTypes: Object,
+})
+
+const showForm = ref(false)
+const editing = ref(false)
+
+const form = ref({
+  id: null,
+  account_id: "",
+  account_type: "",
+  monthly_amount: "",
+  deduction_day: "",
+  effective_from: "",
+  effective_to: "",
+  notes: "",
+})
+
+const createNew = () => {
+  editing.value = false
+  form.value = {
+    id: null,
+    account_id: "",
+    account_type: "",
+    monthly_amount: "",
+    deduction_day: "",
+    effective_from: "",
+    effective_to: "",
+    notes: "",
+  }
+  showForm.value = true
+}
+
+const editItem = (c) => {
+  editing.value = true
+  form.value = { ...c }
+  showForm.value = true
+}
+
+const submit = () => {
+  if (editing.value) {
+    router.put(
+      route("members.deposit-commitments.update", {
+        member: props.member.id,
+        commitment: form.value.id,
+      }),
+      form.value,
+      { onSuccess: () => (showForm.value = false) }
+    )
+  } else {
+    router.post(
+      route("members.deposit-commitments.store", props.member.id),
+      form.value,
+      { onSuccess: () => (showForm.value = false) }
+    )
+  }
+}
+
+const deleteItem = (c) => {
+  if (!confirm("Delete commitment?")) return
+
+  router.delete(
+    route("members.deposit-commitments.destroy", {
+      member: props.member.id,
+      commitment: c.id,
+    })
+  )
+}
+
+const toggle = (c) => {
+  router.post(
+    route("members.deposit-commitments.toggle", {
+      member: props.member.id,
+      commitment: c.id,
+    })
+  )
+}
+</script>

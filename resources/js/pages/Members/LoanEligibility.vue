@@ -57,44 +57,65 @@ const checkEligibility = async () => {
   ]">
     <Head title="Loan Eligibility Check" />
 
-    <div class="p-6 max-w-3xl lg:mx-[25%] space-y-8">
-      <h1 class="text-xl sm:text-2xl font-bold text-blue-900">Loan Eligibility Check</h1>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 py-10 px-4">
+      <div class="max-w-3xl mx-auto space-y-8">
 
-      <!-- Member Info -->
-<Card class="border border-blue-200 bg-blue-50">
-  <CardHeader>
-    <CardTitle class="text-blue-900">Selected Member</CardTitle>
-  </CardHeader>
-
-  <CardContent class="text-sm text-gray-800 space-y-1">
-    <p>
-      <strong>Name:</strong>
-      {{ props.member.first_name }} {{ props.member.last_name }}
-    </p>
-
-    <p>
-      <strong>Member ID:</strong>
-      {{ props.member.member_number ?? props.member.membership_id }}
-    </p>
-
-    <p v-if="props.member.phone">
-      <strong>Phone:</strong>
-      {{ props.member.phone }}
-    </p>
-  </CardContent>
-</Card>
-
-      <!-- Form Card -->
-      <Card class="border border-gray-200 shadow-sm">
-        <CardHeader>
-          <CardTitle>Select Loan Product and Amount</CardTitle>
-        </CardHeader>
-        <CardContent class="space-y-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
           <div>
-            <label class="block text-sm font-medium mb-1">Loan Product</label>
+            <h1 class="text-2xl font-extrabold text-[rgb(7,40,75)]">
+              Loan Eligibility Check
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">
+              Verify if this member qualifies for a loan product
+            </p>
+          </div>
+
+          <Link :href="route('loans.index')"
+            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl shadow-md text-sm transition">
+            ← Back
+          </Link>
+        </div>
+
+        <!-- Member Card -->
+        <div class="bg-white border border-blue-100 rounded-2xl shadow-lg overflow-hidden">
+          <div class="bg-blue-900/90 px-6 py-3">
+            <h3 class="text-white font-semibold">Member Information</h3>
+          </div>
+
+          <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
+            <div>
+              <p class="text-gray-500">Full Name</p>
+              <p class="font-semibold text-gray-900">
+                {{ props.member.first_name }} {{ props.member.last_name }}
+              </p>
+            </div>
+
+            <div>
+              <p class="text-gray-500">Member ID</p>
+              <p class="font-semibold text-gray-900">
+                {{ props.member.member_number ?? props.member.membership_id }}
+              </p>
+            </div>
+
+            <div v-if="props.member.phone">
+              <p class="text-gray-500">Phone</p>
+              <p class="font-semibold text-gray-900">
+                {{ props.member.phone }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white border border-gray-100 rounded-2xl shadow-xl p-6 space-y-6">
+
+          <!-- Loan Product -->
+          <div>
+            <label class="text-sm font-medium text-gray-700">Loan Product</label>
             <select
               v-model="form.loan_product_id"
-              class="w-full border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+              class="mt-2 w-full rounded-xl border border-gray-200 p-3 focus:ring-2 focus:ring-orange-400 focus:outline-none transition"
             >
               <option value="">-- Select Loan Product --</option>
               <option v-for="product in props.loanProducts" :key="product.id" :value="product.id">
@@ -103,65 +124,85 @@ const checkEligibility = async () => {
             </select>
           </div>
 
+          <!-- Amount -->
           <div>
-            <label class="block text-sm font-medium mb-1">Requested Amount (KES)</label>
+            <label class="text-sm font-medium text-gray-700">Requested Amount (KES)</label>
             <input
               v-model="form.requested_amount"
               type="number"
               min="1"
-              class="w-full border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter amount"
+              class="mt-2 w-full rounded-xl border border-gray-200 p-3 focus:ring-2 focus:ring-orange-400 focus:outline-none transition"
             />
           </div>
 
+          <!-- Button -->
           <div class="flex justify-end">
-            <Button
+            <button
               :disabled="checking"
               @click="checkEligibility"
-              class="bg-blue-800 text-white px-5 py-2 rounded-lg"
+              class="flex items-center gap-2 bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-xl shadow-lg transition disabled:bg-gray-400"
             >
+              <svg v-if="checking" class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="white" stroke-width="4" fill="none"/>
+              </svg>
               {{ checking ? "Checking..." : "Check Eligibility" }}
-            </Button>
+            </button>
           </div>
 
           <!-- Errors -->
-          <div v-if="errors.length" class="bg-red-50 border-l-4 border-red-500 p-3 rounded-md">
-            <ul class="list-disc list-inside text-red-700 text-sm">
+          <div v-if="errors.length"
+            class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+            <ul class="list-disc pl-5">
               <li v-for="err in errors" :key="err">{{ err }}</li>
             </ul>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <!-- Results -->
-      <div v-if="result" class="space-y-4">
-        <Card
-          :class="result.eligible ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50'"
-        >
-          <CardHeader>
-            <CardTitle
-              :class="result.eligible ? 'text-green-700' : 'text-red-700'"
-            >
-              {{ result.eligible ? "Eligible for Loan" : "Not Eligible" }}
-            </CardTitle>
-          </CardHeader>
-          <CardContent class="text-sm text-gray-800 space-y-2">
-            <p><strong>Maximum Loan Amount:</strong> KES {{ result.max_loan_amount.toLocaleString() }}</p>
+        <!-- Results -->
+        <div v-if="result" class="space-y-4">
 
-            <div v-if="result.messages && result.messages.length">
-              <p class="font-semibold mb-1">Reason(s):</p>
-              <ul class="list-disc list-inside">
-                <li v-for="msg in result.messages" :key="msg">{{ msg }}</li>
-              </ul>
+          <div
+            class="rounded-2xl shadow-xl border p-6 transition"
+            :class="result.eligible
+              ? 'bg-gradient-to-r from-green-50 to-green-100 border-green-300'
+              : 'bg-gradient-to-r from-red-50 to-red-100 border-red-300'"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <h3
+                class="text-lg font-bold"
+                :class="result.eligible ? 'text-green-700' : 'text-red-700'"
+              >
+                {{ result.eligible ? "Eligible for Loan" : "Not Eligible" }}
+              </h3>
+
+              <span
+                class="text-xs px-3 py-1 rounded-full font-medium"
+                :class="result.eligible
+                  ? 'bg-green-200 text-green-800'
+                  : 'bg-red-200 text-red-800'"
+              >
+                {{ result.eligible ? "Approved" : "Declined" }}
+              </span>
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      <div class="flex justify-start">
-        <Link :href="route('loans.index', props.member.id)">
-          <Button variant="outline">Back to Loans</Button>
-        </Link>
+            <div class="text-sm text-gray-800 space-y-2">
+              <p>
+                <strong>Maximum Loan:</strong>
+                KES {{ Number(result.max_loan_amount).toLocaleString() }}
+              </p>
+
+              <div v-if="result.messages?.length">
+                <p class="font-semibold mt-2">Reason(s):</p>
+                <ul class="list-disc pl-5 mt-1">
+                  <li v-for="msg in result.messages" :key="msg">{{ msg }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   </AppLayout>

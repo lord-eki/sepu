@@ -61,74 +61,167 @@ const closeFlash = () => {
 }
 
 </script>
-
 <template>
-    <AppLayout :breadcrumbs="[
-        { title: 'Loans', href: '/loans' },
-        { title: `Edit ${loan.loan_number}` }
-    ]">
+  <AppLayout :breadcrumbs="[
+    { title: 'Loans', href: '/loans' },
+    { title: `Edit ${loan.loan_number}` }
+  ]">
 
-        <Head :title="`Edit Loan ${loan.loan_number}`" />
+    <Head :title="`Edit Loan ${loan.loan_number}`" />
 
-        <div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8 space-y-8">
 
-            <!-- HEADER -->
-            <div
-                class="rounded-2xl overflow-hidden shadow-md border mb-8 bg-gradient-to-r from-[#06203a] to-[#0a2342] p-6">
-                <h1 class="text-2xl font-bold text-white">Edit Loan Application</h1>
-                <p class="text-orange-200 mt-1">
-                    Modify loan details for: {{ loan.member.first_name }} {{ loan.member.last_name }}
-                </p>
-            </div>
+      <!-- 🔷 HEADER -->
+      <div class="relative overflow-hidden rounded-2xl shadow-lg border border-blue-900/20">
+        <div class="absolute inset-0 bg-gradient-to-r from-[#041c32] via-blue-800 to-blue-900"></div>
 
-            <!-- SUCCESS MESSAGE -->
-            <div v-if="successMessage" class="p-4 mb-4 rounded-lg bg-green-100 text-green-800 border border-green-300 flex justify-between items-center">
-                <span>{{ successMessage }}</span>
-                <button @click="closeFlash" class="ml-4 font-bold">X</button>
-            </div>
+        <div class="relative p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">
+              Edit Loan Application
+            </h1>
 
+            <p class="text-orange-300 mt-1 text-sm">
+              {{ loan.member.first_name }} {{ loan.member.last_name }} • {{ loan.loan_number }}
+            </p>
+          </div>
 
-            <!-- FORM -->
-            <form @submit.prevent="submit" class="bg-white rounded-xl shadow p-6 space-y-6 border">
-
-                <!-- APPLIED AMOUNT -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Applied Amount</label>
-                    <input type="number" v-model="form.applied_amount"
-                        class="w-full border rounded-lg p-2 focus:ring-blue-200 focus:ring" />
-                    <p v-if="errors.applied_amount" class="text-red-500 text-sm">{{ errors.applied_amount[0] }}</p>
-                </div>
-
-                <!-- TERM MONTHS -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Term (Months)</label>
-                    <input type="number" v-model="form.term_months"
-                        class="w-full border rounded-lg p-2 focus:ring-blue-200 focus:ring" />
-                    <p v-if="errors.term_months" class="text-red-500 text-sm">{{ errors.term_months[0] }}</p>
-                </div>
-
-                <!-- PURPOSE / NOTES -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Purpose / Notes</label>
-                    <textarea v-model="form.purpose" rows="4"
-                        class="w-full border rounded-lg p-2 focus:ring-blue-200 focus:ring"></textarea>
-                    <p v-if="errors.purpose" class="text-red-500 text-sm">{{ errors.purpose[0] }}</p>
-                </div>
-
-                <!-- ACTIONS -->
-                <div class="flex justify-end gap-3 pt-4">
-                    <Link :href="route('loans.index')"
-                        class="px-4 py-2 rounded-lg border bg-gray-100 hover:bg-gray-200 text-gray-700">
-                    Cancel
-                    </Link>
-
-                    <button type="submit" :disabled="loading"
-                        class="px-4 py-2 rounded-lg bg-orange-600 text-white font-medium shadow hover:bg-orange-700 disabled:opacity-60">
-                        {{ loading ? 'Updating...' : 'Update Loan' }}
-                    </button>
-                </div>
-
-            </form>
+          <div class="text-white/70 text-sm">
+            Update Loan Details
+          </div>
         </div>
-    </AppLayout>
+      </div>
+
+      <!-- ✅ SUCCESS MESSAGE -->
+      <div 
+        v-if="successMessage" 
+        class="flex justify-between items-center gap-4 p-4 rounded-xl border border-green-300 bg-green-50 shadow-sm"
+      >
+        <span class="text-green-800 text-sm font-medium">
+          {{ successMessage }}
+        </span>
+
+        <button 
+          @click="closeFlash" 
+          class="text-green-700 hover:text-green-900 font-bold text-lg"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- 🧾 FORM -->
+      <form 
+        @submit.prevent="submit" 
+        class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 space-y-8"
+      >
+
+        <!-- SECTION -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">
+            Loan Details
+          </h2>
+          <p class="text-sm text-gray-500">
+            Modify loan values below
+          </p>
+        </div>
+
+        <!-- 🔲 GRID (KEY IMPROVEMENT) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- 💰 AMOUNT -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Applied Amount (KES)
+            </label>
+
+            <input 
+              type="number" 
+              v-model="form.applied_amount"
+              class="w-full rounded-xl border border-gray-300 px-4 py-3 
+                     focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+              placeholder="Enter amount"
+            />
+
+            <p v-if="errors.applied_amount" class="text-red-500 text-sm mt-1">
+              {{ errors.applied_amount[0] }}
+            </p>
+          </div>
+
+          <!-- 📅 TERM -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Loan Term (Months)
+            </label>
+
+            <input 
+              type="number" 
+              v-model="form.term_months"
+              class="w-full rounded-xl border border-gray-300 px-4 py-3 
+                     focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+              placeholder="e.g. 12"
+            />
+
+            <p v-if="errors.term_months" class="text-red-500 text-sm mt-1">
+              {{ errors.term_months[0] }}
+            </p>
+          </div>
+
+        </div>
+
+        <!-- 📝 PURPOSE (FULL WIDTH) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Purpose / Notes
+          </label>
+
+          <textarea 
+            v-model="form.purpose" 
+            rows="5"
+            class="w-full rounded-xl border border-gray-300 px-4 py-3 
+                   focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition resize-none"
+            placeholder="Optional description..."
+          ></textarea>
+
+          <p v-if="errors.purpose" class="text-red-500 text-sm mt-1">
+            {{ errors.purpose[0] }}
+          </p>
+        </div>
+
+        <!-- ⚡ ACTIONS -->
+        <div class="flex justify-between items-center pt-4 border-t">
+
+          <Link 
+            :href="route('loans.index')" 
+            class="text-gray-600 hover:text-gray-900 text-sm"
+          >
+            ← Back to Loans
+          </Link>
+
+          <div class="flex gap-3">
+            <Link 
+              :href="route('loans.index')" 
+              class="px-5 py-2.5 rounded-xl border border-gray-300 bg-gray-100 
+                     hover:bg-gray-200 text-gray-700 transition"
+            >
+              Cancel
+            </Link>
+
+            <button 
+              type="submit" 
+              :disabled="loading"
+              class="px-6 py-2.5 rounded-xl text-white font-semibold 
+                     bg-gradient-to-r from-orange-500 to-orange-600
+                     hover:from-orange-600 hover:to-orange-700
+                     shadow-md hover:shadow-lg
+                     transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ loading ? 'Updating...' : 'Update Loan' }}
+            </button>
+          </div>
+
+        </div>
+
+      </form>
+    </div>
+  </AppLayout>
 </template>
