@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\DB;
 
 class LoanEligibilityService
 {
-    const MINIMUM_SHARE_CAPITAL = 5000; // Kshs. 5,000
-    const MINIMUM_MEMBERSHIP_MONTHS = 6; // 6 months
-    const MAX_DEDUCTION_RATIO = 0.67; // 2/3 of gross salary
+    const MINIMUM_SHARE_CAPITAL = 5000; 
+    const MINIMUM_MEMBERSHIP_MONTHS = 6; 
+    const MAX_DEDUCTION_RATIO = 0.67; 
 
     /**
      * Check if member is eligible for a loan
@@ -103,7 +103,7 @@ class LoanEligibilityService
 
         $membershipMonths = Carbon::parse($member->membership_date)
             ->diffInMonths(Carbon::now());
-
+    
         return $membershipMonths >= self::MINIMUM_MEMBERSHIP_MONTHS;
     }
 
