@@ -1,6 +1,7 @@
 <script setup>
 import { Head, router } from "@inertiajs/vue3"
 import { ref } from "vue"
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const props = defineProps({
   rows: Array,
@@ -24,6 +25,7 @@ const runSchedule = () => {
 </script>
 
 <template>
+  <AppLayout>
   <Head title="Monthly Deposits" />
 
   <div class="p-6 space-y-6 bg-slate-50 min-h-screen">
@@ -124,4 +126,5 @@ const runSchedule = () => {
     </div>
 
   </div>
+</AppLayout>
 </template>

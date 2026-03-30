@@ -67,9 +67,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ── Member profile (staff shortcut) ───────────────────────────────────
-    Route::get('/member/profile', [MemberController::class, 'profile'])->name('member.profile');
-    Route::put('/member/profile', [MemberController::class, 'updateProfile'])->name('member.updateProfile');
-    Route::post('/addmember',     [MemberController::class, 'store'])->name('addmember.store');
+    // Route::get('/member/profile', [MemberController::class, 'show'])->name('member.show');
+    // Route::put('/member/profile', [MemberController::class, 'updateProfile'])->name('member.updateProfile');
+    // Route::post('/addmember',     [MemberController::class, 'store'])->name('addmember.store');
 
     // ── Members ───────────────────────────────────────────────────────────
     Route::prefix('members')->name('members.')->group(function () {
@@ -551,7 +551,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/profile/show',  [ProfileController::class, 'show'])->name('member.profile.show');
+    Route::get('/profile/show',  [ProfileController::class, 'show'])->name('member.profile');
     Route::put('/profile/update',[ProfileController::class, 'updateProfile'])->name('member.updateProfile');
 });
 

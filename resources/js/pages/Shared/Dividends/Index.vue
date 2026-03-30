@@ -467,7 +467,7 @@ const cards = [
 
 <style scoped>
 .bg-header {
-  background: linear-gradient(135deg, #0a2342 0%, #0b2549 50%, #f97316 100%);
+  background: linear-gradient(135deg, #043066 0%, #215bad 50%, #f97316 100%);
 }
 
 button:hover {
