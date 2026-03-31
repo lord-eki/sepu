@@ -23,15 +23,17 @@ class MemberDepositCommitment extends Model
 
     protected $fillable = [
         'member_id',
+        'type',
         'account_id',
-        'account_type',
+        'loan_id',
         'monthly_amount',
         'deduction_day',
+        'dividend_mode',
         'effective_from',
         'effective_to',
         'is_active',
-        'set_by',
         'notes',
+        'set_by',
     ];
 
     protected $casts = [

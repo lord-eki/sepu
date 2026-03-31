@@ -3,120 +3,142 @@
 namespace App\Http\Controllers;
 
 use App\Models\Member;
+use App\Models\Loan;
 use App\Models\MemberDepositCommitment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-/**
- * Manages per-member monthly deposit commitments.
- *
- * All routes are scoped under /members/{member}/deposit-commitments
- * as registered in web.php under the members.deposit-commitments.* names.
- *
- * A commitment record answers: "How much does this member deposit
- * each month, into which account type, and for what date range?"
- * The schedule engine reads these rows
- */
 class MemberDepositCommitmentController extends Controller
 {
     /**
-     * List all commitments for a member (full history, all statuses).
+     * Display finance setup page for a member
      */
     public function index(Member $member)
     {
         $commitments = $member->depositCommitments()
-            ->with('account', 'setBy')
-            ->orderByDesc('effective_from')
+            ->with(['account', 'setBy', 'loan'])
+            ->latest()
             ->get()
             ->map(fn ($c) => $this->format($c));
 
-        $savingsAccounts = $member->accounts()
-            ->where('is_active', true)
-            ->get(['id', 'account_number', 'account_type', 'balance']);
+        return Inertia::render('Members/FinanceSetup/Index', [
+            'member'      => $member,
+            'commitments' => $commitments,
 
-        return Inertia::render('Members/DepositCommitments/Index', [
-            'member'          => $member,
-            'commitments'     => $commitments,
-            'savingsAccounts' => $savingsAccounts,
-            'accountTypes'    => $this->accountTypeOptions(),
+            // active accounts for setup
+            'accounts'    => $member->accounts()->where('is_active', true)->get(),
+
+            // active loans only
+            'loans'       => $member->loans()
+                                ->where('loan_status', 'Active')
+                                ->get(),
+
+            'types'       => $this->types(),
         ]);
     }
 
     /**
-     * Create a new commitment for a member.
-     *
+     * Store new finance setup configuration
      */
     public function store(Request $request, Member $member)
     {
         $data = $request->validate([
-            'account_id'     => 'nullable|exists:accounts,id',
-            'account_type'   => 'required|string|max:50',
-            'monthly_amount' => 'required|numeric|min:1',
-            'deduction_day'  => 'required|integer|min:1|max:28',
-            'effective_from' => 'required|date',
-            'effective_to'   => 'nullable|date|after:effective_from',
-            'notes'          => 'nullable|string|max:500',
+            'type' => 'required|in:contribution,loan_repayment,dividend',
+
+            // account setup
+            'account_id' => 'nullable|exists:accounts,id',
+
+            // loan setup
+            'loan_id' => 'nullable|exists:loans,id',
+
+            // FRD core financial values
+            'monthly_amount'   => 'required|numeric|min:0',
+            'principal_amount'  => 'nullable|numeric|min:0',
+            'interest_amount'   => 'nullable|numeric|min:0',
+
+            // scheduling config
+            'deduction_day'    => 'nullable|integer|min:1|max:28',
+
+            // dividend config
+            'dividend_mode'    => 'nullable|in:reinvest,payout',
+
+            // validity period
+            'effective_from'   => 'required|date',
+            'effective_to'     => 'nullable|date|after:effective_from',
+
+            'notes' => 'nullable|string|max:500',
         ]);
 
-        // Close any existing open-ended commitment for this account type
+        /**
+         * Ensure only ONE active setup per type per member
+         */
         $member->depositCommitments()
-            ->where('account_type', $data['account_type'])
+            ->where('type', $data['type'])
             ->where('is_active', true)
-            ->whereNull('effective_to')
-            ->update(['is_active' => false]);
-
-        $commitment = $member->depositCommitments()->create(array_merge($data, [
-            'is_active' => true,
-            'set_by'    => Auth::id(),
-        ]));
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'message'    => 'Commitment created.',
-                'commitment' => $this->format($commitment->load('account')),
+            ->update([
+                'is_active' => false,
+                'effective_to' => now()
             ]);
-        }
 
-        return back()->with('success',
-            'Monthly deposit of KES ' . number_format($commitment->monthly_amount, 2) .
-            ' set for ' . $member->full_name . '.'
-        );
+        /**
+         * Create new finance setup
+         */
+        $commitment = $member->depositCommitments()->create([
+            'type' => $data['type'],
+
+            'account_id' => $data['account_id'] ?? null,
+            'loan_id'    => $data['loan_id'] ?? null,
+
+            'monthly_amount'  => $data['monthly_amount'],
+            'principal_amount'=> $data['principal_amount'] ?? null,
+            'interest_amount' => $data['interest_amount'] ?? null,
+
+            'deduction_day' => $data['deduction_day'] ?? null,
+            'dividend_mode' => $data['dividend_mode'] ?? null,
+
+            'effective_from' => $data['effective_from'],
+            'effective_to'   => $data['effective_to'] ?? null,
+
+            'notes' => $data['notes'] ?? null,
+
+            'is_active' => true,
+            'set_by' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Finance setup saved successfully.');
     }
 
     /**
-     * Update an existing commitment.
-     * Only amount, account link, deduction day, end date, active flag and notes
-     * can be changed.  To change account_type or start date, create a new row.
+     * Update existing setup
      */
     public function update(Request $request, Member $member, MemberDepositCommitment $commitment)
     {
         $this->assertBelongsTo($member, $commitment);
 
         $data = $request->validate([
-            'account_id'     => 'nullable|exists:accounts,id',
-            'monthly_amount' => 'required|numeric|min:1',
-            'deduction_day'  => 'required|integer|min:1|max:28',
-            'effective_to'   => 'nullable|date|after:' . $commitment->effective_from->toDateString(),
-            'is_active'      => 'boolean',
-            'notes'          => 'nullable|string|max:500',
+            'monthly_amount'   => 'required|numeric|min:0',
+            'principal_amount' => 'nullable|numeric|min:0',
+            'interest_amount'  => 'nullable|numeric|min:0',
+
+            'deduction_day'    => 'nullable|integer|min:1|max:28',
+            'effective_to'     => 'nullable|date',
+            'is_active'        => 'boolean',
+
+            'dividend_mode'    => 'nullable|in:reinvest,payout',
+
+            'notes' => 'nullable|string|max:500',
         ]);
 
-        $commitment->update(array_merge($data, ['set_by' => Auth::id()]));
+        $commitment->update(array_merge($data, [
+            'set_by' => Auth::id()
+        ]));
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'message'    => 'Commitment updated.',
-                'commitment' => $this->format($commitment->fresh()->load('account')),
-            ]);
-        }
-
-        return back()->with('success', 'Deposit commitment updated.');
+        return back()->with('success', 'Finance setup updated successfully.');
     }
 
     /**
-     * Delete a commitment record entirely.
-
+     * Delete setup
      */
     public function destroy(Member $member, MemberDepositCommitment $commitment)
     {
@@ -124,64 +146,80 @@ class MemberDepositCommitmentController extends Controller
 
         $commitment->delete();
 
-        return back()->with('success', 'Deposit commitment removed.');
+        return back()->with('success', 'Finance setup deleted successfully.');
     }
 
     /**
-     * Toggle is_active without deleting the record.
+     * Toggle active/inactive
      */
     public function toggle(Member $member, MemberDepositCommitment $commitment)
     {
         $this->assertBelongsTo($member, $commitment);
 
-        $commitment->update(['is_active' => !$commitment->is_active]);
+        $commitment->update([
+            'is_active' => !$commitment->is_active
+        ]);
 
-        $state = $commitment->is_active ? 'activated' : 'paused';
-
-        return back()->with('success', "Deposit commitment {$state}.");
+        return back()->with('success', 'Setup status updated successfully.');
     }
 
-    // ── Private helpers ──────────────────────────────────────────────────
+    // ================= HELPERS =================
 
-    private function assertBelongsTo(Member $member, MemberDepositCommitment $commitment): void
+    /**
+     * Ensure commitment belongs to member
+     */
+    private function assertBelongsTo(Member $member, MemberDepositCommitment $commitment)
     {
         abort_if($commitment->member_id !== $member->id, 404);
     }
 
     /**
-     * Serialise a commitment for Inertia props or JSON responses.
+     * Format response for frontend
      */
     private function format(MemberDepositCommitment $c): array
     {
         return [
-            'id'             => $c->id,
-            'member_id'      => $c->member_id,
+            'id' => $c->id,
+            'type' => $c->type,
+
+            // financial values
+            'monthly_amount'   => (float) $c->monthly_amount,
+            'principal_amount' => (float) $c->principal_amount,
+            'interest_amount'  => (float) $c->interest_amount,
+
+            // schedule config
+            'deduction_day' => $c->deduction_day,
+
+            // account info
             'account_id'     => $c->account_id,
             'account_number' => $c->account?->account_number,
-            'account_type'   => $c->account_type,
-            'monthly_amount' => (float) $c->monthly_amount,
-            'deduction_day'  => $c->deduction_day,
-            'effective_from' => $c->effective_from?->format('Y-m-d'),
-            'effective_to'   => $c->effective_to?->format('Y-m-d'),
-            'is_active'      => $c->is_active,
-            'is_current'     => $c->isCurrentlyActive(),
-            'notes'          => $c->notes,
-            'set_by_name'    => $c->setBy?->name,
-            'updated_at'     => $c->updated_at?->format('Y-m-d'),
+
+            // loan info
+            'loan_id'   => $c->loan_id,
+            'loan_name' => $c->loan?->loan_product?->name,
+
+            // dividend
+            'dividend_mode' => $c->dividend_mode,
+
+            // validity
+            'effective_from' => optional($c->effective_from)->format('Y-m-d'),
+            'effective_to'   => optional($c->effective_to)->format('Y-m-d'),
+
+            'is_active' => $c->is_active,
+            'notes'     => $c->notes,
+            'set_by'    => $c->setBy?->name,
         ];
     }
 
     /**
-     * Account type options for the form dropdown.
-     * Keys must match the account_type values used in the accounts table.
+     * Finance setup types
      */
-    private function accountTypeOptions(): array
+    private function types(): array
     {
         return [
-            'ordinary_savings' => 'Ordinary Savings',
-            'holiday_savings'  => 'Holiday Savings',
-            'shares'           => 'Share Capital',
-            'fixed_deposit'    => 'Fixed Deposit',
+            'contribution'   => 'Monthly Contribution',
+            'loan_repayment' => 'Loan Repayment',
+            'dividend'       => 'Dividend Setup',
         ];
     }
 }

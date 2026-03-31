@@ -588,3 +588,30 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 Route::redirect('/settings', '/settings/profile');
+
+
+/**
+     * Finance Setup (Member Level)
+     */
+    Route::prefix('members/{member}/finance-setup')->group(function () {
+
+        // View all setups
+        Route::get('/', [MemberDepositCommitmentController::class, 'index'])
+            ->name('members.finance-setup.index');
+
+        // Create new setup
+        Route::post('/', [MemberDepositCommitmentController::class, 'store'])
+            ->name('members.finance-setup.store');
+
+        // Update setup
+        Route::put('/{commitment}', [MemberDepositCommitmentController::class, 'update'])
+            ->name('members.finance-setup.update');
+
+        // Delete setup
+        Route::delete('/{commitment}', [MemberDepositCommitmentController::class, 'destroy'])
+            ->name('members.finance-setup.destroy');
+
+        // Toggle active/inactive
+        Route::patch('/{commitment}/toggle', [MemberDepositCommitmentController::class, 'toggle'])
+            ->name('members.finance-setup.toggle');
+    });

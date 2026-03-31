@@ -34,7 +34,7 @@
       <!-- KPI CARDS -->
       <div class="px-8 py-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <div v-for="stat in quickStats" :key="stat.title"
-          class="relative p-6 rounded-3xl bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
+          class="relative p-6 rounded-3xl bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-700 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
 
           <div class="flex justify-between items-center">
             <div class="text-sm font-medium text-gray-500 dark:text-gray-300">{{ stat.title }}</div>
@@ -62,7 +62,7 @@
 
           <!-- Pending Approvals -->
           <div
-            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
+            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pending Approvals</h3>
               <span class="text-xs text-gray-400 dark:text-gray-300 uppercase tracking-wide">Quick Review</span>
@@ -80,86 +80,78 @@
           </div>
 
           <!-- Recent Activity -->
-<div
-  class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
+          <div
+            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
 
-  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-    Recent Activity
-  </h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+              Recent Activity
+            </h3>
 
-  <div class="space-y-4 max-h-[450px] overflow-y-auto overflow-x-hidden custom-scroll">
+            <div class="space-y-4 max-h-[450px] overflow-y-auto overflow-x-hidden custom-scroll">
 
-    <div
-      v-for="(item, i) in recentActivities"
-      :key="i"
-      @click="item.link ? $inertia.visit(item.link) : null"
-      class="flex justify-between items-start gap-4 p-4 rounded-xl border transition-all duration-300 cursor-pointer hover:shadow-md"
-      :class="[
-        item.status === 'pending'
-          ? 'border-orange-200 dark:border-orange-900 hover:bg-orange-50 dark:hover:bg-orange-900/20'
-          : item.status === 'approved'
-            ? 'border-green-200 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/20'
-            : item.status === 'rejected'
-              ? 'border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
-              : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/20'
-      ]"
-    >
+              <div v-for="(item, i) in recentActivities" :key="i" @click="item.link ? $inertia.visit(item.link) : null"
+                class="flex justify-between items-start gap-4 p-4 rounded-xl border transition-all duration-300 cursor-pointer hover:shadow-md"
+                :class="[
+    item.status === 'pending'
+      ? 'border-orange-200 dark:border-orange-900 hover:bg-orange-50 dark:hover:bg-orange-900/20'
+      : item.status === 'approved'
+        ? 'border-green-200 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/20'
+        : item.status === 'rejected'
+          ? 'border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
+          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/20'
+  ]">
 
-      <!-- LEFT CONTENT -->
-      <div class="min-w-0 flex-1">
+                <!-- LEFT CONTENT -->
+                <div class="min-w-0 flex-1">
 
-        <!-- Description -->
-        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 break-words">
-          {{ item.description }}
-        </p>
+                  <!-- Description -->
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300 break-words">
+                    {{ item.description }}
+                  </p>
 
-        <!-- Meta Row -->
-        <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400 dark:text-gray-400">
+                  <!-- Meta Row -->
+                  <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400 dark:text-gray-400">
 
-          <span>
-            {{ new Date(item.time).toLocaleString() }}
-          </span>
+                    <span>
+                      {{ new Date(item.time).toLocaleString() }}
+                    </span>
 
-          <!-- Status Badge -->
-          <span
-            v-if="item.status"
-            :class="[
-              'px-2 py-0.5 rounded-full font-semibold text-xs whitespace-nowrap',
-              item.status === 'pending'
-                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300'
-                : item.status === 'approved'
-                  ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300'
-                  : item.status === 'rejected'
-                    ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300'
-                    : ''
-            ]"
-          >
-            {{ item.status }}
-          </span>
+                    <!-- Status Badge -->
+                    <span v-if="item.status" :class="[
+    'px-2 py-0.5 rounded-full font-semibold text-xs whitespace-nowrap',
+    item.status === 'pending'
+      ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300'
+      : item.status === 'approved'
+        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300'
+        : item.status === 'rejected'
+          ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300'
+          : ''
+  ]">
+                      {{ item.status }}
+                    </span>
 
-          <!-- Click to View -->
-          <span
-            v-if="item.status === 'pending'"
-            class="text-orange-500 dark:text-orange-300 font-semibold whitespace-nowrap"
-          >
-            Click to view →
-          </span>
+                    <!-- Click to View -->
+                    <span v-if="item.status === 'pending'"
+                      class="text-orange-500 dark:text-orange-300 font-semibold whitespace-nowrap">
+                      Click to view →
+                    </span>
 
-        </div>
+                  </div>
 
-      </div>
+                </div>
 
-      <!-- RIGHT SIDE (Amount) -->
-      <div class="flex-shrink-0 text-sm font-semibold text-gray-700 dark:text-gray-300 text-right whitespace-nowrap">
-        <span v-if="item.amount">
-          Ksh {{ Number(item.amount).toLocaleString() }}
-        </span>
-      </div>
+                <!-- RIGHT SIDE (Amount) -->
+                <div
+                  class="flex-shrink-0 text-sm font-semibold text-gray-700 dark:text-gray-300 text-right whitespace-nowrap">
+                  <span v-if="item.amount">
+                    Ksh {{ Number(item.amount).toLocaleString() }}
+                  </span>
+                </div>
 
-    </div>
+              </div>
 
-  </div>
-</div>
+            </div>
+          </div>
         </div>
 
         <!-- RIGHT: System & Tools -->
