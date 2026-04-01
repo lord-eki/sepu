@@ -22,7 +22,7 @@ class MemberDepositCommitmentController extends Controller
             ->get()
             ->map(fn ($c) => $this->format($c));
 
-        return Inertia::render('Members/FinanceSetup/Index', [
+        return Inertia::render('Members/DepositCommitments/Index', [
             'member'      => $member,
             'commitments' => $commitments,
 
@@ -31,7 +31,7 @@ class MemberDepositCommitmentController extends Controller
 
             // active loans only
             'loans'       => $member->loans()
-                                ->where('loan_status', 'Active')
+                                ->where('status', 'Active')
                                 ->get(),
 
             'types'       => $this->types(),
