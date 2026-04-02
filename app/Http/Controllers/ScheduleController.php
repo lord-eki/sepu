@@ -8,7 +8,7 @@ use App\Models\Loan;
 use App\Models\LoanRepayment;
 use App\Models\Member;
 use App\Models\MemberDividend;
-use App\Models\MemberDepositCommitment;   
+use App\Models\MemberFinanceConfig;   // ← new
 use App\Models\ScheduleExecutionLog;
 use App\Models\Transaction;
 use Carbon\Carbon;
@@ -19,9 +19,7 @@ use Inertia\Inertia;
 
 class ScheduleController extends Controller
 {
-    // =========================================================================
-    //  SCHEDULE INDEX
-    // =========================================================================
+    
 
     public function index()
     {
@@ -49,12 +47,7 @@ class ScheduleController extends Controller
         ]);
     }
 
-    // =========================================================================
-    //  1. MONTHLY DEPOSITS
-    //  Now driven by MemberDepositCommitment instead of a fixed field on Member.
-    //  Each member can have multiple commitments (one per account type).
-    //  Only active commitments within their effective date range are included.
-    // =========================================================================
+    //   MONTHLY DEPOSITS
 
     public function monthlyDeposit(Request $request)
     {
@@ -66,48 +59,41 @@ class ScheduleController extends Controller
         $startDate = Carbon::parse($month)->startOfMonth();
         $endDate   = Carbon::parse($month)->endOfMonth();
 
-        // Load every active commitment for the chosen month, with the linked
-        // member and account, ordered for a clean UI display.
-        $commitments = MemberDepositCommitment::active()
+        $configs = MemberFinanceConfig::activeContributions()
             ->with([
-                'member' => fn($q) => $q->where('membership_status', 'active'),
-                'account',
+                'member'              => fn($q) => $q->where('membership_status', 'active'),
+                'contributionAccount',
             ])
             ->whereHas('member', fn($q) => $q->where('membership_status', 'active'))
-            ->whereNotNull('account_id')
             ->orderBy('member_id')
-            ->orderBy('account_type')
             ->get();
 
-        // Check which members already have a deposit transaction this month
-        // guards against double-posting if the page is visited after a partial run
+        // Which members already had a deposit posted this month?
         $memberIdsAlreadyDone = Transaction::where('transaction_type', 'deposit')
             ->where('status', 'completed')
             ->whereBetween('processed_at', [$startDate, $endDate])
             ->pluck('member_id')
             ->flip();
 
-        $rows = $commitments->map(function ($c) use ($memberIdsAlreadyDone) {
+        $rows = $configs->map(function ($cfg) use ($memberIdsAlreadyDone) {
+            if (! $cfg->member || ! $cfg->contributionAccount) {
+                return null;
+            }
+
             return [
-                // IDs needed by the run endpoint
-                'commitment_id'                => $c->id,
-                'member_id'                    => $c->member_id,
-                'account_id'                   => $c->account_id,
-
-                // Display fields
-                'membership_id'                => $c->member->membership_id,
-                'member_name'                  => $c->member->first_name . ' ' . $c->member->last_name,
-                'account_number'               => $c->account->account_number,
-                'account_type'                 => $c->account_type,
-                'account_balance'              => (float) $c->account->balance,
-                'amount'                       => (float) $c->monthly_amount,
-                'deduction_day'                => $c->deduction_day,
-
-                // Guard flag — the run endpoint skips rows flagged true
-                'already_deposited_this_month' => $memberIdsAlreadyDone->has($c->member_id),
+                'config_id'                    => $cfg->id,
+                'member_id'                    => $cfg->member_id,
+                'account_id'                   => $cfg->contribution_account_id,
+                'membership_id'                => $cfg->member->membership_id,
+                'member_name'                  => $cfg->member->first_name . ' ' . $cfg->member->last_name,
+                'account_number'               => $cfg->contributionAccount->account_number,
+                'account_type'                 => $cfg->contributionAccount->account_type,
+                'account_balance'              => (float) $cfg->contributionAccount->balance,
+                'amount'                       => (float) $cfg->monthly_contribution,
+                'already_deposited_this_month' => $memberIdsAlreadyDone->has($cfg->member_id),
             ];
         })
-        ->filter(fn($r) => $r['amount'] > 0)
+        ->filter(fn($r) => $r !== null && $r['amount'] > 0)
         ->values();
 
         $summary = [
@@ -126,70 +112,16 @@ class ScheduleController extends Controller
     }
 
     /**
-     * PREVIEW — returns proposed transactions without posting.
-     * Reads from MemberDepositCommitment so every member's individual amount
-     * is used rather than a single system-wide figure.
-     */
-    public function previewMonthlyDeposits(Request $request)
-    {
-        $request->validate([
-            'month' => 'required|string|date_format:Y-m',
-        ]);
-
-        [$year, $mon] = explode('-', $request->month);
-
-        if (ScheduleExecutionLog::alreadyRun('monthly_deposits', (int) $year, (int) $mon)) {
-            return response()->json([
-                'error' => 'This schedule has already been run for the selected period.',
-            ], 422);
-        }
-
-        $commitments = MemberDepositCommitment::active()
-            ->with(['member', 'account'])
-            ->whereHas('member', fn($q) => $q->where('membership_status', 'active'))
-            ->get();
-
-        $preview = $commitments->map(function ($c) use ($request) {
-            $hasAccount = $c->account !== null && $c->account->is_active;
-            return [
-                'commitment_id'  => $c->id,
-                'member_id'      => $c->member_id,
-                'member_name'    => $c->member->first_name . ' ' . $c->member->last_name,
-                'membership_id'  => $c->member->membership_id,
-                'account_id'     => $c->account_id,
-                'account_number' => $c->account?->account_number,
-                'account_type'   => $c->account_type,
-                'amount'         => (float) $c->monthly_amount,
-                'month'          => $request->month,
-                'valid'          => $hasAccount,
-                'error'          => $hasAccount ? null : 'No active account linked to this commitment',
-            ];
-        })->values();
-
-        return response()->json([
-            'preview'       => $preview,
-            'total_amount'  => $preview->where('valid', true)->sum('amount'),
-            'total_records' => $preview->where('valid', true)->count(),
-            'skipped'       => $preview->where('valid', false)->count(),
-        ]);
-    }
-
-    /**
-     * RUN — post the monthly deposits after user confirmation.
-     *
-     * The frontend sends back the rows built by monthlyDeposit() / preview,
-     * each containing commitment_id, member_id, account_id, amount.
-     * Only rows where already_deposited_this_month = false should be sent.
+     * post the monthly deposits.
      */
     public function runMonthlyDeposits(Request $request)
     {
         $request->validate([
-            'month'                    => 'required|string|date_format:Y-m',
-            'entries'                  => 'required|array|min:1',
-            'entries.*.member_id'      => 'required|exists:members,id',
-            'entries.*.account_id'     => 'required|exists:accounts,id',
-            'entries.*.amount'         => 'required|numeric|min:1',
-            'entries.*.commitment_id'  => 'nullable|exists:member_deposit_commitments,id',
+            'month'               => 'required|string|date_format:Y-m',
+            'entries'             => 'required|array|min:1',
+            'entries.*.member_id' => 'required|exists:members,id',
+            'entries.*.account_id'=> 'required|exists:accounts,id',
+            'entries.*.amount'    => 'required|numeric|min:1',
         ]);
 
         [$year, $mon] = explode('-', $request->month);
@@ -236,10 +168,7 @@ class ScheduleController extends Controller
 
                 } catch (\Throwable $e) {
                     $failed++;
-                    $errors[] = [
-                        'member_id' => $entry['member_id'],
-                        'error'     => $e->getMessage(),
-                    ];
+                    $errors[] = ['member_id' => $entry['member_id'], 'error' => $e->getMessage()];
                 }
             }
 
@@ -267,10 +196,8 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    // =========================================================================
-    //  2. LOAN REPAYMENTS  
-    // =========================================================================
-
+    //  LOAN REPAYMENTS
+    
     public function loanRepayment(Request $request)
     {
         $month = $request->month ?? Carbon::now()->format('Y-m');
@@ -281,39 +208,60 @@ class ScheduleController extends Controller
         $startDate = Carbon::parse($month)->startOfMonth()->toDateString();
         $endDate   = Carbon::parse($month)->endOfMonth()->toDateString();
 
+        $autoDeductMemberIds = MemberFinanceConfig::autoLoanDeduct()
+            ->pluck('loan_deduction_amount', 'member_id'); 
+
         $repayments = LoanRepayment::with([
             'loan.member.user',
             'loan.loanProduct',
         ])
             ->whereBetween('due_date', [$startDate, $endDate])
             ->whereIn('status', ['pending', 'overdue', 'partial'])
-            ->whereHas('loan', fn($q) => $q->where('status', 'active'))
+            ->whereHas('loan', function ($q) use ($autoDeductMemberIds) {
+                $q->where('status', 'active')
+                  ->whereIn('member_id', $autoDeductMemberIds->keys());
+            })
             ->orderBy('due_date')
             ->get();
 
-        $rows = $repayments->map(fn($r) => [
-            'repayment_id'        => $r->id,
-            'due_date'            => $r->due_date->format('Y-m-d'),
-            'loan_id'             => $r->loan_id,
-            'loan_number'         => $r->loan->loan_number,
-            'member_id'           => $r->loan->member_id,
-            'membership_id'       => $r->loan->member->membership_id,
-            'member_name'         => $r->loan->member->first_name . ' ' . $r->loan->member->last_name,
-            'loan_product'        => $r->loan->loanProduct->name ?? 'N/A',
-            'principal_amount'    => (float) $r->principal_amount,
-            'interest_amount'     => (float) $r->interest_amount,
-            'penalty_amount'      => (float) $r->penalty_amount,
-            'expected_amount'     => (float) $r->expected_amount,
-            'paid_amount'         => (float) $r->paid_amount,
-            'outstanding_amount'  => (float) $r->outstanding_amount,
-            'outstanding_balance' => (float) $r->loan->outstanding_balance,
-            'status'              => $r->status,
-            'days_late'           => $r->days_late,
-        ])->values();
+        $rows = $repayments->map(function ($r) use ($autoDeductMemberIds) {
+            $memberId        = $r->loan->member_id;
+            $overrideAmount  = $autoDeductMemberIds->get($memberId);
+
+            // Determine the amount that will actually be deducted:
+            //  – if the admin set a fixed monthly deduction, use that (capped at outstanding)
+            //  – otherwise fall back to the outstanding instalment amount
+            $deductAmount = $overrideAmount
+                ? min((float) $overrideAmount, (float) $r->outstanding_amount)
+                : (float) $r->outstanding_amount;
+
+            return [
+                'repayment_id'        => $r->id,
+                'due_date'            => $r->due_date->format('Y-m-d'),
+                'loan_id'             => $r->loan_id,
+                'loan_number'         => $r->loan->loan_number,
+                'member_id'           => $memberId,
+                'membership_id'       => $r->loan->member->membership_id,
+                'member_name'         => $r->loan->member->first_name . ' ' . $r->loan->member->last_name,
+                'loan_product'        => $r->loan->loanProduct->name ?? 'N/A',
+                'principal_amount'    => (float) $r->principal_amount,
+                'interest_amount'     => (float) $r->interest_amount,
+                'penalty_amount'      => (float) $r->penalty_amount,
+                'expected_amount'     => (float) $r->expected_amount,
+                'paid_amount'         => (float) $r->paid_amount,
+                'outstanding_amount'  => (float) $r->outstanding_amount,
+                'deduct_amount'       => $deductAmount,  // ← what will be posted
+                'override_set'        => $overrideAmount !== null,
+                'outstanding_balance' => (float) $r->loan->outstanding_balance,
+                'status'              => $r->status,
+                'days_late'           => $r->days_late ?? 0,
+            ];
+        })->values();
 
         $summary = [
             'total_repayments'  => $rows->count(),
             'total_expected'    => round($rows->sum('expected_amount'), 2),
+            'total_deductable'  => round($rows->sum('deduct_amount'), 2),
             'total_outstanding' => round($rows->sum('outstanding_amount'), 2),
             'total_principal'   => round($rows->sum('principal_amount'), 2),
             'total_interest'    => round($rows->sum('interest_amount'), 2),
@@ -336,6 +284,7 @@ class ScheduleController extends Controller
             'entries.*.repayment_id' => 'required|exists:loan_repayments,id',
             'entries.*.loan_id'      => 'required|exists:loans,id',
             'entries.*.member_id'    => 'required|exists:members,id',
+            'entries.*.deduct_amount'=> 'required|numeric|min:0.01',
         ]);
 
         [$year, $mon] = explode('-', $request->month);
@@ -355,13 +304,12 @@ class ScheduleController extends Controller
         try {
             foreach ($request->entries as $entry) {
                 try {
-                    $repayment = LoanRepayment::with('loan')->findOrFail($entry['repayment_id']);
+                    $repayment = LoanRepayment::with('loan.member.accounts')->findOrFail($entry['repayment_id']);
                     $loan      = $repayment->loan;
-                    $amount    = (float) $repayment->outstanding_amount;
+                    $amount    = (float) $entry['deduct_amount'];
 
                     if ($amount <= 0) continue;
 
-                    // Allocation: penalty first, then interest, then principal
                     $penaltyPaid   = min($amount, (float) $repayment->penalty_amount);
                     $remaining     = $amount - $penaltyPaid;
                     $interestPaid  = min($remaining, (float) $repayment->interest_amount);
@@ -372,16 +320,20 @@ class ScheduleController extends Controller
                     $newOutstanding = max(0, (float) $repayment->outstanding_amount - $amount);
                     $newStatus      = $newOutstanding > 0 ? 'partial' : 'paid';
 
+                    // Credit into the member's savings/share-deposits account
+                    $account = $loan->member->accounts()
+                        ->where('account_type', 'share_deposits')
+                        ->where('is_active', true)
+                        ->first();
+
                     $tx = Transaction::create([
                         'transaction_id'   => 'RPY-SCH-' . strtoupper(uniqid()),
-                        'account_id'       => $loan->member->accounts()
-                                                ->where('account_type', 'share_deposits')
-                                                ->value('id') ?? $loan->id,
+                        'account_id'       => $account?->id ?? $loan->id,
                         'member_id'        => $loan->member_id,
                         'transaction_type' => 'loan_repayment',
                         'amount'           => $amount,
-                        'balance_before'   => 0,
-                        'balance_after'    => 0,
+                        'balance_before'   => $account?->balance ?? 0,
+                        'balance_after'    => ($account?->balance ?? 0) - $amount,
                         'description'      => "Schedule: Loan repayment – {$loan->loan_number}",
                         'reference_number' => $loan->loan_number,
                         'payment_method'   => 'schedule',
@@ -407,10 +359,7 @@ class ScheduleController extends Controller
 
                     $loan->refresh();
                     if ($loan->outstanding_balance <= 0) {
-                        $loan->update([
-                            'status'              => 'completed',
-                            'outstanding_balance' => 0,
-                        ]);
+                        $loan->update(['status' => 'completed', 'outstanding_balance' => 0]);
                     }
 
                     $processed++;
@@ -446,9 +395,7 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    // =========================================================================
-    //  3. LOAN DISBURSEMENTS  
-    // =========================================================================
+    //  LOAN DISBURSEMENTS  
 
     public function loanDisbursement(Request $request)
     {
@@ -529,7 +476,7 @@ class ScheduleController extends Controller
                         ->where('is_active', true)
                         ->first();
 
-                    if (!$account) {
+                    if (! $account) {
                         throw new \Exception("No active share_deposits account for member {$loan->member->membership_id}.");
                     }
 
@@ -554,12 +501,12 @@ class ScheduleController extends Controller
                     $account->update(['last_transaction_at' => $now]);
 
                     $loan->update([
-                        'status'               => 'active',
-                        'disbursed_amount'     => $loan->approved_amount,
-                        'disbursement_date'    => $now->toDateString(),
-                        'disbursed_by'         => $processedBy,
-                        'outstanding_balance'  => $loan->total_repayable ?? $loan->approved_amount,
-                        'principal_balance'    => $loan->approved_amount,
+                        'status'              => 'active',
+                        'disbursed_amount'    => $loan->approved_amount,
+                        'disbursement_date'   => $now->toDateString(),
+                        'disbursed_by'        => $processedBy,
+                        'outstanding_balance' => $loan->total_repayable ?? $loan->approved_amount,
+                        'principal_balance'   => $loan->approved_amount,
                     ]);
 
                     $processed++;
@@ -595,9 +542,7 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    // =========================================================================
-    //  4. DIVIDEND PAYMENTS  
-    // =========================================================================
+    //  DIVIDEND PAYMENTS
 
     public function dividendPayment(Request $request)
     {
@@ -610,7 +555,7 @@ class ScheduleController extends Controller
             ->whereIn('status', ['approved', 'distributed'])
             ->first();
 
-        if (!$dividend) {
+        if (! $dividend) {
             return Inertia::render('Admin/Schedule/DividendPayment', [
                 'dividend'        => null,
                 'memberDividends' => [],
@@ -621,24 +566,36 @@ class ScheduleController extends Controller
             ]);
         }
 
+        // Only include members who are eligible per their finance config
+        $eligibleMemberIds = MemberFinanceConfig::dividendEligible()->pluck('member_id');
+
         $memberDividends = MemberDividend::with(['member.user', 'member.accounts'])
             ->where('dividend_id', $dividend->id)
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
-            ->orderByDesc('dividend_amount')
             ->get()
-            ->map(fn($md) => [
-                'id'                  => $md->id,
-                'member_id'           => $md->member_id,
-                'membership_id'       => $md->member->membership_id,
-                'member_name'         => $md->member->first_name . ' ' . $md->member->last_name,
-                'shares_balance'      => (float) $md->shares_balance,
-                'dividend_amount'     => (float) $md->dividend_amount,
-                'status'              => $md->status,
-                'payment_date'        => $md->payment_date,
-                'eligible'            => $md->member->dividend_eligibility ?? true,
-                'dividend_account_id' => $md->member->dividend_account_id
-                    ?? $md->member->accounts->where('account_type', 'share_deposits')->first()?->id,
-            ]);
+            ->map(function ($md) use ($eligibleMemberIds) {
+                $config = $md->member->financeConfig;
+
+                // Determine which account to credit: config's dividend account → FOSA → first account
+                $dividendAccountId = $config?->dividend_account_id
+                    ?? $md->member->accounts->firstWhere('account_type', 'fosa')?->id
+                    ?? $md->member->accounts->first()?->id;
+
+                return [
+                    'id'                  => $md->id,
+                    'member_id'           => $md->member_id,
+                    'membership_id'       => $md->member->membership_id,
+                    'member_name'         => $md->member->first_name . ' ' . $md->member->last_name,
+                    'shares_balance'      => (float) $md->shares_balance,
+                    'dividend_amount'     => (float) $md->dividend_amount,
+                    'status'              => $md->status,
+                    'payment_date'        => $md->payment_date,
+                    'eligible'            => $eligibleMemberIds->contains($md->member_id),
+                    'dividend_account_id' => $dividendAccountId,
+                ];
+            })
+            ->sortByDesc('dividend_amount')
+            ->values();
 
         $pending = $memberDividends->where('status', 'pending')->where('eligible', true);
 
@@ -654,14 +611,14 @@ class ScheduleController extends Controller
 
         return Inertia::render('Admin/Schedule/DividendPayment', [
             'dividend' => [
-                'id'             => $dividend->id,
-                'dividend_year'  => $dividend->dividend_year,
-                'dividend_rate'  => (float) $dividend->dividend_rate,
-                'total_dividends'=> (float) $dividend->total_dividends,
-                'status'         => $dividend->status,
-                'approval_date'  => $dividend->approval_date?->format('Y-m-d'),
+                'id'              => $dividend->id,
+                'dividend_year'   => $dividend->dividend_year,
+                'dividend_rate'   => (float) $dividend->dividend_rate,
+                'total_dividends' => (float) $dividend->total_dividends,
+                'status'          => $dividend->status,
+                'approval_date'   => $dividend->approval_date?->format('Y-m-d'),
             ],
-            'memberDividends' => $memberDividends->values(),
+            'memberDividends' => $memberDividends,
             'summary'         => $summary,
             'year'            => $year,
             'alreadyRun'      => $alreadyRun,
@@ -770,7 +727,7 @@ class ScheduleController extends Controller
     }
 
     // =========================================================================
-    //  EXPORTS  
+    //  EXPORTS
     // =========================================================================
 
     public function exportLoanDisbursement(Request $request)

@@ -205,6 +205,8 @@ class MemberController extends Controller
     {
         $member->load([
             'user',
+            'financeConfig.contributionAccount',
+            'financeConfig.dividendAccount',
             'accounts' => function ($query) {
                 $query->withSum('transactions', 'amount');
             },
@@ -236,6 +238,7 @@ class MemberController extends Controller
 
         return Inertia::render('Admin/Members/Show', [
             'member' => $member,
+            'finance_configs' =>$member->financeConfig,
             'stats' => [
                 'total_savings' => $member->accounts->where('account_type', 'share_deposits')->sum('balance'),
                 'total_shares' => $member->accounts->where('account_type', 'share_capital')->sum('balance'),

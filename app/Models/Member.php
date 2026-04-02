@@ -43,6 +43,11 @@ class Member extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    public function financeConfig()
+    {
+        return $this->hasOne(MemberFinanceConfig::class);
+    }
+    
     public function loans()
     {
         return $this->hasMany(Loan::class);

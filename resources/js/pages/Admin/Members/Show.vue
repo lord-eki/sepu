@@ -9,11 +9,11 @@
         enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
         leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
         <div v-if="flashMessage" :class="[
-    flashType === 'success'
-      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-700 dark:text-green-300'
-      : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300',
-    'mb-4 rounded-xl p-4 shadow-sm flex items-center border'
-  ]">
+          flashType === 'success'
+            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-700 dark:text-green-300'
+            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300',
+          'mb-4 rounded-xl p-4 shadow-sm flex items-center border'
+        ]">
           <component :is="flashType === 'success' ? CheckCircle : AlertCircle" class="h-5 w-5"
             :class="flashType === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" />
           <div class="flex gap-2 items-center">
@@ -28,14 +28,13 @@
     </div>
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between max-sm:mx-2 gap-4 px-4 sm:px-8 py-6 
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between max-sm:mx-2 gap-4 px-4 sm:px-8 py-6
              bg-[#0a2342] text-white rounded-b-3xl shadow-md
              dark:bg-[#0e1628] dark:text-gray-100">
       <div class="flex items-center gap-3">
         <Link :href="route('members.index')" class="hover:text-orange-400 transition">
-        <ArrowLeft class="w-5 h-5" />
+          <ArrowLeft class="w-5 h-5" />
         </Link>
-
         <div>
           <h2 class="font-bold text-lg sm:text-xl">{{ member.first_name }} {{ member.last_name }}</h2>
           <p class="text-sm opacity-75">Member ID: {{ member.membership_id }}</p>
@@ -44,74 +43,59 @@
 
       <!-- ACTION BUTTONS -->
       <div v-if="canEdit" class="flex flex-wrap gap-2">
-        <Link :href="route('members.edit', member.id)" class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 
+        <Link :href="route('members.edit', member.id)" class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600
                  text-white px-4 py-2 rounded-xl text-sm font-medium transition">
-        <Pencil class="w-4 h-4" /> Edit
+          <Pencil class="w-4 h-4" /> Edit
         </Link>
 
         <!-- DROPDOWN -->
         <div class="relative" ref="dropdown">
-          <button @click="showDropdown = !showDropdown" class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-[#0a2342] dark:text-gray-100 
-                   border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm font-medium 
+          <button @click="showDropdown = !showDropdown" class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-[#0a2342] dark:text-gray-100
+                   border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm font-medium
                    hover:bg-gray-50 dark:hover:bg-gray-700">
             Actions
             <ChevronDown class="w-4 h-4" />
           </button>
 
-          <div v-if="showDropdown" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg py-2 z-10 
+          <div v-if="showDropdown" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg py-2 z-10
                    border border-gray-100 dark:border-gray-700">
-            <!-- Pending members -->
             <template v-if="member.membership_status === 'pending' && canManageStatus">
-              <button @click="openConfirm('approve')" class="block w-full text-left px-4 py-2 
-                       hover:bg-blue-50 dark:hover:bg-blue-900/20
-                       text-gray-700 dark:text-gray-300 text-sm">
+              <button @click="openConfirm('approve')" class="block w-full text-left px-4 py-2
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 text-sm">
                 Approve Member
               </button>
-
-              <button @click="openConfirm('reject')" class="block w-full text-left px-4 py-2 
-                       hover:bg-blue-50 dark:hover:bg-blue-900/20
-                       text-gray-700 dark:text-gray-300 text-sm">
+              <button @click="openConfirm('reject')" class="block w-full text-left px-4 py-2
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 text-sm">
                 Reject Member
               </button>
             </template>
 
-            <!-- Active / Inactive / Suspended -->
             <template v-else-if="canManageStatus">
-              <button v-if="member.membership_status !== 'active'" @click="openConfirm('activate')" class="block w-full text-left px-4 py-2 
-                       hover:bg-blue-50 dark:hover:bg-blue-900/20
-                       text-gray-700 dark:text-gray-300 text-sm">
+              <button v-if="member.membership_status !== 'active'" @click="openConfirm('activate')"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 text-sm">
                 Activate Member
               </button>
-
               <button v-if="member.membership_status === 'active' && member.user.id !== $page.props.auth.user.id"
-                @click="openConfirm('deactivate')" class="block w-full text-left px-4 py-2 
-                       hover:bg-blue-50 dark:hover:bg-blue-900/20
-                       text-gray-700 dark:text-gray-300 text-sm">
+                @click="openConfirm('deactivate')"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 text-sm">
                 Deactivate Member
               </button>
-
               <button v-if="member.membership_status !== 'suspended' && member.user.id !== $page.props.auth.user.id"
-                @click="openConfirm('suspend')" class="block w-full text-left px-4 py-2 
-                       hover:bg-blue-50 dark:hover:bg-blue-900/20
-                       text-gray-700 dark:text-gray-300 text-sm">
+                @click="openConfirm('suspend')"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 text-sm">
                 Suspend Member
               </button>
-
-              <button v-if="member.user.id === $page.props.auth.user.id" class="block w-full text-left px-4 py-2 
-                       hover:bg-blue-50 dark:hover:bg-blue-900/20
-                       text-gray-700 dark:text-gray-300 text-sm">
+              <button v-if="member.user.id === $page.props.auth.user.id"
+                class="block w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 text-sm">
                 No action (current user)
               </button>
             </template>
 
             <!-- CONFIRMATION MODAL -->
             <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-              <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-96 
+              <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-96
                           border border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
-                  Confirm Action
-                </h3>
-
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Confirm Action</h3>
                 <p class="text-gray-600 dark:text-gray-300 mb-6">
                   <template v-if="actionType === 'delete'">
                     <strong class="text-red-600 dark:text-red-400">Warning:</strong>
@@ -119,25 +103,19 @@
                     <br /><br />
                     <strong>This action cannot be undone.</strong>
                   </template>
-
                   <template v-else>
                     Are you sure you want to
-                    <span class="font-semibold text-orange-600 dark:text-orange-400">
-                      {{ actionType }}
-                    </span>
+                    <span class="font-semibold text-orange-600 dark:text-orange-400">{{ actionType }}</span>
                     this member?
                   </template>
                 </p>
-
                 <div class="flex justify-end space-x-3">
-                  <button @click="showConfirmModal = false" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 
-                           text-gray-800 dark:text-gray-200 rounded-md 
-                           hover:bg-gray-300 dark:hover:bg-gray-600">
+                  <button @click="showConfirmModal = false"
+                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">
                     Cancel
                   </button>
-
-                  <button @click="updateStatus" class="px-4 py-2 bg-[#0a2342] dark:bg-orange-600 
-                           text-white rounded-md hover:bg-orange-600 dark:hover:bg-orange-500">
+                  <button @click="updateStatus"
+                    class="px-4 py-2 bg-[#0a2342] dark:bg-orange-600 text-white rounded-md hover:bg-orange-600 dark:hover:bg-orange-500">
                     Yes, {{ actionType }}
                   </button>
                 </div>
@@ -149,15 +127,13 @@
     </div>
 
     <!-- Suspended/Rejected Notice -->
-    <div v-if="['suspended', 'rejected'].includes(member.membership_status)" class="max-w-3xl mx-auto mt-6 px-4 py-3 
-             bg-red-50 dark:bg-red-900/20 
-             border border-red-200 dark:border-red-700 
-             text-red-700 dark:text-red-300 
-             rounded-xl shadow-sm flex items-center gap-2">
+    <div v-if="['suspended', 'rejected'].includes(member.membership_status)"
+      class="max-w-3xl mx-auto mt-6 px-4 py-3
+             bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700
+             text-red-700 dark:text-red-300 rounded-xl shadow-sm flex items-center gap-2">
       <AlertCircle class="w-5 h-5 text-red-600 dark:text-red-400" />
       <p class="text-sm">
-        This member has been
-        <strong>{{ member.membership_status }}</strong>.
+        This member has been <strong>{{ member.membership_status }}</strong>.
         Certain actions are disabled until reinstated.
       </p>
     </div>
@@ -171,30 +147,25 @@
           <div>
             <img v-if="member.profile_photo" :src="`/storage/${member.profile_photo}`" :alt="member.first_name"
               class="h-24 w-24 rounded-full object-cover border-2 border-orange-500" />
-            <div v-else
-              class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center border-2 border-orange-500">
+            <div v-else class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center border-2 border-orange-500">
               <User class="h-10 w-10 text-gray-600" />
             </div>
           </div>
-
           <div class="flex-1">
-            <h3 class="text-lg font-semibold text-[#0a2342]">
-              {{ member.first_name }} {{ member.last_name }}
-            </h3>
+            <h3 class="text-lg font-semibold text-[#0a2342]">{{ member.first_name }} {{ member.last_name }}</h3>
             <p class="text-sm text-gray-500">{{ member.membership_id }}</p>
             <div class="mt-2 flex items-center gap-3">
               <span :class="[
-    'inline-flex px-3 py-1 rounded-full text-xs font-medium',
-    member.membership_status === 'active' ? 'bg-green-100 text-green-700' :
-      member.membership_status === 'inactive' ? 'bg-red-100 text-red-700' :
-        member.membership_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-          member.membership_status === 'suspended' ? 'bg-orange-100 text-orange-700' :
-            member.membership_status === 'rejected' ? 'bg-gray-100 text-gray-700' :
-              'bg-blue-100 text-blue-700'
-  ]">
+                'inline-flex px-3 py-1 rounded-full text-xs font-medium',
+                member.membership_status === 'active' ? 'bg-green-100 text-green-700' :
+                  member.membership_status === 'inactive' ? 'bg-red-100 text-red-700' :
+                    member.membership_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      member.membership_status === 'suspended' ? 'bg-orange-100 text-orange-700' :
+                        member.membership_status === 'rejected' ? 'bg-gray-100 text-gray-700' :
+                          'bg-blue-100 text-blue-700'
+              ]">
                 {{ member.membership_status }}
               </span>
-
               <span class="text-sm text-gray-500">Joined {{ formatDate(member.membership_date) }}</span>
             </div>
           </div>
@@ -225,17 +196,18 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <nav class="flex flex-wrap gap-2 sm:gap-6 border-b border-gray-100 px-6 py-3 bg-[#f9fafb]">
           <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="[
-    'px-4 py-2 rounded-xl text-sm font-medium transition-all',
-    activeTab === tab.id
-      ? 'bg-[#0a2342] text-white shadow-sm'
-      : 'text-gray-600 hover:text-[#0a2342] hover:bg-blue-50'
-  ]">
+            'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+            activeTab === tab.id
+              ? 'bg-[#0a2342] text-white shadow-sm'
+              : 'text-gray-600 hover:text-[#0a2342] hover:bg-blue-50'
+          ]">
             {{ tab.name }}
           </button>
         </nav>
 
         <!-- Tab Panels -->
         <div class="p-6">
+
           <!-- Personal Information Tab -->
           <div v-if="activeTab === 'personal'" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -267,7 +239,6 @@
                   </div>
                 </dl>
               </div>
-
               <div>
                 <h4 class="text-lg font-medium text-gray-900 mb-4">Contact Information</h4>
                 <dl class="space-y-3">
@@ -297,11 +268,9 @@
                       <dd class="text-sm text-gray-900">{{ member.county }}</dd>
                     </div>
                   </div>
-
                 </dl>
               </div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h4 class="text-lg font-medium text-gray-900 mb-4">Identification</h4>
@@ -316,7 +285,6 @@
                   </div>
                 </dl>
               </div>
-
               <div v-if="member.occupation || member.employer">
                 <h4 class="text-lg font-medium text-gray-900 mb-4">Employment</h4>
                 <dl class="space-y-3">
@@ -347,21 +315,16 @@
               <div v-for="account in member.accounts" :key="account.id" class="border border-gray-200 rounded-lg p-4">
                 <div class="flex justify-between items-start">
                   <div>
-                    <h4 class="text-base font-medium text-gray-900">
-                      {{ capitalize(account.account_type) }} Account
-                    </h4>
+                    <h4 class="text-base font-medium text-gray-900">{{ capitalize(account.account_type) }} Account</h4>
                     <p class="text-sm text-gray-500">{{ account.account_number }}</p>
                     <div class="mt-2">
-                      <span class="text-lg sm:text-xl font-medium text-gray-900">
-                        {{ formatCurrency(account.balance) }}
-                      </span>
+                      <span class="text-lg sm:text-xl font-medium text-gray-900">{{ formatCurrency(account.balance) }}</span>
                       <span class="text-sm text-gray-500 ml-2">Available Balance</span>
                     </div>
                   </div>
                   <div class="flex space-x-2">
-                    <Link :href="route('accounts.show', account.id)"
-                      class="text-indigo-600 hover:text-indigo-500 text-sm">
-                    View Details
+                    <Link :href="route('accounts.show', account.id)" class="text-indigo-600 hover:text-indigo-500 text-sm">
+                      View Details
                     </Link>
                   </div>
                 </div>
@@ -375,9 +338,7 @@
               <div v-for="loan in member.loans" :key="loan.id" class="border border-gray-200 rounded-lg p-4">
                 <div class="flex justify-between items-start">
                   <div>
-                    <h4 class="text-lg font-medium text-gray-900">
-                      {{ loan.loan_product?.name || 'Loan' }}
-                    </h4>
+                    <h4 class="text-lg font-medium text-gray-900">{{ loan.loan_product?.name || 'Loan' }}</h4>
                     <p class="text-sm text-gray-500">Loan #{{ loan.id }}</p>
                     <div class="mt-2 grid grid-cols-3 gap-4">
                       <div>
@@ -392,20 +353,18 @@
                         <span class="text-sm text-gray-500">Status</span>
                         <div>
                           <span :class="{
-    'inline-flex px-2 py-1 text-xs font-semibold rounded-full': true,
-    'bg-green-100 text-green-800': loan.status === 'active',
-    'bg-yellow-100 text-yellow-800': loan.status === 'pending',
-    'bg-blue-100 text-blue-800': loan.status === 'approved',
-    'bg-red-100 text-red-800': loan.status === 'rejected'
-  }">
-                            {{ loan.status }}
-                          </span>
+                            'inline-flex px-2 py-1 text-xs font-semibold rounded-full': true,
+                            'bg-green-100 text-green-800': loan.status === 'active',
+                            'bg-yellow-100 text-yellow-800': loan.status === 'pending',
+                            'bg-blue-100 text-blue-800': loan.status === 'approved',
+                            'bg-red-100 text-red-800': loan.status === 'rejected'
+                          }">{{ loan.status }}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   <Link :href="route('loans.show', loan.id)" class="text-indigo-600 hover:text-indigo-500 text-sm">
-                  View Details
+                    View Details
                   </Link>
                 </div>
               </div>
@@ -439,27 +398,23 @@
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium"
                         :class="transaction.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'">
-                        {{ transaction.transaction_type === 'credit' ? '+' : '-' }}{{
-    formatCurrency(transaction.amount) }}
+                        {{ transaction.transaction_type === 'credit' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span :class="{
-    'inline-flex px-2 py-1 text-xs font-semibold rounded-full': true,
-    'bg-green-100 text-green-800': transaction.status === 'completed',
-    'bg-yellow-100 text-yellow-800': transaction.status === 'pending',
-    'bg-red-100 text-red-800': transaction.status === 'failed'
-  }">
-                          {{ transaction.status }}
-                        </span>
+                          'inline-flex px-2 py-1 text-xs font-semibold rounded-full': true,
+                          'bg-green-100 text-green-800': transaction.status === 'completed',
+                          'bg-yellow-100 text-yellow-800': transaction.status === 'pending',
+                          'bg-red-100 text-red-800': transaction.status === 'failed'
+                        }">{{ transaction.status }}</span>
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <div class="mt-4">
-                <Link :href="route('members.transactions', member.id)"
-                  class="text-indigo-600 hover:text-indigo-500 text-sm">
-                View All Transactions
+                <Link :href="route('members.transactions', member.id)" class="text-indigo-600 hover:text-indigo-500 text-sm">
+                  View All Transactions
                 </Link>
               </div>
             </div>
@@ -468,26 +423,23 @@
             </div>
           </div>
 
-          <!-- Finance Setup Tab -->
+          <!-- ================================================================ -->
+          <!-- Finance Setup Tab                                                 -->
+          <!-- ================================================================ -->
           <div v-if="activeTab === 'deposit-commitments'" class="space-y-6">
 
-            <!-- Header -->
             <div>
-              <h3 class="text-lg font-semibold text-gray-900">
-                Financial Configuration
-              </h3>
+              <h3 class="text-lg font-semibold text-gray-900">Financial Configuration</h3>
               <p class="text-sm text-gray-500">
                 Configure how this member participates in contributions, loans, and dividends.
                 These settings are used during scheduled system runs.
               </p>
             </div>
 
-            <!-- GRID -->
+            <!-- 3 info cards -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-              <!-- ===================== -->
               <!-- 1. MONTHLY CONTRIBUTIONS -->
-              <!-- ===================== -->
               <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
                 <div class="flex justify-between items-center">
                   <h4 class="font-semibold text-[#0a2342]">Monthly Contributions</h4>
@@ -496,102 +448,88 @@
                     {{ memberConfig?.contribution_active ? 'Active' : 'Inactive' }}
                   </span>
                 </div>
-
                 <div class="text-sm text-gray-600 space-y-1">
                   <p>Amount:</p>
-                  <p class="font-semibold text-gray-900">
+                  <p class="font-semibold text-gray-900 text-lg">
                     {{ formatCurrency(memberConfig?.monthly_contribution || 0) }}
                   </p>
-
-                  <p class="text-xs text-gray-500">
-                    Auto-deducted monthly during schedule run
+                  <p class="text-xs text-gray-400">
+                    Account: {{ memberConfig?.contribution_account?.account_number || '—' }}
                   </p>
+                  <p class="text-xs text-gray-500 pt-1">Auto-credited monthly during schedule run</p>
                 </div>
-
-                <Link :href="route('members.finance-setup.index', member.id)"
-                  class="block text-center bg-blue-50 text-[#0a2342] py-2 rounded-lg text-sm hover:bg-blue-100">
-                Configure
-                </Link>
+                <button @click="openModal('deposit')"
+                  class="block w-full text-center bg-blue-50 text-[#0a2342] py-2 rounded-lg text-sm hover:bg-blue-100 transition">
+                  Configure
+                </button>
               </div>
 
-              <!-- ===================== -->
-              <!-- 2. LOAN SETTINGS -->
-              <!-- ===================== -->
+              <!-- 2. LOAN REPAYMENTS -->
               <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
                 <div class="flex justify-between items-center">
-                  <h4 class="font-semibold text-[#0a2342]">Loan Settings</h4>
-                  <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                    System Controlled
+                  <h4 class="font-semibold text-[#0a2342]">Loan Repayments</h4>
+                  <span class="text-xs px-2 py-1 rounded-full"
+                    :class="memberConfig?.loan_auto_deduct ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'">
+                    {{ memberConfig?.loan_auto_deduct ? 'Auto Deduct' : 'Manual' }}
                   </span>
                 </div>
-
                 <div class="text-sm text-gray-600 space-y-2">
-                  <p>
-                    Active Loans:
-                    <span class="font-semibold text-gray-900">{{ member.loans.length }}</span>
+                  <p>Active Loans:
+                    <span class="font-semibold text-gray-900">{{ member.loans.filter(l => l.status === 'active').length }}</span>
                   </p>
-
-                  <p>
-                    Auto Deduction:
-                    <span class="font-semibold text-gray-900">
-                      {{ memberConfig?.loan_auto_deduct ? 'Enabled' : 'Disabled' }}
+                  <p>Monthly Deduction:
+                    <span class="font-semibold" :class="memberConfig?.loan_deduction_amount ? 'text-blue-700' : 'text-gray-400'">
+                      {{ memberConfig?.loan_deduction_amount ? formatCurrency(memberConfig.loan_deduction_amount) : 'Full instalment' }}
                     </span>
                   </p>
-
                   <p class="text-xs text-gray-500">
-                    Loan repayments will be deducted automatically during schedule execution.
+                    Repayments processed automatically during schedule run.
                   </p>
                 </div>
-
-                <Link :href="route('loans.index')"
-                  class="block text-center bg-blue-50 text-[#0a2342] py-2 rounded-lg text-sm hover:bg-blue-100">
-                Manage Loans
-                </Link>
+                <button @click="openModal('loan')"
+                  class="block w-full text-center bg-blue-50 text-[#0a2342] py-2 rounded-lg text-sm hover:bg-blue-100 transition">
+                  Configure
+                </button>
               </div>
 
-              <!-- ===================== -->
               <!-- 3. DIVIDEND SETTINGS -->
-              <!-- ===================== -->
               <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
                 <div class="flex justify-between items-center">
                   <h4 class="font-semibold text-[#0a2342]">Dividend Settings</h4>
                   <span class="text-xs px-2 py-1 rounded-full"
-                    :class="memberConfig?.dividend_eligible ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
-                    {{ memberConfig?.dividend_eligible ? 'Eligible' : 'Not Eligible' }}
+                    :class="memberConfig?.dividend_eligible !== false ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+                    {{ memberConfig?.dividend_eligible !== false ? 'Eligible' : 'Not Eligible' }}
                   </span>
                 </div>
-
                 <div class="text-sm text-gray-600 space-y-2">
-                  <p>
-                    Shares:
-                    <span class="font-semibold text-gray-900">
-                      {{ formatCurrency(stats.total_shares) }}
+                  <p>Share Capital:
+                    <span class="font-semibold text-gray-900">{{ formatCurrency(stats.total_shares) }}</span>
+                  </p>
+                  <p>Payout Account:
+                    <span class="font-semibold text-gray-700">
+                      {{ memberConfig?.dividend_account?.account_number || 'Default (FOSA)' }}
                     </span>
                   </p>
-
                   <p class="text-xs text-gray-500">
-                    Dividends will be calculated based on shares during annual distribution.
+                    Dividends calculated from shares and deposits during annual distribution.
                   </p>
                 </div>
-
-                <Link :href="route('dividends.index')"
-                  class="block text-center bg-blue-50 text-[#0a2342] py-2 rounded-lg text-sm hover:bg-blue-100">
-                View Dividends
-                </Link>
+                <button @click="openModal('dividend')"
+                  class="block w-full text-center bg-blue-50 text-[#0a2342] py-2 rounded-lg text-sm hover:bg-blue-100 transition">
+                  Configure
+                </button>
               </div>
 
             </div>
 
-            <!-- ===================== -->
-            <!-- SYSTEM NOTE -->
-            <!-- ===================== -->
+            <!-- System Note -->
             <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800">
               <strong>System Note:</strong><br />
               During scheduled execution:
               <ul class="list-disc ml-5 mt-2 space-y-1">
-                <li>Monthly contributions are deducted automatically</li>
-                <li>Loan repayments are processed for active loans</li>
-                <li>Dividend eligibility is considered during distribution</li>
+                <li>Monthly contributions are credited automatically (only if contribution is active and amount &gt; 0)</li>
+                <li>Loan repayments are processed for members with auto-deduct enabled (uses fixed amount if set, otherwise full instalment)</li>
+                <li>Dividend eligibility is considered during the annual distribution run</li>
               </ul>
             </div>
 
@@ -621,7 +559,7 @@
               <p class="text-gray-500">No next of kin information available</p>
             </div>
             <Link :href="route('members.next-of-kin', member.id)" class="text-indigo-600 hover:text-indigo-500 text-sm">
-            Manage Next of Kin
+              Manage Next of Kin
             </Link>
           </div>
 
@@ -635,24 +573,14 @@
                     <div>
                       <h4 class="text-sm font-medium text-gray-900">{{ doc.name }}</h4>
                       <p class="text-sm text-gray-500">
-                        {{ formatFileSize(doc.size) }} • {{ doc.type }} •
-                        Uploaded {{ formatDate(doc.uploaded_at) }}
+                        {{ formatFileSize(doc.size) }} • {{ doc.type }} • Uploaded {{ formatDate(doc.uploaded_at) }}
                       </p>
                     </div>
                   </div>
                   <div class="flex space-x-2">
-                    <a :href="`/storage/${doc.path}`" target="_blank"
-                      class="text-indigo-600 hover:text-indigo-500 text-sm">
-                      View
-                    </a>
-                    <a :href="`/storage/${doc.path}`" :download="doc.name"
-                      class="text-green-600 hover:text-green-500 text-sm">
-                      Download
-                    </a>
-                    <button v-if="canEdit" @click="deleteDocument(index)"
-                      class="text-red-600 hover:text-red-500 text-sm">
-                      Delete
-                    </button>
+                    <a :href="`/storage/${doc.path}`" target="_blank" class="text-indigo-600 hover:text-indigo-500 text-sm">View</a>
+                    <a :href="`/storage/${doc.path}`" :download="doc.name" class="text-green-600 hover:text-green-500 text-sm">Download</a>
+                    <button v-if="canEdit" @click="deleteDocument(index)" class="text-red-600 hover:text-red-500 text-sm">Delete</button>
                   </div>
                 </div>
               </div>
@@ -660,8 +588,6 @@
             <div v-else class="text-center py-8">
               <p class="text-gray-500">No documents uploaded</p>
             </div>
-
-            <!-- Upload New Documents -->
             <div v-if="canEdit" class="mt-6 border-t pt-6">
               <input type="file" ref="documentInput" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="hidden"
                 @change="handleDocumentUpload" />
@@ -672,14 +598,233 @@
               </button>
             </div>
           </div>
+
         </div>
       </div>
     </div>
-    <!-- Global Loader Overlay -->
+
+    <!-- ====================================================================== -->
+    <!-- FINANCE SETUP MODAL                                                     -->
+    <!-- ====================================================================== -->
+    <transition
+      enter-active-class="transition ease-out duration-200"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition ease-in duration-150"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="showFinanceModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700"
+          @click.stop>
+
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div>
+              <h3 class="text-lg font-semibold text-[#0a2342] dark:text-white">{{ modalTitle }}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ member.first_name }} {{ member.last_name }}</p>
+            </div>
+            <button @click="showFinanceModal = false"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <form @submit.prevent="saveConfig" class="p-6 space-y-5">
+
+            <!-- ── 1. MONTHLY DEPOSIT ─────────────────────────────────── -->
+            <template v-if="activeModalSection === 'deposit'">
+              <div class="space-y-4">
+
+                <!-- Active toggle -->
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <div>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Auto Contribution</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Include this member in the monthly deposit schedule</p>
+                  </div>
+                  <button type="button" @click="form.contribution_active = !form.contribution_active"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    :class="form.contribution_active ? 'bg-[#0a2342]' : 'bg-gray-300'">
+                    <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+                      :class="form.contribution_active ? 'translate-x-6' : 'translate-x-1'" />
+                  </button>
+                </div>
+
+                <!-- Amount -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Monthly Contribution Amount (KES)
+                  </label>
+                  <input v-model.number="form.monthly_contribution" type="number" min="0" step="0.01"
+                    placeholder="e.g. 5000" :disabled="!form.contribution_active"
+                    class="w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm
+                           focus:ring-2 focus:ring-[#0a2342] focus:border-transparent outline-none
+                           disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400
+                           dark:bg-gray-800 dark:text-gray-100" />
+                </div>
+
+                <!-- Account selector -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Credit To Account
+                  </label>
+                  <select v-model="form.contribution_account_id" :disabled="!form.contribution_active"
+                    class="w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm
+                           focus:ring-2 focus:ring-[#0a2342] focus:border-transparent outline-none
+                           disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400
+                           dark:bg-gray-800 dark:text-gray-100">
+                    <option value="">— Select account —</option>
+                    <option v-for="acc in member.accounts" :key="acc.id" :value="acc.id">
+                      {{ acc.account_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                      – {{ acc.account_number }} ({{ formatCurrency(acc.balance) }})
+                    </option>
+                  </select>
+                </div>
+
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                  The chosen amount will be posted to the selected account each time the Monthly Deposits schedule is run.
+                </p>
+              </div>
+            </template>
+
+            <!-- ── 2. LOAN REPAYMENT ──────────────────────────────────── -->
+            <template v-if="activeModalSection === 'loan'">
+              <div class="space-y-4">
+
+                <!-- Auto deduct toggle -->
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <div>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Auto Deduction</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Include this member's loans in the automated repayment schedule
+                    </p>
+                  </div>
+                  <button type="button" @click="form.loan_auto_deduct = !form.loan_auto_deduct"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    :class="form.loan_auto_deduct ? 'bg-[#0a2342]' : 'bg-gray-300'">
+                    <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+                      :class="form.loan_auto_deduct ? 'translate-x-6' : 'translate-x-1'" />
+                  </button>
+                </div>
+
+                <!-- Fixed deduction amount -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Fixed Monthly Deduction Amount (KES)
+                    <span class="text-gray-400 font-normal ml-1">— optional</span>
+                  </label>
+                  <input v-model.number="form.loan_deduction_amount" type="number" min="0" step="0.01"
+                    placeholder="Leave blank to deduct the full instalment" :disabled="!form.loan_auto_deduct"
+                    class="w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm
+                           focus:ring-2 focus:ring-[#0a2342] focus:border-transparent outline-none
+                           disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400
+                           dark:bg-gray-800 dark:text-gray-100" />
+                  <p class="text-xs text-gray-400 mt-1">
+                    If set, this fixed amount is deducted each month (capped at the outstanding instalment).
+                    Leave blank to always deduct the full instalment.
+                  </p>
+                </div>
+
+                <!-- Active loans info box -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 space-y-2">
+                  <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Active Loans</p>
+                  <template v-if="member.loans.filter(l => l.status === 'active').length > 0">
+                    <div v-for="loan in member.loans.filter(l => l.status === 'active')" :key="loan.id"
+                      class="flex justify-between text-sm text-blue-700 dark:text-blue-300">
+                      <span>{{ loan.loan_product?.name || 'Loan #' + loan.id }}</span>
+                      <span class="font-semibold">{{ formatCurrency(loan.outstanding_balance) }} outstanding</span>
+                    </div>
+                  </template>
+                  <p v-else class="text-sm text-blue-600 dark:text-blue-400">No active loans at this time.</p>
+                </div>
+              </div>
+            </template>
+
+            <!-- ── 3. DIVIDEND ────────────────────────────────────────── -->
+            <template v-if="activeModalSection === 'dividend'">
+              <div class="space-y-4">
+
+                <!-- Eligibility toggle -->
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <div>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Dividend Eligible</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Include this member in the annual dividend payment run
+                    </p>
+                  </div>
+                  <button type="button" @click="form.dividend_eligible = !form.dividend_eligible"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    :class="form.dividend_eligible ? 'bg-[#0a2342]' : 'bg-gray-300'">
+                    <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+                      :class="form.dividend_eligible ? 'translate-x-6' : 'translate-x-1'" />
+                  </button>
+                </div>
+
+                <!-- Dividend payout account -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Dividend Payout Account
+                    <span class="text-gray-400 font-normal ml-1">— optional, defaults to FOSA</span>
+                  </label>
+                  <select v-model="form.dividend_account_id" :disabled="!form.dividend_eligible"
+                    class="w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm
+                           focus:ring-2 focus:ring-[#0a2342] focus:border-transparent outline-none
+                           disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400
+                           dark:bg-gray-800 dark:text-gray-100">
+                    <option value="">— Default (FOSA) —</option>
+                    <option v-for="acc in member.accounts" :key="acc.id" :value="acc.id">
+                      {{ acc.account_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                      – {{ acc.account_number }} ({{ formatCurrency(acc.balance) }})
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Share summary -->
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 space-y-2">
+                  <p class="text-sm font-medium text-green-800 dark:text-green-300">Member Share Summary</p>
+                  <div class="flex justify-between text-sm text-green-700 dark:text-green-300">
+                    <span>Share Capital</span>
+                    <span class="font-semibold">{{ formatCurrency(stats.total_shares) }}</span>
+                  </div>
+                  <div class="flex justify-between text-sm text-green-700 dark:text-green-300">
+                    <span>Share Deposits</span>
+                    <span class="font-semibold">{{ formatCurrency(stats.total_savings) }}</span>
+                  </div>
+                </div>
+
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                  Dividends are computed using share capital and monthly deposit balances.
+                  Disabling eligibility excludes this member from all dividend schedule runs.
+                </p>
+              </div>
+            </template>
+
+            <!-- Modal Footer -->
+            <div class="flex justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <button type="button" @click="showFinanceModal = false"
+                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800
+                       hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition">
+                Cancel
+              </button>
+              <button type="submit" :disabled="isSaving"
+                class="px-5 py-2 text-sm font-medium text-white bg-[#0a2342] hover:bg-orange-600 rounded-xl transition
+                       disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2">
+                <span v-if="isSaving" class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                {{ isSaving ? 'Saving…' : 'Save Configuration' }}
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Global Loader -->
     <div v-if="isLoading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center space-y-3">
-        <svg class="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none"
-          viewBox="0 0 24 24">
+        <svg class="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
         </svg>
@@ -694,98 +839,184 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { ArrowLeft, ChevronDown, AlertCircle, File, Pencil, User } from 'lucide-vue-next'
-
-// Flash handling
-const page = usePage();
-const flash = computed(() => page.props.flash || {});
-const flashMessage = ref(null);
-const flashType = ref("success");
-const flashBox = ref(null);
-const isLoading = ref(false)
-
-const memberConfig = computed(() => {
-  return props.member.finance_config || {}
-})
-
-
-watch(
-  flash,
-  (val) => {
-    if (val.success) {
-      flashMessage.value = val.success;
-      flashType.value = "success";
-    } else if (val.error) {
-      flashMessage.value = val.error;
-      flashType.value = "error";
-    }
-
-    if (flashMessage.value) {
-      // Scroll to top of page to ensure flash is visible
-      window.scrollTo({ top: 0, behavior: "smooth" });
-
-      // Optional: also ensure the flash container itself is in view
-      flashBox.value?.scrollIntoView({ behavior: "smooth", block: "start" });
-
-      // Auto-hide after 3s
-      setTimeout(() => (flashMessage.value = null), 3000);
-    }
-  },
-  { immediate: true, deep: true }
-);
+import { ArrowLeft, ChevronDown, AlertCircle, CheckCircle, File, Pencil, User, X } from 'lucide-vue-next'
 
 const props = defineProps({
   member: Object,
-  stats: Object
+  stats:  Object,
+
 })
+
+const page         = usePage()
+const flash        = computed(() => page.props.flash || {})
+const flashMessage = ref(null)
+const flashType    = ref('success')
+const flashBox     = ref(null)
+const isLoading    = ref(false)
+
+watch(flash, (val) => {
+  if (val.success)      { flashMessage.value = val.success; flashType.value = 'success' }
+  else if (val.error)   { flashMessage.value = val.error;   flashType.value = 'error'   }
+
+  if (flashMessage.value) {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    flashBox.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setTimeout(() => (flashMessage.value = null), 3000)
+  }
+}, { immediate: true, deep: true })
+
+const memberConfig = computed(() => props.member.finance_config ?? {})
 
 const activeTab = ref('personal')
-const showDropdown = ref(false)
-const dropdown = ref(null)
-
-
-
 const tabs = [
-  { id: 'personal', name: 'Personal Info' },
-  { id: 'accounts', name: 'Accounts' },
-  { id: 'loans', name: 'Loans' },
-  { id: 'transactions', name: 'Recent Transactions' },
+  { id: 'personal',            name: 'Personal Info' },
+  { id: 'accounts',            name: 'Accounts' },
+  { id: 'loans',               name: 'Loans' },
+  { id: 'transactions',        name: 'Recent Transactions' },
   { id: 'deposit-commitments', name: 'Finance Setup' },
-  { id: 'next-of-kin', name: 'Next of Kin' },
-  { id: 'documents', name: 'Documents' }
+  { id: 'next-of-kin',         name: 'Next of Kin' },
+  { id: 'documents',           name: 'Documents' },
 ]
 
-const canEdit = computed(() => {
-  const userRole = page.props.auth.user?.role
-  return ['admin', 'management', 'loan_officer'].includes(userRole)
-})
+const canEdit        = computed(() => ['admin', 'management', 'loan_officer'].includes(page.props.auth.user?.role))
+const canManageStatus = computed(() => ['admin', 'management'].includes(page.props.auth.user?.role))
 
+const showDropdown     = ref(false)
+const dropdown         = ref(null)
+const showConfirmModal = ref(false)
+const actionType       = ref(null)
+const memberId         = props.member.id
 
-const canManageStatus = computed(() => {
-  const userRole = page.props.auth.user?.role
-  return ['admin', 'management'].includes(userRole)
-})
+const openConfirm = (action) => { actionType.value = action; showConfirmModal.value = true }
 
+const updateStatus = () => {
+  isLoading.value = true
+  if (actionType.value === 'delete') {
+    router.delete(route('members.destroy', memberId), {
+      preserveScroll: true,
+      onSuccess: () => { showConfirmModal.value = false; showDropdown.value = false; router.visit(route('members.index')) },
+      onFinish:  () => { isLoading.value = false },
+    })
+    return
+  }
+  router.post(route(`members.${actionType.value}`, memberId), {}, {
+    preserveScroll: true,
+    onSuccess: () => { showConfirmModal.value = false; showDropdown.value = false },
+    onError:   (errors) => { flashMessage.value = errors?.message || 'Something went wrong'; flashType.value = 'error' },
+    onFinish:  () => { isLoading.value = false },
+  })
+}
 
 const memberDocuments = computed(() => {
   if (!props.member.documents) return []
-  try {
-    return JSON.parse(props.member.documents)
-  } catch {
-    return []
-  }
+  try { return JSON.parse(props.member.documents) } catch { return [] }
 })
 
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString()
+const handleDocumentUpload = (event) => {
+  const files = Array.from(event.target.files)
+  if (!files.length) return
+  const formData = new FormData()
+  files.forEach(file => formData.append('documents[]', file))
+  isLoading.value = true
+  router.post(route('members.upload-documents', props.member.id), formData, {
+    preserveScroll: true,
+    onError:  (errors) => { flashMessage.value = errors?.message || 'Failed to upload documents'; flashType.value = 'error' },
+    onFinish: () => { isLoading.value = false; event.target.value = '' },
+  })
 }
 
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-KE', {
-    style: 'currency',
-    currency: 'KES'
-  }).format(amount || 0)
+const deleteDocument = (index) => {
+  if (!confirm('Are you sure you want to delete this document?')) return
+  isLoading.value = true
+  router.delete(route('members.delete-document', [props.member.id, index]), {
+    preserveScroll: true,
+    onError:  (errors) => { flashMessage.value = errors?.message || 'Failed to delete document'; flashType.value = 'error' },
+    onFinish: () => { isLoading.value = false },
+  })
 }
+
+const showFinanceModal   = ref(false)
+const activeModalSection = ref('deposit')   
+const isSaving           = ref(false)
+
+const modalTitle = computed(() => ({
+  deposit:  'Monthly Deposit Configuration',
+  loan:     'Loan Repayment Configuration',
+  dividend: 'Dividend Eligibility Configuration',
+}[activeModalSection.value] ?? 'Finance Setup'))
+
+const form = ref({
+  // Monthly deposit
+  monthly_contribution:    0,
+  contribution_active:     false,
+  contribution_account_id: '',
+
+  // Loan repayment
+  loan_auto_deduct:       false,
+  loan_deduction_amount:  null,   
+
+  // Dividend
+  dividend_eligible:      true,
+  dividend_account_id:    '',     
+})
+
+
+const openModal = (section) => {
+  activeModalSection.value = section
+
+  const cfg = memberConfig.value
+  form.value = {
+    monthly_contribution:    cfg.monthly_contribution    ?? 0,
+    contribution_active:     cfg.contribution_active     ?? false,
+    contribution_account_id: cfg.contribution_account_id ?? '',
+
+    loan_auto_deduct:       cfg.loan_auto_deduct       ?? false,
+    loan_deduction_amount:  cfg.loan_deduction_amount  ?? null,
+
+    dividend_eligible:      cfg.dividend_eligible      ?? true,
+    dividend_account_id:    cfg.dividend_account_id    ?? '',
+  }
+
+  showFinanceModal.value = true
+}
+
+
+const saveConfig = () => {
+  isSaving.value = true
+
+  router.post(
+    route('members.finance-config.save', props.member.id),
+    {
+      // Monthly deposit
+      monthly_contribution:    form.value.monthly_contribution,
+      contribution_active:     form.value.contribution_active,
+      contribution_account_id: form.value.contribution_account_id || null,
+
+      // Loan repayment
+      loan_auto_deduct:       form.value.loan_auto_deduct,
+      loan_deduction_amount:  form.value.loan_deduction_amount || null,
+
+      // Dividend
+      dividend_eligible:      form.value.dividend_eligible,
+      dividend_account_id:    form.value.dividend_account_id || null,
+    },
+    {
+      preserveScroll: true,
+      onSuccess: () => { showFinanceModal.value = false },
+      onError: (errors) => {
+        const first = Object.values(errors)[0]
+        flashMessage.value = first || 'Failed to save configuration'
+        flashType.value = 'error'
+      },
+      onFinish: () => { isSaving.value = false },
+    }
+  )
+}
+
+const formatDate = (date) => new Date(date).toLocaleDateString()
+
+const formatCurrency = (amount) =>
+  new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount || 0)
 
 const formatFileSize = (bytes) => {
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
@@ -794,122 +1025,11 @@ const formatFileSize = (bytes) => {
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
 }
 
-const capitalize = (str) => {
-  if (!str) return ''
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
-const showConfirmModal = ref(false)
-const actionType = ref(null)
-const memberId = props.member.id
-
-const openConfirm = (action) => {
-  actionType.value = action
-  showConfirmModal.value = true
-}
-
-const updateStatus = () => {
-  isLoading.value = true
-
-  // DELETE MEMBER
-  if (actionType.value === 'delete') {
-    router.delete(route('members.destroy', memberId), {
-      preserveScroll: true,
-      onSuccess: () => {
-        const flash = usePage().props.flash
-
-        if (flash?.error) {
-          flashMessage.value = flash.error
-          flashType.value = "error"
-        }
-
-        if (flash?.success) {
-          flashMessage.value = flash.success
-          flashType.value = "success"
-        }
-
-        showConfirmModal.value = false
-        showDropdown.value = false
-
-        // Optional: redirect to members list after deletion
-        router.visit(route('members.index'))
-      },
-      onFinish: () => {
-        isLoading.value = false
-      }
-    })
-
-    return
-  }
-
-  // ALL OTHER STATUS ACTIONS
-  router.post(route(`members.${actionType.value}`, memberId), {}, {
-    preserveScroll: true,
-    onSuccess: () => {
-      showConfirmModal.value = false
-      showDropdown.value = false
-    },
-    onError: (errors) => {
-      flashMessage.value = errors?.message || "Something went wrong"
-      flashType.value = "error"
-    },
-    onFinish: () => {
-      isLoading.value = false
-    }
-  })
-}
-
-
-const handleDocumentUpload = (event) => {
-  const files = Array.from(event.target.files)
-  if (files.length > 0) {
-    const formData = new FormData()
-    files.forEach(file => formData.append('documents[]', file))
-
-    isLoading.value = true
-    router.post(route('members.upload-documents', props.member.id), formData, {
-      preserveScroll: true,
-      onError: (errors) => {
-        flashMessage.value = errors?.message || "Failed to upload documents"
-        flashType.value = "error"
-      },
-      onFinish: () => {
-        isLoading.value = false
-        event.target.value = ''
-      }
-    })
-  }
-}
-
-
-const deleteDocument = (index) => {
-  if (!confirm('Are you sure you want to delete this document?')) return
-
-  isLoading.value = true
-  router.delete(route('members.delete-document', [props.member.id, index]), {
-    preserveScroll: true,
-    onError: (errors) => {
-      flashMessage.value = errors?.message || "Failed to delete document"
-      flashType.value = "error"
-    },
-    onFinish: () => {
-      isLoading.value = false
-    }
-  })
-}
-
+const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : ''
 
 const handleClickOutside = (event) => {
-  if (dropdown.value && !dropdown.value.contains(event.target)) {
-    showDropdown.value = false
-  }
+  if (dropdown.value && !dropdown.value.contains(event.target)) showDropdown.value = false
 }
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+onMounted(() => document.addEventListener('click', handleClickOutside))
+onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
