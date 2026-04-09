@@ -1,183 +1,158 @@
-<script setup>
-import { Head, Link } from '@inertiajs/vue3'
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, Link } from '@inertiajs/vue3'
+import { Calendar, TrendingUp, Users, Banknote } from 'lucide-vue-next'
 
-const props = defineProps({
-    recentLogs: Array,
-    currentMonth: Number,
-    currentYear: Number
-})
+const props = defineProps<{
+  recentLogs: any[]
+  currentMonth: string
+  currentYear: number
+}>()
 
-/* Convert month number to name */
-function getMonthName(month) {
-    const months = [
-        "January","February","March","April","May","June",
-        "July","August","September","October","November","December"
-    ]
-    return months[(month ?? 1) - 1]
-}
-
-/* Format money */
-function formatMoney(amount) {
-    if (!amount) return "KES 0"
-    return "KES " + Number(amount).toLocaleString()
-}
+const cards = [
+  {
+    title: 'Monthly Deposits',
+    icon: Banknote,
+    link: '/schedule/monthly-deposit',
+    desc: 'Automate member monthly contributions'
+  },
+  {
+    title: 'Loan Repayments',
+    icon: TrendingUp,
+    link: '/schedule/loan-repayment',
+    desc: 'Process scheduled loan deductions'
+  },
+  {
+    title: 'Loan Disbursement',
+    icon: Users,
+    link: '/schedule/loan-disbursement',
+    desc: 'Release approved loans to members'
+  },
+  {
+    title: 'Dividends',
+    icon: Calendar,
+    link: '/schedule/dividend-payment',
+    desc: 'Distribute annual dividends'
+  }
+]
 </script>
 
-
 <template>
-    <AppLayout :breadcrumbs="[{ title: 'Financial Schedules' }]">
+  <AppLayout>
+    <Head title="Schedules Dashboard" />
 
-        <Head title="Financial Schedules" />
-
-        <div class="p-6 space-y-8">
-
-            <!-- PAGE HEADER -->
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800">
-                    Financial Schedule Processing
-                </h1>
-
-                <div class="text-sm text-gray-500">
-                    Period: {{ getMonthName(currentMonth) }} {{ currentYear }}
-                </div>
-            </div>
-
-
-            <!-- SCHEDULE CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-                <!-- Monthly Deposits -->
-                <Link :href="route('schedule.monthly-deposit')"
-                    class="bg-white shadow rounded-xl p-6 hover:shadow-lg transition">
-                    <div class="text-blue-600 text-lg font-semibold">
-                        Monthly Deposits
-                    </div>
-                    <p class="text-sm text-gray-500 mt-2">
-                        Generate monthly member contribution transactions
-                    </p>
-                </Link>
-
-                <!-- Loan Repayments -->
-                <Link :href="route('schedule.loan-repayment')"
-                    class="bg-white shadow rounded-xl p-6 hover:shadow-lg transition">
-                    <div class="text-green-600 text-lg font-semibold">
-                        Loan Repayments
-                    </div>
-                    <p class="text-sm text-gray-500 mt-2">
-                        Process monthly loan repayments
-                    </p>
-                </Link>
-
-                <!-- Loan Disbursements -->
-                <Link :href="route('schedule.loan-disbursement')"
-                    class="bg-white shadow rounded-xl p-6 hover:shadow-lg transition">
-                    <div class="text-purple-600 text-lg font-semibold">
-                        Loan Disbursements
-                    </div>
-                    <p class="text-sm text-gray-500 mt-2">
-                        Disburse approved loans to members
-                    </p>
-                </Link>
-
-                <!-- Dividend Payments -->
-                <Link :href="route('schedule.dividend-payment')"
-                    class="bg-white shadow rounded-xl p-6 hover:shadow-lg transition">
-                    <div class="text-yellow-600 text-lg font-semibold">
-                        Dividend Payments
-                    </div>
-                    <p class="text-sm text-gray-500 mt-2">
-                        Pay dividends to eligible members
-                    </p>
-                </Link>
-
-            </div>
-
-
-            <!-- RECENT EXECUTIONS -->
-            <div class="bg-white shadow rounded-xl p-6">
-
-                <h2 class="text-lg font-semibold mb-4">
-                    Recent Schedule Executions
-                </h2>
-
-                <div class="overflow-x-auto">
-
-                    <table class="min-w-full text-sm">
-
-                        <thead class="bg-gray-100 text-gray-600">
-                            <tr>
-                                <th class="p-3 text-left">Schedule</th>
-                                <th class="p-3 text-left">Period</th>
-                                <th class="p-3 text-left">Execution Date</th>
-                                <th class="p-3 text-left">Executed By</th>
-                                <th class="p-3 text-left">Records</th>
-                                <th class="p-3 text-left">Amount</th>
-                                <th class="p-3 text-left">Status</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            <tr v-for="log in (recentLogs ?? [])" :key="log.id" class="border-t">
-
-                                <td class="p-3">
-                                    {{ log.schedule_type }}
-                                </td>
-
-                                <td class="p-3">
-                                    {{ getMonthName(log.processing_month) }} {{ log.processing_year }}
-                                </td>
-
-                                <td class="p-3">
-                                    {{ log.execution_date }}
-                                </td>
-
-                                <td class="p-3">
-                                    {{ log.executed_by }}
-                                </td>
-
-                                <td class="p-3">
-                                    {{ log.total_records_processed ?? 0 }}
-                                </td>
-
-                                <td class="p-3">
-                                    {{ formatMoney(log.total_amount) }}
-                                </td>
-
-                                <td class="p-3">
-
-                                    <span
-                                        v-if="log.status === 'Completed'"
-                                        class="text-green-600 font-semibold">
-                                        Completed
-                                    </span>
-
-                                    <span
-                                        v-else
-                                        class="text-red-600 font-semibold">
-                                        Failed
-                                    </span>
-
-                                </td>
-
-                            </tr>
-
-                            <tr v-if="(recentLogs ?? []).length === 0">
-                                <td colspan="7" class="text-center p-6 text-gray-400">
-                                    No schedules executed yet
-                                </td>
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
+    <div class="p-6 space-y-8">
+      <!-- HEADER -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Schedules Dashboard</h1>
+          <p class="text-gray-500 mt-1">
+            Manage automated SACCO financial operations and track execution history
+          </p>
         </div>
 
-    </AppLayout>
+        <div class="bg-white px-4 py-2 rounded-xl shadow text-sm">
+          <p><strong>Current Month:</strong> {{ currentMonth }}</p>
+          <p><strong>Year:</strong> {{ currentYear }}</p>
+        </div>
+      </div>
+
+      <!-- ACTION CARDS -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Link
+          v-for="card in cards"
+          :key="card.title"
+          :href="card.link"
+          class="group bg-white rounded-2xl p-5 shadow hover:shadow-lg transition"
+        >
+          <div class="flex items-center justify-between">
+            <component :is="card.icon" class="w-8 h-8 text-blue-600" />
+            <span class="text-xs text-gray-400 group-hover:text-blue-600">
+              Open →
+            </span>
+          </div>
+
+          <h3 class="mt-4 text-lg font-semibold text-gray-800">
+            {{ card.title }}
+          </h3>
+
+          <p class="text-sm text-gray-500 mt-1">
+            {{ card.desc }}
+          </p>
+        </Link>
+      </div>
+
+      <!-- RECENT LOGS -->
+      <div class="bg-white rounded-2xl shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-gray-800">
+            Recent Schedule Executions
+          </h2>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left border-b text-gray-500">
+                <th class="py-2">Type</th>
+                <th>Period</th>
+                <th>Date</th>
+                <th>Processed</th>
+                <th>Failed</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                v-for="log in recentLogs"
+                :key="log.id"
+                class="border-b hover:bg-gray-50 transition"
+              >
+                <td class="py-2 font-medium">
+                  {{ log.schedule_type_label }}
+                </td>
+
+                <td>{{ log.period_label }}</td>
+
+                <td>{{ log.execution_date }}</td>
+
+                <td class="text-green-600">
+                  {{ log.total_records_processed }}
+                </td>
+
+                <td class="text-red-500">
+                  {{ log.total_records_failed }}
+                </td>
+
+                <td class="font-semibold">
+                  KES {{ log.total_amount_posted.toLocaleString() }}
+                </td>
+
+                <td>
+                  <span
+                    class="px-2 py-1 rounded-full text-xs font-medium"
+                    :class="{
+                      'bg-green-100 text-green-700': log.status === 'completed',
+                      'bg-yellow-100 text-yellow-700': log.status === 'partial',
+                      'bg-red-100 text-red-700': log.status === 'failed'
+                    }"
+                  >
+                    {{ log.status }}
+                  </span>
+                </td>
+              </tr>
+
+              <tr v-if="recentLogs.length === 0">
+                <td colspan="7" class="text-center py-6 text-gray-400">
+                  No schedule executions yet
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </AppLayout>
 </template>
