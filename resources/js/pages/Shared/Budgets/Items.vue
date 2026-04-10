@@ -1,5 +1,5 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: 'Budgets', href: '/budgets'}, { title: `Budget Items - ${budget.title}` }]">
+  <AppLayout :breadcrumbs="[{ title: 'Budgets', href: '/budgets' }, { title: `Budget Items - ${budget.title}` }]">
 
     <!-- Flash Message -->
     <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
@@ -350,7 +350,7 @@
 
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, reactive, onMounted } from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 const searchQuery = ref("")
@@ -359,8 +359,23 @@ const page = usePage()
 
 import axios from 'axios'
 
-const flashMessage = ref(page.props.flash.success || page.props.flash.error);
-const flashType = ref(page.props.flash.success ? 'success' : 'error');
+
+const props = defineProps({
+  budget: Object,
+  items_by_category: Object,
+  can_edit: Boolean
+})
+
+const localItems = ref({})
+
+onMounted(() => {
+  localItems.value = JSON.parse(
+    JSON.stringify(props.items_by_category || {})
+  )
+})
+
+const flashMessage = ref(page.props.flash?.success || page.props.flash?.error)
+const flashType = ref(page.props.flash?.success ? 'success' : 'error')
 
 watch(
   () => page.props.flash,
@@ -387,14 +402,6 @@ watch(
 )
 
 
-
-
-const props = defineProps({
-  budget: Object,
-  items_by_category: Object,
-  can_edit: Boolean
-})
-
 // Available budget categories (from controller)
 const availableCategories = [
   'Administrative Expenses',
@@ -411,6 +418,9 @@ const availableCategories = [
   'Loan Provisions',
   'Other Expenses',
 ]
+
+
+
 
 const showAddForm = ref(false)
 const showEditModal = ref(false)
@@ -452,10 +462,22 @@ const closeDeleteModal = () => {
 }
 
 
+const showFlash = (message, type = 'success') => {
+  flashMessage.value = message
+  flashType.value = type
+
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+
+  setTimeout(() => {
+    flashMessage.value = null
+  }, 5000)
+}
+
+
 const filteredCategories = computed(() => {
   const results = {}
 
-  Object.entries(props.items_by_category).forEach(([category, items]) => {
+  Object.entries(localItems).forEach(([category, items]) => {
     // Filter by selected category
     if (selectedCategory.value && selectedCategory.value !== category) return
 
@@ -465,7 +487,7 @@ const filteredCategories = computed(() => {
       (item.description && item.description.toLowerCase().includes(searchQuery.value.toLowerCase()))
     )
 
-    if (filteredItems.length > 0) {
+    if (selectedCategory.value === category || filteredItems.length > 0) {
       results[category] = filteredItems
     }
   })
@@ -476,17 +498,17 @@ const filteredCategories = computed(() => {
 
 // Computed properties
 const totalItems = computed(() => {
-  return Object.values(props.items_by_category).reduce((total, items) => total + items.length, 0)
+  return Object.values(localItems.value).reduce((total, items) => total + items.length, 0)
 })
 
 const totalBudgeted = computed(() => {
-  return Object.values(props.items_by_category).reduce((total, items) => {
+  return Object.values(localItems.value).reduce((total, items) => {
     return total + items.reduce((categoryTotal, item) => categoryTotal + parseFloat(item.budgeted_amount), 0)
   }, 0)
 })
 
 const totalRemaining = computed(() => {
-  return Object.values(props.items_by_category).reduce((total, items) => {
+  return Object.values(localItems.value).reduce((total, items) => {
     return total + items.reduce((categoryTotal, item) => categoryTotal + parseFloat(item.remaining_amount), 0)
   }, 0)
 })
@@ -534,9 +556,9 @@ const addNewItem = async () => {
     )
 
     const category = newItemForm.value.category
-    if (!props.items_by_category[category]) props.items_by_category[category] = []
+    if (!localItems.value[category]) localItems.value[category] = []
 
-    props.items_by_category[category].push({
+    localItems.value[category].push({
       id: response.data.id || Date.now(),
       spent_amount: 0,
       remaining_amount: parseFloat(newItemForm.value.budgeted_amount),
@@ -544,7 +566,7 @@ const addNewItem = async () => {
     })
 
 
-    flashMessage.value = response.data.message || 'Item added successfully'
+    flashMessage.value = response.data.message
     flashType.value = 'success'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setTimeout(() => (flashMessage.value = null), 5000)
@@ -552,7 +574,7 @@ const addNewItem = async () => {
     showAddForm.value = false
     resetNewItemForm()
   } catch (error) {
-    flashMessage.value = error.response?.data?.message || 'Failed to add item'
+    flashMessage.value = error.response?.data?.message
     flashType.value = 'error'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setTimeout(() => (flashMessage.value = null), 5000)
@@ -576,14 +598,14 @@ const updateItem = async () => {
     const updatedCategory = editItemForm.value.category
 
     if (category !== updatedCategory) {
-      props.items_by_category[category] = props.items_by_category[category].filter(
+      localItems.value[category] = localItems.value[category].filter(
         i => i.id !== editingItem.value.id
       )
-      if (!props.items_by_category[updatedCategory]) props.items_by_category[updatedCategory] = []
-      props.items_by_category[updatedCategory].push({ ...editingItem.value, ...editItemForm.value })
+      if (!localItems[updatedCategory]) localItems[updatedCategory] = []
+      localItems[updatedCategory].push({ ...editingItem.value, ...editItemForm.value })
     } else {
-      const index = props.items_by_category[category].findIndex(i => i.id === editingItem.value.id)
-      if (index !== -1) props.items_by_category[category][index] = { ...props.items_by_category[category][index], ...editItemForm.value }
+      const index = localItems.value[category].findIndex(i => i.id === editingItem.value.id)
+      if (index !== -1) localItems.value[category][index] = { ...localItems.value[category][index], ...editItemForm.value }
     }
 
     closeEditModal()
@@ -613,7 +635,7 @@ const confirmDelete = async () => {
     const response = await axios.delete(route('budgets.destroy-item', [props.budget.id, deleteItemTarget.value.id]))
 
     const category = deleteItemTarget.value.category
-    props.items_by_category[category] = props.items_by_category[category].filter(
+    localItems.value[category] = localItems.value[category].filter(
       i => i.id !== deleteItemTarget.value.id
     )
 
@@ -656,7 +678,7 @@ const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-KE', {
     style: 'currency',
     currency: 'KES'
-  }).format(amount || 0)
+  }).format(Number(amount) || 0)
 }
 </script>
 

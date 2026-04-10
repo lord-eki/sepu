@@ -122,131 +122,100 @@
           </section>
 
           <!-- Budget Items card -->
-          <section class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
-              <div>
-                <h2 class="text-lg font-semibold text-[#0a2342]">Budget Items</h2>
-                <div class="text-sm text-gray-500">Add or remove items for this budget</div>
-              </div>
+          <section class="bg-white p-6 rounded-2xl shadow border border-gray-100">
 
-              <div class="shrink-0 flex items-center gap-3">
-                <button type="button" @click="addBudgetItem"
-                  class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f97316] text-white text-sm font-medium hover:bg-[#e86b11] shadow-sm">
-                  Add Item
-                </button>
+            <!-- HEADER -->
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-[#0a2342]">
+                Budget Items
+              </h3>
 
-                <button type="submit" :disabled="processing"
-                  class="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-[#f97316] text-white text-sm font-semibold hover:bg-[#e86b11] disabled:opacity-60">
-                  {{ processing ? 'Updating...' : 'Update Budget' }}
-                </button>
-              </div>
+              <button type="button" @click="addBudgetItem"
+                class="bg-[#f97316] text-white px-4 py-2 rounded-lg hover:bg-[#e86b11] transition">
+                + Add Item
+              </button>
             </div>
 
-            <div class="p-6">
+            <!-- EMPTY -->
+            <div v-if="form.budget_items.length === 0" class="text-center text-gray-500 py-6">
+              No budget items yet.
+            </div>
 
-              <input v-model="search" type="text" placeholder="Search items..."
-                class="mb-4 w-full px-3 py-2 border border-orange-500 rounded-lg shadow-sm" />
+            <!-- TABLE -->
+            <div v-else class="overflow-x-auto">
+              <table class="min-w-full border text-sm">
 
-              <!-- Empty state -->
-              <div v-if="form.budget_items.length === 0" class="text-center py-8">
-                <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-                    d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h5.586a1 1 0 00.707-.293l5.414-5.414a1 1 0 00.293-.707V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2">
-                  </path>
-                </svg>
-                <p class="text-gray-600">No budget items added yet. Click <span class="font-semibold text-[#f97316]">Add
-                    Item</span> to get started.</p>
-              </div>
+                <thead class="bg-blue-50">
+                  <tr>
+                    <th class="px-3 py-2 text-left">#</th>
+                    <th class="px-3 py-2 text-left">Account</th>
+                    <th class="px-3 py-2 text-left">Category</th>
+                    <th class="px-3 py-2 text-left">Description</th>
+                    <th class="px-3 py-2 text-right">Amount</th>
+                    <th class="px-3 py-2"></th>
+                  </tr>
+                </thead>
 
-              <!-- Item list -->
-              <div v-else class="space-y-4">
-                <div v-for="(item, index) in filteredItems" :key="index"
-                  :ref="index === form.budget_items.length - 1 ? 'lastItemRef' : null" :class="['border border-gray-100 rounded-lg p-4 bg-white shadow-sm',
-    item._highlight ? 'animate-highlight' : '']">
-                  <div class="flex justify-between items-start mb-4">
-                    <h4 class="text-sm font-medium text-[#0a2342]">Budget Item #{{ index + 1 }}</h4>
-                    <div class="flex items-center gap-2">
-                      <button type="button" @click="confirmDelete(index)"
-                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
-                        :title="'Remove item ' + (index + 1)">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                          </path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
+                <tbody>
+                  <tr v-for="(item, i) in form.budget_items" :key="i" class="border-t hover:bg-gray-50">
 
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700">Category</label>
-                      <select v-model="item.category"
-                        class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]/40 focus:border-[#f97316]"
+                    <td class="px-3 py-2">{{ i + 1 }}</td>
+
+                    <!-- ACCOUNT -->
+                    <td class="px-3 py-2">
+                      <select v-model="item.chart_of_account_id" class="w-full border border-gray-300 rounded-lg p-2"
                         required>
-                        <option value="">Select Category</option>
-                        <option v-for="category in budget_categories" :key="category" :value="category">
-                          {{ category }}
+                        <option value="">Select Account</option>
+                        <option v-for="acc in budget_accounts" :key="acc.id" :value="acc.id">
+                          {{ acc.account_category }} - {{ acc.account_name }}
                         </option>
                       </select>
-                      <div v-if="errors[`budget_items.${index}.category`]" class="mt-1 text-sm text-red-600">
-                        {{ errors[`budget_items.${index}.category`] }}
-                      </div>
-                    </div>
+                    </td>
 
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 ">Item Name</label>
-                      <input v-model="item.item_name" type="text" :ref="el => itemRefs[index] = el" class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 shadow-sm
-                                focus:outline-none focus:ring-2 focus:ring-[#f97316]/40 focus:border-[#f97316]"
+                    <!-- CATEGORY (AUTO) -->
+                    <td class="px-3 py-2 text-gray-600">
+                      {{ getAccount(item.chart_of_account_id)?.account_category || '-' }}
+                    </td>
+
+                    <!-- DESCRIPTION -->
+                    <td class="px-3 py-2">
+                      <input v-model="item.description" class="w-full border border-gray-300 rounded-lg p-2" />
+                    </td>
+
+                    <!-- AMOUNT -->
+                    <td class="px-3 py-2">
+                      <input v-model.number="item.budgeted_amount" type="number"
+                        class="w-full text-right border border-gray-300 rounded-lg p-2" @input="calculateTotalBudget"
                         required />
+                    </td>
 
-                      <div v-if="errors[`budget_items.${index}.item_name`]" class="mt-1 text-sm text-red-600">
-                        {{ errors[`budget_items.${index}.item_name`] }}
-                      </div>
-                    </div>
+                    <!-- DELETE -->
+                    <td class="px-3 py-2 text-center">
+                      <button type="button" @click="confirmDelete(i)" class="text-red-500 hover:text-red-700">
+                        ✕
+                      </button>
+                    </td>
 
-                    <div class="md:col-span-2">
-                      <label class="block text-sm font-medium text-gray-700">Description</label>
-                      <textarea v-model="item.description" rows="2"
-                        class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]/40 focus:border-[#f97316]"></textarea>
-                      <div v-if="errors[`budget_items.${index}.description`]" class="mt-1 text-sm text-red-600">
-                        {{ errors[`budget_items.${index}.description`] }}
-                      </div>
-                    </div>
+                  </tr>
+                </tbody>
 
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700">Budgeted Amount (KES)</label>
-                      <input v-model="item.budgeted_amount" type="number" step="0.01" min="0"
-                        @input="calculateTotalBudget"
-                        class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]/40 focus:border-[#f97316]"
-                        required />
-                      <div v-if="errors[`budget_items.${index}.budgeted_amount`]" class="mt-1 text-sm text-red-600">
-                        {{ errors[`budget_items.${index}.budgeted_amount`] }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                <!-- TOTAL -->
+                <tfoot class="bg-gray-50 font-semibold">
+                  <tr>
+                    <td colspan="4" class="px-3 py-2 text-right">
+                      Total
+                    </td>
+                    <td class="px-3 py-2 text-right text-[#0a2342]">
+                      {{ formatCurrency(form.total_budget) }}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
 
-              <!-- Totals -->
-              <div v-if="form.budget_items.length > 0" class="mt-6 border-t border-gray-100 pt-4">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div class="w-full md:w-1/2">
-                    <label class="block text-sm font-medium text-gray-700">Total Budget Amount</label>
-                    <input id="total_budget" v-model="form.total_budget" type="number" step="0.01" min="0" readonly
-                      class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 bg-gray-50 shadow-sm" />
-                    <div v-if="errors.total_budget" class="mt-1 text-sm text-red-600">{{ errors.total_budget }}</div>
-                  </div>
-
-                  <div class="text-right">
-                    <div class="text-xl font-bold text-[#0a2342]">{{ formatCurrency(form.total_budget) }}</div>
-                    <div class="text-sm text-gray-500">Total Budget Amount</div>
-                  </div>
-                </div>
-              </div>
+              </table>
             </div>
-          </section>
 
+          </section>
           <!-- Actions (sticky on small screens) -->
           <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
             <div class="flex justify-end md:items-center gap-3">
@@ -336,8 +305,7 @@
             class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm">
             Cancel
           </button>
-          <button @click="removeBudgetItemConfirmed"
-            class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
+          <button @click="removeBudgetItem" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
             Delete
           </button>
         </div>
@@ -357,34 +325,20 @@ const search = ref("")
 
 const page = usePage();
 
-const flashMessage = ref(page.props.flash.success || page.props.flash.error);
-const flashType = ref(page.props.flash.success ? 'success' : 'error');
+const flashMessage = ref(page.props.flash?.success || page.props.flash?.error)
+const flashType = ref(page.props.flash?.success ? 'success' : 'error')
 
 import { nextTick } from 'vue'
 
 const itemRefs = ref([]);
 
-const addBudgetItem = async () => {
+const addBudgetItem = () => {
   form.budget_items.push({
-    category: '',
-    item_name: '',
+    chart_of_account_id: '',
     description: '',
-    budgeted_amount: '',
-    _highlight: true
-  });
-
-  setTimeout(() => {
-    form.budget_items[form.budget_items.length - 1]._highlight = false;
-  }, 3000);
-
-  await nextTick();
-
-  const lastIndex = form.budget_items.length - 1;
-  itemRefs.value[lastIndex]?.focus();
-
-  scrollToBottom();
-};
-
+    budgeted_amount: 0
+  })
+}
 
 watch(
   () => page.props.flash,
@@ -407,7 +361,7 @@ watch(
 
 const props = defineProps({
   budget: Object,
-  budget_categories: Array,
+  budget_accounts: Array,
   errors: Object
 })
 
@@ -427,13 +381,11 @@ const processing = ref(false)
 // Initialize budget items from existing data
 onMounted(() => {
   form.budget_items = (props.budget.budget_items || []).map(item => ({
-    category: item.category,
-    item_name: item.item_name,
+    chart_of_account_id: item.chart_of_account_id,
     description: item.description,
     budgeted_amount: item.budgeted_amount
   }))
 
-  // calculate total on mount
   calculateTotalBudget()
 })
 
@@ -465,10 +417,17 @@ const confirmDelete = (index) => {
   showDeleteConfirm.value = true
 }
 
-const removeBudgetItemConfirmed = () => {
-  form.budget_items.splice(deleteIndex.value, 1)
-  calculateTotalBudget()
+const removeBudgetItem = () => {
+  if (deleteIndex.value !== null) {
+    form.budget_items.splice(deleteIndex.value, 1)
+    calculateTotalBudget()
+  }
   showDeleteConfirm.value = false
+  deleteIndex.value = null
+}
+
+const getAccount = (id) => {
+  return props.budget_accounts.find(a => a.id === id)
 }
 
 

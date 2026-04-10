@@ -336,9 +336,9 @@ class BudgetController extends Controller
 
     public function approve(Budget $budget)
     {
-        if ($budget->status !== 'draft') {
+        if ($budget->status !== 'pending') {
             return redirect()->route('budgets.show', $budget)
-                ->with('error', 'Only draft budgets can be approved.');
+                ->with('error', 'Only pending budgets can be approved.');
         }
 
         if (!$this->canApproveBudget($budget)) {

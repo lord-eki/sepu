@@ -38,7 +38,10 @@ const cards = [
 </script>
 
 <template>
-  <AppLayout>
+  <AppLayout :breadcrumbs="[
+    { title: 'Schedules', href: route('schedule.index') }
+  ]">
+
     <Head title="Schedules Dashboard" />
 
     <div class="p-6 space-y-8">
@@ -59,26 +62,22 @@ const cards = [
 
       <!-- ACTION CARDS -->
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Link
-          v-for="card in cards"
-          :key="card.title"
-          :href="card.link"
-          class="group bg-white rounded-2xl p-5 shadow hover:shadow-lg transition"
-        >
-          <div class="flex items-center justify-between">
-            <component :is="card.icon" class="w-8 h-8 text-blue-600" />
-            <span class="text-xs text-gray-400 group-hover:text-blue-600">
-              Open →
-            </span>
-          </div>
+        <Link v-for="card in cards" :key="card.title" :href="card.link"
+          class="group bg-white rounded-2xl p-5 shadow hover:shadow-lg transition">
+        <div class="flex items-center justify-between">
+          <component :is="card.icon" class="w-8 h-8 text-blue-600" />
+          <span class="text-xs text-gray-400 group-hover:text-blue-600">
+            Open →
+          </span>
+        </div>
 
-          <h3 class="mt-4 text-lg font-semibold text-gray-800">
-            {{ card.title }}
-          </h3>
+        <h3 class="mt-4 text-lg font-semibold text-gray-800">
+          {{ card.title }}
+        </h3>
 
-          <p class="text-sm text-gray-500 mt-1">
-            {{ card.desc }}
-          </p>
+        <p class="text-sm text-gray-500 mt-1">
+          {{ card.desc }}
+        </p>
         </Link>
       </div>
 
@@ -105,11 +104,7 @@ const cards = [
             </thead>
 
             <tbody>
-              <tr
-                v-for="log in recentLogs"
-                :key="log.id"
-                class="border-b hover:bg-gray-50 transition"
-              >
+              <tr v-for="log in recentLogs" :key="log.id" class="border-b hover:bg-gray-50 transition">
                 <td class="py-2 font-medium">
                   {{ log.schedule_type_label }}
                 </td>
@@ -131,14 +126,11 @@ const cards = [
                 </td>
 
                 <td>
-                  <span
-                    class="px-2 py-1 rounded-full text-xs font-medium"
-                    :class="{
-                      'bg-green-100 text-green-700': log.status === 'completed',
-                      'bg-yellow-100 text-yellow-700': log.status === 'partial',
-                      'bg-red-100 text-red-700': log.status === 'failed'
-                    }"
-                  >
+                  <span class="px-2 py-1 rounded-full text-xs font-medium" :class="{
+    'bg-green-100 text-green-700': log.status === 'completed',
+    'bg-yellow-100 text-yellow-700': log.status === 'partial',
+    'bg-red-100 text-red-700': log.status === 'failed'
+  }">
                     {{ log.status }}
                   </span>
                 </td>

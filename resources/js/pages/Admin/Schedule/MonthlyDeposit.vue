@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, useForm } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps<{
   rows: any[]
@@ -39,6 +39,16 @@ const toggleOne = (id: number) => {
   }
 }
 
+watch(
+  () => props.rows,
+  () => {
+    selected.value = props.rows
+      .filter(r => !r.already_deposited_this_month)
+      .map(r => r.member_id)
+  },
+  { immediate: true }
+)
+
 // Form
 const form = useForm({
   month: props.month,
@@ -68,7 +78,10 @@ const runSchedule = () => {
 </script>
 
 <template>
-  <AppLayout>
+  <AppLayout :breadcrumbs="[
+    { title: 'Schedules', href: route('schedule.index') },
+    { title: 'Monthly Deposit' },
+  ]">
 
     <Head title="Monthly Deposits" />
 
@@ -123,8 +136,8 @@ const runSchedule = () => {
 
               <td>
                 <span class="px-2 py-1 rounded-full text-xs" :class="row.already_deposited_this_month
-            ? 'bg-green-100 text-green-700'
-            : 'bg-yellow-100 text-yellow-700'">
+    ? 'bg-green-100 text-green-700'
+    : 'bg-yellow-100 text-yellow-700'">
                   {{ row.already_deposited_this_month ? 'Completed' : 'Pending' }}
                 </span>
               </td>
@@ -169,24 +182,31 @@ const runSchedule = () => {
 <style scoped>
 .card {
   background-color: #ffffff;
-  padding: 1rem;              /* p-4 */
-  border-radius: 0.75rem;     /* rounded-xl */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow */
+  padding: 1rem;
+  /* p-4 */
+  border-radius: 0.75rem;
+  /* rounded-xl */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* shadow */
   text-align: center;
 }
 
 .btn-primary {
-  background-color: #2563eb;  /* bg-blue-600 */
+  background-color: #2563eb;
+  /* bg-blue-600 */
   color: #ffffff;
-  padding: 0.5rem 1rem;      /* py-2 px-4 */
-  border-radius: 0.5rem;     /* rounded-lg */
+  padding: 0.5rem 1rem;
+  /* py-2 px-4 */
+  border-radius: 0.5rem;
+  /* rounded-lg */
   border: none;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .btn-primary:hover {
-  background-color: #1d4ed8; /* bg-blue-700 */
+  background-color: #1d4ed8;
+  /* bg-blue-700 */
 }
 
 .btn-primary:disabled {

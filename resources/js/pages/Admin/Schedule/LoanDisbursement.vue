@@ -1,187 +1,280 @@
-<script setup>
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import axios from 'axios';
-import { ref } from 'vue';
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, useForm } from '@inertiajs/vue3'
+import { ref, computed, watch } from 'vue'
 
-const props = defineProps({
-    loans: Array,
-    summary: Object,
-    filters: Object,
-});
+const props = defineProps<{
+  loans: any[]
+  summary: any
+  filters: any
+}>()
 
-const selectedLoans = ref([]);
+// -------------------------
+// Selection State
+// -------------------------
+const selected = ref<number[]>(
+  props.loans.map(l => l.id)
+)
 
-const filterDateFrom = ref(props.filters.date_from);
-const filterDateTo = ref(props.filters.date_to);
+const selectableIds = computed(() =>
+  props.loans.map(l => l.id)
+)
 
-function applyFilters() {
-    router.get(route('schedule.loan-disbursement'), {
-        date_from: filterDateFrom.value,
-        date_to: filterDateTo.value,
-    });
+// -------------------------
+// Sync when filters change
+// -------------------------
+watch(
+  () => props.loans,
+  () => {
+    selected.value = props.loans.map(l => l.id)
+  },
+  { immediate: true }
+)
+
+// -------------------------
+// Toggle
+// -------------------------
+const toggleAll = () => {
+  if (selected.value.length === selectableIds.value.length) {
+    selected.value = []
+  } else {
+    selected.value = [...selectableIds.value]
+  }
 }
 
-function toggleLoan(id) {
-    if (selectedLoans.value.includes(id)) {
-        selectedLoans.value = selectedLoans.value.filter((l) => l !== id);
-    } else {
-        selectedLoans.value.push(id);
-    }
+const toggleOne = (id: number) => {
+  if (selected.value.includes(id)) {
+    selected.value = selected.value.filter(i => i !== id)
+  } else {
+    selected.value.push(id)
+  }
 }
 
-function runDisbursement() {
-    if (selectedLoans.value.length === 0) {
-        alert('Select loans to disburse');
-        return;
-    }
+// -------------------------
+// Form
+// -------------------------
+const form = useForm({
+  loan_ids: [] as number[],
+  year: new Date().getFullYear()
+})
 
-    if (!confirm('Disburse selected loans?')) return;
+// -------------------------
+// Modal
+// -------------------------
+const showConfirm = ref(false)
 
-    axios
-        .post(route('schedule.loan-disbursement.run'), {
-            loan_ids: selectedLoans.value,
-            year: new Date().getFullYear(),
-        })
-        .then(() => {
-            router.reload();
-        });
+const prepareRun = () => {
+  form.loan_ids = props.loans
+    .filter(l => selected.value.includes(l.id))
+    .map(l => l.id)
+
+  showConfirm.value = true
 }
+
+const runSchedule = () => {
+  form.post('/schedule/loan-disbursement/run', {
+    onFinish: () => (showConfirm.value = false)
+  })
+}
+
+// -------------------------
+// Helpers
+// -------------------------
+const allSelected = computed(() =>
+  selectableIds.value.length > 0 &&
+  selectableIds.value.every(id => selected.value.includes(id))
+)
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="[{ title: 'Financial Schedules', href: route('schedule.index') }, { title: 'Loan Disbursement' }]">
-        <Head title="Loan Disbursement Schedule" />
+<AppLayout :breadcrumbs="[
+  { title: 'Schedules', href: route('schedule.index') },
+  { title: 'Loan Disbursements' },
+]">
 
-        <div class="space-y-8 p-6">
-            <!-- HEADER -->
+<Head title="Loan Disbursements" />
 
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Loan Disbursement Processor</h1>
-                    <p class="text-sm text-gray-500">Process approved loans for member disbursement</p>
-                </div>
+<div class="p-6 space-y-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold">Loan Disbursement Schedule</h1>
+      <p class="text-gray-500 text-sm">Approved loans ready for payout</p>
+    </div>
+
+    <div class="text-sm bg-white px-4 py-2 rounded-xl shadow">
+      {{ new Date().getFullYear() }}
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="grid md:grid-cols-4 gap-4">
+
+    <div class="card">
+      Loans<br>
+      <strong>{{ summary.total_loans }}</strong>
+    </div>
+
+    <div class="card">
+      Approved<br>
+      <strong>KES {{ summary.total_approved.toLocaleString() }}</strong>
+    </div>
+
+    <div class="card">
+      Net Disbursement<br>
+      <strong>KES {{ summary.total_net.toLocaleString() }}</strong>
+    </div>
+
+    <div class="card">
+      Fees<br>
+      <strong>KES {{ summary.total_fees.toLocaleString() }}</strong>
+    </div>
+
+  </div>
+
+  <!-- TABLE -->
+  <div class="bg-white rounded-2xl shadow overflow-hidden">
+
+    <table class="w-full text-sm">
+
+      <thead class="bg-gray-50 text-gray-600">
+        <tr>
+          <th class="p-3">
+            <input
+              type="checkbox"
+              :checked="allSelected"
+              @change="toggleAll"
+            />
+          </th>
+
+          <th class="text-left">Loan</th>
+          <th class="text-left">Member</th>
+          <th class="text-left">Approved</th>
+          <th class="text-left">Fees</th>
+          <th class="text-left">Net</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr v-for="loan in loans" :key="loan.id" class="border-t hover:bg-gray-50">
+
+          <td class="p-3">
+            <input
+              type="checkbox"
+              :checked="selected.includes(loan.id)"
+              @change="toggleOne(loan.id)"
+            />
+          </td>
+
+          <td>
+            <div class="font-medium">{{ loan.loan_number }}</div>
+            <div class="text-xs text-gray-500">{{ loan.loan_product }}</div>
+          </td>
+
+          <td>
+            <div class="font-medium">{{ loan.member_name }}</div>
+            <div class="text-xs text-gray-500">{{ loan.membership_id }}</div>
+          </td>
+
+          <td>
+            KES {{ loan.approved_amount.toLocaleString() }}
+          </td>
+
+          <td>
+            <div class="text-xs text-red-500">
+              P: {{ loan.processing_fee.toLocaleString() }}
             </div>
-
-            <!-- SUMMARY CARDS -->
-
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
-                <div class="rounded-xl border bg-white p-5 shadow-lg">
-                    <div class="text-sm text-gray-500">Approved Loans</div>
-                    <div class="text-2xl font-bold text-blue-900">
-                        {{ summary.total_loans }}
-                    </div>
-                </div>
-
-                <div class="rounded-xl border bg-white p-5 shadow-lg">
-                    <div class="text-sm text-gray-500">Total Approved</div>
-                    <div class="text-2xl font-bold text-blue-900">KES {{ summary.total_approved }}</div>
-                </div>
-
-                <div class="rounded-xl border bg-white p-5 shadow-lg">
-                    <div class="text-sm text-gray-500">Processing Fees</div>
-                    <div class="text-2xl font-bold text-orange-500">KES {{ summary.total_processing_fee }}</div>
-                </div>
-
-                <div class="rounded-xl border bg-white p-5 shadow-lg">
-                    <div class="text-sm text-gray-500">Net Disbursement</div>
-                    <div class="text-2xl font-bold text-green-600">KES {{ summary.total_net }}</div>
-                </div>
+            <div class="text-xs text-red-500">
+              I: {{ loan.insurance_fee.toLocaleString() }}
             </div>
+          </td>
 
-            <!-- FILTERS -->
+          <td class="font-semibold text-green-600">
+            KES {{ loan.net_disbursement.toLocaleString() }}
+          </td>
 
-            <div class="rounded-xl border bg-white p-6 shadow">
-                <h2 class="mb-4 font-semibold text-gray-700">Filter Approved Loans</h2>
+        </tr>
 
-                <div class="flex flex-wrap items-end gap-4">
-                    <div>
-                        <label class="text-sm text-gray-600"> From </label>
+      </tbody>
 
-                        <input type="date" v-model="filterDateFrom" class="rounded-lg border px-3 py-2" />
-                    </div>
+    </table>
 
-                    <div>
-                        <label class="text-sm text-gray-600"> To </label>
+  </div>
 
-                        <input type="date" v-model="filterDateTo" class="rounded-lg border px-3 py-2" />
-                    </div>
+  <!-- ACTION BAR -->
+  <div class="flex justify-between items-center sticky bottom-0 bg-white p-4 shadow rounded-xl">
 
-                    <button @click="applyFilters" class="rounded-lg bg-blue-900 px-5 py-2 text-white hover:bg-blue-800">Apply Filter</button>
-                </div>
-            </div>
+    <p class="text-sm text-gray-600">
+      Selected: <strong>{{ selected.length }}</strong>
+    </p>
 
-            <!-- LOANS TABLE -->
+    <button
+      :disabled="selected.length === 0"
+      @click="prepareRun"
+      class="btn-primary"
+    >
+      Run Disbursement
+    </button>
 
-            <div class="overflow-hidden rounded-xl border bg-white shadow-xl">
-                <div class="border-b p-5 font-semibold text-gray-700">Approved Loans Awaiting Disbursement</div>
+  </div>
 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-gray-100 text-gray-600">
-                            <tr>
-                                <th class="p-3"></th>
-                                <th class="p-3 text-left">Loan Number</th>
-                                <th class="p-3 text-left">Member</th>
-                                <th class="p-3 text-left">Product</th>
-                                <th class="p-3 text-left">Approved</th>
-                                <th class="p-3 text-left">Processing Fee</th>
-                                <th class="p-3 text-left">Insurance</th>
-                                <th class="p-3 text-left">Net Disbursement</th>
-                                <th class="p-3 text-left">Approval Date</th>
-                            </tr>
-                        </thead>
+  <!-- CONFIRM MODAL -->
+  <div v-if="showConfirm" class="fixed inset-0 bg-black/50 flex items-center justify-center">
 
-                        <tbody>
-                            <tr v-for="loan in loans" :key="loan.id" class="border-t hover:bg-gray-50">
-                                <td class="p-3">
-                                    <input type="checkbox" :checked="selectedLoans.includes(loan.id)" @click="toggleLoan(loan.id)" class="h-4 w-4" />
-                                </td>
+    <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
 
-                                <td class="p-3 font-medium">
-                                    {{ loan.loan_number }}
-                                </td>
+      <h2 class="text-lg font-bold">Confirm Loan Disbursement</h2>
 
-                                <td class="p-3">
-                                    {{ loan.member_name }}
-                                </td>
+      <p class="text-sm text-gray-600">
+        You are about to disburse <strong>{{ selected.length }}</strong> loans.
+      </p>
 
-                                <td class="p-3">
-                                    {{ loan.product }}
-                                </td>
+      <div class="flex justify-end gap-2">
 
-                                <td class="p-3">KES {{ loan.approved_amount }}</td>
+        <button @click="showConfirm = false" class="px-4 py-2">
+          Cancel
+        </button>
 
-                                <td class="p-3">KES {{ loan.processing_fee }}</td>
+        <button
+          @click="runSchedule"
+          class="bg-green-600 text-white px-4 py-2 rounded-lg"
+        >
+          Confirm & Disburse
+        </button>
 
-                                <td class="p-3">KES {{ loan.insurance_fee }}</td>
+      </div>
 
-                                <td class="p-3 font-semibold text-green-600">KES {{ loan.net_disbursement }}</td>
+    </div>
 
-                                <td class="p-3">
-                                    {{ loan.approval_date }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+  </div>
 
-            <!-- ACTIONS -->
-
-            <div class="rounded-xl border bg-white p-6 shadow">
-                <h2 class="mb-4 font-semibold text-gray-700">Disbursement Actions</h2>
-
-                <div class="flex flex-wrap gap-4">
-                    <button @click="runDisbursement" class="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700">
-                        Disburse Selected Loans
-                    </button>
-
-                    <a :href="route('schedule.loan-disbursement.export')" class="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700">
-                        Export CSV
-                    </a>
-                </div>
-            </div>
-        </div>
-    </AppLayout>
+</div>
+</AppLayout>
 </template>
+
+<style scoped>
+.card {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.btn-primary {
+  background: #16a34a;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.btn-primary:hover {
+  background: #15803d;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+</style>

@@ -83,7 +83,7 @@
               ✏️ Edit Budget
               </Link>
 
-              <button v-if="can_submit && budget.status === 'pending'" @click="submitBudget"
+              <button v-if="can_submit && budget.status === 'draft'" @click="submitBudget"
                 class="action-btn bg-orange-600 text-white hover:cursor-pointer hover:bg-orange-700">
                 📤 Submit for Approval
               </button>

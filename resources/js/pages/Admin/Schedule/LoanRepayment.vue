@@ -1,133 +1,278 @@
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, useForm } from '@inertiajs/vue3'
+import { ref, computed, watch } from 'vue'
+
+const props = defineProps<{
+  rows: any[]
+  summary: any
+  month: string
+  alreadyRun: boolean
+}>()
+
+// ---------------------------
+// Selection State
+// ---------------------------
+const selected = ref<number[]>(
+  props.rows
+    .filter(r => r.status !== 'paid') // only unpaid/partial
+    .map(r => r.repayment_id)
+)
+
+const selectableIds = computed(() =>
+  props.rows
+    .filter(r => r.status !== 'paid')
+    .map(r => r.repayment_id)
+)
+
+// ---------------------------
+// Watch props refresh safety
+// ---------------------------
+watch(
+  () => props.rows,
+  () => {
+    selected.value = props.rows
+      .filter(r => r.status !== 'paid')
+      .map(r => r.repayment_id)
+  },
+  { immediate: true }
+)
+
+// ---------------------------
+// Toggle
+// ---------------------------
+const toggleAll = () => {
+  if (selected.value.length === selectableIds.value.length) {
+    selected.value = []
+  } else {
+    selected.value = [...selectableIds.value]
+  }
+}
+
+const toggleOne = (id: number) => {
+  if (props.alreadyRun) return
+
+  if (selected.value.includes(id)) {
+    selected.value = selected.value.filter(i => i !== id)
+  } else {
+    selected.value.push(id)
+  }
+}
+
+// ---------------------------
+// Form
+// ---------------------------
+const form = useForm({
+  month: props.month,
+  entries: [] as any[]
+})
+
+// ---------------------------
+// Modal
+// ---------------------------
+const showConfirm = ref(false)
+
+const prepareRun = () => {
+  form.entries = props.rows
+    .filter(r => selected.value.includes(r.repayment_id))
+    .map(r => ({
+      repayment_id: r.repayment_id,
+      loan_id: r.loan_id,
+      member_id: r.member_id,
+      deduct_amount: r.deduct_amount
+    }))
+
+  showConfirm.value = true
+}
+
+const runSchedule = () => {
+  form.post('/schedule/loan-repayment/run', {
+    onFinish: () => (showConfirm.value = false)
+  })
+}
+
+// ---------------------------
+// Helpers
+// ---------------------------
+const allSelected = computed(() =>
+  selectableIds.value.length > 0 &&
+  selectableIds.value.every(id => selected.value.includes(id))
+)
+</script>
+
 <template>
-    <AppLayout>
+<AppLayout :breadcrumbs="[
+  { title: 'Schedules', href: route('schedule.index') },
+  { title: 'Loan Repayments' },
+]">
 
-        <Head title="Monthly Deposits" />
+<Head title="Loan Repayments" />
 
-        <!-- HEADER -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Monthly Deposits</h1>
-            <div class="flex gap-4 items-center mt-4 md:mt-0">
-                <input type="month" v-model="selectedMonth" @change="fetchDeposits" class="border rounded px-3 py-2" />
-                <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" :disabled="alreadyRun"
-                    @click="runDeposits">
-                    Post Deposits
-                </button>
-            </div>
-        </div>
+<div class="p-6 space-y-6">
 
-        <!-- SUMMARY CARDS -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white p-4 rounded shadow text-center">
-                <div class="text-gray-500">Eligible Members</div>
-                <div class="font-bold text-xl">{{ summary.total_eligible }}</div>
-            </div>
-            <div class="bg-white p-4 rounded shadow text-center">
-                <div class="text-gray-500">Already Done</div>
-                <div class="font-bold text-xl">{{ summary.already_done }}</div>
-            </div>
-            <div class="bg-white p-4 rounded shadow text-center">
-                <div class="text-gray-500">Pending</div>
-                <div class="font-bold text-xl">{{ summary.pending }}</div>
-            </div>
-            <div class="bg-white p-4 rounded shadow text-center">
-                <div class="text-gray-500">Total Amount (KES)</div>
-                <div class="font-bold text-xl">{{ summary.total_amount | currency }}</div>
-            </div>
-        </div>
+  <!-- HEADER -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold">Loan Repayment Schedule</h1>
+      <p class="text-gray-500 text-sm">Automated loan deductions</p>
+    </div>
 
-        <!-- DEPOSITS TABLE -->
-        <div class="overflow-x-auto bg-white rounded shadow">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-gray-600">Member ID</th>
-                        <th class="px-4 py-2 text-left text-gray-600">Member Name</th>
-                        <th class="px-4 py-2 text-left text-gray-600">Account Number</th>
-                        <th class="px-4 py-2 text-left text-gray-600">Amount (KES)</th>
-                        <th class="px-4 py-2 text-left text-gray-600">Already Deposited</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="row in rows" :key="row.config_id"
-                        :class="{ 'bg-red-50': row.already_deposited_this_month }">
-                        <td class="px-4 py-2">{{ row.membership_id }}</td>
-                        <td class="px-4 py-2">{{ row.member_name }}</td>
-                        <td class="px-4 py-2">{{ row.account_number }}</td>
-                        <td class="px-4 py-2">{{ row.amount | currency }}</td>
-                        <td class="px-4 py-2">
-                            <span class="px-2 py-1 rounded text-white text-sm"
-                                :class="row.already_deposited_this_month ? 'bg-red-500' : 'bg-green-500'">
-                                {{ row.already_deposited_this_month ? 'Yes' : 'No' }}
-                            </span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="text-sm bg-white px-4 py-2 rounded-xl shadow">
+      {{ month }}
+    </div>
+  </div>
 
-        <!-- SUCCESS / ERROR NOTIFICATIONS -->
-        <Notification v-if="flash.success" type="success" :message="flash.success" />
-        <Notification v-if="flash.error" type="error" :message="flash.error" />
-    </AppLayout>
+  <!-- FLASH -->
+  <div v-if="$page.props.flash?.success" class="bg-green-100 text-green-700 p-3 rounded-lg">
+    {{ $page.props.flash.success }}
+  </div>
+
+  <div v-if="$page.props.flash?.error" class="bg-red-100 text-red-700 p-3 rounded-lg">
+    {{ $page.props.flash.error }}
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="grid md:grid-cols-4 gap-4">
+    <div class="card">Total<br><strong>{{ summary.total_repayments }}</strong></div>
+    <div class="card">Expected<br><strong>KES {{ summary.total_expected.toLocaleString() }}</strong></div>
+    <div class="card">Deductable<br><strong>KES {{ summary.total_deductable.toLocaleString() }}</strong></div>
+    <div class="card">Outstanding<br><strong>KES {{ summary.total_outstanding.toLocaleString() }}</strong></div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <table class="w-full text-sm">
+
+      <thead class="bg-gray-50 text-gray-600">
+        <tr>
+          <th class="p-3">
+            <input
+              type="checkbox"
+              :checked="allSelected"
+              @change="toggleAll"
+            />
+          </th>
+          <th class="text-left">Member</th>
+          <th class="text-left">Loan</th>
+          <th class="text-left">Outstanding</th>
+          <th class="text-left">Deduct</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr v-for="row in rows" :key="row.repayment_id" class="border-t hover:bg-gray-50">
+
+          <td class="p-3">
+            <input
+              type="checkbox"
+              :checked="selected.includes(row.repayment_id)"
+              :disabled="row.status === 'paid' || alreadyRun"
+              @change="toggleOne(row.repayment_id)"
+            />
+          </td>
+
+          <td>
+            <div class="font-medium">{{ row.member_name }}</div>
+            <div class="text-xs text-gray-500">{{ row.membership_id }}</div>
+          </td>
+
+          <td>
+            <div class="font-medium">{{ row.loan_number }}</div>
+            <div class="text-xs text-gray-500">{{ row.loan_product }}</div>
+          </td>
+
+          <td>
+            KES {{ row.outstanding_amount.toLocaleString() }}
+          </td>
+
+          <td class="font-semibold text-blue-600">
+            KES {{ row.deduct_amount.toLocaleString() }}
+          </td>
+
+          <td>
+            <span class="px-2 py-1 rounded-full text-xs"
+              :class="row.status === 'paid'
+                ? 'bg-green-100 text-green-700'
+                : row.status === 'partial'
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-red-100 text-red-700'"
+            >
+              {{ row.status }}
+            </span>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="flex justify-between items-center sticky bottom-0 bg-white p-4 shadow rounded-xl">
+
+    <p class="text-sm text-gray-600">
+      Selected: <strong>{{ selected.length }}</strong>
+    </p>
+
+    <button
+      :disabled="form.processing || alreadyRun || selected.length === 0"
+      @click="prepareRun"
+      class="btn-primary"
+    >
+      Run Loan Repayment
+    </button>
+
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div v-if="showConfirm" class="fixed inset-0 bg-black/50 flex items-center justify-center">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+
+      <h2 class="text-lg font-bold">Confirm Loan Repayments</h2>
+
+      <p class="text-sm text-gray-600">
+        You are about to process <strong>{{ selected.length }}</strong> repayments.
+      </p>
+
+      <div class="flex justify-end gap-2">
+        <button @click="showConfirm = false" class="px-4 py-2">
+          Cancel
+        </button>
+
+        <button
+          @click="runSchedule"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg"
+        >
+          Confirm & Run
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</AppLayout>
 </template>
 
-<script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { Head, useForm, router } from '@inertiajs/vue3'
-import AppLayout from '@/layouts/AppLayout.vue'
-import Notification from '@/components/Notification.vue'
-
-const selectedMonth = ref(new Date().toISOString().slice(0, 7))
-
-const flash = reactive({ success: '', error: '' })
-
-// Form data from backend
-const { data: deposits, setData } = useForm({
-    month: selectedMonth.value,
-    entries: []
-})
-
-const rows = ref([])
-const summary = reactive({
-    total_eligible: 0,
-    already_done: 0,
-    pending: 0,
-    total_amount: 0
-})
-
-const alreadyRun = ref(false)
-
-const fetchDeposits = () => {
-    router.get(route('schedule.monthly-deposit'), { month: selectedMonth.value }, {
-        preserveState: true,
-        onSuccess: (page) => {
-            rows.value = page.props.rows
-            summary.total_eligible = page.props.summary.total_eligible
-            summary.already_done = page.props.summary.already_done
-            summary.pending = page.props.summary.pending
-            summary.total_amount = page.props.summary.total_amount
-            alreadyRun.value = page.props.alreadyRun
-        }
-    })
+<style scoped>
+.card {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-align: center;
 }
 
-const runDeposits = () => {
-    if (!confirm('Are you sure you want to post monthly deposits?')) return
-
-    const entries = rows.value.filter(r => !r.already_deposited_this_month)
-        .map(r => ({ member_id: r.member_id, account_id: r.account_id, amount: r.amount }))
-
-    router.post(route('schedule.run-monthly-deposits'), { month: selectedMonth.value, entries }, {
-        onSuccess: page => {
-            flash.success = page.props.flash.success
-            fetchDeposits()
-        },
-        onError: page => flash.error = Object.values(page.props.errors || {}).join(', ')
-    })
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
 }
-
-onMounted(() => fetchDeposits())
-
-// Filters
-const currency = (value: number) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(value)
-</script>
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+</style>
