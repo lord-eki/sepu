@@ -32,7 +32,7 @@ const isActive = (url: string) => page.url === url
             <!-- Small Devices -->
             <span class="block sm:hidden text-2xl font-extrabold tracking-wide
                         text-gray-900 dark:text-white">
-              SEPU <span class="italic text-orange-500">-SACCO</span>
+              SEPU <span class="text-orange-500">-SACCO</span>
             </span>
 
             <!-- Medium & Large Devices -->
@@ -42,7 +42,7 @@ const isActive = (url: string) => page.url === url
                 School Equipment Production Unit
               </span>
 
-              <span class="block text-xs md:text-sm italic
+              <span class="block text-xs md:text-sm
                           text-orange-600">
                 Savings and Credit Co-operative Organization
               </span>

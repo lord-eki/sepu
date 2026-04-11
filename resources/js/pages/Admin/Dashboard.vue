@@ -8,7 +8,7 @@
 
       <!-- TOP BAR -->
       <div
-        class="relative px-8 py-6 bg-gradient-to-r from-blue-900 to-orange-500 rounded-b-3xl overflow-hidden dark:from-blue-800 dark:to-orange-600">
+        class="relative px-8 py-6 bg-blue-900 dark:bg-gray-800 rounded-b-3xl overflow-hidden dark:from-blue-800 dark:to-orange-600">
         <div class="absolute inset-0 bg-white/10 backdrop-blur-sm dark:bg-gray-800/20"></div>
         <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -32,20 +32,20 @@
       </div>
 
       <!-- KPI CARDS -->
-      <div class="px-8 py-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div class="px-8 py-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         <div v-for="stat in quickStats" :key="stat.title"
-          class="relative p-6 rounded-3xl bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-700 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
+          class="relative p-4 rounded-3xl bg-white/70 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
 
           <div class="flex justify-between items-center">
             <div class="text-sm font-medium text-gray-500 dark:text-gray-300">{{ stat.title }}</div>
-            <div class="p-3 rounded-xl bg-gradient-to-br from-orange-400 to-orange-200 text-white shadow-sm">
-              <component :is="stat.icon" class="h-5 w-5" />
+            <div class="p-2 rounded-xl bg-gradient-to-br from-orange-400 to-orange-200 font-normal text-gray-900">
+              <component :is="stat.icon" class="h-4 w-4" />
             </div>
           </div>
 
           <div class="mt-5">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ stat.value }}</h2>
-            <p class="text-xs text-gray-500 dark:text-gray-300 mt-1">{{ stat.sub }}</p>
+            <h2 class="text-2xl text-center font-bold text-gray-900 dark:text-white">{{ stat.value }}</h2>
+            <p class="text-xs text-center text-gray-500 dark:text-gray-300 mt-1">{{ stat.sub }}</p>
           </div>
 
           <div class="absolute -top-5 -right-5 w-16 h-16 bg-blue-100/40 dark:bg-blue-800/30 rounded-3xl blur-2xl"></div>
@@ -55,15 +55,15 @@
       </div>
 
       <!-- MAIN GRID -->
-      <div class="px-8 py-4 grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div class="px-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
 
         <!-- LEFT: Pending & Activity -->
-        <div class="xl:col-span-2 space-y-8">
+        <div class="xl:col-span-2 space-y-3">
 
           <!-- Pending Approvals -->
           <div
             class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-3">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pending Approvals</h3>
               <span class="text-xs text-gray-400 dark:text-gray-300 uppercase tracking-wide">Quick Review</span>
             </div>
@@ -83,14 +83,14 @@
           <div
             class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
 
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Recent Activity
             </h3>
 
-            <div class="space-y-4 max-h-[450px] overflow-y-auto overflow-x-hidden custom-scroll">
+            <div class="space-y-3 max-h-[450px] overflow-y-auto overflow-x-hidden custom-scroll">
 
               <div v-for="(item, i) in recentActivities" :key="i" @click="item.link ? $inertia.visit(item.link) : null"
-                class="flex justify-between items-start gap-4 p-4 rounded-xl border transition-all duration-300 cursor-pointer hover:shadow-md"
+                class="flex justify-between items-start gap-4 px-4 py-2 rounded-xl border transition-all duration-300 cursor-pointer hover:shadow-md"
                 :class="[
     item.status === 'pending'
       ? 'border-orange-200 dark:border-orange-900 hover:bg-orange-50 dark:hover:bg-orange-900/20'
@@ -155,11 +155,11 @@
         </div>
 
         <!-- RIGHT: System & Tools -->
-        <div class="space-y-8">
+        <div class="space-y-4">
 
           <!-- System Health -->
           <div
-            class="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
+            class="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition-all duration-500">
             <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">System Health</h3>
             <div class="space-y-4 text-sm">
               <div class="flex justify-between">
@@ -179,7 +179,7 @@
 
           <!-- Admin Tools -->
           <div
-            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
+            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition-all duration-500">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Administrative Tools</h3>
             <div class="space-y-4">
               <div v-for="setup in setupItems" :key="setup.title" @click="$inertia.visit(setup.link)"
