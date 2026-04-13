@@ -2,6 +2,12 @@
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import { Phone, Mail, MapPin, Clock } from 'lucide-vue-next'
+
+const props = defineProps<{
+  settings: Record<string, any>
+}>()
+
+const s = props.settings
 </script>
 
 <template>
@@ -40,7 +46,7 @@ import { Phone, Mail, MapPin, Clock } from 'lucide-vue-next'
                      transition-all duration-500">
             <Phone class="w-8 h-8 text-orange-500 mx-auto mb-4 group-hover:scale-110 transition" />
             <h3 class="font-semibold text-gray-900 dark:text-white text-lg">Call Us</h3>
-            <p class="text-gray-600 dark:text-gray-300 text-sm mt-2">+254 712 345 678</p>
+            <p class="text-gray-600 dark:text-gray-300 text-sm mt-2">{{ s.sacco_phone?.value }}</p>
           </div>
 
           <div class="group rounded-2xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-lg
@@ -49,8 +55,8 @@ import { Phone, Mail, MapPin, Clock } from 'lucide-vue-next'
                      transition-all duration-500">
             <Mail class="w-8 h-8 text-orange-500 mx-auto mb-4 group-hover:scale-110 transition" />
             <h3 class="font-semibold text-gray-900 dark:text-white text-lg">Email</h3>
-            <a href="mailto:support@sepusacco.co.ke" class="text-blue-600 dark:text-blue-400 text-sm mt-2 block hover:underline">
-              support@sepusacco.co.ke
+            <a :href="`mailto:${s.sacco_email?.value}`" class="text-blue-600 dark:text-blue-400 text-sm mt-2 block hover:underline">
+              {{ s.sacco_email?.value }}
             </a>
           </div>
 

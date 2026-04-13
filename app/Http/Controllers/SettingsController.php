@@ -48,50 +48,81 @@ class SettingsController extends Controller
     /**
      * Update general settings
      */
+
     public function updateGeneral(Request $request)
     {
+    
         $validated = $request->validate([
-            'sacco_name' => ['required', 'string', 'max:255'],
-            'sacco_code' => ['required', 'string', 'max:10', 'alpha_num'],
-            'registration_number' => ['required', 'string', 'max:50'],
-            'address' => ['required', 'string', 'max:500'],
-            'phone' => ['required', 'string', 'max:20'],
-            'email' => ['required', 'email', 'max:255'],
+            'sacco_name' => ['nullable', 'string', 'max:255'],
+            'sacco_code' => ['nullable', 'string', 'max:10', 'alpha_num'],
+            'registration_number' => ['nullable', 'string', 'max:50'],
+            'sacco_address' => ['nullable', 'string', 'max:500'],
+            'sacco_phone' => ['nullable', 'string', 'max:20'],
+            'sacco_email' => ['nullable', 'email', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
-            'currency' => ['required', 'string', 'size:3'],
-            'timezone' => ['required', 'string', 'max:50'],
-            'language' => ['required', 'string', 'max:10'],
-            'date_format' => ['required', 'string', 'max:20'],
-            'time_format' => ['required', 'string', 'max:20'],
+            'currency' => ['nullable', 'string', 'size:3'],
+            'timezone' => ['nullable', 'string', 'max:50'],
+            'language' => ['nullable', 'string', 'max:10'],
+            'date_format' => ['nullable', 'string', 'max:20'],
+            'time_format' => ['nullable', 'string', 'max:20'],
             'logo' => ['nullable', 'image', 'max:2048'],
             'favicon' => ['nullable', 'image', 'max:512'],
-            'maintenance_mode' => ['boolean'],
-            'member_registration_open' => ['boolean'],
-            'auto_generate_member_id' => ['boolean'],
-            'require_email_verification' => ['boolean'],
-            'require_phone_verification' => ['boolean']
+
+            // booleans (optional)
+            'maintenance_mode' => ['nullable', 'boolean'],
+            'member_registration_open' => ['nullable', 'boolean'],
+            'auto_generate_member_id' => ['nullable', 'boolean'],
+            'require_email_verification' => ['nullable', 'boolean'],
+            'require_phone_verification' => ['nullable', 'boolean'],
         ]);
 
         DB::transaction(function () use ($validated, $request) {
+
+            // Handle boolean fields safely (checkbox issue fix)
+            $booleanFields = [
+                'maintenance_mode',
+                'member_registration_open',
+                'auto_generate_member_id',
+                'require_email_verification',
+                'require_phone_verification'
+            ];
+
+            foreach ($booleanFields as $field) {
+                $validated[$field] = $request->boolean($field);
+            }
+
             foreach ($validated as $key => $value) {
+
+                // Skip null values (do not overwrite existing settings)
+                if (is_null($value)) {
+                    continue;
+                }
+
+                // Handle file uploads
                 if (in_array($key, ['logo', 'favicon'])) {
+
                     if ($request->hasFile($key)) {
-                        // Delete old file if exists
                         $oldSetting = SystemSetting::where('key', $key)->first();
+
                         if ($oldSetting && $oldSetting->value) {
                             Storage::disk('public')->delete($oldSetting->value);
                         }
-                        
-                        // Store new file
+
                         $path = $request->file($key)->store('settings', 'public');
                         $this->updateSetting($key, $path, 'general');
                     }
+
                 } else {
-                    $this->updateSetting($key, $value, 'general');
+
+                    // Only update if value changed (optimization)
+                    $existing = SystemSetting::where('key', $key)->first();
+
+                    if (!$existing || $existing->value != $value) {
+                        $this->updateSetting($key, $value, 'general');
+                    }
                 }
             }
 
-            // Log the activity
             $this->logActivity('general_settings_updated', 'General settings updated');
         });
 

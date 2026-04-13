@@ -22,6 +22,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SystemUserController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\Public\ContactController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -578,3 +579,6 @@ Route::prefix('members/{member}/finance-setup')->name('members.finance-setup.')-
     Route::delete('/{commitment}',        [MemberDepositCommitmentController::class, 'destroy'])->name('destroy');
     Route::patch('/{commitment}/toggle',  [MemberDepositCommitmentController::class, 'toggle'])->name('toggle');
 });
+
+
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
