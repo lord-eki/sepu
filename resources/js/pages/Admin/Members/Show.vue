@@ -145,7 +145,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="p-6 flex flex-col md:flex-row items-center gap-6 border-b border-gray-100">
           <div>
-            <img v-if="member.profile_photo" :src="`/storage/${member.profile_photo}`" :alt="member.first_name"
+            <img v-if="member.profile_photo" :src="`/storage/${member.profile_photo}`" alt='profile'
               class="h-24 w-24 rounded-full object-cover border-2 border-orange-500" />
             <div v-else class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center border-2 border-orange-500">
               <User class="h-10 w-10 text-gray-600" />

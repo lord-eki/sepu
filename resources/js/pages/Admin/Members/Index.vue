@@ -40,7 +40,7 @@
 
           <!-- Title -->
           <div>
-            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Members</h1>
+            <h1 class="text-xl sm:text-3xl font-extrabold tracking-tight">Members Management</h1>
             <p class="text-blue-200 mt-1 max-sm:text-sm dark:text-blue-300">
               Manage and organize all SACCO members efficiently.
             </p>
@@ -52,7 +52,8 @@
             <!-- Add Member -->
             <Link v-if="$page.props.auth.user.role !== 'member'" :href="route('members.create')"
               class="px-5 py-2.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm sm:text-base shadow-md flex items-center gap-2 transition transform hover:-translate-y-0.5">
-            <PlusCircle class="w-5 h-5" /><span class="sm:hidden"> Add</span> <span class="max-sm:hidden"> Add Member</span>
+            <PlusCircle class="w-5 h-5" /><span class="sm:hidden"> Add</span> <span class="max-sm:hidden"> Add
+              Member</span>
             </Link>
 
             <!-- Import Dropdown -->
@@ -97,14 +98,13 @@
                 class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden border dark:border-gray-700 z-50">
 
                 <button @click="generateUsernames"
-                  class="w-full px-4 py-3 text-left text-sm sm:text-base text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                  class="w-full px-4 py-3 text-left text-sm sm:text-base text-blue-600 dark:text-blue-400 hover:bg-green-50 dark:hover:bg-gray-700 flex items-center gap-2">
                   <Loader2Icon v-if="isGenerating" class="w-4 h-4 animate-spin" />
                   {{ isGenerating ? "Generating..." : "Generate Username(s)" }}
                 </button>
 
                 <button @click="confirmDelete"
                   class="w-full px-4 py-3 text-left text-sm sm:text-base text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 flex items-center gap-2">
-                  <CircleX class="w-4 h-4" />
                   Delete Selected
                 </button>
 
@@ -280,7 +280,7 @@
 
       <!-- DESKTOP TABLE -->
       <div class="max-w-7xl mx-auto mt-10 hidden sm:block">
-        <div class="overflow-x-auto rounded-sm shadow border border-gray-200 dark:border-gray-700">
+        <div class="overflow-x-auto rounded-2xl shadow border border-gray-200 dark:border-gray-700">
           <table class="w-full text-sm px-2">
             <thead class="bg-[rgb(10,35,66)] dark:bg-gray-800 text-white">
               <tr>

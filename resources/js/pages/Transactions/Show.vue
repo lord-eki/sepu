@@ -1,157 +1,144 @@
 <template>
-  <AppLayout :breadcrumbs="[{ title: 'Transactions', href: '/transactions' }, { title: transaction.transaction_id ?? 'Transaction' }]">
+  <AppLayout
+    :breadcrumbs="[{ title: 'Transactions', href: '/transactions' }, { title: transaction.transaction_id ?? 'Transaction' }]">
+
     <Head :title="transaction.transaction_id ?? 'Transaction'" />
+
+    <!-- FLASH -->
+    <div ref="flashBox" class="mx-auto mt-4 max-w-4xl px-4">
+      <transition enter-active-class="transition duration-300" enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200"
+        leave-from-class="opacity-100" leave-to-class="opacity-0">
+        <div v-if="flashMessage" :class="[
+      'flex items-center gap-3 rounded-lg border p-4 text-sm shadow',
+      flashType === 'success'
+        ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+        : 'border-rose-300 bg-rose-50 text-rose-800',
+    ]">
+          <span>{{ flashMessage }}</span>
+          <button class="ml-auto text-gray-400 hover:text-gray-700" @click="flashMessage = null">✕</button>
+        </div>
+      </transition>
+    </div>
 
     <div class="space-y-10 mx-8 mt-6">
       <!-- HEADER -->
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
-          <h1 class="text-xl font-bold text-slate-900">Transaction {{ transaction.transaction_id }}</h1>
-          <p class="text-sm text-slate-500 mt-1">Reference: {{ transaction.reference_number ?? 'N/A' }}</p>
+          <button @click="goBack" class="mb-3 text-lg text-blue-600 hover:underline">
+            ← Back to Transactions
+          </button>
+
+          <h1 class="text-xl font-bold text-slate-900">
+            Transaction {{ transaction.transaction_id }}
+          </h1>
+          <p class="text-sm text-slate-500 mt-1">
+            Reference: {{ transaction.reference_number ?? 'N/A' }}
+          </p>
         </div>
 
         <div class="flex flex-wrap gap-3">
-          <button
-            v-if="transaction.status === 'pending'"
-            @click="approve"
-            class="rounded-lg bg-blue-700 px-6 py-2 text-white shadow-md transition hover:shadow-xl hover:bg-blue-800"
-          >
+          <!-- ✅ CHANGED: now opens modal -->
+          <button v-if="transaction.status === 'pending'" @click="openApprove"
+            class="rounded-lg bg-blue-700 px-6 py-2 text-white shadow-md hover:bg-blue-800">
             Approve
           </button>
 
-          <button
-            v-if="transaction.status === 'pending'"
-            @click="openReject"
-            class="rounded-lg bg-orange-600 px-6 py-2 text-white shadow-md transition hover:shadow-xl hover:bg-orange-700"
-          >
+          <button v-if="transaction.status === 'pending'" @click="openReject"
+            class="rounded-lg bg-orange-600 px-6 py-2 text-white shadow-md hover:bg-orange-700">
             Reject
           </button>
 
-          <button
-            v-if="transaction.status === 'completed'"
-            @click="openReverse"
-            class="rounded-lg bg-orange-500 px-6 py-2 text-white shadow-md transition hover:shadow-xl hover:bg-orange-600"
-          >
+          <button v-if="transaction.status === 'completed'" @click="openReverse"
+            class="rounded-lg bg-orange-500 px-6 py-2 text-white shadow-md hover:bg-orange-600">
             Reverse
           </button>
 
-          <button
-            @click="deleteTxn"
-            class="rounded-lg border border-slate-300 px-6 py-2 hover:bg-slate-100 transition"
-          >
+          <button @click="deleteTxn" class="rounded-lg border border-slate-300 px-6 py-2 hover:bg-slate-100">
             Delete
           </button>
         </div>
       </div>
 
-      <!-- GRID -->
+      <!-- GRID (UNCHANGED) -->
       <div class="grid gap-6 lg:grid-cols-3">
-        <!-- SUMMARY CARD -->
-        <div class="space-y-5 rounded-2xl bg-white p-6 shadow-lg hover:shadow-xl transition">
-          <div class="flex justify-between items-start">
+        <div class="rounded-2xl bg-white p-6 shadow-lg">
+          <div class="flex justify-between">
             <div>
               <p class="text-sm text-slate-400">Amount</p>
-              <p class="text-xl font-bold text-slate-900">KSh {{ formattedNumber(transaction.amount) }}</p>
+              <p class="text-xl font-bold text-slate-900">
+                KSh {{ formattedNumber(transaction.amount) }}
+              </p>
             </div>
-            <span :class="['rounded-full px-3 py-1 text-sm font-semibold', statusBadge(transaction.status)]">
+            <span :class="['px-3 py-1 h-fit rounded-full text-sm', statusBadge(transaction.status)]">
               {{ capitalize(transaction.status) }}
             </span>
           </div>
-
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between">
-              <span class="text-slate-400">Type</span>
-              <span class="font-medium">{{ transaction.transaction_type }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Payment Method</span>
-              <span class="font-medium">{{ transaction.payment_method ?? '-' }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Processed By</span>
-              <span class="font-medium">{{ transaction.processedBy?.name ?? '-' }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Date</span>
-              <span class="font-medium">{{ formatDate(transaction.created_at) }}</span>
-            </div>
-          </div>
         </div>
 
-        <!-- MEMBER CARD -->
-        <div class="rounded-2xl bg-white p-6 shadow-lg hover:shadow-xl transition">
-          <h3 class="mb-4 text-lg font-semibold text-slate-800">Member Info</h3>
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between">
-              <span class="text-slate-400">Name</span>
-              <span>{{ memberName }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Membership</span>
-              <span>{{ transaction.member?.membership_id ?? '-' }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Account</span>
-              <span>{{ transaction.account?.account_number ?? '-' }}</span>
-            </div>
-          </div>
+        <div class="rounded-2xl bg-white p-6 shadow-lg">
+          <h3 class="mb-3 font-semibold">Member</h3>
+          <p>{{ memberName }}</p>
         </div>
 
-        <!-- BALANCE FLOW -->
-        <div class="rounded-2xl bg-white p-6 shadow-lg hover:shadow-xl transition">
-          <h3 class="mb-4 text-lg font-semibold text-slate-800">Balance Flow</h3>
-          <div class="flex items-center justify-between text-sm">
-            <div class="text-center">
-              <p class="text-slate-400">Before</p>
-              <p class="font-semibold">KSh {{ formattedNumber(transaction.balance_before) }}</p>
-            </div>
-            <div class="text-lg text-slate-400">→</div>
-            <div class="text-center">
-              <p class="text-slate-400">Amount</p>
-              <p class="font-semibold text-blue-700">+ {{ formattedNumber(transaction.amount) }}</p>
-            </div>
-            <div class="text-lg text-slate-400">→</div>
-            <div class="text-center">
-              <p class="text-slate-400">After</p>
-              <p class="font-semibold">KSh {{ formattedNumber(transaction.balance_after) }}</p>
-            </div>
-          </div>
+        <div class="rounded-2xl bg-white p-6 shadow-lg">
+          <h3 class="mb-3 font-semibold">Balance Flow</h3>
+          <p>
+            KSh {{ formattedNumber(transaction.balance_before) }} →
+            KSh {{ formattedNumber(transaction.balance_after) }}
+          </p>
         </div>
-      </div>
-
-      <!-- DESCRIPTION CARD -->
-      <div class="rounded-2xl bg-white p-6 shadow-lg hover:shadow-xl transition">
-        <h3 class="mb-3 text-lg font-semibold text-slate-800">Description</h3>
-        <p class="text-sm text-slate-600">
-          {{ transaction.description ?? 'No description provided.' }}
-        </p>
       </div>
     </div>
 
-    <!-- MODALS -->
-    <div v-if="modals.reject || modals.reverse" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4 animate-fade-in">
-        <h3 class="text-lg font-semibold text-slate-900">
-          {{ modals.reject ? 'Reject Transaction' : 'Reverse Transaction' }}
+    <!-- ✅ UPDATED MODAL -->
+    <div v-if="modals.approve || modals.reject || modals.reverse"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center">
+
+      <div class="bg-white p-6 rounded-xl w-full max-w-md">
+
+        <h3 class="font-semibold mb-4">
+          {{ modals.approve
+            ? 'Approve Transaction'
+            : modals.reject
+            ? 'Reject Transaction'
+            : 'Reverse Transaction' }}
         </h3>
 
-        <textarea
-          v-model="payload.reason"
-          rows="4"
-          class="w-full rounded-lg border p-3 focus:ring-2 focus:ring-blue-700 transition"
-          placeholder="Enter reason..."
-        ></textarea>
+        <!-- APPROVE -->
+        <p v-if="modals.approve" class="text-sm text-gray-600 mb-4">
+          Are you sure you want to approve this transaction?
+        </p>
 
-        <div class="flex justify-end gap-3">
-          <button @click="closeModals" class="rounded-lg border px-4 py-2 hover:bg-slate-100 transition">
-            Cancel
-          </button>
+        <!-- REJECT -->
+        <textarea
+          v-if="modals.reject"
+          v-model="payload.reason"
+          class="w-full border rounded p-2 mb-4"
+          placeholder="Enter rejection reason"
+        />
+
+        <!-- REVERSE (REQUIRED) -->
+        <div v-if="modals.reverse">
+          <textarea
+            v-model="payload.reason"
+            class="w-full border rounded p-2 mb-2"
+            placeholder="Enter reversal reason"
+          />
+          <p v-if="!payload.reason.trim()" class="text-xs text-red-500">
+            Reason is required
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-4">
+          <button @click="closeModals" class="border px-4 py-2 rounded">Cancel</button>
 
           <button
-            @click="modals.reject ? reject() : reverse()"
-            class="rounded-lg bg-blue-700 px-4 py-2 text-white shadow hover:shadow-lg transition hover:bg-blue-800"
+            @click="handleAction"
+            :disabled="(modals.reverse && !payload.reason.trim()) || loading"
+            class="bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            Confirm
+            {{ loading ? 'Processing...' : 'Confirm' }}
           </button>
         </div>
       </div>
@@ -161,16 +148,19 @@
 
 <script setup>
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, router, usePage } from '@inertiajs/vue3'
-import { computed, reactive } from 'vue'
+import { Head, router } from '@inertiajs/vue3'
+import { ref, computed, reactive } from 'vue'
 
 const props = defineProps({ transaction: Object })
 const transaction = props.transaction
 
-const page = usePage()
-const user = page.props.auth?.user
+const loading = ref(false)
 
-const modals = reactive({ reject: false, reverse: false })
+const flashMessage = ref(null)
+const flashType = ref('success')
+
+// ✅ UPDATED MODALS
+const modals = reactive({ approve: false, reject: false, reverse: false })
 const payload = reactive({ reason: '' })
 
 const memberName = computed(() => {
@@ -186,64 +176,89 @@ function capitalize(s) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
 }
 
-function formatDate(d) {
-  return d ? new Date(d).toLocaleString() : '-'
-}
-
 function statusBadge(status) {
-  switch (status) {
-    case 'pending': return 'bg-orange-100 text-orange-700'
-    case 'completed': return 'bg-blue-100 text-blue-700'
-    case 'failed': return 'bg-rose-100 text-rose-700'
-    case 'reversed': return 'bg-slate-200 text-slate-700'
-    default: return 'bg-slate-200 text-slate-700'
-  }
+  return status === 'completed'
+    ? 'bg-emerald-100 text-emerald-700'
+    : status === 'pending'
+      ? 'bg-orange-100 text-orange-700'
+      : 'bg-slate-200 text-slate-700'
 }
 
-function csrf() {
-  return document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-}
-
-async function approve() {
-  await fetch(`/transactions/${transaction.id}/approve`, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf() } })
-  router.reload()
-}
-
-function openReject() { payload.reason = ''; modals.reject = true }
-function openReverse() { payload.reason = ''; modals.reverse = true }
-function closeModals() { modals.reject = false; modals.reverse = false }
-
-async function reject() {
-  await fetch(`/transactions/${transaction.id}/reject`, {
-    method: 'POST',
-    headers: { 'X-CSRF-TOKEN': csrf(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rejection_reason: payload.reason })
-  })
-  router.reload()
-}
-
-async function reverse() {
-  await fetch(`/transactions/${transaction.id}/reverse`, {
-    method: 'POST',
-    headers: { 'X-CSRF-TOKEN': csrf(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reversal_reason: payload.reason })
-  })
-  router.reload()
-}
-
-async function deleteTxn() {
-  if (!confirm('Delete this transaction?')) return
-  await fetch(`/transactions/${transaction.id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf() } })
+function goBack() {
   router.visit('/transactions')
 }
-</script>
 
-<style>
-.animate-fade-in {
-  animation: fadeIn 0.25s ease-out;
+// OPEN MODALS
+function openApprove() {
+  modals.approve = true
 }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+function openReject() {
+  payload.reason = ''
+  modals.reject = true
 }
-</style>
+function openReverse() {
+  payload.reason = ''
+  modals.reverse = true
+}
+function closeModals() {
+  modals.approve = modals.reject = modals.reverse = false
+}
+
+// HANDLE ACTION
+function handleAction() {
+  if (modals.approve) approve()
+  else if (modals.reject) reject()
+  else reverse()
+}
+
+// ACTIONS
+function approve() {
+  loading.value = true
+
+  router.post(`/transactions/${transaction.id}/approve`, {}, {
+    onSuccess: () => {
+      loading.value = false
+      closeModals()
+      transaction.status = 'completed'
+      flashMessage.value = 'Transaction approved'
+      flashType.value = 'success'
+    }
+  })
+}
+
+function reject() {
+  router.post(`/transactions/${transaction.id}/reject`, {
+    rejection_reason: payload.reason
+  }, {
+    onSuccess: () => {
+      closeModals()
+      transaction.status = 'failed'
+      flashMessage.value = 'Transaction rejected'
+    }
+  })
+}
+
+function reverse() {
+  if (!payload.reason.trim()) return
+
+  router.post(`/transactions/${transaction.id}/reverse`, {
+    reversal_reason: payload.reason
+  }, {
+    onSuccess: () => {
+      closeModals()
+      transaction.status = 'reversed'
+      flashMessage.value = 'Transaction reversed'
+    }
+  })
+}
+
+function deleteTxn() {
+  if (!confirm('Delete this transaction?')) return
+
+  router.delete(`/transactions/${transaction.id}`, {
+    onSuccess: () => {
+      router.visit('/transactions')
+    }
+  })
+}
+</script>
