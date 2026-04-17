@@ -132,7 +132,7 @@ class LoanController extends Controller
 
     /**
      * Store a newly created loan application
-     */
+    */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -183,7 +183,7 @@ class LoanController extends Controller
             ) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Loan amount must be between {$loanProduct->min_amount->toFixed(2)} and {$loanProduct->max_amount->toFixed(2)}",
+                    'message' => "Loan amount must be between {$loanProduct->min_amount} and {$loanProduct->max_amount}",
                 ], 422);
             }
 
@@ -210,25 +210,31 @@ class LoanController extends Controller
                 ], 422);
             }
 
-            // Calculate loan details
-            $processingFee = ($request->applied_amount * $loanProduct->processing_fee_rate) / 100;
-            $insuranceFee = ($request->applied_amount * $loanProduct->insurance_rate) / 100;
-            $monthlyInterestRate = $loanProduct->interest_rate / 100 / 12;
-            $monthlyRepayment = $this->calculateMonthlyRepayment(
-                $request->applied_amount,
-                $monthlyInterestRate,
-                $request->term_months
-            );
-            $totalRepayable = $monthlyRepayment * $request->term_months;
+            // ✅ CALCULATOR-CONSISTENT LOGIC
+            $principal = $request->applied_amount;
+            $months = $request->term_months;
+            $monthlyRate = $loanProduct->interest_rate / 100;
+
+            $principalPerMonth = $principal / $months;
+
+            $totalInterest = $principal * $monthlyRate * ($months + 1) / 2;
+            $mInterest = $totalInterest / $months;
+
+            $monthlyRepayment = $principalPerMonth + $mInterest;
+            $totalRepayable = $monthlyRepayment * $months;
+
+            // Fees
+            $processingFee = ($principal * $loanProduct->processing_fee_rate) / 100;
+            $insuranceFee = ($principal * $loanProduct->insurance_rate) / 100;
 
             // Create loan
             $loan = Loan::create([
                 'loan_number' => $this->generateLoanNumber(),
                 'member_id' => $request->member_id,
                 'loan_product_id' => $request->loan_product_id,
-                'applied_amount' => $request->applied_amount,
+                'applied_amount' => $principal,
                 'interest_rate' => $loanProduct->interest_rate,
-                'term_months' => $request->term_months,
+                'term_months' => $months,
                 'monthly_repayment' => $monthlyRepayment,
                 'total_repayable' => $totalRepayable,
                 'processing_fee' => $processingFee,
@@ -284,7 +290,6 @@ class LoanController extends Controller
             ], 500);
         }
     }
-
     /**
      * Display the specified loan
      */
@@ -343,14 +348,14 @@ class LoanController extends Controller
         ]);
     }
 
+    
     /**
      * Update the specified loan
-     */
+    */
     public function update(Request $request, $id)
     {
         $loan = Loan::findOrFail($id);
 
-        // Only allow updates for pending loans
         if ($loan->status !== 'pending') {
             return response()->json([
                 'success' => false,
@@ -377,6 +382,7 @@ class LoanController extends Controller
             DB::beginTransaction();
 
             $oldValues = $loan->toArray();
+
             $loan->update($request->only([
                 'applied_amount',
                 'term_months',
@@ -384,27 +390,34 @@ class LoanController extends Controller
                 'documents',
             ]));
 
-            // Recalculate loan details if amount or term changed
             if ($request->has('applied_amount') || $request->has('term_months')) {
+
                 $loanProduct = $loan->loanProduct;
-                $processingFee = ($loan->applied_amount * $loanProduct->processing_fee_rate) / 100;
-                $insuranceFee = ($loan->applied_amount * $loanProduct->insurance_rate) / 100;
-                $monthlyInterestRate = $loanProduct->interest_rate / 100 / 12;
-                $monthlyRepayment = $this->calculateMonthlyRepayment(
-                    $loan->applied_amount,
-                    $monthlyInterestRate,
-                    $loan->term_months
-                );
-                $totalRepayable = $monthlyRepayment * $loan->term_months;
+
+                // ✅ CALCULATOR-CONSISTENT LOGIC
+                $principal = $loan->applied_amount;
+                $months = $loan->term_months;
+                $monthlyRate = $loanProduct->interest_rate / 100;
+
+                $principalPerMonth = $principal / $months;
+
+                $totalInterest = $principal * $monthlyRate * ($months + 1) / 2;
+                $mInterest = $totalInterest / $months;
+
+                $monthlyRepayment = $principalPerMonth + $mInterest;
+                $totalRepayable = $monthlyRepayment * $months;
+
+                $processingFee = ($principal * $loanProduct->processing_fee_rate) / 100;
+                $insuranceFee = ($principal * $loanProduct->insurance_rate) / 100;
 
                 $loan->update([
                     'monthly_repayment' => $monthlyRepayment,
                     'total_repayable' => $totalRepayable,
                     'processing_fee' => $processingFee,
                     'insurance_fee' => $insuranceFee,
-                    'outstanding_balance' => $loan->applied_amount,
-                    'principal_balance' => $loan->applied_amount,
-                    'interest_balance' => $totalRepayable - $loan->applied_amount,
+                    'outstanding_balance' => $principal,
+                    'principal_balance' => $principal,
+                    'interest_balance' => $totalRepayable - $principal,
                 ]);
             }
 
@@ -620,9 +633,7 @@ class LoanController extends Controller
         }
     }
 
-    /**
-     * Disburse an approved loan
-     */
+
     /**
      * Disburse an approved loan
      */
@@ -859,41 +870,62 @@ class LoanController extends Controller
         return $voucherNumber;
     }
 
+    
     /**
-     * Generate repayment schedule for a loan
-     */
+    * Generate repayment schedule for a loan
+    */
     private function generateRepaymentSchedule(Loan $loan)
     {
-        $startDate = Carbon::parse($loan->first_repayment_date);
-        $monthlyRepayment = $loan->monthly_repayment;
-        $remainingBalance = $loan->disbursed_amount;
-        $monthlyInterestRate = $loan->interest_rate / 100 / 12;
+        // Start date (respect grace period if needed)
+        $graceDays = $loan->loanProduct->grace_period_days ?? 0;
+        $startDate = Carbon::now()->addDays($graceDays)->addMonth();
 
-        for ($i = 1; $i <= $loan->term_months; $i++) {
+        $principal = $loan->approved_amount ?? $loan->applied_amount;
+        $months = $loan->term_months;
+        $monthlyRate = $loan->interest_rate / 100;
+
+        // SAME AS CALCULATOR
+        $principalPerMonth = $principal / $months;
+
+        $totalInterest = $principal * $monthlyRate * ($months + 1) / 2;
+        $mInterest = $totalInterest / $months;
+
+        $cumulativeInterest = 0;
+        $cumulativePrincipal = 0;
+
+        for ($i = 1; $i <= $months; $i++) {
+
             $dueDate = $startDate->copy()->addMonths($i - 1);
-            $interestAmount = $remainingBalance * $monthlyInterestRate;
-            $principalAmount = $monthlyRepayment - $interestAmount;
 
-            // Adjust last payment to clear any remaining balance
-            if ($i == $loan->term_months) {
-                $principalAmount = $remainingBalance;
-                $monthlyRepayment = $principalAmount + $interestAmount;
-            }
+            $interestAmount = $mInterest;
+            $principalAmount = $principalPerMonth;
+            $paymentAmount = $principalAmount + $interestAmount;
+
+            $cumulativeInterest += $interestAmount;
+            $cumulativePrincipal += $principalAmount;
 
             LoanRepayment::create([
                 'loan_id' => $loan->id,
                 'due_date' => $dueDate,
-                'expected_amount' => $monthlyRepayment,
-                'principal_amount' => $principalAmount,
-                'interest_amount' => $interestAmount,
+
+                // Core amounts
+                'expected_amount' => round($paymentAmount, 2),
+                'principal_amount' => round($principalAmount, 2),
+                'interest_amount' => round($interestAmount, 2),
+
+                // Tracking
                 'penalty_amount' => 0,
                 'paid_amount' => 0,
-                'outstanding_amount' => $monthlyRepayment,
+                'outstanding_amount' => round($paymentAmount, 2),
+
+                // Status
                 'status' => 'pending',
                 'days_late' => 0,
-            ]);
 
-            $remainingBalance -= $principalAmount;
+                // Optional (if your table supports it)
+                'cumulative_interest' => round($cumulativeInterest, 2),
+                'cumulative_principal' => round($cumulativePrincipal, 2),
+            ]);
         }
     }
 }

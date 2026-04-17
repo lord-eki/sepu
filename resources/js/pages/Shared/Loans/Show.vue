@@ -7,114 +7,207 @@
     <Head title="Loan Details" />
 
     <!-- ================= TOAST ================= -->
-    <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-3"
-      enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
-      leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-3">
-      <div v-if="visible" class="fixed top-6 left-1/2 -translate-x-1/2 z-9999 w-[92%] max-w-lg
-               bg-white/90 backdrop-blur-xl border border-slate-200
-               shadow-xl rounded-2xl px-5 py-3 flex gap-3 items-start">
-        <div class="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold"
-          :class="type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-slate-500'">
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 -translate-y-3 scale-95"
+      enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-3"
+    >
+      <div
+        v-if="visible"
+        class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-md
+        rounded-2xl border border-white/60 bg-white/90 backdrop-blur-xl
+        shadow-2xl px-5 py-4 flex items-start gap-3"
+      >
+        <div
+          class="h-9 w-9 rounded-xl flex items-center justify-center text-white font-bold shadow"
+          :class="type === 'success'
+            ? 'bg-emerald-500'
+            : type === 'error'
+            ? 'bg-rose-500'
+            : 'bg-slate-500'"
+        >
           {{ type === 'success' ? '✓' : '!' }}
         </div>
 
         <div class="flex-1">
-          <p class="text-sm font-medium text-slate-800">{{ message }}</p>
+          <p class="text-sm font-semibold text-slate-800">{{ message }}</p>
         </div>
 
-        <button @click="close" class="text-slate-500 hover:text-slate-900">✕</button>
+        <button @click="close" class="text-slate-400 hover:text-slate-800">
+          ✕
+        </button>
       </div>
     </transition>
 
-    <!-- ================= PAGE WRAPPER ================= -->
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <!-- ================= PAGE ================= -->
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
 
-      <!-- ================= HEADER (STRIPE STYLE) ================= -->
-      <div class="border-b bg-white/70 backdrop-blur-xl">
-        <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+      <!-- ================= HERO HEADER ================= -->
+      <div class="border-b border-white/50 bg-white/70 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-6 py-7">
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-center">
+
+            <!-- LEFT -->
+            <div class="xl:col-span-2 flex items-start gap-4">
+
+              <div
+                class="h-10 w-10 rounded-3xl bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900
+                flex items-center justify-center shadow-xl"
+              >
+                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3" />
+                </svg>
+              </div>
+
+              <div>
+                <p class="text-xs uppercase tracking-[0.25em] text-slate-400 mb-1">
+                  Loan Account
+                </p>
+
+                <h1 class="text-2xl font-black text-slate-900">
+                  {{ loan.loan_number }}
+                </h1>
+
+                <div class="mt-3 flex flex-wrap gap-2">
+
+                  <span
+                    class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold"
+                  >
+                    {{ loan.loan_product?.name || 'Loan Product' }}
+                  </span>
+
+                  <span
+                    class="px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold"
+                  >
+                    Applied {{ formatDate(loan.application_date || loan.created_at) }}
+                  </span>
+
+                </div>
+              </div>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="xl:text-right">
+
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-400">
+                Member
+              </p>
+
+              <h2 class="text-xl font-bold text-slate-900 mt-1">
+                {{ loan.member?.first_name }} {{ loan.member?.last_name }}
+              </h2>
+
+              <div class="mt-4 flex gap-3 xl:justify-end flex-wrap">
+
+                <Link
+                  v-if="canEdit"
+                  :href="route('loans.edit', loan.id)"
+                  class="px-4 py-2.5 rounded-2xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 shadow"
+                >
+                  Edit Loan
+                </Link>
+
+                <Link
+                  :href="isMemberRole ? route('my-loans') : route('loans.index')"
+                  class="px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50"
+                >
+                  Back
+                </Link>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= STATUS BAR ================= -->
+      <div class="max-w-7xl mx-auto px-6 pt-2">
+        <div
+          class="rounded-3xl bg-white/90 backdrop-blur-xl border border-white shadow-xl p-5
+          flex flex-col md:flex-row md:items-center gap-4 justify-between"
+        >
 
           <div class="flex items-center gap-4">
-            <div class="p-3 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-700 shadow-lg">
-              <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3" />
-              </svg>
+
+            <div
+              class="h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-lg"
+              :class="getStatusBannerClass(loan.status)"
+            >
+              !
             </div>
 
             <div>
-              <h1 class="text-2xl font-bold text-slate-900">
-                Loan No: <span class="text-orange-600">{{ loan.loan_number }}</span>
-              </h1>
-              <p class="text-sm text-slate-500">Complete loan lifecycle & management</p>
+              <p class="text-sm text-slate-500">Current Status</p>
+              <p class="font-bold text-slate-900 text-sm">
+                {{ formatStatus(loan.status) }}
+              </p>
             </div>
+
           </div>
 
-          <div class="flex gap-3 flex-wrap">
-            <Link v-if="canEdit" :href="route('loans.edit', loan.id)"
-              class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800 shadow">
-            Edit Loan
-            </Link>
-
-            <Link :href="isMemberRole ? route('my-loans') : route('loans.index')"
-              class="px-4 py-2 rounded-xl bg-white border text-slate-700 hover:bg-slate-50 text-sm">
-            Back
-            </Link>
-          </div>
+          <p class="text-sm text-slate-500 max-w-xl">
+            {{ getStatusDescription(loan.status) }}
+          </p>
 
         </div>
       </div>
 
-      <!-- ================= STATUS STRIP ================= -->
-      <div class="max-w-7xl mx-auto px-6 pt-6">
-        <div class="rounded-2xl shadow-xl bg-white p-5 flex items-center gap-4">
-
-          <div class="h-10 w-10 rounded-xl flex items-center justify-center font-bold"
-            :class="getStatusBannerClass(loan.status)">
-            !
-          </div>
-
-          <div>
-            <p class="font-semibold text-slate-900">
-              Status: {{ formatStatus(loan.status) }}
-            </p>
-            <p class="text-sm text-slate-500">
-              {{ getStatusDescription(loan.status) }}
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ================= QUICK ACTIONS (RESTORED) ================= -->
+      <!-- ================= QUICK ACTIONS ================= -->
       <div v-if="hasQuickActions" class="max-w-7xl mx-auto px-6 mt-6">
-        <div class="bg-white border rounded-2xl shadow-sm p-5">
+        <div class="rounded-3xl bg-white border border-slate-100 shadow-sm p-5">
 
-          <h3 class="text-sm font-semibold text-slate-900 mb-4">Quick Actions</h3>
+          <h3 class="font-semibold text-slate-900 mb-4">
+            Quick Actions
+          </h3>
 
           <div class="flex flex-wrap gap-3">
 
-            <button v-if="canApprove" @click="openApprovalModal"
-              class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm hover:bg-emerald-700">
+            <button
+              v-if="canApprove"
+              @click="openApprovalModal"
+              class="px-4 py-2.5 rounded-2xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"
+            >
               Approve
             </button>
 
-            <button v-if="canReject" @click="openRejectModal"
-              class="px-4 py-2 rounded-xl bg-red-600 text-white text-sm hover:bg-red-700">
+            <button
+              v-if="canReject"
+              @click="openRejectModal"
+              class="px-4 py-2.5 rounded-2xl bg-rose-600 text-white text-sm font-medium hover:bg-rose-700"
+            >
               Reject
             </button>
 
-            <button v-if="canDisburse" @click="openDisbursementModal"
-              class="px-4 py-2 rounded-xl bg-blue-900 text-white text-sm hover:bg-blue-950">
+            <button
+              v-if="canDisburse"
+              @click="openDisbursementModal"
+              class="px-4 py-2.5 rounded-2xl bg-blue-700 text-white text-sm font-medium hover:bg-blue-800"
+            >
               Disburse
             </button>
 
-            <Link v-if="canViewSchedule" :href="route('loans.schedule', loan.id)"
-              class="px-4 py-2 rounded-xl bg-white border text-sm hover:bg-slate-50">
-            Schedule
+            <Link
+              v-if="canViewSchedule"
+              :href="route('loans.schedule', loan.id)"
+              class="px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200"
+            >
+              Schedule
             </Link>
 
-            <Link v-if="canViewRepayments" :href="route('loans.repayments', loan.id)"
-              class="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm hover:bg-orange-600">
-            Repayments
+            <Link
+              v-if="canViewRepayments"
+              :href="route('loans.repayments', loan.id)"
+              class="px-4 py-2.5 rounded-2xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600"
+            >
+              Repayments
             </Link>
 
           </div>
@@ -122,336 +215,336 @@
         </div>
       </div>
 
-      <!-- ================= MAIN GRID (STRIPE STYLE) ================= -->
-      <div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- ================= BODY ================= -->
+      <div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
 
         <!-- LEFT -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="xl:col-span-2 space-y-6">
 
-          <!-- LOAN DETAILS -->
-          <div class="bg-white border rounded-2xl shadow-sm p-6">
-            <h2 class="text-lg font-semibold mb-5">Loan Information</h2>
+          <!-- LOAN INFO -->
+          <div class="rounded-3xl bg-white border border-slate-100 shadow-sm p-6">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="text-lg font-bold text-slate-900">
+                Loan Information
+              </h2>
 
-              <div class="p-4 bg-slate-100 rounded-xl">
-                <p class="text-slate-500">Applied</p>
-                <p class="font-semibold">KES {{ formatCurrency(loan.applied_amount) }}</p>
+              <span class="text-xs text-slate-400 uppercase tracking-widest">
+                Overview
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div class="rounded-2xl bg-slate-50 p-4">
+                <p class="text-xs text-slate-500">Applied Amount</p>
+                <p class="mt-1 text-xl font-bold text-slate-900">
+                  KES {{ formatCurrency(loan.applied_amount) }}
+                </p>
               </div>
 
-              <div class="p-4 bg-slate-100 rounded-xl">
-                <p class="text-slate-500">Approved</p>
-                <p class="font-semibold text-blue-700">
+              <div class="rounded-2xl bg-blue-50 p-4">
+                <p class="text-xs text-blue-600">Approved Amount</p>
+                <p class="mt-1 text-xl font-bold text-blue-800">
                   KES {{ formatCurrency(loan.approved_amount) }}
                 </p>
               </div>
 
-              <div class="p-4 bg-slate-100 rounded-xl">
-                <p class="text-slate-500">Purpose</p>
-                <p class="font-semibold text-gray-700">
-                   {{ loan.purpose }}
-                </p>
-              </div>
-
-              <div class="p-4 bg-slate-100 rounded-xl">
-                <p class="text-slate-500">Disbursed</p>
-                <p class="font-semibold text-blue-700">
+              <div class="rounded-2xl bg-emerald-50 p-4">
+                <p class="text-xs text-emerald-600">Disbursed Amount</p>
+                <p class="mt-1 text-xl font-bold text-emerald-700">
                   KES {{ formatCurrency(loan.disbursed_amount) }}
                 </p>
               </div>
 
-              <div class="p-4 bg-slate-100 rounded-xl">
-                <p class="text-slate-500">Interest</p>
-                <p class="font-semibold">{{ loan.interest_rate }}%</p>
+              <div class="rounded-2xl bg-orange-50 p-4">
+                <p class="text-xs text-orange-600">Interest Rate</p>
+                <p class="mt-1 text-xl font-bold text-orange-700">
+                  {{ loan.interest_rate }}%
+                </p>
               </div>
 
-              <div class="p-4 bg-slate-100 rounded-xl">
-                <p class="text-slate-500">Term</p>
-                <p class="font-semibold">{{ loan.term_months }} months</p>
+              <div class="rounded-2xl bg-slate-50 p-4">
+                <p class="text-xs text-slate-500">Repayment Term</p>
+                <p class="mt-1 text-xl font-bold text-slate-900">
+                  {{ loan.term_months }} Months
+                </p>
+              </div>
+
+              <div class="rounded-2xl bg-slate-50 p-4">
+                <p class="text-xs text-slate-500">Purpose</p>
+                <p class="mt-1 font-semibold text-slate-900">
+                  {{ loan.purpose || 'N/A' }}
+                </p>
               </div>
 
             </div>
           </div>
 
-          <!-- GUARANTORS-->
-          <div v-if="loan.guarantors?.length" class="bg-white border rounded-2xl shadow-sm p-6">
-            <h2 class="text-lg font-semibold mb-4">Guarantors</h2>
+          <!-- GUARANTORS -->
+          <div
+            v-if="loan.guarantors?.length"
+            class="rounded-3xl bg-white border border-slate-100 shadow-sm p-6"
+          >
+            <h2 class="text-lg font-bold text-slate-900 mb-5">
+              Guarantors
+            </h2>
 
             <div class="space-y-3">
-              <div v-for="g in loan.guarantors" :key="g.id" class="p-4 border rounded-xl flex justify-between">
+
+              <div
+                v-for="g in loan.guarantors"
+                :key="g.id"
+                class="rounded-2xl border border-slate-100 p-4 flex items-center justify-between"
+              >
                 <div>
-                  <p class="font-medium">
-                    {{ g.guarantor_member.first_name }} {{ g.guarantor_member.last_name }}
+                  <p class="font-semibold text-slate-900">
+                    {{ g.guarantor_member.first_name }}
+                    {{ g.guarantor_member.last_name }}
                   </p>
-                  <p class="text-sm text-slate-500">{{ g.guarantor_member.membership_id }}</p>
+
+                  <p class="text-sm text-slate-500">
+                    {{ g.guarantor_member.membership_id }}
+                  </p>
                 </div>
 
                 <div class="text-right">
-                  <p class="font-semibold">KES {{ formatCurrency(g.guaranteed_amount) }}</p>
-                  <span class="text-xs px-2 py-1 rounded-full bg-slate-100">
+                  <p class="font-bold text-slate-900">
+                    KES {{ formatCurrency(g.guaranteed_amount) }}
+                  </p>
+
+                  <span class="text-xs text-slate-500">
                     {{ g.status }}
                   </span>
                 </div>
               </div>
-            </div>
 
+            </div>
           </div>
 
         </div>
 
-        <!-- RIGHT SIDEBAR -->
+        <!-- RIGHT -->
         <div class="space-y-6">
 
           <!-- BALANCE -->
-          <div class="bg-white border rounded-2xl shadow-sm p-6">
-            <h2 class="font-semibold mb-4">Balance</h2>
+          <div class="rounded-3xl bg-white border border-slate-100 shadow-sm p-6">
 
-            <div class="space-y-3 text-sm">
+            <h2 class="text-lg font-bold text-slate-900 mb-5">
+              Balance Summary
+            </h2>
+
+            <div class="space-y-4">
+
               <div class="flex justify-between">
                 <span class="text-slate-500">Outstanding</span>
-                <span class="text-red-600 font-semibold">
+                <span class="font-bold text-rose-600">
                   KES {{ formatCurrency(loan.outstanding_balance) }}
                 </span>
               </div>
 
               <div class="flex justify-between">
                 <span class="text-slate-500">Principal</span>
-                <span>{{ formatCurrency(loan.principal_balance) }}</span>
+                <span class="font-semibold text-slate-900">
+                  KES {{ formatCurrency(loan.principal_balance) }}
+                </span>
               </div>
 
               <div class="flex justify-between">
                 <span class="text-slate-500">Interest</span>
-                <span>{{ formatCurrency(loan.interest_balance) }}</span>
+                <span class="font-semibold text-slate-900">
+                  KES {{ formatCurrency(loan.interest_balance) }}
+                </span>
               </div>
+
             </div>
           </div>
 
           <!-- FEES -->
-          <div class="bg-white border rounded-2xl shadow-sm p-6">
-            <h2 class="font-semibold mb-4">Fees</h2>
+          <div class="rounded-3xl bg-white border border-slate-100 shadow-sm p-6">
 
-            <div class="flex justify-between text-sm">
-              <span>Processing</span>
-              <span>{{ formatCurrency(loan.processing_fee) }}</span>
-            </div>
+            <h2 class="text-lg font-bold text-slate-900 mb-5">
+              Charges & Fees
+            </h2>
 
-            <div class="flex justify-between text-sm mt-2">
-              <span>Insurance</span>
-              <span>{{ formatCurrency(loan.insurance_fee) }}</span>
+            <div class="space-y-4">
+
+              <div class="flex justify-between">
+                <span class="text-slate-500">Processing Fee</span>
+                <span class="font-semibold text-slate-900">
+                  KES {{ formatCurrency(loan.processing_fee) }}
+                </span>
+              </div>
+
+              <div class="flex justify-between">
+                <span class="text-slate-500">Insurance Fee</span>
+                <span class="font-semibold text-slate-900">
+                  KES {{ formatCurrency(loan.insurance_fee) }}
+                </span>
+              </div>
+
             </div>
           </div>
 
         </div>
+
       </div>
 
     </div>
 
-    <!-- APPROVAL MODAL -->
-    <div v-if="showApprovalModal" class="fixed inset-0 z-50 flex items-center justify-center">
+  <!-- ================= APPROVAL MODAL ================= -->
+<div
+  v-if="showApprovalModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+>
+  <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl p-6">
 
-      <!-- BACKDROP -->
-      <div class="absolute inset-0 bg-black/40" @click="closeApprovalModal"></div>
+    <h2 class="text-xl font-bold text-slate-900 mb-5">
+      Approve Loan
+    </h2>
 
-      <!-- MODAL -->
-      <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl">
+    <!-- Applied Amount -->
+    <div class="mb-4 rounded-2xl bg-slate-50 p-4">
+      <p class="text-sm text-slate-500">Applied Amount</p>
+      <p class="text-2xl font-bold text-slate-900">
+        KES {{ formatCurrency(loan.applied_amount) }}
+      </p>
+    </div>
 
-        <!-- HEADER -->
-        <div class="px-6 py-4 border-b">
-          <h2 class="text-lg font-semibold">Approve Loan</h2>
-          <p class="text-sm text-slate-500">Set approval amount & review breakdown</p>
-        </div>
+    <!-- Amount To Approve -->
+    <div class="mb-4">
+      <label class="text-sm font-semibold text-slate-700">
+        Amount To Approve
+      </label>
 
-        <!-- BODY -->
-        <div class="p-6 space-y-5">
+      <input
+        v-model="approvalForm.approved_amount"
+        type="number"
+        class="w-full mt-2 border rounded-2xl p-3"
+        placeholder="Enter approved amount"
+      />
+    </div>
 
-        
-          <!-- INPUT -->
-<div>
-  <label class="text-sm font-medium">Approved Amount (Amount Member Receives)</label>
-  <input
-    v-model.number="approvalForm.approved_amount"
-    type="number"
-    class="w-full mt-1 border rounded-xl p-3"
-    :class="{'border-red-500': validationErrors.approved_amount}"
-    @input="validateApprovedAmount"
-    placeholder="Enter approved amount" required
-  />
-  <p v-if="validationErrors.approved_amount" class="text-red-600 text-xs mt-1">
-    {{ validationErrors.approved_amount }}
-  </p>
+    <!-- Preview -->
+    <div class="mb-4 rounded-2xl bg-emerald-50 p-4">
+      <p class="text-sm text-emerald-600">Approved Amount</p>
+      <p class="text-2xl font-bold text-emerald-700">
+        KES {{ formatCurrency(approvalForm.approved_amount) }}
+      </p>
+    </div>
+
+    <textarea
+      v-model="approvalForm.approval_notes"
+      class="w-full border rounded-2xl p-3 mb-5"
+      placeholder="Approval Notes (optional)"
+    ></textarea>
+
+    <div class="flex justify-end gap-3">
+      <button
+        @click="closeApprovalModal"
+        class="px-4 py-2 border rounded-xl"
+      >
+        Cancel
+      </button>
+
+      <button
+        @click="approveLoan"
+        class="px-5 py-2 bg-emerald-600 text-white rounded-xl"
+      >
+        Approve Loan
+      </button>
+    </div>
+
+  </div>
 </div>
 
-          <div class="mt-3 text-sm">
-            <span class="text-slate-500">Calculated Approved Amount:</span>
-            <span class="font-semibold text-blue-700 ml-2">
-              {{ formatCurrency(approvalForm.approved_amount) }}
-            </span>
-          </div>
+<div v-if="showRejectionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+  <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
+    <h2 class="text-xl font-bold text-red-600 mb-4">Reject Loan</h2>
 
-          <!-- BREAKDOWN -->
-          <div v-if="approvalForm.approved_amount" class="bg-slate-50 p-4 rounded-xl text-sm space-y-2">
+    <textarea
+      v-model="rejectionForm.rejection_reason"
+      class="w-full border rounded-2xl p-3 mb-4"
+      placeholder="Reason for rejection"
+    ></textarea>
 
-            <div class="flex justify-between">
-              <span>Processing Fee</span>
-              <span class="text-red-600">- {{ formatCurrency(processingFeePreview) }}</span>
-            </div>
+    <div class="flex justify-end gap-3">
+      <button @click="closeRejectModal" class="px-4 py-2 border rounded-xl">
+        Cancel
+      </button>
 
-            <div class="flex justify-between">
-              <span>Insurance Fee</span>
-              <span class="text-red-600">- {{ formatCurrency(insuranceFeePreview) }}</span>
-            </div>
+      <button
+        @click="rejectLoan"
+        class="px-5 py-2 bg-red-600 text-white rounded-xl"
+      >
+        Reject
+      </button>
+    </div>
+  </div>
+</div>
 
-            <div class="border-t pt-2 flex justify-between font-semibold">
-              <span>Net Disbursement</span>
-              <span class="text-green-600">{{ formatCurrency(netDisbursementPreview) }}</span>
-            </div>
+<!-- ================= DISBURSEMENT MODAL ================= -->
+<div
+  v-if="showDisbursementModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+>
+  <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
 
-            <div class="flex justify-between">
-              <span>Monthly Payment</span>
-              <span class="text-orange-600">{{ formatCurrency(monthlyPreview) }}</span>
-            </div>
+    <h2 class="text-xl font-bold text-slate-900 mb-5">
+      Disburse Loan
+    </h2>
 
-            <div class="flex justify-between">
-              <span>Total Repayable</span>
-              <span class="font-semibold">{{ formatCurrency(totalRepaymentPreview) }}</span>
-            </div>
-
-          </div>
-
-          <!-- NOTES -->
-          <textarea v-model="approvalForm.approval_notes" class="w-full border rounded-xl p-3"
-            placeholder="Optional notes"></textarea>
-
-        </div>
-
-        <!-- FOOTER -->
-        <div class="px-6 py-4 border-t flex justify-end gap-3">
-          <button @click="closeApprovalModal" class="px-4 py-2 border rounded-xl">
-            Cancel
-          </button>
-
-          <button
-            @click="approveLoan"
-            :disabled="loading.approve"
-            class="px-5 py-2 bg-orange-600 text-white rounded-xl flex items-center gap-2 disabled:opacity-60"
-          >
-            <span v-if="loading.approve" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-            {{ loading.approve ? 'Approving...' : 'Approve' }}
-          </button>
-        </div>
-
-      </div>
+    <!-- Approved Amount -->
+    <div class="mb-4 rounded-2xl bg-blue-50 p-4">
+      <p class="text-sm text-blue-600">Approved Amount</p>
+      <p class="text-2xl font-bold text-blue-700">
+        KES {{ formatCurrency(loan.approved_amount) }}
+      </p>
     </div>
 
-
-    <!-- REJECT MODAL -->
-    <div v-if="showRejectionModal" class="fixed inset-0 z-50 flex items-center justify-center">
-
-      <div class="absolute inset-0 bg-black/40" @click="closeRejectModal"></div>
-
-      <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl">
-
-        <div class="px-6 py-4 border-b">
-          <h2 class="text-lg font-semibold text-red-600">Reject Loan</h2>
-        </div>
-
-        <div class="p-6">
-          <textarea v-model="rejectionForm.rejection_reason" required class="w-full border rounded-xl p-3"
-            placeholder="Reason..." />
-        </div>
-
-        <div class="px-6 py-4 border-t flex justify-end gap-3">
-          <button @click="closeRejectModal" class="px-4 py-2 border rounded-xl">
-            Cancel
-          </button>
-
-          <button
-              @click="rejectLoan"
-              :disabled="loading.reject"
-              class="px-5 py-2 bg-red-600 text-white rounded-xl flex items-center gap-2 disabled:opacity-60"
-            >
-              <span v-if="loading.reject" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-              {{ loading.reject ? 'Rejecting...' : 'Reject' }}
-            </button>
-        </div>
-
-      </div>
+    <!-- Amount To Disburse -->
+    <div class="mb-4 rounded-2xl bg-emerald-50 p-4">
+      <p class="text-sm text-emerald-600">Amount To Disburse</p>
+      <p class="text-2xl font-bold text-emerald-700">
+        KES {{ formatCurrency(loan.approved_amount) }}
+      </p>
     </div>
 
-    <!-- DISBURSE MODAL -->
-    <div v-if="showDisbursementModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <select
+      v-model="disbursementForm.disbursement_method"
+      class="w-full border rounded-2xl p-3 mb-4"
+    >
+      <option value="">Select Method</option>
+      <option value="cash">Cash</option>
+      <option value="mobile_money">Mobile Money</option>
+      <option value="bank_transfer">Bank Transfer</option>
+    </select>
 
-      <div class="absolute inset-0 bg-black/40" @click="closeDisbursementModal"></div>
+    <input
+      v-model="disbursementForm.disbursement_reference"
+      class="w-full border rounded-2xl p-3 mb-5"
+      placeholder="Reference Number"
+    />
 
-      <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-xl">
+    <div class="flex justify-end gap-3">
+      <button
+        @click="closeDisbursementModal"
+        class="px-4 py-2 border rounded-xl"
+      >
+        Cancel
+      </button>
 
-        <div class="px-6 py-4 border-b">
-          <h2 class="text-lg font-semibold">Disburse Loan</h2>
-        </div>
-
-        <div class="p-6 space-y-4 text-sm">
-
-          <div class="bg-slate-50 p-4 rounded-xl space-y-2">
-
-            <div class="flex justify-between">
-              <span>Approved</span>
-              <span>{{ formatCurrency(loan.approved_amount) }}</span>
-            </div>
-
-            <div class="flex justify-between text-red-600">
-              <span>Fees</span>
-              <span>
-  - {{
-    formatCurrency(
-      (Number(loan.processing_fee) || 0) +
-      (Number(loan.insurance_fee) || 0)
-    )
-  }}
-</span>
-            </div>
-
-            <div class="flex justify-between font-semibold border-t pt-2">
-              <span>Net Disbursement</span>
-              <span class="text-green-600">
-                {{ formatCurrency(
-    loan.approved_amount -
-    loan.processing_fee -
-    loan.insurance_fee
-  ) }}
-              </span>
-            </div>
-
-          </div>
-
-          <select v-model="disbursementForm.disbursement_method" class="w-full border rounded-xl p-2">
-            <option value="">Select Method</option>
-            <option value="cash">Cash</option>
-            <option value="mobile_money">Mobile Money</option>
-            <option value="bank_transfer">Bank Transfer</option>
-          </select>
-
-          <input v-model="disbursementForm.disbursement_reference" class="w-full border rounded-xl p-2"
-            placeholder="Reference (optional)" />
-
-        </div>
-
-        <div class="px-6 py-4 border-t flex justify-end gap-3">
-          <button @click="closeDisbursementModal" class="px-4 py-2 border rounded-xl">
-            Cancel
-          </button>
-
-          <button
-              @click="disburseLoan"
-              :disabled="loading.disburse"
-              class="px-5 py-2 bg-blue-600 text-white rounded-xl flex items-center gap-2 disabled:opacity-60"
-            >
-              <span v-if="loading.disburse" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-              {{ loading.disburse ? 'Processing...' : 'Confirm' }}
-            </button>
-                    </div>
-
-      </div>
+      <button
+        @click="disburseLoan"
+        class="px-5 py-2 bg-blue-700 text-white rounded-xl"
+      >
+        Confirm Disbursement
+      </button>
     </div>
+
+  </div>
+</div>
+
   </AppLayout>
 </template>
 
