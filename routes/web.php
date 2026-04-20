@@ -508,6 +508,13 @@ Route::middleware('role:member')->group(function () {
     Route::get('/my-transactions', function () {
         return redirect()->route('members.transactions', auth()->user()->member);
     })->name('my-transactions');
+    Route::get('/my-transactions/statement',
+        [TransactionController::class, 'myStatement']
+    )->name('my-transactions.statement');
+
+    Route::get('/my-transactions/statement/pdf',
+        [TransactionController::class, 'myStatementPdf']
+    )->name('my-transactions.statement.pdf');
 });
 
 Route::middleware(['auth', 'role:member'])->group(function () {

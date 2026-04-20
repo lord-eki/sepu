@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Exception;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TransactionController extends Controller
 {
@@ -524,6 +525,85 @@ class TransactionController extends Controller
         }
     }
 
+
+
+    public function myStatement(Request $request)
+    {
+        $member = auth()->user()->member;
+
+        $from = $request->from
+            ? Carbon::parse($request->from)->startOfDay()
+            : now()->startOfMonth()->startOfDay();
+
+        $to = $request->to
+            ? Carbon::parse($request->to)->endOfDay()
+            : now()->endOfDay();
+
+        // ✅ Opening balance (last completed txn before period)
+        $openingBalance = Transaction::where('member_id', $member->id)
+            ->where('created_at', '<', $from)
+            ->latest()
+            ->value('balance_after') ?? 0;
+
+        // ✅ Transactions in period
+        $transactions = Transaction::with('account')
+            ->where('member_id', $member->id)
+            ->whereBetween('created_at', [$from, $to])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // ✅ Closing balance
+        $closingBalance = $transactions->last()->balance_after ?? $openingBalance;
+
+        return Inertia::render('Transactions/Statement', [
+            'member' => $member,
+            'transactions' => $transactions,
+            'opening_balance' => $openingBalance,
+            'closing_balance' => $closingBalance,
+            'period' => [
+                'from' => $from->toDateString(),
+                'to'   => $to->toDateString(),
+            ]
+        ]);
+    }
+    
+
+    public function myStatementPdf(Request $request)
+    {
+        $member = auth()->user()->member;
+
+        $from = $request->from
+            ? Carbon::parse($request->from)->startOfDay()
+            : now()->startOfMonth()->startOfDay();
+
+        $to = $request->to
+            ? Carbon::parse($request->to)->endOfDay()
+            : now()->endOfDay();
+
+        $openingBalance = Transaction::where('member_id', $member->id)
+            ->where('created_at', '<', $from)
+            ->latest()
+            ->value('balance_after') ?? 0;
+
+        $transactions = Transaction::with('account')
+            ->where('member_id', $member->id)
+            ->whereBetween('created_at', [$from, $to])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $closingBalance = $transactions->last()->balance_after ?? $openingBalance;
+
+        $pdf = Pdf::loadView('pdf.statement', [
+            'member' => $member,
+            'transactions' => $transactions,
+            'opening_balance' => $openingBalance,
+            'closing_balance' => $closingBalance,
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString()
+        ]);
+
+        return $pdf->stream('transaction-statement.pdf');
+    }
 
     /**
      * Get member's transaction history.

@@ -37,9 +37,9 @@
 
             <a :href="route('my-accounts.statement.pdf', { account: account.id, from: fromDate, to: toDate })"
               target="_blank"
-              class="inline-flex items-center gap-2 bg-white text-blue-900 font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-50 transition">
+              class="inline-flex items-center gap-2 h-fit bg-white text-blue-900 font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-50 transition">
               <Download class="w-4 h-4" />
-              Download PDF
+              Download
             </a>
 
           </div>
@@ -59,9 +59,20 @@
             <input type="date" v-model="toDate" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-600" />
           </div>
 
-          <button @click="applyFilter"
-            class="bg-blue-900 text-white px-5 py-2 rounded-lg hover:bg-blue-800 transition font-medium">
-            Apply Filter
+          <!-- BUTTON -->
+          <button
+            @click="applyFilter"
+            :disabled="loading"
+            class="bg-blue-900 text-white px-5 py-2 rounded-lg hover:bg-blue-800 transition font-medium inline-flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            <Loader2
+              v-if="loading"
+              class="w-4 h-4 animate-spin"
+            />
+
+            <span>
+              {{ loading ? 'Refreshing...' : 'Apply Filter' }}
+            </span>
           </button>
 
         </div>
@@ -150,7 +161,7 @@
 import { ref } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Download } from 'lucide-vue-next'
+import { Download, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps<{
   account: any
@@ -160,14 +171,27 @@ const props = defineProps<{
 
 const fromDate = ref(props.period.from)
 const toDate = ref(props.period.to)
+const loading = ref(false)
 
 const applyFilter = () => {
-  router.get(route('my-accounts.statement', {
-    memberId: props.account.member.id,
-    accountId: props.account.id,
-    from: fromDate.value,
-    to: toDate.value
-  }))
+  loading.value = true
+
+  router.get(
+    route('my-accounts.statement', {
+      member: props.account.member.id,
+      account: props.account.id,
+    }),
+    {
+      from: fromDate.value,
+      to: toDate.value
+    },
+    {
+      preserveScroll: true,
+      preserveState: true,
+      onFinish: () => loading.value = false,
+      onError: () => loading.value = false
+    }
+  )
 }
 
 const formatCurrency = (amount: number) =>

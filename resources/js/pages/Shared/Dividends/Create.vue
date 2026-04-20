@@ -151,15 +151,18 @@
                 <InputError :message="form.errors.total_profit" />
               </div>
 
-              <!-- RATE -->
-              <div>
-                <InputLabel for="dividend_rate" value="Dividend Rate (%) *" class="dark:text-gray-200" />
-                <TextInput id="dividend_rate" type="number" min="0.01" max="9" step="0.01"
-                  class="mt-1 p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  v-model="form.dividend_rate" @input="calculateDividends" />
-                <InputError :message="form.errors.dividend_rate" />
-                <p class="text-sm text-gray-500 mt-1">Enter a value greater than 0 and maximum 9%</p>
-              </div>
+              <!-- RATE (FROM SETTINGS - READ ONLY) -->
+                <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border">
+                  <InputLabel value="Dividend Rate (From Settings)" class="dark:text-gray-200" />
+
+                  <div class="mt-2 text-lg font-bold text-[#0A1A2F] dark:text-white">
+                    {{ dividendRate }}%
+                  </div>
+
+                  <p class="text-sm text-gray-500 mt-1">
+                    This rate is managed in settings and cannot be edited here.
+                  </p>
+</div>
 
 
               <!-- NOTES -->

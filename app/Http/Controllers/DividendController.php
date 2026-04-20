@@ -271,7 +271,11 @@ class DividendController extends Controller
             'financialData'    => $financialData,
             'totalShareCapital'=> $totalShareCapital,
             'activeMembers'    => Member::where('membership_status', 'active')->count(),
-            'settings'         => $settings,
+            'settings' => [
+                    'share_dividend_rate'   => $settings['share_dividend_rate'],
+                    'deposit_interest_rate' => $settings['deposit_interest_rate'],
+                    'tax_rate'              => $settings['tax_rate'],
+                ],
         ]);
     }
 
