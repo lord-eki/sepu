@@ -85,7 +85,7 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 space-y-10 overflow-x-hidden">
 
       <!-- ========== EXECUTIVE HEADER ========== -->
-      <div class="relative rounded-2xl bg-gradient-to-r from-[#102F55] via-blue-900 to-orange-900 p-6 shadow-2xl overflow-hidden">
+      <div class="relative rounded-2xl bg-gradient-to-r from-[#102F55] via-blue-900 to-orange-900 p-6 shadow-2xl">
 
         <!-- subtle glow -->
         <div class="absolute -top-24 -right-24 w-72 h-72 bg-orange-500/20 rounded-full blur-3xl"></div>
@@ -122,8 +122,13 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
               </button>
 
               <!-- Notification Dropdown -->
-              <div v-if="showNotifications"
-                class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 z-40">
+              <div v-if="showNotifications" class="
+                  absolute mt-3 z-50
+                  w-[90vw] max-w-sm
+                  left-1/2 -translate-x-1/2
+                  sm:left-auto sm:translate-x-0 sm:right-0 sm:w-80
+                  bg-white rounded-2xl shadow-2xl border border-slate-200
+                ">
                 <div class="p-4 border-b font-semibold text-slate-700">
                   Notifications
                 </div>
@@ -289,12 +294,12 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
                         <td class="p-4 text-right font-medium text-slate-800">{{ fmtMoney(t.amount) }}</td>
                         <td class="p-4 text-right">
                           <Badge v-if="[
-                            'deposit',
-                            'loan_disbursement',
-                            'dividend_payment',
-                            'interest_payment',
-                            'share_capital_contribution'
-                          ].includes(t.transaction_type)" class="bg-emerald-100 text-emerald-700">Credit</Badge>
+    'deposit',
+    'loan_disbursement',
+    'dividend_payment',
+    'interest_payment',
+    'share_capital_contribution'
+  ].includes(t.transaction_type)" class="bg-emerald-100 text-emerald-700">Credit</Badge>
                           <Badge v-else class="bg-rose-100 text-rose-700">Debit</Badge>
                         </td>
                       </tr>

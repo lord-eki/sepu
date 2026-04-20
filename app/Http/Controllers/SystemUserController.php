@@ -210,8 +210,7 @@ class SystemUserController extends Controller
 
         // Revert to normal member
         $systemUser->update([
-            'role' => 'member',
-            'is_active' => false, // optional but recommended
+            'role' => 'member'
         ]);
 
         return redirect()
