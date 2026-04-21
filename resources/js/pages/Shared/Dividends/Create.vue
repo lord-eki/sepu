@@ -91,7 +91,7 @@
               <!-- TOTAL ACTIVE SHARES -->
               <div class="bg-[#0A1A2F] dark:bg-[#111f38] text-white p-5 rounded-xl shadow-sm">
                 <div class="text-sm opacity-90">Total Active Shares</div>
-                <div class="text-xl font-bold mt-1">KSh {{ formatCurrency(totalShares) }}</div>
+                <div class="text-xl font-bold mt-1">KSh {{ formatCurrency(totalShareCapital) }}</div>
                 <div class="text-sm opacity-80 mt-1">{{ activeMembers }} active members</div>
               </div>
 
@@ -116,7 +116,7 @@
                   KSh {{ formatCurrency(calculatedDividends) }}
                 </div>
                 <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  At {{ form.dividend_rate || 0 }}%
+                  At {{ dividendRate || 0 }}%
                 </div>
               </div>
             </div>
@@ -230,7 +230,7 @@
                     Member Dividend Breakdown (Preview)
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Showing first 10 of {{ memberBreakdown.length }} members
+                    Showing first {{ Math.min(memberBreakdown.length, 10) }} of {{ memberBreakdown.length }} members
                   </p>
                 </div>
 
@@ -245,23 +245,21 @@
                     </thead>
 
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                      <tr v-for="member in memberBreakdown.slice(0, 10)" :key="member.member_id"
-                        class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
-                        <td class="px-4 py-3 text-[#0A1A2F] dark:text-white">
+                     <tr v-for="member in memberBreakdown.slice(0, 10)" :key="member.member_id">  
+                        <td class="px-4 py-3">
                           <div class="font-medium">{{ member.member_name }}</div>
-                          <div class="text-gray-500 dark:text-gray-300">
-                            {{ member.membership_id }}
-                          </div>
+                          <div class="text-gray-500">{{ member.membership_id }}</div>
                         </td>
 
-                        <td class="px-4 py-3 dark:text-white">
-                          KSh {{ formatCurrency(member.shares_balance) }}
+                        <td class="px-4 py-3">
+                          KSh {{ formatCurrency(member.share_capital) }}
                         </td>
 
-                        <td class="px-4 py-3 dark:text-white">
-                          KSh {{ formatCurrency(member.dividend_amount) }}
+                        <td class="px-4 py-3">
+                          KSh {{ formatCurrency(member.share_dividend) }}
                         </td>
-                      </tr>
+
+                        </tr>
                     </tbody>
                   </table>
                 </div>
@@ -337,15 +335,14 @@ const props = defineProps({
   suggestedYear: Number,
   previousYear: Number,
   existingDividend: Object,
-  totalShares: Number,
+  totalShareCapital: Number,
   activeMembers: Number,
+  settings: Object,
 })
 
 // FORM
 const form = useForm({
   dividend_year: props.suggestedYear,
-  total_profit: 0,
-  dividend_rate: 0,
   notes: ''
 })
 
@@ -353,11 +350,17 @@ const calculationSummary = ref(null)
 const memberBreakdown = ref([])
 const loading = ref(false)
 
-const numericTotalShares = computed(() => Number(props.totalShares) || 0)
+const dividendRate = computed(() =>
+  props.settings?.share_dividend_rate || 0
+)
+const numericTotalShares = computed(() => Number(props.totalShareCapital) || 0)
 
 const calculatedDividends = computed(() => {
-  if (!form.dividend_rate || numericTotalShares.value <= 0) return 0
-  return (numericTotalShares.value * form.dividend_rate) / 100
+  if (!dividendRate.value || !form.total_profit) return 0
+
+  return (
+    form.total_profit * dividendRate.value
+  ) / 100
 })
 
 const profitUtilization = computed(() => {
@@ -366,7 +369,7 @@ const profitUtilization = computed(() => {
 })
 
 const canPreview = computed(() => {
-  return form.dividend_year && form.total_profit > 0 && form.dividend_rate > 0
+  return form.dividend_year && form.total_profit > 0 && dividendRate.value > 0
 })
 
 const formatCurrency = (amount) =>
@@ -385,13 +388,16 @@ const calculateDividends = () => {
 
 const previewCalculation = async () => {
   if (!canPreview.value) return
+
   try {
-    const res = await axios.post(route('dividends.calculate', form.dividend_year), {
-      total_profit: form.total_profit,
-      dividend_rate: form.dividend_rate,
+    const res = await axios.post(route('dividends.preview'), {
+      dividend_year: form.dividend_year
     })
-    calculationSummary.value = res.data
-    memberBreakdown.value = res.data.member_breakdown || []
+
+    calculationSummary.value = res.data.summary || {}
+
+    memberBreakdown.value = res.data.preview || []
+
   } catch (e) {
     console.error(e)
   }
@@ -405,7 +411,7 @@ const submitForm = () => {
   })
 }
 
-watch([() => form.total_profit, () => form.dividend_rate], calculateDividends)
+watch([() => form.total_profit, dividendRate], calculateDividends)
 </script>
 
 <style scoped>

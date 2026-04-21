@@ -254,6 +254,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{dividend}',      [DividendController::class, 'update'])->name('update');
         Route::delete('/{dividend}',   [DividendController::class, 'destroy'])->name('destroy');
 
+        Route::post('/preview', [DividendController::class, 'preview'])->name('preview');
         Route::post('/calculate/{year}',           [DividendController::class, 'calculate'])->name('calculate');
         Route::post('/{dividend}/approve',          [DividendController::class, 'approve'])->name('approve');
         Route::post('/{dividend}/distribute',       [DividendController::class, 'distribute'])->name('distribute');

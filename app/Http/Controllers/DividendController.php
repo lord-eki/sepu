@@ -77,7 +77,7 @@ class DividendController extends Controller
      */
     private function calcShareDividend(float $shareCapital, float $rate): float
     {
-        if ($shareCapital <= 0 || $rate <= 0) {
+        if ($shareCapital <= 0) {
             return 0.0;
         }
 
@@ -96,90 +96,74 @@ class DividendController extends Controller
      */
     private function calcDepositInterest(int $memberId, int $year, float $interestRate): array
     {
-        $isLeapYear = (bool) date('L', mktime(0, 0, 0, 1, 1, $year));
+        $isLeapYear = date('L', strtotime("$year-01-01"));
 
-        // Days per month for the target year
         $daysInMonth = [
-            1  => 31,
-            2  => $isLeapYear ? 29 : 28,
-            3  => 31,
-            4  => 30,
-            5  => 31,
-            6  => 30,
-            7  => 31,
-            8  => 31,
-            9  => 30,
+            1 => 31,
+            2 => $isLeapYear ? 29 : 28,
+            3 => 31,
+            4 => 30,
+            5 => 31,
+            6 => 30,
+            7 => 31,
+            8 => 31,
+            9 => 30,
             10 => 31,
             11 => 30,
             12 => 31,
         ];
 
-        // Validation: must cover Jan–Dec fully (all 12 months)
-        if (count($daysInMonth) !== 12) {
-            throw new \RuntimeException('Month coverage validation failed – must have all 12 months.');
-        }
-
-        // Find the member's savings/deposit account
         $account = Account::where('member_id', $memberId)
-            ->where('account_type', 'savings')   // adjust account_type to match your schema
+            ->where('account_type', 'savings')
             ->where('is_active', true)
             ->first();
 
         $totalQualifying = 0.0;
-        $totalInterest   = 0.0;
-        $breakdown       = [];
-
-        if (! $account) {
-            // No deposit account → interest = 0 (validation rule)
-            return [
-                'total_qualifying_deposits' => 0.0,
-                'total_interest'            => 0.0,
-                'monthly_breakdown'         => [],
-            ];
-        }
+        $totalInterest = 0.0;
+        $breakdown = [];
 
         foreach ($daysInMonth as $month => $days) {
-            // Last day of the month
-            $lastDay     = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
-            $firstDay    = date('Y-m-01', mktime(0, 0, 0, $month, 1, $year));
 
-            // Balance at end of this month: sum of all transactions up to last day of month
-            $balance = (float) Transaction::where('account_id', $account->id)
+            $lastDay = date('Y-m-t', strtotime("$year-$month-01"));
+
+            $balance = (float) Transaction::where('account_id', $account?->id)
                 ->whereDate('created_at', '<=', $lastDay)
                 ->sum('amount');
 
-            $balance = max(0.0, $balance); 
+            // VALIDATION: no negative balances
+            $balance = max(0, $balance);
 
-            if ($balance <= 0) {
+            if (!$account || $balance <= 0) {
                 $breakdown[] = [
-                    'month'                => $month,
-                    'days'                 => $days,
-                    'balance'              => 0.0,
-                    'qualifying_deposit'   => 0.0,
-                    'monthly_interest'     => 0.0,
+                    'month' => $month,
+                    'days' => $days,
+                    'balance' => 0,
+                    'qualifying_deposit' => 0,
+                    'monthly_interest' => 0,
                 ];
                 continue;
             }
 
+            // CORE FORMULA
             $qualifying = ($days / 365) * $balance;
-            $interest   = $qualifying * ($interestRate / 100);
+            $interest = $qualifying * ($interestRate / 100);
 
             $totalQualifying += $qualifying;
-            $totalInterest   += $interest;
+            $totalInterest += $interest;
 
             $breakdown[] = [
-                'month'              => $month,
-                'days'               => $days,
-                'balance'            => round($balance, 4),
-                'qualifying_deposit' => round($qualifying, 4),
-                'monthly_interest'   => round($interest, 4),
+                'month' => $month,
+                'days' => $days,
+                'balance' => $balance,
+                'qualifying_deposit' => $qualifying,
+                'monthly_interest' => $interest,
             ];
         }
 
         return [
-            'total_qualifying_deposits' => round($totalQualifying, 4),
-            'total_interest'            => round($totalInterest, 4),
-            'monthly_breakdown'         => $breakdown,
+            'total_qualifying_deposits' => $totalQualifying,
+            'total_interest' => $totalInterest,
+            'monthly_breakdown' => $breakdown,
         ];
     }
 
@@ -197,18 +181,21 @@ class DividendController extends Controller
         float $processingFee,
         float $exciseDuty
     ): array {
+
         $gross = $shareDividend + $depositInterest;
-        $tax   = $gross * ($taxRate / 100);
-        $net   = $gross - $tax - $processingFee - $exciseDuty;
+
+        $tax = $gross * ($taxRate / 100);
+
+        $net = $gross - $tax - $processingFee - $exciseDuty;
 
         return [
-            'share_dividend'   => round($shareDividend, 2),
+            'share_dividend' => round($shareDividend, 2),
             'deposit_interest' => round($depositInterest, 2),
-            'gross'            => round($gross, 2),
-            'tax'              => round($tax, 2),
-            'processing_fee'   => $processingFee,
-            'excise_duty'      => $exciseDuty,
-            'net_payable'      => round($net, 2),
+            'gross' => round($gross, 2),
+            'tax' => round($tax, 2),
+            'processing_fee' => $processingFee,
+            'excise_duty' => $exciseDuty,
+            'net_payable' => round($net, 2),
         ];
     }
 
@@ -1003,10 +990,7 @@ class DividendController extends Controller
                 $settings['deposit_interest_rate']
             );
 
-            // Validation: skip entirely if both components are zero
-            if ($shareDividend == 0 && $interestData['total_interest'] == 0) {
-                continue;
-            }
+          
 
             // --- Steps 5–7: Gross → Tax → Net ---
             $calc = $this->calcNetPayable(
