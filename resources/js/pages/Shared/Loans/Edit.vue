@@ -1,8 +1,7 @@
 <script setup>
 import axios from 'axios'
-import { ref } from 'vue'
-import { Head, Link } from '@inertiajs/vue3'
-import { router } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const props = defineProps({ loan: Object })
@@ -18,6 +17,55 @@ const loading = ref(false)
 const successMessage = ref('')
 let flashTimeout = null
 
+const loanProduct = props.loan.loan_product
+
+// ========================
+// 📊 LOAN PROJECTIONS
+// ========================
+
+const monthlyPreview = computed(() => {
+  const P = form.value.applied_amount || 0
+  const n = form.value.term_months || 1
+  const r = (loanProduct?.interest_rate || 0) / 100
+
+  if (!P || !n) return 0
+
+  const principalPerMonth = P / n
+  const totalInterest = P * r * ((n + 1) / 2)
+  const mInterest = totalInterest / n
+
+  return principalPerMonth + mInterest
+})
+
+const totalInterestPreview = computed(() => {
+  const P = form.value.applied_amount || 0
+  const n = form.value.term_months || 1
+  const r = (loanProduct?.interest_rate || 0) / 100
+
+  return P * r * ((n + 1) / 2)
+})
+
+const processingFeePreview = computed(() => {
+  const P = form.value.applied_amount || 0
+  return (P * (loanProduct?.processing_fee_rate || 0)) / 100
+})
+
+const insuranceFeePreview = computed(() => {
+  const P = form.value.applied_amount || 0
+  return (P * (loanProduct?.insurance_rate || 0)) / 100
+})
+
+const netDisbursementPreview = computed(() => {
+  return (
+    (form.value.applied_amount || 0)
+    - processingFeePreview.value
+    - insuranceFeePreview.value
+  )
+})
+
+// ========================
+// 💰 SUBMIT
+// ========================
 const submit = async () => {
   loading.value = true
   errors.value = {}
@@ -34,10 +82,8 @@ const submit = async () => {
 
     successMessage.value = res.data.message
 
-    // Update local loan data
     Object.assign(props.loan, res.data.data)
 
-    // Auto redirect after 5s
     flashTimeout = setTimeout(() => {
       router.visit(route('loans.index'))
     }, 3000)
@@ -53,14 +99,23 @@ const submit = async () => {
   }
 }
 
-// Optional: Close flash manually and redirect immediately
 const closeFlash = () => {
   successMessage.value = ''
   if (flashTimeout) clearTimeout(flashTimeout)
   router.visit(route('loans.index'))
 }
 
+// ========================
+// FORMATTER
+// ========================
+const formatCurrency = (value) =>
+  new Intl.NumberFormat('en-KE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value || 0)
+
 </script>
+
 <template>
   <AppLayout :breadcrumbs="[
     { title: 'Loans', href: '/loans' },
@@ -69,155 +124,113 @@ const closeFlash = () => {
 
     <Head :title="`Edit Loan ${loan.loan_number}`" />
 
-    <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8 space-y-8">
+    <div class="max-w-7xl mx-auto py-10 px-4 space-y-8">
 
-      <!-- 🔷 HEADER -->
-      <div class="relative overflow-hidden rounded-2xl shadow-lg border border-blue-900/20">
-        <div class="absolute inset-0 bg-gradient-to-r from-[#041c32] via-blue-800 to-blue-900"></div>
-
-        <div class="relative p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-white">
-              Edit Loan Application
-            </h1>
-
-            <p class="text-orange-300 mt-1 text-sm">
-              {{ loan.member.first_name }} {{ loan.member.last_name }} • {{ loan.loan_number }}
-            </p>
-          </div>
-
-          <div class="text-white/70 text-sm">
-            Update Loan Details
-          </div>
-        </div>
-      </div>
-
-      <!-- ✅ SUCCESS MESSAGE -->
-      <div 
-        v-if="successMessage" 
-        class="flex justify-between items-center gap-4 p-4 rounded-xl border border-green-300 bg-green-50 shadow-sm"
-      >
-        <span class="text-green-800 text-sm font-medium">
-          {{ successMessage }}
-        </span>
-
-        <button 
-          @click="closeFlash" 
-          class="text-green-700 hover:text-green-900 font-bold text-lg"
-        >
-          ×
-        </button>
-      </div>
-
-      <!-- 🧾 FORM -->
-      <form 
-        @submit.prevent="submit" 
-        class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 space-y-8"
-      >
-
-        <!-- SECTION -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800">
-            Loan Details
-          </h2>
-          <p class="text-sm text-gray-500">
-            Modify loan values below
+      <!-- HEADER -->
+      <div class="rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-950 via-blue-800 to-blue-900 p-6 text-white">
+          <h1 class="text-2xl font-bold">Edit Loan Application</h1>
+          <p class="text-orange-300 text-sm mt-1">
+            {{ loan.member.first_name }} {{ loan.member.last_name }} • {{ loan.loan_number }}
           </p>
         </div>
+      </div>
 
-        <!-- 🔲 GRID (KEY IMPROVEMENT) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- SUCCESS -->
+      <div v-if="successMessage" class="p-4 bg-green-50 border border-green-200 rounded-xl flex justify-between">
+        <span class="text-green-700 text-sm">{{ successMessage }}</span>
+        <button @click="closeFlash" class="text-green-700 font-bold">×</button>
+      </div>
 
-          <!-- 💰 AMOUNT -->
+      <!-- FORM -->
+      <form @submit.prevent="submit" class="bg-white rounded-2xl shadow p-6 space-y-6">
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+          <!-- AMOUNT -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Applied Amount (KES)
-            </label>
-
-            <input 
-              type="number" 
+            <label class="text-sm font-medium">Applied Amount</label>
+            <input
               v-model="form.applied_amount"
-              class="w-full rounded-xl border border-gray-300 px-4 py-3 
-                     focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-              placeholder="Enter amount"
+              type="number"
+              class="w-full border rounded-xl p-3 mt-1 focus:ring-2 focus:ring-orange-500"
             />
-
-            <p v-if="errors.applied_amount" class="text-red-500 text-sm mt-1">
+            <p v-if="errors.applied_amount" class="text-red-500 text-sm">
               {{ errors.applied_amount[0] }}
             </p>
           </div>
 
-          <!-- 📅 TERM -->
+          <!-- TERM -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Loan Term (Months)
-            </label>
-
-            <input 
-              type="number" 
+            <label class="text-sm font-medium">Term (Months)</label>
+            <input
               v-model="form.term_months"
-              class="w-full rounded-xl border border-gray-300 px-4 py-3 
-                     focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-              placeholder="e.g. 12"
+              type="number"
+              class="w-full border rounded-xl p-3 mt-1 focus:ring-2 focus:ring-orange-500"
             />
-
-            <p v-if="errors.term_months" class="text-red-500 text-sm mt-1">
+            <p v-if="errors.term_months" class="text-red-500 text-sm">
               {{ errors.term_months[0] }}
+            </p>
+          </div>
+        </div>
+
+        <!-- PURPOSE -->
+        <div>
+          <label class="text-sm font-medium">Purpose</label>
+          <textarea
+            v-model="form.purpose"
+            rows="4"
+            class="w-full border rounded-xl p-3 mt-1"
+          ></textarea>
+        </div>
+
+        <!-- ================= PREVIEW SECTION ================= -->
+        <div class="grid md:grid-cols-2 gap-4 pt-4">
+
+          <div class="bg-blue-50 p-4 rounded-xl">
+            <p class="text-sm text-blue-600">Monthly Repayment</p>
+            <p class="text-xl font-bold text-blue-800">
+              KES {{ formatCurrency(monthlyPreview) }}
+            </p>
+          </div>
+
+          <div class="bg-orange-50 p-4 rounded-xl">
+            <p class="text-sm text-orange-600">Total Interest</p>
+            <p class="text-xl font-bold text-orange-700">
+              KES {{ formatCurrency(totalInterestPreview) }}
+            </p>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-xl">
+            <p class="text-sm text-slate-600">Processing Fee</p>
+            <p class="text-xl font-bold">
+              KES {{ formatCurrency(processingFeePreview) }}
+            </p>
+          </div>
+
+          <div class="bg-emerald-50 p-4 rounded-xl">
+            <p class="text-sm text-emerald-600">Net Disbursement</p>
+            <p class="text-xl font-bold text-emerald-700">
+              KES {{ formatCurrency(netDisbursementPreview) }}
             </p>
           </div>
 
         </div>
 
-        <!-- 📝 PURPOSE (FULL WIDTH) -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Purpose / Notes
-          </label>
+        <!-- ACTIONS -->
+        <div class="flex justify-between pt-4 border-t">
 
-          <textarea 
-            v-model="form.purpose" 
-            rows="5"
-            class="w-full rounded-xl border border-gray-300 px-4 py-3 
-                   focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition resize-none"
-            placeholder="Optional description..."
-          ></textarea>
-
-          <p v-if="errors.purpose" class="text-red-500 text-sm mt-1">
-            {{ errors.purpose[0] }}
-          </p>
-        </div>
-
-        <!-- ⚡ ACTIONS -->
-        <div class="flex justify-between items-center pt-4 border-t">
-
-          <Link 
-            :href="route('loans.index')" 
-            class="text-gray-600 hover:text-gray-900 text-sm"
-          >
-            ← Back to Loans
+          <Link :href="route('loans.index')" class="text-gray-600">
+            ← Back
           </Link>
 
-          <div class="flex gap-3">
-            <Link 
-              :href="route('loans.index')" 
-              class="px-5 py-2.5 rounded-xl border border-gray-300 bg-gray-100 
-                     hover:bg-gray-200 text-gray-700 transition"
-            >
-              Cancel
-            </Link>
-
-            <button 
-              type="submit" 
-              :disabled="loading"
-              class="px-6 py-2.5 rounded-xl text-white font-semibold 
-                     bg-gradient-to-r from-orange-500 to-orange-600
-                     hover:from-orange-600 hover:to-orange-700
-                     shadow-md hover:shadow-lg
-                     transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {{ loading ? 'Updating...' : 'Update Loan' }}
-            </button>
-          </div>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="bg-orange-600 text-white px-6 py-2 rounded-xl"
+          >
+            {{ loading ? 'Updating...' : 'Update Loan' }}
+          </button>
 
         </div>
 

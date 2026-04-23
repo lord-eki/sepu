@@ -426,10 +426,24 @@
     </div>
 
     <!-- Preview -->
-    <div class="mb-4 rounded-2xl bg-emerald-50 p-4">
-      <p class="text-sm text-emerald-600">Approved Amount</p>
-      <p class="text-2xl font-bold text-emerald-700">
-        KES {{ formatCurrency(approvalForm.approved_amount) }}
+    <div class="mb-4 rounded-2xl bg-blue-50 p-4">
+      <p class="text-sm text-blue-600">Monthly Repayment</p>
+      <p class="text-xl font-bold text-blue-800">
+        KES {{ formatCurrency(monthlyPreview) }}
+      </p>
+    </div>
+
+    <div class="mb-4 rounded-2xl bg-orange-50 p-4">
+      <p class="text-sm text-orange-600">Total Interest</p>
+      <p class="text-xl font-bold text-orange-700">
+        KES {{ formatCurrency(totalInterestPreview) }}
+      </p>
+    </div>
+
+    <div class="mb-4 rounded-2xl bg-slate-50 p-4">
+      <p class="text-sm text-slate-600">Net Disbursement</p>
+      <p class="text-xl font-bold text-slate-900">
+        KES {{ formatCurrency(netDisbursementPreview) }}
       </p>
     </div>
 
@@ -449,9 +463,11 @@
 
       <button
         @click="approveLoan"
-        class="px-5 py-2 bg-emerald-600 text-white rounded-xl"
+        :disabled="loading.approve"
+        class="px-5 py-2 bg-emerald-600 text-white rounded-xl flex items-center gap-2"
       >
-        Approve Loan
+        <span v-if="loading.approve" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+        <span>{{ loading.approve ? 'Processing...' : 'Approve Loan' }}</span>
       </button>
     </div>
 
@@ -474,14 +490,17 @@
       </button>
 
       <button
-        @click="rejectLoan"
-        class="px-5 py-2 bg-red-600 text-white rounded-xl"
-      >
-        Reject
-      </button>
+          @click="rejectLoan"
+          :disabled="loading.reject"
+          class="px-5 py-2 bg-red-600 text-white rounded-xl flex items-center gap-2"
+        >
+          <span v-if="loading.reject" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+          <span>{{ loading.reject ? 'Processing...' : 'Reject' }}</span>
+        </button>
     </div>
   </div>
 </div>
+
 
 <!-- ================= DISBURSEMENT MODAL ================= -->
 <div
@@ -502,17 +521,23 @@
       </p>
     </div>
 
-    <!-- Amount To Disburse -->
-    <div class="mb-4 rounded-2xl bg-emerald-50 p-4">
-      <p class="text-sm text-emerald-600">Amount To Disburse</p>
+    <!-- Net Disbursement -->
+    <div class="mb-6 rounded-2xl bg-emerald-50 p-4">
+      <p class="text-sm text-emerald-600">Net Disbursement</p>
       <p class="text-2xl font-bold text-emerald-700">
-        KES {{ formatCurrency(loan.approved_amount) }}
+        KES {{
+          formatCurrency(loan.approved_amount - (
+              (loan.approved_amount * (loan.loan_product?.processing_fee_rate || 0) / 100) +
+              (loan.approved_amount * (loan.loan_product?.insurance_rate || 0) / 100)
+            ))
+        }}
       </p>
     </div>
 
+    <!-- Disbursement Method -->
     <select
       v-model="disbursementForm.disbursement_method"
-      class="w-full border rounded-2xl p-3 mb-4"
+      class="w-full border rounded-2xl p-3 mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
     >
       <option value="">Select Method</option>
       <option value="cash">Cash</option>
@@ -520,26 +545,38 @@
       <option value="bank_transfer">Bank Transfer</option>
     </select>
 
+    <!-- Reference -->
     <input
       v-model="disbursementForm.disbursement_reference"
-      class="w-full border rounded-2xl p-3 mb-5"
+      class="w-full border rounded-2xl p-3 mb-5 focus:ring-2 focus:ring-blue-500 outline-none"
       placeholder="Reference Number"
     />
 
+    <!-- Actions -->
     <div class="flex justify-end gap-3">
+
       <button
         @click="closeDisbursementModal"
-        class="px-4 py-2 border rounded-xl"
+        class="px-4 py-2 border rounded-xl hover:bg-slate-50"
       >
         Cancel
       </button>
 
       <button
         @click="disburseLoan"
-        class="px-5 py-2 bg-blue-700 text-white rounded-xl"
+        :disabled="loading.disburse"
+        class="px-5 py-2 bg-blue-700 text-white rounded-xl flex items-center gap-2 hover:bg-blue-800 disabled:opacity-60"
       >
-        Confirm Disbursement
+        <span
+          v-if="loading.disburse"
+          class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+        ></span>
+
+        <span>
+          {{ loading.disburse ? 'Processing...' : 'Confirm Disbursement' }}
+        </span>
       </button>
+
     </div>
 
   </div>
@@ -575,11 +612,13 @@ const showDisbursementModal = ref(false)
 
 function openApprovalModal() {
   resetValidation()
+
   const applied = props.loan.applied_amount || 0
-  const rate = ((props.loan.processing_fee_rate || 0) + (props.loan.insurance_rate || 0)) / 100
-  const net = applied * (1 - rate)
+
+  // ✅ Approved amount should start as FULL amount
   approvalForm.approved_amount = applied
-  approvalForm.approved_amount = net
+  approvalForm.approval_notes = ''
+
   showApprovalModal.value = true
 }
 
@@ -646,6 +685,15 @@ const monthlyPreview = computed(() => {
   // ── Actual installment (principal + fixed monthly interest)
   return principalPerMonth + mInterest
 })
+
+const totalInterestPreview = computed(() => {
+  const P = approvalForm.approved_amount || 0
+  const n = loan.value.term_months || 1
+  const r = loan.value.loan_product?.interest_rate / 100 || 0
+
+  return P * r * ((n + 1) / 2)
+})
+
 
 const totalRepaymentPreview = computed(() => {
   const n = loan.value.term_months || 1
@@ -728,18 +776,25 @@ const approveLoan = async () => {
     validationErrors.approved_amount = ['Cannot approve more than applied amount']
     return
   }
-  const rate = totalFeeRate.value
-  const maxNet = props.loan.applied_amount * (1 - rate)
-  if (approvalForm.net_amount > maxNet) {
-    validationErrors.net_amount = ['Net exceeds allowed disbursement']
-    return
-  }
+   
+  if (!approvalForm.approved_amount || approvalForm.approved_amount <= 0) {
+  validationErrors.approved_amount = ['Enter a valid amount']
+  return
+}
+
+if (approvalForm.approved_amount > props.loan.applied_amount) {
+  validationErrors.approved_amount = ['Cannot approve more than applied amount']
+  return
+}
   loading.approve = true
   try {
     const { data } = await axios.post(route('loans.approve', props.loan.id), approvalForm)
     showToast(data.message || 'Loan approved', 'success')
     showApprovalModal.value = false
-    router.reload({ only: ['loan'] })
+    router.visit(route('loans.show', props.loan.id), {
+      preserveScroll: true,
+      preserveState: false
+    })
   } catch (error) {
     const res = error.response
     if (res?.data?.errors) Object.assign(validationErrors, res.data.errors)
@@ -794,11 +849,7 @@ const disburseLoan = async () => {
   }
 }
 
-// Watches
-watch(() => approvalForm.net_amount, (net) => {
-  if (!net) { approvalForm.approved_amount = 0; return }
-  approvalForm.approved_amount = net / (1 - totalFeeRate.value)
-})
+
 
 watch(showApprovalModal, (val) => {
   if (!val) {

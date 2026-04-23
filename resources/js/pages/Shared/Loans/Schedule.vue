@@ -4,55 +4,52 @@ import { Head, Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { ArrowLeft } from 'lucide-vue-next'
 
-// Props from backend
 const props = defineProps({
   loan: Object,
   repayments: Array,
   message: String
 })
 
-// Access logged-in user from shared props
 const page = usePage()
-const user = computed(() => page.props.auth.user)
-const role = computed(() => user.value?.role)
+const user = computed(() => page.props.auth?.user || {})
+const role = computed(() => user.value?.role || '')
 
+const safeRepayments = computed(() => props.repayments ?? [])
 
-// Safe number parser
 const toNumber = (val: any) => {
-  const num = parseFloat(val)
-  return isNaN(num) ? 0 : num
+  const n = Number(val)
+  return isNaN(n) ? 0 : n
 }
 
-// Format repayments safely
-const formattedRepayments = computed(() => {
-  return props.repayments.map((item: any) => ({
-    ...item,
-    due_date: item.due_date ? new Date(item.due_date).toLocaleDateString() : '—',
-    principal_amount: toNumber(item.principal_amount).toLocaleString(),
-    interest_amount: toNumber(item.interest_amount).toLocaleString(),
-    total_amount: toNumber(item.total_amount).toLocaleString(),
-    balance_after_payment: toNumber(item.balance_after_payment).toLocaleString(),
-  }))
-})
+const formatNumber = (n: any) =>
+  new Intl.NumberFormat('en-KE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(toNumber(n))
 
-// Totals summary (safe)
+const formatDate = (d: any) => {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('en-KE', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
 const totals = computed(() => {
   let principal = 0
   let interest = 0
   let total = 0
-  props.repayments.forEach((r: any) => {
+
+  safeRepayments.value.forEach((r: any) => {
     principal += toNumber(r.principal_amount)
     interest += toNumber(r.interest_amount)
-    total += toNumber(r.total_amount)
+    total += toNumber(r.payment_amount)
   })
-  return {
-    principal: principal.toLocaleString(),
-    interest: interest.toLocaleString(),
-    total: total.toLocaleString(),
-  }
+
+  return { principal, interest, total }
 })
 
-// Dynamic back route based on user role
 const backRoute = computed(() => {
   return role.value === 'admin'
     ? route('my-loans')
@@ -63,95 +60,159 @@ const backRoute = computed(() => {
 <template>
   <Head title="Loan Schedule" />
 
-  <AppLayout :breadcrumbs="[{ title: 'Loan Schedule', href: backRoute }]">
-    <div class="min-h-screen bg-gray-50 py-10 px-6">
-      <!-- Header -->
-      <div class="max-w-6xl mx-auto mb-8 flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-800">Loan Repayment Schedule</h1>
+  <AppLayout :breadcrumbs="[
+    { title: 'Loans', href: backRoute },
+    { title: 'Loan Schedule' }
+  ]">
+
+    <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
+
+      <!-- HEADER -->
+      <div class="max-w-7xl mx-auto mb-6 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-[#0a2342]">
+            Loan Repayment Schedule
+          </h1>
+          <p class="text-sm text-gray-500">
+            Detailed amortization breakdown
+          </p>
+        </div>
+
         <Link
           :href="backRoute"
-          class="flex items-center gap-1 text-blue-600 hover:text-blue-500 font-medium transition-colors"
+          class="flex items-center gap-2 text-orange-600 hover:text-orange-500 font-medium"
         >
-          <ArrowLeft class="w-4 h-4" /> Back to Loans
+          <ArrowLeft class="w-4 h-4" />
+          Back
         </Link>
       </div>
 
-      <!-- Loan Details -->
-      <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-10">
-        <h2 class="text-lg font-semibold text-blue-700 mb-4">Loan Details</h2>
-        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-y-3 text-sm text-gray-700">
-          <p><span class="font-medium text-gray-900">Loan Number:</span> {{ loan.loan_number }}</p>
-          <p><span class="font-medium text-gray-900">Member:</span> {{ loan.member?.name }}</p>
-          <p><span class="font-medium text-gray-900">Loan Product:</span> {{ loan.loanProduct?.name }}</p>
-          <p><span class="font-medium text-gray-900">Principal:</span> Ksh {{ loan.approved_amount.toLocaleString() }}</p>
-          <p><span class="font-medium text-gray-900">Interest Rate:</span> {{ loan.interest_rate }}%</p>
-          <p><span class="font-medium text-gray-900">Term:</span> {{ loan.term_months }} months</p>
+      <!-- LOAN SUMMARY -->
+      <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow border border-gray-100 p-6 mb-8">
+        <h2 class="text-lg font-semibold text-[#0a2342] mb-4">
+          Loan Summary
+        </h2>
+
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <p><b>Loan No:</b> {{ loan?.loan_number }}</p>
+          <p><b>Member:</b> {{ loan?.member?.first_name }} {{ loan?.member?.last_name }}</p>
+          <p><b>Product:</b> {{ loan?.loanProduct?.name }}</p>
+          <p><b>Principal:</b> KSh {{ formatNumber(loan?.approved_amount || loan?.disbursed_amount) }}</p>
+          <p><b>Interest:</b> {{ loan?.interest_rate }}% p.m</p>
+          <p><b>Term:</b> {{ loan?.term_months }} months</p>
         </div>
       </div>
 
-      <!-- Repayment Schedule Table -->
+      <!-- TABLE -->
       <div
-        v-if="repayments.length"
-        class="max-w-6xl mx-auto overflow-x-auto bg-white rounded-xl shadow-md border border-gray-100"
+        v-if="safeRepayments.length"
+        class="max-w-7xl mx-auto bg-white rounded-2xl shadow border border-gray-100 overflow-hidden"
       >
-        <table class="min-w-full text-sm text-left text-gray-700">
-          <thead class="bg-blue-600 text-white uppercase text-xs">
-            <tr>
-              <th class="px-4 py-3 font-semibold">#</th>
-              <th class="px-4 py-3 font-semibold">Due Date</th>
-              <th class="px-4 py-3 font-semibold">Principal</th>
-              <th class="px-4 py-3 font-semibold">Interest</th>
-              <th class="px-4 py-3 font-semibold">Total</th>
-              <th class="px-4 py-3 font-semibold">Balance</th>
-              <th class="px-4 py-3 font-semibold">Status</th>
-            </tr>
-          </thead>
 
-          <tbody>
-            <tr
-              v-for="(item, index) in formattedRepayments"
-              :key="index"
-              class="border-t hover:bg-blue-50 transition-colors"
-            >
-              <td class="px-4 py-2">{{ item.installment_number }}</td>
-              <td class="px-4 py-2">{{ item.due_date }}</td>
-              <td class="px-4 py-2">Ksh {{ item.principal_amount }}</td>
-              <td class="px-4 py-2">Ksh {{ item.interest_amount }}</td>
-              <td class="px-4 py-2 font-medium text-blue-700">Ksh {{ item.total_amount }}</td>
-              <td class="px-4 py-2">Ksh {{ item.balance_after_payment }}</td>
-              <td class="px-4 py-2 capitalize">
-                <span
-                  :class="item.status === 'paid'
-                    ? 'text-green-600 font-medium'
-                    : 'text-orange-500 font-medium'"
-                >
-                  {{ item.status }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
+        <div class="overflow-x-auto max-h-[650px] overflow-y-auto">
 
-          <!-- Totals Row -->
-          <tfoot class="bg-gray-100 border-t text-gray-800">
-            <tr>
-              <td colspan="2" class="px-4 py-3 font-semibold text-right">Totals:</td>
-              <td class="px-4 py-3">Ksh {{ totals.principal }}</td>
-              <td class="px-4 py-3">Ksh {{ totals.interest }}</td>
-              <td class="px-4 py-3">Ksh {{ totals.total }}</td>
-              <td colspan="2"></td>
-            </tr>
-          </tfoot>
-        </table>
+          <table class="min-w-full text-sm">
+
+            <!-- HEAD -->
+            <thead class="bg-[#0a2342] text-white sticky top-0 z-10">
+              <tr>
+                <th class="px-4 py-3 text-center">#</th>
+                <th class="px-4 py-3 text-left">Date</th>
+                <th class="px-4 py-3 text-right">Opening</th>
+                <th class="px-4 py-3 text-right">Principal</th>
+                <th class="px-4 py-3 text-right">Interest</th>
+                <th class="px-4 py-3 text-right">Installment</th>
+                <th class="px-4 py-3 text-right">Balance</th>
+                <th class="px-4 py-3 text-center">Status</th>
+              </tr>
+            </thead>
+
+            <!-- BODY -->
+            <tbody class="divide-y divide-gray-100">
+              <tr
+                v-for="row in safeRepayments"
+                :key="row.payment_number"
+                class="hover:bg-blue-50 transition"
+              >
+                <td class="px-4 py-3 text-center font-medium">
+                  {{ row.payment_number }}
+                </td>
+
+                <td class="px-4 py-3">
+                  {{ formatDate(row.payment_date || row.due_date) }}
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  {{ formatNumber(row.opening_balance) }}
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  {{ formatNumber(row.principal_amount) }}
+                </td>
+
+                <td class="px-4 py-3 text-right text-blue-700">
+                  {{ formatNumber(row.interest_amount) }}
+                </td>
+
+                <td class="px-4 py-3 text-right font-semibold text-green-700">
+                  {{ formatNumber(row.payment_amount || row.installment) }}
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  {{ formatNumber(row.closing_balance) }}
+                </td>
+
+                <td class="px-4 py-3 text-center">
+                  <span
+                    :class="row.status === 'paid'
+                      ? 'text-green-600 font-semibold'
+                      : 'text-orange-500 font-semibold'"
+                  >
+                    {{ row.status || 'pending' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+
+            <!-- FOOTER -->
+            <tfoot class="bg-[#0a2342] text-white font-semibold sticky bottom-0">
+              <tr>
+                <td colspan="3" class="px-4 py-3 text-right">
+                  TOTALS
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  {{ formatNumber(totals.principal) }}
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  {{ formatNumber(totals.interest) }}
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  {{ formatNumber(totals.total) }}
+                </td>
+
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+
+          </table>
+        </div>
       </div>
 
-      <!-- Empty message -->
+      <!-- EMPTY -->
       <div
         v-else
-        class="max-w-6xl mx-auto bg-white text-center text-gray-600 py-10 rounded-xl border border-gray-100 shadow-sm"
+        class="max-w-7xl mx-auto bg-white text-center py-12 rounded-2xl shadow border"
       >
-        {{ message }}
+        <p class="text-gray-500">
+          {{ message || 'No repayment schedule found' }}
+        </p>
       </div>
+
     </div>
+
   </AppLayout>
 </template>
 
