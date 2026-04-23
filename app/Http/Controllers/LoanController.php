@@ -210,22 +210,11 @@ class LoanController extends Controller
                 ], 422);
             }
 
-            // ✅ CALCULATOR-CONSISTENT LOGIC
-            $principal = $request->applied_amount;
-            $months = $request->term_months;
-            $monthlyRate = $loanProduct->interest_rate / 100;
-
-            $principalPerMonth = $principal / $months;
-
-            $totalInterest = $principal * $monthlyRate * ($months + 1) / 2;
-            $mInterest = $totalInterest / $months;
-
-            $monthlyRepayment = $principalPerMonth + $mInterest;
-            $totalRepayable = $monthlyRepayment * $months;
-
-            // Fees
-            $processingFee = ($principal * $loanProduct->processing_fee_rate) / 100;
-            $insuranceFee = ($principal * $loanProduct->insurance_rate) / 100;
+            $calc = $this->calculateLoanDetails(
+                $loanProduct,
+                $request->applied_amount,
+                $request->term_months
+            );
 
             // Create loan
             $loan = Loan::create([
@@ -235,10 +224,10 @@ class LoanController extends Controller
                 'applied_amount' => $principal,
                 'interest_rate' => $loanProduct->interest_rate,
                 'term_months' => $months,
-                'monthly_repayment' => $monthlyRepayment,
-                'total_repayable' => $totalRepayable,
-                'processing_fee' => $processingFee,
-                'insurance_fee' => $insuranceFee,
+                'monthly_repayment' => $calc['monthly_repayment'],
+                'total_repayable' => $calc['total_repayable'],
+                'processing_fee' => $calc['processing_fee'],
+                'insurance_fee' => $calc['insurance_fee'],
                 'purpose' => $request->purpose,
                 'status' => 'pending',
                 'application_date' => now(),
@@ -517,22 +506,23 @@ class LoanController extends Controller
             $loanProduct = $loan->loanProduct;
             $processingFee = ($request->approved_amount * $loanProduct->processing_fee_rate) / 100;
             $insuranceFee = ($request->approved_amount * $loanProduct->insurance_rate) / 100;
-            $monthlyInterestRate = $loanProduct->interest_rate / 100 / 12;
-            $monthlyRepayment = $this->calculateMonthlyRepayment(
+            $calc = $this->calculateLoanDetails(
+                $loanProduct,
                 $request->approved_amount,
-                $monthlyInterestRate,
                 $loan->term_months
             );
             $totalRepayable = $monthlyRepayment * $loan->term_months;
 
             $loan->update([
-                'monthly_repayment' => $monthlyRepayment,
-                'total_repayable' => $totalRepayable,
-                'processing_fee' => $processingFee,
-                'insurance_fee' => $insuranceFee,
+                'monthly_repayment' => $calc['monthly_repayment'],
+                'total_repayable' => $calc['total_repayable'],
+                'processing_fee' => $calc['processing_fee'],
+                'insurance_fee' => $calc['insurance_fee'],
+            
+                // ✅ FIXED LOGIC
                 'outstanding_balance' => $request->approved_amount,
                 'principal_balance' => $request->approved_amount,
-                'interest_balance' => $totalRepayable - $request->approved_amount,
+                'interest_balance' => $calc['total_repayable'] - $request->approved_amount,
             ]);
 
             // Log the activity
@@ -774,6 +764,33 @@ class LoanController extends Controller
                 'message' => 'Error disbursing loan: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+
+    private function calculateLoanDetails($loanProduct, $principal, $months)
+    {
+        $monthlyRate = $loanProduct->interest_rate / 100;
+
+        $principalPerMonth = $principal / $months;
+
+        $totalInterest = $principal * $monthlyRate * ($months + 1) / 2;
+        $mInterest = $totalInterest / $months;
+
+        $monthlyRepayment = $principalPerMonth + $mInterest;
+        $totalRepayable = $monthlyRepayment * $months;
+
+        $processingFee = ($principal * $loanProduct->processing_fee_rate) / 100;
+        $insuranceFee = ($principal * $loanProduct->insurance_rate) / 100;
+
+        return [
+            'monthly_repayment' => round($monthlyRepayment, 2),
+            'total_repayable' => round($totalRepayable, 2),
+            'processing_fee' => round($processingFee, 2),
+            'insurance_fee' => round($insuranceFee, 2),
+            'principal_per_month' => round($principalPerMonth, 2),
+            'm_interest' => round($mInterest, 2),
+            'total_interest' => round($totalInterest, 2),
+        ];
     }
 
     /**
