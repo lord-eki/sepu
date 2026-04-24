@@ -308,12 +308,11 @@ class LoanController extends Controller
     /**
      * Show loan repayments
      */
-    public function repayments($id)
+   public function repayments($id)
     {
         $loan = Loan::with(['member.user', 'loanProduct'])->findOrFail($id);
-        $repayments = LoanRepayment::where('loan_id', $id)
-            ->orderBy('due_date')
-            ->get();
+
+        $repayments = collect($this->generateRepaymentSchedule($loan));
 
         return Inertia::render('Shared/Loans/Repayment', [
             'loan' => $loan,
@@ -462,27 +461,6 @@ class LoanController extends Controller
         }
     }
 
-    /**
-     * Loan Schedule
-     */
-    public function schedule($id)
-    {
-        $loan = Loan::with(['member', 'loanProduct', 'repayments'])->findOrFail($id);
-
-        // If no repayments yet, you can generate or just show message
-        if ($loan->repayments->isEmpty()) {
-            return Inertia::render('Shared/Loans/Schedule', [
-                'loan' => $loan,
-                'repayments' => [],
-                'message' => 'No repayment schedule generated for this loan yet.',
-            ]);
-        }
-
-        return Inertia::render('Shared/Loans/Schedule', [
-            'loan' => $loan,
-            'repayments' => $loan->repayments,
-        ]);
-    }
 
    /**
  * Approve a loan application
@@ -765,6 +743,7 @@ public function disburse(Request $request, $id)
         // -----------------------------------
         // Update loan 
         // -----------------------------------
+        $disbursementDate = now();
         $loan->update([
             'disbursed_amount'    => $netDisbursement,
             'status'              => 'disbursed',
@@ -772,18 +751,48 @@ public function disburse(Request $request, $id)
             'disbursed_by'        => Auth::id(),
 
             // Dates
-            'first_repayment_date'=> now()->addMonth(),
-            'maturity_date'       => now()->addMonths($loan->term_months),
+
+            'first_repayment_date'=> $disbursementDate->copy()->addMonthsNoOverflow(1),
+            'maturity_date'       => $disbursementDate->copy()->addMonthsNoOverflow($loan->term_months),
+            'disbursement_date'   => $disbursementDate,
 
             'outstanding_balance' => $loan->total_repayable,
             'principal_balance'   => $loan->approved_amount,
             'interest_balance'    => $loan->interest_balance,
         ]);
 
+       // -----------------------------------
+        // Generate + STORE repayment schedule
         // -----------------------------------
-        // Generate repayment schedule
-        // -----------------------------------
-        $this->generateRepaymentSchedule($loan);
+        LoanRepayment::where('loan_id', $loan->id)->delete(); // safety reset
+
+        $schedule = $this->generateRepaymentSchedule(
+                $loan,
+                $disbursementDate
+            );
+        foreach ($schedule as $row) {
+
+            $expected = round($row['payment_amount'], 2);
+
+            LoanRepayment::create([
+                'loan_id'             => $loan->id,
+                'transaction_id'      => null, // not paid yet
+                'due_date'            => $row['payment_date'],
+
+                'expected_amount'     => $expected,
+                'principal_amount'    => round($row['principal_amount'], 2),
+                'interest_amount'     => round($row['interest_amount'], 2),
+
+                // DEFAULTS FOR NEW LOAN
+                'penalty_amount'      => 0,
+                'paid_amount'         => 0,
+                'outstanding_amount'  => $expected,
+
+                'status'              => 'pending',
+                'payment_date'        => null,
+                'days_late'           => 0,
+            ]);
+        }
 
         // -----------------------------------
         // Payment voucher
@@ -863,6 +872,9 @@ public function disburse(Request $request, $id)
         return $summary;
     }
 
+
+    
+
     /**
      * Calculate monthly repayment using PMT formula
      */
@@ -934,45 +946,168 @@ public function disburse(Request $request, $id)
         return $voucherNumber;
     }
 
-private function generateRepaymentSchedule(Loan $loan): array
+
+    /**
+ * Loan Schedule
+ */
+public function schedule($id)
 {
-    $principal = $loan->disbursed_amount;
-    $termMonths = $loan->term_months;
-    $monthlyRate = $loan->interest_rate / 100;
+    $loan = Loan::with(['member', 'loanProduct', 'repayments'])->findOrFail($id);
 
-    $principalPerMonth = $principal / $termMonths;
+    if ($loan->repayments->isNotEmpty()) {
 
-    $mInterest = $loan->monthly_interest ?? ($principal * $monthlyRate);
+        $openingBalance = (float) $loan->approved_amount;
 
-    $actualInstallment = $principalPerMonth + $mInterest;
+        $repayments = $loan->repayments
+            ->sortBy('due_date')
+            ->values()
+            ->map(function ($r, $i) use (&$openingBalance) {
+
+                $principal = (float) $r->principal_amount;
+                $interest  = (float) $r->interest_amount;
+
+                $expected = (float) ($r->expected_amount ?? ($principal + $interest));
+
+                $closing = $openingBalance - $principal;
+
+                $data = [
+                    'payment_number'   => $i + 1,
+
+                    // FIX: ensure consistent date fallback logic
+                    'payment_date'     => $r->payment_date
+                        ?? $r->due_date
+                        ?? null,
+
+                    'opening_balance'  => round($openingBalance, 2),
+                    'principal_amount' => round($principal, 2),
+                    'interest_amount'  => round($interest, 2),
+                    'payment_amount'   => round($expected, 2),
+                    'closing_balance'  => round(max(0, $closing), 2),
+                    'expected_amount'  => $r->expected_amount,
+                    'status'           => $r->status,
+                ];
+
+                $openingBalance = $closing;
+
+                return $data;
+            });
+
+    } else {
+
+        // IMPORTANT: align with calculator logic (includes grace + correct date rule)
+        $loanProduct = $loan->loanProduct;
+
+        $principal   = (float) $loan->approved_amount;
+        $termMonths  = (int) $loan->term_months;
+        $monthlyRate = (float) $loan->interest_rate / 100;
+        $graceDays   = $loanProduct->grace_period_days ?? 0;
+
+        $principalPerMonth = $principal / $termMonths;
+
+        $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
+        $mInterest     = $totalInterest / $termMonths;
+
+        $actualInstallment = $principalPerMonth + $mInterest;
+
+        $repayments = collect(
+            $this->generateSchedule(
+                $principal,
+                $principalPerMonth,
+                $monthlyRate,
+                $mInterest,
+                $actualInstallment,
+                $termMonths,
+                $graceDays
+            )
+        );
+    }
+
+    // totals for BOTH cases
+    $totals = [
+        'principal' => round($repayments->sum('principal_amount'), 2),
+        'interest'  => round($repayments->sum('interest_amount'), 2),
+        'total'     => round($repayments->sum('payment_amount'), 2),
+    ];
+
+    return Inertia::render('Shared/Loans/Schedule', [
+        'loan'       => $loan,
+        'repayments' => $repayments,
+        'totals'     => $totals,
+        'message'    => $repayments->isEmpty()
+            ? 'No repayment schedule generated for this loan yet.'
+            : null,
+    ]);
+}
+
+private function generateRepaymentSchedule(Loan $loan, $baseDate = null): array
+{
+    $principal   = (float) $loan->approved_amount;
+    $termMonths  = (int) $loan->term_months;
+    $monthlyRate = (float) $loan->interest_rate / 100;
+
+    // MATCH CALCULATOR LOGIC
+    $principalPerMonth = round($principal / $termMonths, 2);
+
+    $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
+    $mInterest     = round($totalInterest / $termMonths, 2);
+
+    $actualInstallment = round($principalPerMonth + $mInterest, 2);
 
     $openingBalance = $principal;
     $schedule = [];
 
-    $currentDate = now()
-        ->addDays($loan->grace_period_days ?? 0)
-        ->addMonth();
+    /**
+     * FIX DATE:
+     * Always start next month + force 1st of month logic
+     */
+    $graceDays = $loan->loanProduct->grace_period_days ?? 0;
+
+    $currentDate = ($baseDate ?? now())
+        ->copy()
+        ->addDays($graceDays)
+        ->addMonthsNoOverflow(1);
 
     $cumulInterest = 0;
     $cumulPrincipal = 0;
 
     for ($i = 1; $i <= $termMonths; $i++) {
 
-        $interestThisMonth = $openingBalance * $monthlyRate;
-        $closingBalance = $openingBalance - $principalPerMonth;
+        $interestThisMonth = round($openingBalance * $monthlyRate, 2);
 
-        $cumulInterest += $mInterest;
-        $cumulPrincipal += $principalPerMonth;
+        $principalThisMonth = $principalPerMonth;
+
+        if ($i === $termMonths) {
+            $principalThisMonth = round($openingBalance, 2);
+        }
+
+        $closingBalance = $openingBalance - $principalThisMonth;
+
+        $cumulInterest += $interestThisMonth;
+        $cumulPrincipal += $principalThisMonth;
 
         $schedule[] = [
-            'payment_number' => $i,
-            'payment_date' => $currentDate->format('Y-m-d'),
-            'opening_balance' => round($openingBalance,2),
-            'principal_amount' => round($principalPerMonth,2),
-            'interest_amount' => round($interestThisMonth,2),
-            'payment_amount' => round($actualInstallment,2),
-            'closing_balance' => round(max(0,$closingBalance),2),
+            'payment_number'       => $i,
+            'payment_date'         => $currentDate->format('Y-m-d'),
+
+            'opening_balance'      => round($openingBalance, 2),
+            'principal_amount'     => $principalThisMonth,
+            'interest_amount'      => $interestThisMonth,
+
+            'payment_amount'       => $actualInstallment,
+
+            'm_interest'           => $mInterest,
+            'cumulative_interest'  => round($cumulInterest, 2),
+            'cumulative_principal' => round($cumulPrincipal, 2),
+
+            'closing_balance'      => round(max(0, $closingBalance), 2),
         ];
+
+        // fix rounding difference on last row
+        if ($i === $termMonths) {
+            $difference = round($principal - $cumulPrincipal, 2);
+            $schedule[$i - 1]['principal_amount'] += $difference;
+            $schedule[$i - 1]['closing_balance'] = 0;
+        }
 
         $openingBalance = $closingBalance;
         $currentDate->addMonth();
