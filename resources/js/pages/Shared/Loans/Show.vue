@@ -45,83 +45,73 @@
     <!-- ================= PAGE ================= -->
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
 
-      <!-- ================= HERO HEADER ================= -->
+      <!-- ================= HERO HEADER ) ================= -->
       <div class="border-b border-white/50 bg-white/70 backdrop-blur-xl">
-        <div class="max-w-7xl mx-auto px-6 py-7">
+        <div class="max-w-7xl mx-auto px-6 py-5 sm:py-7">
 
-          <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-center">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
             <!-- LEFT -->
-            <div class="xl:col-span-2 flex items-start gap-4">
+            <div class="flex items-start gap-3 sm:gap-4">
 
               <div
-                class="h-10 w-10 rounded-3xl bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900
-                flex items-center justify-center shadow-xl"
+                class="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl sm:rounded-3xl
+                bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900
+                flex items-center justify-center shadow-xl flex-shrink-0"
               >
-                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3" />
                 </svg>
               </div>
 
-              <div>
-                <p class="text-xs uppercase tracking-[0.25em] text-slate-400 mb-1">
+              <div class="min-w-0">
+                <p class="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-400 mb-1">
                   Loan Account
                 </p>
 
-                <h1 class="text-2xl font-black text-slate-900">
+                <h1 class="text-lg sm:text-2xl font-black text-slate-900 break-words">
                   {{ loan.loan_number }}
                 </h1>
 
-                <div class="mt-3 flex flex-wrap gap-2">
-
-                  <span
-                    class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold"
-                  >
+                <div class="mt-2 sm:mt-3 flex flex-wrap gap-2">
+                  <span class="px-2 sm:px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] sm:text-xs font-semibold">
                     {{ loan.loan_product?.name || 'Loan Product' }}
                   </span>
 
-                  <span
-                    class="px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold"
-                  >
+                  <span class="px-2 sm:px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-semibold">
                     Applied {{ formatDate(loan.application_date || loan.created_at) }}
                   </span>
-
                 </div>
               </div>
 
             </div>
 
             <!-- RIGHT -->
-            <div class="xl:text-right">
+          <div class="flex items-center justify-between w-full lg:flex-col lg:items-end gap-3">
 
-              <p class="text-xs uppercase tracking-[0.25em] text-slate-400">
+            <!-- Member info (left on mobile) -->
+            <div class="min-w-0">
+              <p class="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-400">
                 Member
               </p>
 
-              <h2 class="text-xl font-bold text-slate-900 mt-1">
+              <h2 class="text-base sm:text-xl font-bold text-slate-900 mt-1 truncate">
                 {{ loan.member?.first_name }} {{ loan.member?.last_name }}
               </h2>
-
-              <div class="mt-4 flex gap-3 xl:justify-end flex-wrap">
-
-                <Link
-                  v-if="canEdit"
-                  :href="route('loans.edit', loan.id)"
-                  class="px-4 py-2.5 rounded-2xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 shadow"
-                >
-                  Edit Loan
-                </Link>
-
-                <Link
-                  :href="isMemberRole ? route('my-loans') : route('loans.index')"
-                  class="px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50"
-                >
-                  Back
-                </Link>
-
-              </div>
-
             </div>
+
+            <!-- Back button (right on mobile) -->
+            <div class="flex-shrink-0">
+              <Link
+                :href="isMemberRole ? route('my-loans') : route('loans.index')"
+                class="px-3 sm:px-4 py-2 rounded-xl sm:rounded-2xl bg-white border border-slate-200
+                      text-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-50"
+              >
+                Back
+              </Link>
+            </div>
+
+          </div>
 
           </div>
 

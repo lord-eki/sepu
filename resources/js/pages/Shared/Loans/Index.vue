@@ -155,12 +155,12 @@
                     Edit
                     </Link>
 
-                    <button v-if="canApprove(loan)" @click="showApprovalModal(loan)"
+                    <button v-if="canApprove(loan)" @click="openApprovalModal(loan)"
                       class="bg-emerald-600 text-white px-3 py-1.5 rounded-md text-xs hover:bg-emerald-700">
                       Approve
                     </button>
 
-                    <button v-if="canReject(loan)" @click="showRejectionModal(loan)"
+                    <button v-if="canReject(loan)" @click="openRejectionModal(loan)"
                       class="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs hover:bg-red-700">
                       Reject
                     </button>
@@ -188,7 +188,14 @@
           <button @click="openModal = false">✕</button>
         </div>
 
-        <select v-model="selectedMember" class="w-full border border-slate-200 rounded-xl p-2 text-sm">
+        <div v-if="loadingMembers" class="text-sm text-slate-500 mb-3">
+          Loading members...
+        </div>
+        <select
+            v-model="selectedMember"
+            :disabled="loadingMembers"
+            class="w-full border border-slate-200 rounded-xl p-2 text-sm disabled:bg-slate-100 disabled:cursor-not-allowed"
+          >
           <option disabled value="">Select a member</option>
           <option v-for="m in members" :key="m.id" :value="m.id">
             {{ m.name }}
@@ -205,6 +212,159 @@
           </button>
         </div>
 
+      </div>
+    </div>
+
+    <!-- APPROVAL MODAL -->
+    <div
+      v-if="showApprovalModal && selectedLoan"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+    >
+      <div class="w-full max-w-xl rounded-3xl bg-white shadow-2xl border border-slate-200 p-6">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-xl font-bold text-slate-900">Approve Loan</h2>
+          <button
+            @click="closeApprovalModal"
+            class="w-9 h-9 rounded-full hover:bg-slate-100 text-slate-500"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Applied -->
+        <div class="mb-4 rounded-2xl bg-slate-50 p-4">
+          <p class="text-sm text-slate-500">Applied Amount</p>
+          <p class="text-2xl font-bold text-slate-900">
+            KES {{ formatCurrency(selectedLoan.applied_amount || 0) }}
+          </p>
+        </div>
+
+        <!-- Input -->
+        <label class="text-sm font-semibold text-slate-700">
+          Amount To Approve
+        </label>
+
+        <input
+          v-model="approvalForm.approved_amount"
+          type="number"
+          class="w-full mt-2 border border-slate-200 rounded-2xl p-3 focus:ring-2 focus:ring-blue-400 outline-none"
+          placeholder="Enter approved amount"
+        />
+
+        <!-- Preview -->
+        <div class="mt-4 space-y-3">
+          <div class="rounded-2xl bg-blue-50 p-4">
+            <p class="text-sm text-blue-600">Monthly Repayment</p>
+            <p class="text-xl font-bold text-blue-800">
+              KES {{ formatCurrency(monthlyPreview) }}
+            </p>
+          </div>
+
+          <div class="rounded-2xl bg-orange-50 p-4">
+            <p class="text-sm text-orange-600">Total Interest</p>
+            <p class="text-xl font-bold text-orange-700">
+              KES {{ formatCurrency(totalInterestPreview) }}
+            </p>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-sm text-slate-600">Net Disbursement</p>
+            <p class="text-xl font-bold text-slate-900">
+              KES {{ formatCurrency(netDisbursementPreview) }}
+            </p>
+          </div>
+        </div>
+
+        <textarea
+          v-model="approvalForm.approval_notes"
+          class="w-full border border-slate-200 rounded-2xl p-3 mt-4 focus:ring-2 focus:ring-blue-400 outline-none"
+          placeholder="Approval Notes"
+          rows="4"
+        ></textarea>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3 mt-5">
+          <button
+            @click="closeApprovalModal"
+            class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            @click="approveLoan"
+            :disabled="approvingLoan"
+            class="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <svg
+              v-if="approvingLoan"
+              class="w-4 h-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/>
+              <path d="M22 12a10 10 0 00-10-10" stroke="currentColor" stroke-width="4" class="opacity-90"/>
+            </svg>
+
+            {{ approvingLoan ? 'Approving...' : 'Approve' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+<!-- REJECTION MODAL -->
+    <div
+      v-if="showRejectionModal && selectedLoan"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+    >
+      <div class="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-200 p-6">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-xl font-bold text-red-600">Reject Loan</h2>
+          <button
+            @click="closeRejectionModal"
+            class="w-9 h-9 rounded-full hover:bg-slate-100 text-slate-500"
+          >
+            ✕
+          </button>
+        </div>
+
+        <textarea
+          v-model="rejectionForm.rejection_reason"
+          class="w-full border border-slate-200 rounded-2xl p-3 focus:ring-2 focus:ring-red-400 outline-none"
+          placeholder="Reason for rejection"
+          rows="5"
+        ></textarea>
+
+        <div class="flex justify-end gap-3 mt-5">
+          <button
+            @click="closeRejectionModal"
+            class="px-4 py-2 border border-slate-300 rounded-xl hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            @click="rejectLoan"
+            :disabled="rejectingLoan"
+            class="px-5 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <svg
+              v-if="rejectingLoan"
+              class="w-4 h-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/>
+              <path d="M22 12a10 10 0 00-10-10" stroke="currentColor" stroke-width="4" class="opacity-90"/>
+            </svg>
+
+            {{ rejectingLoan ? 'Rejecting...' : 'Reject' }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -260,10 +420,16 @@
 }
 </style>
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import Pagination from '@/components/Pagination.vue'
+import axios from 'axios'
+
+const loadingMembers = ref(false)
+const approvingLoan = ref(false)
+const rejectingLoan = ref(false)
+
 
 const props = defineProps({
   loans: Object,
@@ -281,8 +447,8 @@ const filters = reactive({
   date_to: ''
 })
 
-const showApproval = ref(false)
-const showRejection = ref(false)
+const showApprovalModal = ref(false)
+const showRejectionModal = ref(false)
 const selectedLoan = ref(null)
 
 const approvalForm = reactive({
@@ -334,6 +500,46 @@ const formatStatus = (status) => {
   return status.replace('_', ' ').toUpperCase()
 }
 
+const previewMeta = computed(() => {
+  if (!selectedLoan.value || !approvalForm.approved_amount) {
+    return {
+      monthlyRepayment: 0,
+      totalInterest: 0,
+      netDisbursement: 0,
+      processingFee: 0,
+      insuranceFee: 0
+    }
+  }
+
+  const principal = Number(approvalForm.approved_amount)
+  const termMonths = Number(selectedLoan.value.term_months || 1)
+
+  // backend uses monthly rate already
+  const monthlyRate = Number(selectedLoan.value.loan_product?.interest_rate || selectedLoan.value.interest_rate || 0) / 100
+
+  const processingRate = Number(selectedLoan.value.loan_product?.processing_fee_rate || 0) / 100
+  const insuranceRate = Number(selectedLoan.value.loan_product?.insurance_rate || 0) / 100
+
+  const processingFee = principal * processingRate
+  const insuranceFee = principal * insuranceRate
+
+  const principalPerMonth = principal / termMonths
+  const totalInterest = principal * monthlyRate * (termMonths + 1) / 2
+  const monthlyRepayment = principalPerMonth + (totalInterest / termMonths)
+  const netDisbursement = principal - (processingFee + insuranceFee)
+
+  return {
+    monthlyRepayment,
+    totalInterest,
+    netDisbursement,
+    processingFee,
+    insuranceFee
+  }
+})
+
+const monthlyPreview = computed(() => previewMeta.value.monthlyRepayment)
+const totalInterestPreview = computed(() => previewMeta.value.totalInterest)
+const netDisbursementPreview = computed(() => previewMeta.value.netDisbursement)
 const getStatusBadgeClass = (status) => {
   const classes = {
     'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
@@ -362,17 +568,17 @@ const canDisburse = (loan) => {
   return loan.status === 'approved' && ['admin', 'accountant'].includes(props.auth.user.role)
 }
 
-const showApprovalModal = (loan) => {
+const openApprovalModal = (loan) => {
   selectedLoan.value = loan
-  approvalForm.approved_amount = loan.applied_amount
+  approvalForm.approved_amount = loan.applied_amount || ''
   approvalForm.approval_notes = ''
-  showApproval.value = true
+  showApprovalModal.value = true
 }
 
-const showRejectionModal = (loan) => {
+const openRejectionModal = (loan) => {
   selectedLoan.value = loan
   rejectionForm.rejection_reason = ''
-  showRejection.value = true
+  showRejectionModal.value = true
 }
 
 const showDisbursementModal = (loan) => {
@@ -380,33 +586,41 @@ const showDisbursementModal = (loan) => {
 }
 
 const closeApprovalModal = () => {
-  showApproval.value = false
+  showApprovalModal.value = false
   selectedLoan.value = null
-  Object.keys(approvalForm).forEach(key => {
-    approvalForm[key] = ''
-  })
+  approvalForm.approved_amount = ''
+  approvalForm.approval_notes = ''
 }
 
 const closeRejectionModal = () => {
-  showRejection.value = false
+  showRejectionModal.value = false
   selectedLoan.value = null
-  Object.keys(rejectionForm).forEach(key => {
-    rejectionForm[key] = ''
-  })
+  rejectionForm.rejection_reason = ''
 }
 
 const approveLoan = () => {
+  if (!selectedLoan.value || approvingLoan.value) return
+
+  approvingLoan.value = true
+
   router.post(route('loans.approve', selectedLoan.value.id), approvalForm, {
-    onSuccess: () => {
-      closeApprovalModal()
+    preserveScroll: true,
+    onSuccess: () => closeApprovalModal(),
+    onFinish: () => {
+      approvingLoan.value = false
     }
   })
 }
-
 const rejectLoan = () => {
+  if (!selectedLoan.value || rejectingLoan.value) return
+
+  rejectingLoan.value = true
+
   router.post(route('loans.reject', selectedLoan.value.id), rejectionForm, {
-    onSuccess: () => {
-      closeRejectionModal()
+    preserveScroll: true,
+    onSuccess: () => closeRejectionModal(),
+    onFinish: () => {
+      rejectingLoan.value = false
     }
   })
 }
@@ -447,16 +661,19 @@ const openModal = ref(false)
 const selectedMember = ref('')
 
 
-import axios from 'axios'
-import { onMounted } from 'vue'
-
 const members = ref([])
 
 onMounted(async () => {
-  const response = await axios.get('/api/search/members')
-  members.value = response.data
+  loadingMembers.value = true
+  try {
+    const response = await axios.get('/api/search/members')
+    members.value = response.data
+  } catch (error) {
+    console.error('Failed to load members:', error)
+  } finally {
+    loadingMembers.value = false
+  }
 })
-
 
 const checkEligibility = () => {
   if (selectedMember.value) {
