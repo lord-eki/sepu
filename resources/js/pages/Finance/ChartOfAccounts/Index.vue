@@ -75,7 +75,7 @@ function deleteAccount() {
 
     <Link
       :href="route('chart-of-accounts.create')"
-      class="inline-flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow hover:bg-slate-800 transition"
+      class="inline-flex items-center gap-2 bg-blue-950 text-white px-5 py-2.5 rounded-xl shadow hover:bg-slate-800 transition"
     >
       <Plus class="w-4 h-4" />
       New Account
@@ -161,7 +161,7 @@ function deleteAccount() {
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
 
-        <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider sticky top-0">
+        <thead class="bg-blue-950 text-white text-xs uppercase tracking-wider sticky top-0">
           <tr>
             <th class="p-4 text-left">Code</th>
             <th class="p-4 text-left">Account Name</th>

@@ -819,6 +819,53 @@ class MemberController extends Controller
     }
 
 
+    public function resetPassword(Request $request, Member $member)
+    {
+        $request->validate([
+            'must_change_password' => 'boolean'
+        ]);
+
+        $user = $member->user;
+
+        if (!$user) {
+            return back()->with('error', 'User not found');
+        }
+
+        // DEFAULT PASSWORD = MEMBER ID NUMBER
+        $defaultPassword = $member->id_number;
+
+        $user->password = Hash::make($defaultPassword);
+
+        // force password change on next login
+        $user->must_change_password = $request->boolean('must_change_password', true);
+
+        // optional tracking (better than null)
+        $user->password_changed_at = now();
+
+        $user->save();
+
+        return back()->with('success', 'Password reset successfully');
+    }
+
+
+    public function updateUsername(Request $request, Member $member)
+    {
+        $request->validate([
+            'username' => 'required|string|min:3|max:50|unique:users,username,' . $member->user_id,
+        ]);
+
+        $user = $member->user;
+
+        if (!$user) {
+            return back()->with('error', 'User not found');
+        }
+
+        $user->username = $request->username;
+        $user->save();
+
+        return back()->with('success', 'Username updated successfully');
+    }
+
     /**
      * Get member transactions
      */

@@ -48,6 +48,18 @@
           <Pencil class="w-4 h-4" /> Edit
         </Link>
 
+        <button
+        @click="openUsernameModal"
+        class="inline-flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm">
+        Edit Username
+        </button>
+
+        <button
+        @click="openResetPasswordModal"
+        class="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm">
+        Reset Password
+        </button>
+
         <!-- DROPDOWN -->
         <div class="relative" ref="dropdown">
           <button @click="showDropdown = !showDropdown" class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-[#0a2342] dark:text-gray-100
@@ -832,6 +844,88 @@
       </div>
     </div>
 
+    <div v-if="showResetModal"
+ class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+        Reset Password
+      </h3>
+      <p class="text-sm text-gray-500 mt-1">
+        {{ member.first_name }} {{ member.last_name }}
+      </p>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 space-y-4">
+
+      <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+        <p class="text-sm text-blue-800 dark:text-blue-300">
+          The new default password will be:
+        </p>
+
+        <p class="font-bold text-lg mt-1 text-[#0a2342] dark:text-white">
+          {{ member.id_number }}
+        </p>
+      </div>
+
+      <label class="flex items-start gap-3">
+        <input
+          type="checkbox"
+          v-model="resetForm.must_change_password"
+          class="mt-1 rounded border-gray-300"
+        />
+
+        <span class="text-sm text-gray-700 dark:text-gray-300">
+          Force member to change password on next login
+        </span>
+      </label>
+
+      <p class="text-xs text-gray-500">
+        This will immediately replace the current password.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+
+      <button
+        @click="showResetModal = false"
+        class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm">
+        Cancel
+      </button>
+
+      <button
+        @click="submitResetPassword"
+        class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm">
+        Reset Password
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<div v-if="showUsernameModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+ <div class="bg-white rounded-xl p-6 w-full max-w-md">
+   <h3 class="font-bold text-lg mb-4">Edit Username</h3>
+
+   <input v-model="usernameForm.username"
+    class="w-full border rounded-lg px-3 py-2 mb-4">
+
+   <div class="flex justify-end gap-2">
+     <button @click="showUsernameModal=false">Cancel</button>
+
+     <button @click="submitUsername"
+      class="bg-indigo-500 text-white px-4 py-2 rounded-lg">
+      Save
+     </button>
+   </div>
+ </div>
+</div>
+
   </AppLayout>
 </template>
 
@@ -853,6 +947,7 @@ const flashMessage = ref(null)
 const flashType    = ref('success')
 const flashBox     = ref(null)
 const isLoading    = ref(false)
+
 
 watch(flash, (val) => {
   if (val.success)      { flashMessage.value = val.success; flashType.value = 'success' }
@@ -878,6 +973,79 @@ const tabs = [
   { id: 'documents',           name: 'Documents' },
 ]
 
+const showResetModal = ref(false)
+const showUsernameModal = ref(false)
+
+const resetForm = ref({
+  must_change_password: true
+})
+
+const usernameForm = ref({
+  username: props.member.user?.username || ''
+})
+
+const openResetPasswordModal = () => {
+  resetForm.value.must_change_password = true
+  showResetModal.value = true
+}
+
+const openUsernameModal = () => {
+  usernameForm.value.username = props.member.user?.username || ''
+  showUsernameModal.value = true
+}
+
+const submitResetPassword = () => {
+  isLoading.value = true
+
+  router.post(
+    route('members.reset-password', props.member.id),
+    {
+      must_change_password: resetForm.value.must_change_password
+    },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        showResetModal.value = false
+      },
+      onError: (errors) => {
+        flashMessage.value =
+          errors?.message || 'Failed to reset password'
+        flashType.value = 'error'
+      },
+      onFinish: () => {
+        isLoading.value = false
+      }
+    }
+  )
+}
+
+const submitUsername = () => {
+  isLoading.value = true
+
+  router.post(
+    route('members.update-username', props.member.id),
+    {
+      username: usernameForm.value.username
+    },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        showUsernameModal.value = false
+      },
+      onError: (errors) => {
+        flashMessage.value =
+          errors?.username ||
+          errors?.message ||
+          'Failed to update username'
+
+        flashType.value = 'error'
+      },
+      onFinish: () => {
+        isLoading.value = false
+      }
+    }
+  )
+}
 const canEdit        = computed(() => ['admin', 'management', 'loan_officer'].includes(page.props.auth.user?.role))
 const canManageStatus = computed(() => ['admin', 'management'].includes(page.props.auth.user?.role))
 

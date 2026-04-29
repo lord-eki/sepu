@@ -590,3 +590,9 @@ Route::prefix('members/{member}/finance-setup')->name('members.finance-setup.')-
 
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+
+Route::post('/members/{member}/reset-password', [MemberController::class, 'resetPassword'])
+    ->name('members.reset-password');
+
+Route::post('/members/{member}/update-username', [MemberController::class, 'updateUsername'])
+->name('members.update-username');
