@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,26 +32,35 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $user = Auth::user();
-
-        // Only check email verification here
-        // if (!$user->hasVerifiedEmail()) {
-        //     return redirect()
-        //         ->route('verification.notice')
-        //         ->with('status', 'Please verify your email before logging in.');
-        // }
-
         $request->session()->regenerate();
 
-        \Log::info('Login successful', [
-            'user_id' => $user->id,
-            'username' => $user->username ?? 'N/A',
-            'role' => $user->role,
-        ]);
+        $user = Auth::user();
+
+        // Force password change first
+        if ($user->must_change_password) {
+            return redirect()->route('password.change.form');
+        }
 
         return redirect()->intended(route('dashboard'));
     }
 
+
+
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'min:6', 'confirmed'],
+        ]);
+
+        $user = Auth::user();
+
+        $user->password = Hash::make($request->password);
+        $user->must_change_password = false;
+        $user->save();
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Password changed successfully');
+    }
 
     /**
      * Destroy an authenticated session.

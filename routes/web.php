@@ -23,6 +23,8 @@ use App\Http\Controllers\SystemUserController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\Public\ContactController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -59,7 +61,7 @@ Route::get('/awaiting-payment',    fn () => Inertia::render('Profile/AwaitingPay
 
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {
 
     // ── Dashboard ─────────────────────────────────────────────────────────
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -596,3 +598,29 @@ Route::post('/members/{member}/reset-password', [MemberController::class, 'reset
 
 Route::post('/members/{member}/update-username', [MemberController::class, 'updateUsername'])
 ->name('members.update-username');
+// User must be logged in to access change password page
+Route::middleware('auth')->group(function () {
+
+    // Show password change page
+    Route::get('/change-password', [AuthenticatedSessionController::class, 'showChangePassword'])
+        ->name('password.change.form');
+
+    // Submit new password
+    Route::post('/change-password', [AuthenticatedSessionController::class, 'updatePassword'])
+        ->name('password.change.update');
+
+});
+
+
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/change-password', function () {
+        return Inertia::render('auth/ChangePassword');
+    })->name('password.change.form');
+
+    Route::post('/change-password', [AuthenticatedSessionController::class, 'updatePassword'])
+        ->name('password.change.update');
+
+});
+

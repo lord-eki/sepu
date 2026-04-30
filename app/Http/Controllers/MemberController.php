@@ -114,6 +114,7 @@ class MemberController extends Controller
         ]);
     }
 
+  
     /**
      * Store a newly created member
      */
@@ -122,34 +123,77 @@ class MemberController extends Controller
         try {
             DB::beginTransaction();
 
-            // Create user account
+            /*
+            |--------------------------------------------------------------------------
+            | Password Logic (same as reset password)
+            |--------------------------------------------------------------------------
+            */
+            $plainPassword =
+                $request->password_type === 'custom'
+                    ? $request->custom_password
+                    : $request->id_number;
+
+            if (!$plainPassword) {
+                $plainPassword = Str::random(12);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create User Account
+            |--------------------------------------------------------------------------
+            */
             $user = User::create([
-                'name' => $request->first_name.' '.$request->last_name,
+                'name' => $request->first_name . ' ' . $request->last_name,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'password' => Hash::make($request->password ?? Str::random(12)),
+                'password' => Hash::make($plainPassword),
                 'role' => 'member',
-                'is_active' => true,
+                'is_active' => false,
+
+                // same reset-password logic
+                'must_change_password' => $request->boolean('must_change_password', true),
+                'password_changed_at' => now(),
             ]);
 
-            // Create member profile
+            /*
+            |--------------------------------------------------------------------------
+            | Create Member Profile
+            |--------------------------------------------------------------------------
+            */
             $memberData = $request->validated();
+
+            unset(
+                $memberData['password_type'],
+                $memberData['custom_password'],
+                $memberData['must_change_password']
+            );
+
             $memberData['user_id'] = $user->id;
             $memberData['membership_id'] = $this->generateMembershipId();
             $memberData['membership_date'] = now();
             $memberData['membership_status'] = 'active';
 
-            // Handle profile photo upload
+            /*
+            |--------------------------------------------------------------------------
+            | Profile Photo
+            |--------------------------------------------------------------------------
+            */
             if ($request->hasFile('profile_photo')) {
                 $memberData['profile_photo'] = $request->file('profile_photo')
                     ->store('members/photos', 'public');
             }
 
-            // Handle documents upload
+            /*
+            |--------------------------------------------------------------------------
+            | Documents
+            |--------------------------------------------------------------------------
+            */
             if ($request->hasFile('documents')) {
                 $documents = [];
+
                 foreach ($request->file('documents') as $file) {
                     $path = $file->store('members/documents', 'public');
+
                     $documents[] = [
                         'name' => $file->getClientOriginalName(),
                         'path' => $path,
@@ -158,43 +202,52 @@ class MemberController extends Controller
                         'uploaded_at' => now(),
                     ];
                 }
+
                 $memberData['documents'] = json_encode($documents);
             }
 
             $member = Member::create($memberData);
 
-            // Create default accounts (share_capital and share_deposits)
+            /*
+            |--------------------------------------------------------------------------
+            | Default Accounts
+            |--------------------------------------------------------------------------
+            */
             DB::table('accounts')->insert([
-                'account_number' => $this->generateAccountNumber('SEPU', 'S'),
-                'account_type' => 'share_capital',
-                'balance' => 0,
-                'available_balance' => 0,
-                'is_active' => true,
-                'member_id' => $member->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            DB::table('accounts')->insert([
-                'account_number' => $this->generateAccountNumber('SEPU', 'D'),
-                'account_type' => 'share_deposits',
-                'balance' => 0,
-                'available_balance' => 0,
-                'is_active' => true,
-                'member_id' => $member->id,
-                'created_at' => now(),
-                'updated_at' => now(),
+                [
+                    'account_number' => $this->generateAccountNumber('SEPU', 'S'),
+                    'account_type' => 'share_capital',
+                    'balance' => 0,
+                    'available_balance' => 0,
+                    'is_active' => true,
+                    'member_id' => $member->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'account_number' => $this->generateAccountNumber('SEPU', 'D'),
+                    'account_type' => 'share_deposits',
+                    'balance' => 0,
+                    'available_balance' => 0,
+                    'is_active' => true,
+                    'member_id' => $member->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
             ]);
 
             DB::commit();
 
-            return redirect()->route('members.show', $member)
+            return redirect()
+                ->route('members.show', $member)
                 ->with('success', 'Member created successfully');
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create member: '.$e->getMessage()]);
+            return back()->withErrors([
+                'error' => 'Failed to create member: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -819,10 +872,12 @@ class MemberController extends Controller
     }
 
 
-    public function resetPassword(Request $request, Member $member)
+   public function resetPassword(Request $request, Member $member)
     {
         $request->validate([
-            'must_change_password' => 'boolean'
+            'password_type'         => 'required|in:default,custom',
+            'custom_password'      => 'nullable|required_if:password_type,custom|min:6',
+            'must_change_password' => 'boolean',
         ]);
 
         $user = $member->user;
@@ -831,22 +886,23 @@ class MemberController extends Controller
             return back()->with('error', 'User not found');
         }
 
-        // DEFAULT PASSWORD = MEMBER ID NUMBER
-        $defaultPassword = $member->id_number;
+        // Choose password
+        $newPassword = $request->password_type === 'custom'
+            ? $request->custom_password
+            : $member->id_number;
 
-        $user->password = Hash::make($defaultPassword);
+        $user->password = Hash::make($newPassword);
 
-        // force password change on next login
+        // Force change next login
         $user->must_change_password = $request->boolean('must_change_password', true);
 
-        // optional tracking (better than null)
+        // Optional audit timestamp
         $user->password_changed_at = now();
 
         $user->save();
 
         return back()->with('success', 'Password reset successfully');
     }
-
 
     public function updateUsername(Request $request, Member $member)
     {

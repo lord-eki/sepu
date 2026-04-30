@@ -367,30 +367,93 @@
           <!-- Account Setup -->
           <div class="bg-white border-l-4 border-orange-500 shadow px-4 py-5 sm:rounded-lg sm:p-6">
             <div class="md:grid md:grid-cols-3 md:gap-6">
+
               <div class="md:col-span-1">
                 <h3 class="text-lg font-bold text-darkBlue">Account Setup</h3>
-                <p class="mt-1 text-sm text-gray-500">Login credentials for the member portal.</p>
+                <p class="mt-1 text-sm text-gray-500">
+                  Choose how member password will be created.
+                </p>
               </div>
-              <div class="mt-5 md:mt-0 md:col-span-2">
-                <div class="grid grid-cols-6 gap-6">
-                  <!-- Password -->
-                  <div class="col-span-6 sm:col-span-3">
-                    <label class="block text-sm font-medium text-darkBlue">Password *</label>
-                    <input v-model="form.password" type="password" required
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
-                  </div>
 
-                  <!-- Confirm Password -->
-                  <div class="col-span-6 sm:col-span-3">
-                    <label class="block text-sm font-medium text-darkBlue">Confirm Password *</label>
-                    <input v-model="form.password_confirmation" type="password" required
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                      :class="{ 'border-red-500': !passwordsMatch && form.password_confirmation }" />
-                    <p v-if="!passwordsMatch && form.password_confirmation" class="mt-1 text-sm text-red-600">
-                      Passwords do not match.
+              <div class="mt-5 md:mt-0 md:col-span-2 space-y-4">
+
+                <!-- Password Type -->
+                <div class="grid sm:grid-cols-2 gap-4">
+
+                  <label class="border rounded-xl p-4 cursor-pointer hover:border-orange-500"
+                    :class="form.password_type === 'id_number' ? 'border-orange-500 bg-orange-50' : 'border-gray-300'">
+
+                    <input
+                      type="radio"
+                      value="id_number"
+                      v-model="form.password_type"
+                      class="mr-2"
+                    />
+
+                    <span class="font-semibold text-darkBlue">Use ID Number</span>
+
+                    <p class="text-xs text-gray-500 mt-1">
+                      Password becomes member ID number
                     </p>
-                  </div>
+                  </label>
+
+                  <label class="border rounded-xl p-4 cursor-pointer hover:border-orange-500"
+                    :class="form.password_type === 'custom' ? 'border-orange-500 bg-orange-50' : 'border-gray-300'">
+
+                    <input
+                      type="radio"
+                      value="custom"
+                      v-model="form.password_type"
+                      class="mr-2"
+                    />
+
+                    <span class="font-semibold text-darkBlue">Custom Password</span>
+
+                    <p class="text-xs text-gray-500 mt-1">
+                      Manually create password
+                    </p>
+                  </label>
+
                 </div>
+
+                <!-- Preview -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p class="text-sm text-blue-700 font-medium">Selected Password</p>
+
+                  <p class="text-xl font-bold text-[#0a2342] mt-1">
+                    {{
+                      form.password_type === 'id_number'
+                        ? (form.id_number || 'Enter ID Number first')
+                        : (form.custom_password || 'Enter custom password')
+                    }}
+                  </p>
+                </div>
+
+                <!-- Custom Password -->
+                <div v-if="form.password_type === 'custom'">
+                  <label class="block text-sm font-medium text-darkBlue mb-1">
+                    Custom Password
+                  </label>
+
+                  <input
+                    v-model="form.custom_password"
+                    type="text"
+                    class="w-full border border-gray-300 rounded-md p-2"
+                    placeholder="Enter custom password"
+                  />
+                </div>
+
+                <!-- Force Change -->
+                <label class="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    v-model="form.must_change_password"
+                  />
+                  <span class="text-sm text-gray-700">
+                    Require password change on first login
+                  </span>
+                </label>
+
               </div>
             </div>
           </div>
@@ -458,8 +521,7 @@ watch(
   { immediate: true, deep: true }
 );
 
-
-// Form state
+// form state
 const form = useForm({
   first_name: "",
   last_name: "",
@@ -471,20 +533,26 @@ const form = useForm({
   phone: "",
   physical_address: "",
   postal_address: "",
-  city: "", county: "",
+  city: "",
+  county: "",
   id_type: "",
   id_number: "",
   occupation: "",
   employer: "",
   monthly_income: "",
-  password: "",
-  password_confirmation: "",
+
+  // password setup options
+  password_type: "id_number", // id_number | custom
+  custom_password: "",
+  must_change_password: true,
+
   profile_photo: null,
   documents: [],
   emergency_contact_name: "",
   emergency_contact_phone: "",
   emergency_contact_relationship: "",
 });
+
 
 // File upload state
 const selectedDocuments = ref([]);
@@ -493,6 +561,15 @@ const photoPreview = ref(null);
 
 // Confirm Password Check
 const passwordsMatch = computed(() => form.password === form.password_confirmation);
+
+watch(
+  () => form.id_number,
+  (value) => {
+    if (form.password_type === "id_number") {
+      form.custom_password = "";
+    }
+  }
+);
 
 // Required Fields Check
 const formValid = computed(() => {
@@ -510,18 +587,18 @@ const formValid = computed(() => {
     form.county &&
     form.id_type &&
     form.id_number &&
-    form.password &&
-    form.password_confirmation &&
     form.emergency_contact_name &&
     form.emergency_contact_phone &&
     form.emergency_contact_relationship &&
     form.occupation &&
     form.employer &&
     form.monthly_income &&
-    passwordsMatch.value
+    (
+      form.password_type === "id_number" ||
+      (form.password_type === "custom" && form.custom_password)
+    )
   );
 });
-
 
 
 // Handlers 
@@ -543,6 +620,7 @@ const removeDocument = (index) => {
   selectedDocuments.value.splice(index, 1);
   form.documents = selectedDocuments.value;
 };
+
 const submit = () => {
   form.post(route("members.store"), {
     forceFormData: true,
@@ -551,11 +629,9 @@ const submit = () => {
       photoPreview.value = null;
       selectedDocuments.value = [];
     },
-    onError: (errors) => {
-      console.error("Validation errors:", errors);
-    },
   });
 };
+
 </script>
 
 <style scoped>

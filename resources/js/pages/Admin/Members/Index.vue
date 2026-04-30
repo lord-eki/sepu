@@ -38,99 +38,121 @@
     </div>
 
     <div class="min-h-screen bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+     
       <!-- Hero -->
-      <section class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <section class="mx-auto max-w-7xl px-4 py-6 px-4">
         <div
-          class="relative rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-4 shadow-2xl shadow-blue-950/20 sm:p-5"
+          class="relative rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 shadow-2xl shadow-blue-950/20"
         >
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,146,60,0.15),transparent_30%),radial-gradient(circle_at_left,rgba(59,130,246,0.12),transparent_35%)]"></div>
+          <!-- Background Effects -->
+          <div
+            class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,146,60,0.18),transparent_30%),radial-gradient(circle_at_left,rgba(59,130,246,0.14),transparent_35%)]"
+          ></div>
+          <div class="absolute inset-0 bg-grid-white/[0.03] bg-[size:24px_24px]"></div>
 
-          <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              
-              <h1 class="mt-4 text-2xl font-bold tracking-tight text-white sm:text-4xl">
-                Members Management
-              </h1>
-              <p class="mt-2 max-w-2xl text-sm text-slate-300 sm:text-base">
-                Manage registrations, approvals, account access and member records from one streamlined dashboard.
-              </p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-              <Link
-                v-if="$page.props.auth.user.role !== 'member'"
-                :href="route('members.create')"
-                class="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-0.5 hover:bg-orange-600"
-              >
-                <PlusCircle class="h-4 w-4" />
-                Add Member
-              </Link>
-
-              <div class="relative" ref="importWrapper">
-                <button
-                  @click="openImport = !openImport"
-                  class="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
-                >
-                  <Upload class="h-4 w-4" />
-                  Import
-                  <ChevronDownIcon class="h-4 w-4" />
-                </button>
-
+          <div class="relative px-4 py-6 sm:px-5 sm:py-7 lg:px-6 lg:py-8">
+            <div class="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+              <!-- Left Content -->
+              <div class="flex flex-1 items-start gap-4">
                 <div
-                  v-if="openImport"
-                  class="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+                  class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-lg shadow-black/20 backdrop-blur-md"
                 >
-                  <Link
-                    :href="route('members.import.form')"
-                    class="block px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
-                    Import Members
-                  </Link>
-                  <Link
-                    :href="route('members.deposits.import.form')"
-                    class="block px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
-                    Import Deposits
-                  </Link>
+                  <Users class="h-6 w-6 text-white" />
+                </div>
+
+                <div class="min-w-0">
+                  <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                      Members Management
+                    </h1>
+                  </div>
+
+                  <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                    Manage registrations, approvals, account access, and member records.
+                  </p>
                 </div>
               </div>
 
-              <button
-                @click="exportMembers"
-                class="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-100"
-              >
-                <Loader2Icon v-if="isExporting" class="h-4 w-4 animate-spin" />
-                <DownloadIcon v-else class="h-4 w-4" />
-                {{ isExporting ? 'Exporting...' : 'Export' }}
-              </button>
-
-              <div class="relative" ref="actionsWrapper">
-                <button
-                  @click="openActions = !openActions"
-                  class="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
+              <!-- Right Actions -->
+              <div class="flex flex-wrap items-center gap-3 xl:justify-end">
+                <Link
+                  v-if="$page.props.auth.user.role !== 'member'"
+                  :href="route('members.create')"
+                  class="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-600"
                 >
-                  More
-                  <ChevronDownIcon class="h-4 w-4" />
+                  <PlusCircle class="h-4 w-4" />
+                  Add Member
+                </Link>
+
+                <!-- Import Dropdown -->
+                <div class="relative" ref="importWrapper">
+                  <button
+                    @click="openImport = !openImport"
+                    class="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all duration-200 hover:bg-white/15"
+                  >
+                    <Upload class="h-4 w-4" />
+                    Import
+                    <ChevronDownIcon class="h-4 w-4" />
+                  </button>
+
+                  <div
+                    v-if="openImport"
+                    class="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <Link
+                      :href="route('members.import.form')"
+                      class="block px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      Import Members
+                    </Link>
+                    <Link
+                      :href="route('members.deposits.import.form')"
+                      class="block px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      Import Deposits
+                    </Link>
+                  </div>
+                </div>
+
+                <!-- Export -->
+                <button
+                  @click="exportMembers"
+                  class="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  <Loader2Icon v-if="isExporting" class="h-4 w-4 animate-spin" />
+                  <DownloadIcon v-else class="h-4 w-4" />
+                  {{ isExporting ? 'Exporting...' : 'Export' }}
                 </button>
 
-                <div
-                  v-if="openActions"
-                  class="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
-                >
+                <!-- More Actions -->
+                <div class="relative" ref="actionsWrapper">
                   <button
-                    @click="generateUsernames"
-                    class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-blue-600 transition hover:bg-slate-50 dark:text-blue-400 dark:hover:bg-slate-800"
+                    @click="openActions = !openActions"
+                    class="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all duration-200 hover:bg-white/15"
                   >
-                    <Loader2Icon v-if="isGenerating" class="h-4 w-4 animate-spin" />
-                    {{ isGenerating ? 'Generating...' : 'Generate Username(s)' }}
+                    More
+                    <ChevronDownIcon class="h-4 w-4" />
                   </button>
 
-                  <button
-                    @click="confirmDelete"
-                    class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-slate-800"
+                  <div
+                    v-if="openActions"
+                    class="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
                   >
-                    Delete Selected
-                  </button>
+                    <button
+                      @click="generateUsernames"
+                      class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-blue-600 transition hover:bg-slate-50 dark:text-blue-400 dark:hover:bg-slate-800"
+                    >
+                      <Loader2Icon v-if="isGenerating" class="h-4 w-4 animate-spin" />
+                      {{ isGenerating ? 'Generating...' : 'Generate Username(s)' }}
+                    </button>
+
+                    <button
+                      @click="confirmDelete"
+                      class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-slate-800"
+                    >
+                      Delete Selected
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

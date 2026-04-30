@@ -29,7 +29,7 @@
 
     <!-- Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between max-sm:mx-2 gap-4 px-4 sm:px-8 py-6
-             bg-[#0a2342] text-white rounded-b-3xl shadow-md
+             bg-blue-950 text-white rounded-b-3xl shadow-md
              dark:bg-[#0e1628] dark:text-gray-100">
       <div class="flex items-center gap-3">
         <Link :href="route('members.index')" class="hover:text-orange-400 transition">
@@ -210,7 +210,7 @@
           <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="[
             'px-4 py-2 rounded-xl text-sm font-medium transition-all',
             activeTab === tab.id
-              ? 'bg-[#0a2342] text-white shadow-sm'
+              ? 'bg-blue-950 text-white shadow-sm'
               : 'text-gray-600 hover:text-[#0a2342] hover:bg-blue-50'
           ]">
             {{ tab.name }}
@@ -833,80 +833,130 @@
       </div>
     </transition>
 
-    <!-- Global Loader -->
-    <div v-if="isLoading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center space-y-3">
-        <svg class="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-        </svg>
-        <p class="text-gray-700 text-sm font-medium">Processing, please wait...</p>
-      </div>
-    </div>
-
-    <div v-if="showResetModal"
- class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-
-  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700">
-
-    <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Reset Password
-      </h3>
-      <p class="text-sm text-gray-500 mt-1">
-        {{ member.first_name }} {{ member.last_name }}
-      </p>
-    </div>
-
-    <!-- Body -->
-    <div class="p-6 space-y-4">
-
-      <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
-        <p class="text-sm text-blue-800 dark:text-blue-300">
-          The new default password will be:
-        </p>
-
-        <p class="font-bold text-lg mt-1 text-[#0a2342] dark:text-white">
-          {{ member.id_number }}
+   <!-- ================= RESET PASSWORD MODAL ================= -->
+  <div
+    v-if="showResetModal"
+    class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+  >
+    <div
+      class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700"
+    >
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Reset Password
+        </h3>
+        <p class="text-sm text-gray-500 mt-1">
+          {{ member.first_name }} {{ member.last_name }}
         </p>
       </div>
 
-      <label class="flex items-start gap-3">
-        <input
-          type="checkbox"
-          v-model="resetForm.must_change_password"
-          class="mt-1 rounded border-gray-300"
-        />
+      <!-- Body -->
+      <div class="p-6 space-y-4">
 
-        <span class="text-sm text-gray-700 dark:text-gray-300">
-          Force member to change password on next login
-        </span>
-      </label>
+        <!-- Password Type -->
+        <div>
+          <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+            Password Option
+          </label>
 
-      <p class="text-xs text-gray-500">
-        This will immediately replace the current password.
-      </p>
-    </div>
+          <select
+            v-model="resetForm.password_type"
+            class="w-full border rounded-xl px-3 py-2 dark:bg-gray-800 dark:border-gray-700"
+          >
+            <option value="default">Use ID Number</option>
+            <option value="custom">Set Custom Password</option>
+          </select>
+        </div>
 
-    <!-- Footer -->
-    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+        <!-- Default Password -->
+        <div
+          v-if="resetForm.password_type === 'default'"
+          class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4"
+        >
+          <p class="text-sm text-blue-800 font-medium">Default Password</p>
 
-      <button
-        @click="showResetModal = false"
-        class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm">
-        Cancel
-      </button>
+          <p class="font-bold text-xl text-[#0a2342] dark:text-white">
+            {{ member.id_number }}
+          </p>
+        </div>
 
-      <button
-        @click="submitResetPassword"
-        class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm">
-        Reset Password
-      </button>
+        <!-- Custom Password -->
+        <div v-if="resetForm.password_type === 'custom'">
+          <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+            New Password
+          </label>
 
+          <input
+            type="password"
+            v-model="resetForm.custom_password"
+            class="w-full border rounded-xl px-3 py-2 dark:bg-gray-800 dark:border-gray-700"
+            placeholder="Enter custom password"
+          />
+        </div>
+
+        <!-- Force change -->
+        <label class="flex items-start gap-3">
+          <input
+            type="checkbox"
+            v-model="resetForm.must_change_password"
+            class="mt-1 rounded border-gray-300"
+          />
+
+          <span class="text-sm text-gray-700 dark:text-gray-300">
+            Force password change on next login
+          </span>
+        </label>
+
+      </div>
+
+      <!-- Footer -->
+      <div
+        class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3"
+      >
+        <button
+          @click="showResetModal = false"
+          :disabled="isLoading"
+          class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm disabled:opacity-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          @click="submitResetPassword"
+          :disabled="isLoading"
+          class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm disabled:opacity-70 flex items-center gap-2"
+        >
+          <!-- Loader -->
+          <svg
+            v-if="isLoading"
+            class="animate-spin h-4 w-4 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
+          </svg>
+
+          <span>
+            {{ isLoading ? 'Resetting...' : 'Reset Password' }}
+          </span>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
 <div v-if="showUsernameModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
  <div class="bg-white rounded-xl p-6 w-full max-w-md">
@@ -918,10 +968,18 @@
    <div class="flex justify-end gap-2">
      <button @click="showUsernameModal=false">Cancel</button>
 
-     <button @click="submitUsername"
-      class="bg-indigo-500 text-white px-4 py-2 rounded-lg">
-      Save
-     </button>
+     <button
+      @click="submitUsername"
+      :disabled="isLoading"
+      class="bg-indigo-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-60">
+
+      <span
+        v-if="isLoading"
+        class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin">
+      </span>
+
+      {{ isLoading ? 'Saving...' : 'Save' }}
+      </button>
    </div>
  </div>
 </div>
@@ -977,6 +1035,8 @@ const showResetModal = ref(false)
 const showUsernameModal = ref(false)
 
 const resetForm = ref({
+  password_type: 'default',
+  custom_password: '',
   must_change_password: true
 })
 
@@ -1000,18 +1060,34 @@ const submitResetPassword = () => {
   router.post(
     route('members.reset-password', props.member.id),
     {
+      password_type: resetForm.value.password_type,
+      custom_password: resetForm.value.custom_password,
       must_change_password: resetForm.value.must_change_password
     },
     {
       preserveScroll: true,
+
       onSuccess: () => {
         showResetModal.value = false
+
+        // reset form
+        resetForm.value = {
+          password_type: 'default',
+          custom_password: '',
+          must_change_password: true
+        }
       },
+
       onError: (errors) => {
         flashMessage.value =
-          errors?.message || 'Failed to reset password'
+          errors?.custom_password ||
+          errors?.password_type ||
+          errors?.message ||
+          'Failed to reset password'
+
         flashType.value = 'error'
       },
+
       onFinish: () => {
         isLoading.value = false
       }
