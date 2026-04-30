@@ -148,7 +148,7 @@ class MemberController extends Controller
                 'phone' => $request->phone,
                 'password' => Hash::make($plainPassword),
                 'role' => 'member',
-                'is_active' => false,
+                'is_active' => true,
 
                 // same reset-password logic
                 'must_change_password' => $request->boolean('must_change_password', true),
