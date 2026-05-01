@@ -321,7 +321,7 @@ class NotificationController extends Controller
                 try {
                     // Send notification through selected channels
                     foreach ($request->channels as $channel) {
-                        $notification = Notification::create([
+                        $notification = SystemNotification::create([
                             'user_id' => $recipient->id,
                             'title' => $request->title,
                             'message' => $request->message,
@@ -509,7 +509,7 @@ class NotificationController extends Controller
         $user = Auth::user();
 
         try {
-            $notification = Notification::create([
+            $notification = SystemNotification::create([
                 'user_id' => $user->id,
                 'title' => 'Test Notification',
                 'message' => $request->message,

@@ -10,8 +10,12 @@ class LoanGuarantor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'loan_id', 'guarantor_member_id', 'guaranteed_amount',
-        'status', 'response_date', 'comments'
+        'loan_id',
+        'guarantor_member_id',
+        'guaranteed_amount',
+        'status',
+        'response_date',
+        'comments'
     ];
 
     protected $casts = [
@@ -19,14 +23,18 @@ class LoanGuarantor extends Model
         'response_date' => 'datetime',
     ];
 
-    // Relationships
     public function loan()
     {
         return $this->belongsTo(Loan::class);
     }
 
-    // Rename relationship to match controller/frontend usage
     public function guarantorMember()
+    {
+        return $this->belongsTo(Member::class, 'guarantor_member_id');
+    }
+
+    // ADD THIS
+    public function member()
     {
         return $this->belongsTo(Member::class, 'guarantor_member_id');
     }

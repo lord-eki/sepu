@@ -1060,7 +1060,6 @@ const confirmSubmit = async () => {
       formData.append(`documents[${idx}][file]`, fileObj.file)
     })
   }
-
   try {
     const response = await axios.post(route('loans.store'), formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -1068,14 +1067,27 @@ const confirmSubmit = async () => {
 
     if (response.data?.success) {
       resetForm()
-      showMessage('success', response.data.message, null, () => {
-        if (isMemberRole.value) {
-          router.visit(route('my-loans'))
-        } else {
-          router.visit(route('loans.index'))
+
+      // Count guarantors selected
+      const guarantorCount = form.guarantors.length
+
+      showMessage(
+        'success',
+        `Loan application submitted successfully. ${guarantorCount} guarantor${guarantorCount > 1 ? 's have' : ' has'} been notified for approval.`,
+        null,
+        () => {
+          if (isMemberRole.value) {
+            router.visit(route('my-loans'))
+          } else {
+            router.visit(route('loans.index'))
+          }
         }
-      })
+      )
     } else {
+      showMessage('error', response.data?.message || 'Unexpected response from server.')
+    }
+  }
+  catch (error) {
       showMessage('error', response.data?.message || 'Unexpected response from server.')
     }
   } catch (error) {
@@ -1138,8 +1150,9 @@ const checkEligibility = async () => {
 
 // Run automatically for member role
 onMounted(() => {
-  if (isMemberRole.value && props.auth?.member?.id) {
-    form.member_id = props.auth.member.id
+  if (isMemberRole.value && props.auth?.user?.member?.id) {
+    form.member_id = props.auth.user.member.id
+    selectedMember.value = props.auth.user.member
     checkEligibility()
   }
 })

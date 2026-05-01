@@ -171,7 +171,7 @@ class MemberController extends Controller
             $memberData['user_id'] = $user->id;
             $memberData['membership_id'] = $this->generateMembershipId();
             $memberData['membership_date'] = now();
-            $memberData['membership_status'] = 'active';
+            $memberData['membership_status'] = 'inactive';
 
             /*
             |--------------------------------------------------------------------------

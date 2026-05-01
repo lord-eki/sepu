@@ -17,6 +17,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\GuarantorRequestNotification;
+use App\Services\NotificationService;
 use Inertia\Inertia;
 
 class LoanController extends Controller
@@ -74,7 +77,7 @@ class LoanController extends Controller
         ]);
     }
 
-    /**
+   /**
      * Show the form for creating a new loan
      */
     public function create()
@@ -87,7 +90,6 @@ class LoanController extends Controller
             'members' => $members,
             'auth' => [
                 'user' => auth()->user()->load('member'),
-                'member' => auth()->user()->member,
             ],
         ]);
     }
@@ -141,9 +143,11 @@ class LoanController extends Controller
             'applied_amount' => 'required|numeric|min:1',
             'term_months' => 'required|integer|min:1',
             'purpose' => 'required|string|max:500',
-            'guarantors' => 'sometimes|array',
-            'guarantors.*.member_id' => 'required_with:guarantors|exists:members,id',
-            'guarantors.*.guaranteed_amount' => 'required_with:guarantors|numeric|min:0',
+
+            'guarantors' => 'required|array|min:1',
+            'guarantors.*.member_id' => 'required|exists:members,id',
+            'guarantors.*.guaranteed_amount' => 'required|numeric|min:1',
+
             'documents' => 'sometimes|array',
         ]);
 
@@ -168,7 +172,7 @@ class LoanController extends Controller
                 $request->applied_amount
             );
 
-            if (! $eligibility['eligible']) {
+            if (!$eligibility['eligible']) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Member is not eligible for this loan',
@@ -176,52 +180,107 @@ class LoanController extends Controller
                 ], 422);
             }
 
-            // Validate loan amount against product limits
+            /**
+             * Validate loan amount
+             */
             if (
                 $request->applied_amount < $loanProduct->min_amount ||
                 $request->applied_amount > $loanProduct->max_amount
             ) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Loan amount must be between {$loanProduct->min_amount->toFixed(2)} and {$loanProduct->max_amount->toFixed(2)}",
+                    'message' => 'Loan amount outside allowed range.',
                 ], 422);
             }
 
-            // Validate term against product limits
+            /**
+             * Validate term
+             */
             if (
                 $request->term_months < $loanProduct->min_term_months ||
                 $request->term_months > $loanProduct->max_term_months
             ) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Loan term must be between {$loanProduct->min_term_months} and {$loanProduct->max_term_months} months",
+                    'message' => 'Loan term outside allowed range.',
                 ], 422);
             }
 
-            // Check if member has existing active loans
+            /**
+             * Check existing active loans
+             */
             $existingLoans = Loan::where('member_id', $request->member_id)
-                ->whereIn('status', ['pending', 'approved', 'disbursed'])
+                ->whereIn('status', [
+                    'pending_guarantor_approval',
+                    'pending',
+                    'approved',
+                    'disbursed'
+                ])
                 ->count();
 
             if ($existingLoans > 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Member has existing active loan applications',
+                    'message' => 'Member has existing active loan applications.',
                 ], 422);
             }
 
-            // Calculate loan details
+            /**
+             * GUARANTOR VALIDATIONS
+             */
+
+            $totalGuaranteed = collect($request->guarantors)
+                ->sum('guaranteed_amount');
+
+            if ($totalGuaranteed < $request->applied_amount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Total guarantor amount must equal or exceed requested loan amount.',
+                ], 422);
+            }
+
+            foreach ($request->guarantors as $guarantorData) {
+
+                if ($guarantorData['member_id'] == $request->member_id) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Applicant cannot be their own guarantor.',
+                    ], 422);
+                }
+
+                $guarantor = Member::findOrFail($guarantorData['member_id']);
+
+                $depositBalance = $guarantor->accounts()
+                    ->where('account_type', 'share_deposits')
+                    ->sum('available_balance');
+
+                if ($depositBalance < $guarantorData['guaranteed_amount']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $guarantor->first_name . ' has insufficient deposits to guarantee requested amount.',
+                    ], 422);
+                }
+            }
+
+            /**
+             * Loan calculations
+             */
             $processingFee = ($request->applied_amount * $loanProduct->processing_fee_rate) / 100;
             $insuranceFee = ($request->applied_amount * $loanProduct->insurance_rate) / 100;
+
             $monthlyInterestRate = $loanProduct->interest_rate / 100 / 12;
+
             $monthlyRepayment = $this->calculateMonthlyRepayment(
                 $request->applied_amount,
                 $monthlyInterestRate,
                 $request->term_months
             );
+
             $totalRepayable = $monthlyRepayment * $request->term_months;
 
-            // Create loan
+            /**
+             * CREATE LOAN
+             */
             $loan = Loan::create([
                 'loan_number' => $this->generateLoanNumber(),
                 'member_id' => $request->member_id,
@@ -234,9 +293,13 @@ class LoanController extends Controller
                 'processing_fee' => $processingFee,
                 'insurance_fee' => $insuranceFee,
                 'purpose' => $request->purpose,
-                'status' => 'pending',
+
+                // IMPORTANT
+                'status' => 'pending_guarantor_approval',
+
                 'application_date' => now(),
                 'documents' => $request->documents ?? [],
+
                 'outstanding_balance' => 0,
                 'principal_balance' => 0,
                 'interest_balance' => 0,
@@ -244,19 +307,45 @@ class LoanController extends Controller
                 'days_in_arrears' => 0,
             ]);
 
-            // Add guarantors if provided
-            if ($request->has('guarantors') && is_array($request->guarantors)) {
-                foreach ($request->guarantors as $guarantorData) {
-                    LoanGuarantor::create([
-                        'loan_id' => $loan->id,
-                        'guarantor_member_id' => $guarantorData['member_id'],
-                        'guaranteed_amount' => $guarantorData['guaranteed_amount'],
-                        'status' => 'pending',
-                    ]);
-                }
-            }
+            /**
+             * SAVE GUARANTORS
+             */
 
-            // Log the activity
+            $notifications = [];
+
+            foreach ($request->guarantors as $guarantorData) {
+
+            $guarantorMember = Member::with('user')->findOrFail($guarantorData['member_id']);
+
+            LoanGuarantor::create([
+                'loan_id' => $loan->id,
+                'guarantor_member_id' => $guarantorData['member_id'],
+                'guaranteed_amount' => $guarantorData['guaranteed_amount'],
+                'status' => 'pending',
+            ]);
+
+            // notify EACH guarantor individually
+            if ($guarantorMember->user) {
+
+                app(NotificationService::class)->create(
+                    $guarantorMember->user->id, // ✅ correct user
+                    'Guarantor Request',
+                    'You have been requested to guarantee a loan of KES ' . number_format($guarantorData['guaranteed_amount']),
+                    'guarantor_request',
+                    'system'
+                )->update([
+                    'metadata' => [
+                        'loan_id' => $loan->id,
+                        'loan_number' => $loan->loan_number,
+                        'guaranteed_amount' => $guarantorData['guaranteed_amount'],
+                        'borrower' => $member->first_name . ' ' . $member->last_name,
+                    ]
+                ]);
+            }
+        }
+            /**
+             * AUDIT LOG
+             */
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'loan_application_created',
@@ -271,16 +360,21 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Loan application submitted successfully',
-                'data' => $loan->load(['member', 'loanProduct', 'guarantors.guarantorMember']),
+                'message' => 'Loan submitted. Waiting for guarantor approvals.',
+                'data' => $loan->load([
+                    'member',
+                    'loanProduct',
+                    'guarantors.guarantorMember'
+                ]),
             ]);
 
         } catch (\Exception $e) {
+
             DB::rollback();
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating loan application: '.$e->getMessage(),
+                'message' => 'Error creating loan application: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1114,5 +1208,81 @@ private function generateRepaymentSchedule(Loan $loan, $baseDate = null): array
     }
 
     return $schedule;
+}
+
+public function isFullyGuaranteed()
+{
+    return $this->guarantors()->where('status', '!=', 'approved')->count() === 0;
+}
+
+public function guarantorRequestPage(Loan $loan)
+{
+    $user = auth()->user();
+
+    $loan->load(['member', 'guarantors.guarantorMember']);
+
+    $guarantor = LoanGuarantor::with('guarantorMember')
+        ->where('loan_id', $loan->id)
+        ->whereHas('guarantorMember', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })
+        ->first();
+
+    if (!$guarantor) {
+        abort(403, 'You are not a guarantor for this loan');
+    }
+
+    return Inertia::render('Shared/Loans/GuarantorRequest', [
+        'loan' => $loan,
+        'guarantor' => $guarantor,
+    ]);
+}
+
+public function acceptGuarantee(Loan $loan)
+{
+    $member = Auth::user()->member;
+
+    $guarantor = LoanGuarantor::where('loan_id', $loan->id)
+        ->where('guarantor_member_id', $member->id)
+        ->firstOrFail();
+
+    $guarantor->update([
+        'status' => 'accepted',
+        'response_date' => now(),
+    ]);
+
+    // If all guarantors approved
+    $pending = LoanGuarantor::where('loan_id', $loan->id)
+        ->where('status', 'pending')
+        ->count();
+
+    if ($pending == 0) {
+        $loan->update([
+            'status' => 'pending'
+        ]);
+    }
+
+    return redirect()->back()->with('success', 'Loan guarantee approved successfully.');
+}
+
+public function rejectGuarantee(Loan $loan)
+{
+    $member = Auth::user()->member;
+
+    $guarantor = LoanGuarantor::where('loan_id', $loan->id)
+        ->where('guarantor_member_id', $member->id)
+        ->firstOrFail();
+
+    $guarantor->update([
+        'status' => 'rejected',
+        'response_date' => now(),
+    ]);
+
+    // Optional: reject whole loan immediately
+    $loan->update([
+        'status' => 'guarantor_rejected'
+    ]);
+
+    return redirect()->back()->with('error', 'You rejected this guarantor request.');
 }
 }

@@ -707,6 +707,7 @@ const formatStatus = (status = '') => status.replace('_', ' ').toUpperCase()
 
 const getStatusBannerClass = (status) => ({
   'pending': 'bg-yellow-50 text-yellow-800 border border-yellow-200',
+  'pending_guarantor_approval': 'bg-orange-50 text-orange-800 border border-orange-200',
   'approved': 'bg-green-50 text-green-800 border border-green-200',
   'disbursed': 'bg-blue-50 text-blue-800 border border-blue-200',
   'active': 'bg-blue-100 text-blue-800 border border-blue-200',
@@ -717,6 +718,7 @@ const getStatusBannerClass = (status) => ({
 
 const getStatusDescription = (status) => ({
   'pending': 'This loan application is awaiting review and approval.',
+  'pending_guarantor_approval': 'This loan application is awaiting guarantor acceptance.',
   'approved': 'This loan has been approved and is ready for disbursement.',
   'disbursed': 'This loan has been disbursed to the member.',
   'active': 'This loan is active with ongoing repayments.',

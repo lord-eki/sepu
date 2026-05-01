@@ -4,7 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\{Member, Account, Loan, Transaction, PaymentVoucher, Notification};
+use App\Models\Member;
+use App\Models\Account;
+use App\Models\Loan;
+use App\Models\Transaction;
+use App\Models\PaymentVoucher;
+use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, Link, usePage } from '@inertiajs/vue3'
+import { Head, router, Link, usePage } from '@inertiajs/vue3'
 import { ref, watch, computed } from 'vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Bell, Wallet, Handshake, BadgeDollarSign, Landmark, TrendingUp, Receipt } from 'lucide-vue-next'
+import axios from 'axios';
+
 
 interface Member { id: number; first_name: string; last_name: string }
 interface Stats {
@@ -75,6 +77,26 @@ const toggleBalances = () => (showBalances.value = !showBalances.value)
 
 const showNotifications = ref(false)
 const toggleNotifications = () => (showNotifications.value = !showNotifications.value)
+
+const openNotification = (n: any) => {
+    const data = n.metadata || n.data || {}
+
+    // mark notification as read
+    if (typeof axios !== 'undefined') {
+        axios.post(`/notifications/${n.id}/read`).catch(() => {})
+    }
+
+    // open guarantor request
+    if (n.type === 'guarantor_request' && data.loan_id) {
+        router.visit(`/guarantor-requests/${data.loan_id}`)
+        return
+    }
+
+    // generic fallback
+    if (data.loan_id) {
+        router.visit(`/guarantor-requests/${data.loan_id}`)
+    }
+}
 </script>
 
 <template>
@@ -134,7 +156,12 @@ const toggleNotifications = () => (showNotifications.value = !showNotifications.
                 </div>
 
                 <div v-if="notifications?.length">
-                  <div v-for="n in notifications" :key="n.id" class="p-4 border-b hover:bg-slate-50 text-sm">
+                  <div
+                        v-for="n in notifications"
+                        :key="n.id"
+                        class="p-4 border-b hover:bg-slate-50 text-sm cursor-pointer"
+                        @click="openNotification(n)"
+                      >
                     <p class="text-slate-700">{{ n.message }}</p>
                     <p class="text-xs text-slate-400 mt-1">
                       {{ fmtDate(n.created_at) }}
