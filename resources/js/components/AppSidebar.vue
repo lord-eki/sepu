@@ -87,7 +87,12 @@ const memberNavItems: NavItem[] = [
         routeName: 'loan-calculator.index',
         icon: Calculator,
       },
-
+       {
+          title: 'My Guarantees',  
+          href: route('my-guarantees'),
+          routeName: 'my-guarantees',
+          icon: Shield,
+        },
       {
         title: 'Loan Application',
         href: route('loans.create'),

@@ -191,40 +191,92 @@ class LoanEligibilityService
     /**
      * Get eligibility messages
      */
-    private function getEligibilityMessages(array $checks): array
+    private function getEligibilityMessages(array $checks, Member $member = null, LoanProduct $loanProduct = null, float $requestedAmount = 0): array
     {
         $messages = [];
 
+        /* ---------------- ACTIVE STATUS ---------------- */
         if (!$checks['is_active_member']) {
-            $messages[] = 'Member account is not active';
+            $messages[] = 'Member account is inactive. Please activate the account to proceed.';
         }
 
+        /* ---------------- DEPOSITS ---------------- */
         if (!$checks['has_regular_deposits']) {
-            $messages[] = 'Member must have regular deposits/contributions';
+            $messages[] = 'No consistent deposits detected. At least 2 contributions in the last 3 months are required.';
         }
 
+        /* ---------------- SHARE CAPITAL ---------------- */
         if (!$checks['meets_share_capital']) {
-            $messages[] = 'Member must have minimum share capital of Kshs. ' . number_format(self::MINIMUM_SHARE_CAPITAL);
+            $sharesAccount = $member?->accounts()
+                ->where('account_type', 'share_capital')
+                ->first();
+
+            $current = $sharesAccount?->balance ?? 0;
+
+            $messages[] = 'Insufficient share capital. Current: KES '
+                . number_format($current)
+                . ', Required: KES '
+                . number_format(self::MINIMUM_SHARE_CAPITAL) . '.';
         }
 
+        /* ---------------- MEMBERSHIP DURATION ---------------- */
         if (!$checks['meets_membership_duration']) {
-            $messages[] = 'Member must have been a member for at least ' . self::MINIMUM_MEMBERSHIP_MONTHS . ' months';
+            $months = $member?->membership_date
+                ? Carbon::parse($member->membership_date)->diffInMonths(Carbon::now())
+                : 0;
+
+            $messages[] = 'Membership period is too short ('
+                . $months . ' months). Minimum required is '
+                . self::MINIMUM_MEMBERSHIP_MONTHS . ' months.';
         }
 
+        /* ---------------- INCOME ---------------- */
         if (!$checks['has_income_source']) {
-            $messages[] = 'Member must have a regular source of income';
+            $messages[] = 'No valid income source found. Please update employment and income details.';
         }
 
+        /* ---------------- CREDIT HISTORY ---------------- */
         if (!$checks['has_good_credit_history']) {
-            $messages[] = 'Member has adverse credit history or loans in arrears';
+            $messages[] = 'Member has defaulted loans or active arrears exceeding 90 days.';
         }
 
+        /* ---------------- DEDUCTION LIMIT ---------------- */
         if (!$checks['deductions_within_limit']) {
-            $messages[] = 'Total loan deductions would exceed 2/3 of gross salary';
+            $existingRepayment = $member?->loans()
+                ->where('status', 'active')
+                ->sum('monthly_repayment') ?? 0;
+
+            $proposedRepayment = $this->calculateMonthlyRepayment(
+                $requestedAmount,
+                $loanProduct->interest_rate,
+                $loanProduct->max_term_months
+            );
+
+            $total = $existingRepayment + $proposedRepayment;
+            $maxAllowed = $member?->monthly_income * self::MAX_DEDUCTION_RATIO;
+
+            $messages[] = 'Repayment capacity exceeded. Total deductions (KES '
+                . number_format($total)
+                . ') exceed allowed limit (KES '
+                . number_format($maxAllowed)
+                . ').';
         }
 
+        /* ---------------- LOAN LIMIT ---------------- */
+        if ($member && $loanProduct && $requestedAmount > 0) {
+            $maxLoan = $this->getMaximumLoanAmount($member, $loanProduct);
+
+            if ($requestedAmount > $maxLoan) {
+                $messages[] = 'Requested amount (KES '
+                    . number_format($requestedAmount)
+                    . ') exceeds eligible loan limit (KES '
+                    . number_format($maxLoan) . ').';
+            }
+        }
+
+        /* ---------------- SUCCESS ---------------- */
         if (empty($messages)) {
-            $messages[] = 'Member is eligible for this loan';
+            $messages[] = 'Member meets all eligibility requirements.';
         }
 
         return $messages;

@@ -624,12 +624,13 @@ Route::middleware('auth')->group(function () {
 
 });
 
-Route::get('/my-guarantees', [LoanController::class, 'myGuarantees'])
-    ->name('guarantor.dashboard');
-
 
 
 Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 
 Route::get('/guarantor-requests/{loan}', [LoanController::class, 'guarantorRequestPage']);
+Route::get('/my-guarantees', [LoanController::class, 'myGuarantees'])->name('my-guarantees');
+
+Route::get('/admin/guarantees', [LoanController::class, 'allGuarantees'])
+    ->middleware(['auth', 'role:admin,loan_officer']);
 

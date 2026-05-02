@@ -97,6 +97,8 @@ const currentLoanMessage = computed(() => {
   switch (currentLoanStatus.value) {
     case 'pending':
       return 'Pending Loan'
+    case 'pending_guarantor_approval':
+      return 'Awaiting guarantor approval'
     case 'approved':
       return 'Loan approved'
     case 'disbursed':
@@ -110,7 +112,7 @@ const currentLoanMessage = computed(() => {
     case 'defaulted':
       return 'Loan defaulted'
     case 'under_review':
-      return 'in process'
+      return 'In process'
     default:
       return 'No active loan'
   }

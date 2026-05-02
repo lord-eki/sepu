@@ -268,7 +268,7 @@
           </section>
 
           <!-- Guarantors -->
-          <section class="bg-white text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
+          <section class="bg-white relative overflow-visible text-gray-900 shadow-xl rounded-2xl border border-gray-100 overflow-hidden">
             <div class="px-6 py-3 bg-blue-900/90">
               <h3 class="text-base sm:text-lg font-semibold text-white">Guarantors</h3>
             </div>
@@ -281,19 +281,59 @@
               <div v-for="(guarantor, index) in form.guarantors" :key="index" class="p-4 border rounded-lg space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700">Select Member *</label>
-                    <select v-model="guarantor.member_id" required
-                      class="mt-2 block w-full rounded-lg border border-gray-300 p-3">
-                      <option 
-                        v-for="member in members" 
-                        :key="member.id" 
-                        :value="member.id"
-                        :disabled="member.id == form.member_id"
-                      >
-                        {{ member.first_name }} {{ member.last_name }} - {{ member.membership_id }}
-                        <span v-if="member.id == form.member_id"> (Applicant)</span>
-                      </option>
-                    </select>
+                  <!-- Select -->
+                    <!-- SEARCH INPUT -->
+                      <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700">
+                          Select Member *
+                        </label>
+
+                        <!-- Input (styled like your other fields) -->
+                        <input
+                          v-model="guarantorSearch[index]"
+                          @input="handleSearchInput(index)"
+                          @focus="openSearchIndex = index"
+                          @blur="setTimeout(() => openSearchIndex = null, 200)"
+                          placeholder="Search member by name or ID..."
+                          class="mt-2 block w-full rounded-lg border border-gray-300 bg-white p-3 text-sm
+                                focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        />
+
+                        <!-- DROPDOWN LIST -->
+                        <div
+                          v-if="openSearchIndex === index && filteredMembers(index).length"
+                          class="absolute z-50 bg-white border rounded-lg shadow-lg w-full max-h-60 overflow-y-auto mt-1"
+                        >
+                          <div
+                            v-for="member in filteredMembers(index)"
+                            :key="member.id"
+                            @mousedown.prevent="
+                              guarantor.member_id = member.id;
+                              guarantorSearch[index] = member.first_name + ' ' + member.last_name;
+                              openSearchIndex = null;
+                            "
+                            class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm transition"
+                          >
+                            <div class="font-medium text-gray-900">
+                              {{ member.first_name }} {{ member.last_name }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                              {{ member.membership_id }}
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- SELECTED DISPLAY -->
+                        <div v-if="guarantor.member_id" class="mt-2 text-sm text-emerald-700">
+                          Selected:
+                          {{
+                            props.members.find(m => m.id === guarantor.member_id)?.first_name
+                          }}
+                          {{
+                            props.members.find(m => m.id === guarantor.member_id)?.last_name
+                          }}
+                        </div>
+                      </div>
                   </div>
 
                   <div>
@@ -410,8 +450,6 @@
             </div>
           </section>
 
-
-
           <!-- Submit row -->
           <div class="flex justify-end items-center gap-4">
             <Link :href="isMemberRole ? route('my-loans') : route('loans.index')"
@@ -419,14 +457,14 @@
             Cancel
             </Link>
             <button type="submit" :disabled="!canSubmit || processing"
-              class="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 hover:cursor-pointer disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-medium shadow">
+              class="inline-flex items-center gap-3 bg-blue-900/90 hover:bg-orange-600 hover:cursor-pointer disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-medium shadow">
               <svg v-if="processing" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
                 fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
               </svg>
-              <span v-if="processing">Submitting...</span>
-              <span v-else>Submit Application</span>
+              <span v-if="processing">Loading...</span>
+              <span v-else>Preview Application</span>
             </button>
           </div>
         </form>
@@ -514,7 +552,7 @@
               <button type="button" @click="showConfirm = false"
                 class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:cursor-pointer hover:bg-gray-100">Cancel</button>
               <button type="button" @click="confirmSubmit"
-                class="px-4 py-2 rounded-lg bg-blue-900/90 text-white hover:cursor-pointer hover:bg-blue-800 shadow">Yes,
+                class="px-4 py-2 rounded-lg bg-orange-500 text-white hover:cursor-pointer hover:bg-blue-800 shadow">Yes,
                 Submit</button>
             </div>
           </div>
@@ -528,7 +566,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
-            <span class="text-gray-900 font-medium">Submitting your loan application...</span>
+            <span class="text-gray-900 font-medium">Processing your loan application...</span>
           </div>
         </div>
 
@@ -541,6 +579,7 @@
 import { ref, reactive, onMounted, computed, watch, watchEffect } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { ArrowLeft } from 'lucide-vue-next'
 import axios from 'axios'
 
 /* props from server */
@@ -555,7 +594,8 @@ const successMessage = ref(null)
 const errorMessages = ref(null)
 const processing = ref(false)
 const showConfirm = ref(false)
-import { ArrowLeft } from 'lucide-vue-next'
+const guarantorSearch = ref([])
+const openSearchIndex = ref(null)
 
 
 const form = reactive({
@@ -572,7 +612,13 @@ const form = reactive({
   mpesa_number: ''
 })
 
-
+function handleSearchInput(index) {
+  if (!guarantorSearch.value[index]) {
+    openSearchIndex.value = null
+  } else {
+    openSearchIndex.value = index
+  }
+}
 
 
 function formatCurrency(value) {
@@ -592,6 +638,33 @@ const disbursementDetails = reactive({
   accountNumber: '',
   payee: ''
 })
+
+const filteredMembers = (index) => {
+  const search = (guarantorSearch.value[index] || '').trim().toLowerCase()
+
+  if (!search) return [] 
+
+  return props.members.filter(member => {
+    const fullName = `${member.first_name} ${member.last_name}`.toLowerCase()
+    const id = (member.membership_id || '').toLowerCase()
+
+    const matchesSearch = fullName.includes(search) || id.includes(search)
+
+    const alreadySelected = form.guarantors.some((g, i) =>
+      g.member_id === member.id && i !== index
+    )
+
+    const isApplicant = member.id == form.member_id
+
+    return matchesSearch && !alreadySelected && !isApplicant
+  })
+}
+
+const selectedGuarantorIds = computed(() =>
+  form.guarantors
+    .map(g => g.member_id)
+    .filter(Boolean)
+)
 
 const selectedMember = ref(null)
 const selectedProduct = ref(null)
@@ -1016,57 +1089,86 @@ const confirmSubmit = async () => {
   showConfirm.value = false
   processing.value = true
 
+  // Clean guarantors
   form.guarantors = form.guarantors.filter(
     g => g.member_id && g.guaranteed_amount
   )
 
-  // Final server-side eligibility check before creating the loan (defense in depth)
   try {
-  const response = await axios.post(route('loans.store'), formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+    const formData = new FormData()
 
-  if (response.data?.success) {
-    resetForm()
+    // Basic fields
+    formData.append('member_id', form.member_id)
+    formData.append('loan_product_id', form.loan_product_id)
+    formData.append('applied_amount', form.applied_amount)
+    formData.append('term_months', form.term_months)
+    formData.append('purpose', form.purpose)
 
-    const guarantorCount = form.guarantors.length
+    // Disbursement
+    formData.append('disbursement_method', disbursementMethod.value)
 
-    showMessage(
-      'success',
-      `Loan application submitted successfully. ${guarantorCount} guarantor${guarantorCount > 1 ? 's have' : ' has'} been notified for approval.`,
-      null,
-      () => {
-        if (isMemberRole.value) {
-          router.visit(route('my-loans'))
-        } else {
-          router.visit(route('loans.index'))
-        }
-      }
-    )
-  } else {
-    showMessage('error', response.data?.message || 'Unexpected response from server.')
-  }
-
-} catch (error) {
-
-  if (error.response?.status === 422) {
-    const data = error.response.data
-
-    if (data.errors) {
-      showMessage('error', null, data.errors)
-    } else if (data.message) {
-      showMessage('error', data.message)
+    if (disbursementMethod.value === 'mpesa') {
+      formData.append('mpesa_number', disbursementDetails.mpesaNumber)
     }
 
-  } else {
-    console.error('Unexpected error:', error)
-    showMessage('error', 'Something went wrong. Please try again.')
+    if (disbursementMethod.value === 'bank') {
+      formData.append('bank_name', disbursementDetails.bankName)
+      formData.append('bank_branch', disbursementDetails.branch)
+      formData.append('bank_account', disbursementDetails.accountNumber)
+    }
+
+    if (disbursementMethod.value === 'cheque') {
+      formData.append('payee', disbursementDetails.payee)
+    }
+
+    // Guarantors
+    form.guarantors.forEach((g, index) => {
+      formData.append(`guarantors[${index}][member_id]`, g.member_id)
+      formData.append(`guarantors[${index}][guaranteed_amount]`, g.guaranteed_amount)
+    })
+
+    // Files
+    uploadedFiles.multiple.forEach((fileObj, index) => {
+      formData.append(`documents[${index}]`, fileObj.file)
+      formData.append(`document_types[${index}]`, fileObj.type)
+    })
+
+    // Send request
+    const response = await axios.post(route('loans.store'), formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    if (response.data?.success) {
+      resetForm()
+
+      showMessage(
+        'success',
+        response.data.message,
+        null,
+        () => {
+          router.visit(isMemberRole.value ? route('my-loans') : route('loans.index'))
+        }
+      )
+    } else {
+      showMessage('error', response.data?.message || 'Unexpected response from server.')
+    }
+
+  } catch (error) {
+    if (error.response?.status === 422) {
+      const data = error.response.data
+
+      if (data.errors) {
+        showMessage('error', null, data.errors)
+      } else if (data.message) {
+        showMessage('error', data.message)
+      }
+    } else {
+      console.error('Unexpected error:', error)
+      showMessage('error', 'Something went wrong. Please try again.')
+    }
+  } finally {
+    processing.value = false
   }
-
-} finally {
-  processing.value = false
-}
-
 }
 
 

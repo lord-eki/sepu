@@ -328,7 +328,7 @@ class LoanController extends Controller
             if ($guarantorMember->user) {
 
                 app(NotificationService::class)->create(
-                    $guarantorMember->user->id, // ✅ correct user
+                    $guarantorMember->user->id, 
                     'Guarantor Request',
                     'You have been requested to guarantee a loan of KES ' . number_format($guarantorData['guaranteed_amount']),
                     'guarantor_request',
@@ -374,7 +374,7 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating loan application: ' . $e->getMessage(),
+                'message' => 'Error in creating loan application: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1215,6 +1215,20 @@ public function isFullyGuaranteed()
     return $this->guarantors()->where('status', '!=', 'approved')->count() === 0;
 }
 
+public function myGuarantees()
+{
+    $member = auth()->user()->member;
+
+    $guarantees = LoanGuarantor::with('loan.member', 'loan.loanProduct')
+        ->where('guarantor_member_id', $member->id)
+        ->latest()
+        ->get();
+
+    return Inertia::render('Shared/Loans/MyGuarantees', [
+        'guarantees' => $guarantees
+    ]);
+}
+
 public function guarantorRequestPage(Loan $loan)
 {
     $user = auth()->user();
@@ -1237,6 +1251,31 @@ public function guarantorRequestPage(Loan $loan)
         'guarantor' => $guarantor,
     ]);
 }
+
+public function allGuarantees(Request $request)
+{
+    $query = LoanGuarantor::with([
+        'loan.member',
+        'guarantorMember'
+    ]);
+
+    // filters (modern admin UX)
+    if ($request->status) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->search) {
+        $query->whereHas('loan', function ($q) use ($request) {
+            $q->where('loan_number', 'like', "%{$request->search}%");
+        });
+    }
+
+    return Inertia::render('Admin/Loans/GuaranteesIndex', [
+        'guarantees' => $query->latest()->paginate(20),
+        'filters' => $request->only(['status', 'search']),
+    ]);
+}
+
 
 public function acceptGuarantee(Loan $loan)
 {
@@ -1262,7 +1301,7 @@ public function acceptGuarantee(Loan $loan)
         ]);
     }
 
-    return redirect()->back()->with('success', 'Loan guarantee approved successfully.');
+    return redirect()->back()->with('success', 'Loan guarantee accepted successfully.');
 }
 
 public function rejectGuarantee(Loan $loan)
