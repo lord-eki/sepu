@@ -1022,91 +1022,52 @@ const confirmSubmit = async () => {
 
   // Final server-side eligibility check before creating the loan (defense in depth)
   try {
-    const result = await checkEligibilityServer()
-    if (!result.eligible) {
-      showMessage('error', null, { eligibility: [result.reason || 'Member is not eligible'] })
-      processing.value = false
-      return
-    }
-  } catch (err) {
-    // If server check failed (network), stop and show message (already handled in checkEligibilityServer)
-    processing.value = false
-    return
-  }
-
-  const formData = new FormData()
-  Object.keys(form).forEach(key => {
-    if (key !== 'guarantors') {
-      formData.append(key, form[key] ?? '')
-    }
+  const response = await axios.post(route('loans.store'), formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
   })
 
-  form.guarantors.forEach((g, i) => {
-    Object.keys(g).forEach(k => formData.append(`guarantors[${i}][${k}]`, g[k] ?? ''))
-  })
+  if (response.data?.success) {
+    resetForm()
 
-  // disbursement details
-  Object.keys(disbursementDetails).forEach(k => {
-    formData.append(k, disbursementDetails[k] ?? '')
-  })
+    const guarantorCount = form.guarantors.length
 
-  // support documents (multiple)
-  if (uploadedFiles.combined) {
-    formData.append('documents[combined]', uploadedFiles.combined)
-  } else if (Array.isArray(uploadedFiles.multiple) && uploadedFiles.multiple.length) {
-    uploadedFiles.multiple.forEach((fileObj, idx) => {
-      // include type metadata if backend expects it
-      formData.append(`documents[${idx}][type]`, fileObj.type)
-      formData.append(`documents[${idx}][file]`, fileObj.file)
-    })
-  }
-  try {
-    const response = await axios.post(route('loans.store'), formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-
-    if (response.data?.success) {
-      resetForm()
-
-      // Count guarantors selected
-      const guarantorCount = form.guarantors.length
-
-      showMessage(
-        'success',
-        `Loan application submitted successfully. ${guarantorCount} guarantor${guarantorCount > 1 ? 's have' : ' has'} been notified for approval.`,
-        null,
-        () => {
-          if (isMemberRole.value) {
-            router.visit(route('my-loans'))
-          } else {
-            router.visit(route('loans.index'))
-          }
+    showMessage(
+      'success',
+      `Loan application submitted successfully. ${guarantorCount} guarantor${guarantorCount > 1 ? 's have' : ' has'} been notified for approval.`,
+      null,
+      () => {
+        if (isMemberRole.value) {
+          router.visit(route('my-loans'))
+        } else {
+          router.visit(route('loans.index'))
         }
-      )
-    } else {
-      showMessage('error', response.data?.message || 'Unexpected response from server.')
-    }
-  }
-  catch (error) {
-      showMessage('error', response.data?.message || 'Unexpected response from server.')
-    }
-  } catch (error) {
-    if (error.response?.status === 422) {
-      const data = error.response.data
-      if (data.errors) {
-        showMessage('error', null, data.errors)
-      } else if (data.message) {
-        showMessage('error', data.message)
       }
-    } else {
-      console.error('Unexpected error:', error)
-      showMessage('error', 'Something went wrong. Please try again.')
-    }
-  } finally {
-    processing.value = false
+    )
+  } else {
+    showMessage('error', response.data?.message || 'Unexpected response from server.')
   }
+
+} catch (error) {
+
+  if (error.response?.status === 422) {
+    const data = error.response.data
+
+    if (data.errors) {
+      showMessage('error', null, data.errors)
+    } else if (data.message) {
+      showMessage('error', data.message)
+    }
+
+  } else {
+    console.error('Unexpected error:', error)
+    showMessage('error', 'Something went wrong. Please try again.')
+  }
+
+} finally {
+  processing.value = false
 }
 
+}
 
 
 // eligibility state

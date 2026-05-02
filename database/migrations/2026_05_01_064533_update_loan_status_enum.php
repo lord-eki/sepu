@@ -10,6 +10,28 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Step 0: remove ENUM restriction first
+        DB::statement("
+            ALTER TABLE loans MODIFY status VARCHAR(255)
+        ");
+
+        // Step 1: now cleanup works safely
+        DB::statement("
+            UPDATE loans 
+            SET status = 'pending_guarantor_approval'
+            WHERE status NOT IN (
+                'pending_guarantor_approval',
+                'pending',
+                'approved',
+                'rejected',
+                'disbursed',
+                'completed',
+                'defaulted',
+                'written_off'
+            )
+        ");
+
+        // Step 2: restore ENUM safely
         DB::statement("
             ALTER TABLE loans 
             MODIFY COLUMN status ENUM(
@@ -22,25 +44,6 @@ return new class extends Migration
                 'defaulted',
                 'written_off'
             ) NOT NULL DEFAULT 'pending_guarantor_approval'
-        ");
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        DB::statement("
-            ALTER TABLE loans 
-            MODIFY COLUMN status ENUM(
-                'pending',
-                'approved',
-                'rejected',
-                'disbursed',
-                'completed',
-                'defaulted',
-                'written_off'
-            ) NOT NULL DEFAULT 'pending'
         ");
     }
 };

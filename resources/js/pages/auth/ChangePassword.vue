@@ -1,8 +1,9 @@
 <script setup>
 import { computed } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { useForm, router } from '@inertiajs/vue3'
 import { LockKeyhole, ShieldCheck, Eye, EyeOff } from 'lucide-vue-next'
 import { ref } from 'vue'
+
 
 const showPassword = ref(false)
 const showConfirm = ref(false)
@@ -11,6 +12,7 @@ const form = useForm({
   password: '',
   password_confirmation: ''
 })
+
 
 const passwordStrength = computed(() => {
   const pass = form.password || ''
@@ -28,6 +30,10 @@ const passwordsMatch = computed(() => {
     form.password === form.password_confirmation
   )
 })
+
+const logout = () => {
+  router.post(route('logout'))
+}
 
 const submit = () => {
   form.post(route('password.change.update'))
@@ -169,6 +175,13 @@ const submit = () => {
       </button>
 
     </form>
+    <button
+      type="button"
+      @click="logout"
+      class="w-full mt-3 border border-gray-300 hover:bg-gray-100 transition-all text-gray-700 font-semibold py-3 rounded-xl"
+    >
+      Logout
+    </button>
 
   </div>
 </div>
