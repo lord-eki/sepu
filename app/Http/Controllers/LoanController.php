@@ -1259,19 +1259,32 @@ public function allGuarantees(Request $request)
         'guarantorMember'
     ]);
 
-    // filters (modern admin UX)
-    if ($request->status) {
+    // Status filter
+    if ($request->filled('status')) {
         $query->where('status', $request->status);
     }
 
-    if ($request->search) {
-        $query->whereHas('loan', function ($q) use ($request) {
-            $q->where('loan_number', 'like', "%{$request->search}%");
+    // Search (improved: search borrower + loan number)
+    if ($request->filled('search')) {
+        $search = $request->search;
+
+        $query->where(function ($q) use ($search) {
+            $q->whereHas('loan', function ($q2) use ($search) {
+                $q2->where('loan_number', 'like', "%{$search}%")
+                   ->orWhereHas('member', function ($q3) use ($search) {
+                       $q3->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                   });
+            })
+            ->orWhereHas('guarantorMember', function ($q4) use ($search) {
+                $q4->where('first_name', 'like', "%{$search}%")
+                   ->orWhere('last_name', 'like', "%{$search}%");
+            });
         });
     }
 
-    return Inertia::render('Admin/Loans/GuaranteesIndex', [
-        'guarantees' => $query->latest()->paginate(20),
+    return Inertia::render('Shared/Loans/Guarantors', [
+        'guarantees' => $query->latest()->paginate(20)->withQueryString(),
         'filters' => $request->only(['status', 'search']),
     ]);
 }

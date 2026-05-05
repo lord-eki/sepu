@@ -38,6 +38,13 @@
               class="inline-flex items-center rounded-2xl bg-orange-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-orange-600">
             Loan Calculator
             </Link>
+
+            <Link
+              :href="route('loans.guarantors')"
+              class="inline-flex items-center rounded-2xl bg-purple-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-purple-700"
+            >
+              Guarantors
+            </Link>
           </div>
         </div>
 
@@ -595,5 +602,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
 
 </script>

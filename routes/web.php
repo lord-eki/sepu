@@ -631,6 +631,4 @@ Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsR
 Route::get('/guarantor-requests/{loan}', [LoanController::class, 'guarantorRequestPage']);
 Route::get('/my-guarantees', [LoanController::class, 'myGuarantees'])->name('my-guarantees');
 
-Route::get('/admin/guarantees', [LoanController::class, 'allGuarantees'])
-    ->middleware(['auth', 'role:admin,loan_officer']);
-
+Route::get('/loans/guarantors', [LoanController::class, 'allGuarantees'])->name('loans.guarantors');

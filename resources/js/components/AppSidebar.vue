@@ -165,6 +165,12 @@ const adminNavItems: NavItem[] = [
         icon: Package,
       },
       {
+          title: 'Loan Guarantors',
+          href: route('loans.guarantors'),
+          routeName: 'loans.guarantors',
+          icon: Shield,
+        },
+        {
         title: 'Loan Calculator',
         href: route('loan-calculator.index'),
         routeName: 'loan-calculator.index',

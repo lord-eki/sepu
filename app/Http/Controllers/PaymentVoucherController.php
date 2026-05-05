@@ -56,7 +56,7 @@ class PaymentVoucherController extends Controller
             });
         }
 
-        $vouchers = $query->paginate(20);
+        $vouchers = $query->paginate(15);
 
         // Get summary statistics
         $stats = [
