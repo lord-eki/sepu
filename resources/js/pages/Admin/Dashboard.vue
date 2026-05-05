@@ -1,30 +1,26 @@
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }]">
-
     <Head title="Admin Dashboard" />
 
-    <div
-      class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-
+    <div class="min-h-screen bg-slate-50 dark:bg-[#081122]">
       <!-- TOP BAR -->
-      <div
-        class="relative px-8 py-6 bg-blue-900 dark:bg-gray-800 rounded-b-3xl overflow-hidden dark:from-blue-800 dark:to-orange-600">
-        <div class="absolute inset-0 bg-white/10 backdrop-blur-sm dark:bg-gray-800/20"></div>
-        <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="relative overflow-hidden border-b border-white/10 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 px-6 py-6 sm:px-8 rounded-b-3xl shadow-2xl shadow-blue-950/20">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(249,115,22,0.18),_transparent_30%)]" />
+        <div class="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-              SEPU <span class="text-orange-400 dark:text-orange-300">SACCO</span>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">
+              SEPU <span class="text-orange-400">SACCO</span>
             </h1>
-            <p class="text-sm md:text-base text-white/70 dark:text-white/60 mt-1">
+            <p class="mt-1 text-sm md:text-base text-slate-300">
               Administrative Financial Overview
             </p>
           </div>
-          <div class="flex items-center gap-6">
-            <div class="text-sm text-white/80 dark:text-white/60">
+
+          <div class="flex items-center gap-4">
+            <div class="hidden sm:block text-sm text-slate-300">
               {{ new Date().toDateString() }}
             </div>
-            <div
-              class="w-10 h-10 rounded-full bg-white/20 dark:bg-gray-700/30 text-white flex items-center justify-center font-semibold shadow-lg">
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-sm font-semibold text-white shadow-lg backdrop-blur-xl">
               A
             </div>
           </div>
@@ -32,177 +28,313 @@
       </div>
 
       <!-- KPI CARDS -->
-      <div class="px-8 py-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        <div v-for="stat in quickStats" :key="stat.title"
-          class="relative p-4 rounded-3xl bg-white/70 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
+      <div class="px-6 py-8 sm:px-8">
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div
+            v-for="stat in quickStats"
+            :key="stat.title"
+            class="group relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900/80"
+          >
+            <div class="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-slate-50/40 dark:to-slate-800/20" />
 
-          <div class="flex justify-between items-center">
-            <div class="text-sm font-medium text-gray-500 dark:text-gray-300">{{ stat.title }}</div>
-            <div class="p-2 rounded-xl bg-gradient-to-br from-orange-400 to-orange-200 font-normal text-gray-900">
-              <component :is="stat.icon" class="h-4 w-4" />
+            <div class="relative flex items-start justify-between">
+              <div>
+                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  {{ stat.title }}
+                </p>
+                <h2 class="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {{ stat.value }}
+                </h2>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {{ stat.sub }}
+                </p>
+              </div>
+
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/20">
+                <component :is="stat.icon" class="h-5 w-5" />
+              </div>
             </div>
-          </div>
-
-          <div class="mt-5">
-            <h2 class="text-2xl text-center font-bold text-gray-900 dark:text-white">{{ stat.value }}</h2>
-            <p class="text-xs text-center text-gray-500 dark:text-gray-300 mt-1">{{ stat.sub }}</p>
-          </div>
-
-          <div class="absolute -top-5 -right-5 w-16 h-16 bg-blue-100/40 dark:bg-blue-800/30 rounded-3xl blur-2xl"></div>
-          <div class="absolute -bottom-5 -left-5 w-16 h-16 bg-orange-100/40 dark:bg-orange-700/30 rounded-3xl blur-2xl">
           </div>
         </div>
       </div>
 
       <!-- MAIN GRID -->
-      <div class="px-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-        <!-- LEFT: Pending & Activity -->
-        <div class="xl:col-span-2 space-y-3">
-
+      <div class="grid grid-cols-1 gap-6 px-6 pb-8 sm:px-8 xl:grid-cols-3">
+        <!-- LEFT -->
+        <div class="space-y-6 xl:col-span-2">
           <!-- Pending Approvals -->
-          <div
-            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
-            <div class="flex justify-between items-center mb-3">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pending Approvals</h3>
-              <span class="text-xs text-gray-400 dark:text-gray-300 uppercase tracking-wide">Quick Review</span>
+          <div class="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <div class="mb-5 flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                Pending Approvals
+              </h3>
+              <span class="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                Quick Review
+              </span>
             </div>
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              <div v-for="item in approvalItems" :key="item.label" @click="$inertia.visit(item.link)"
-                class="cursor-pointer rounded-2xl p-4 border border-gray-200 dark:border-gray-700 hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition flex flex-col gap-2">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-blue-900 dark:text-gray-300">{{ item.label }}</span>
-                  <span class="font-bold text-orange-500">{{ item.value }}</span>
+
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div
+                v-for="item in approvalItems"
+                :key="item.label"
+                @click="$inertia.visit(item.link)"
+                class="group cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition-all duration-300 hover:border-orange-300 hover:bg-orange-50 dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-orange-500/40 dark:hover:bg-orange-500/5"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {{ item.label }}
+                  </span>
+                  <span class="text-lg font-bold text-orange-500">
+                    {{ item.value }}
+                  </span>
                 </div>
-                <div class="text-xs text-gray-400 dark:text-gray-300 mt-1">Click to review →</div>
+                <p class="mt-3 text-xs text-slate-400 group-hover:text-orange-500">
+                  Click to review →
+                </p>
               </div>
             </div>
           </div>
 
           <!-- Recent Activity -->
-          <div
-            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-700 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500">
-
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div class="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <h3 class="mb-5 text-lg font-semibold text-slate-900 dark:text-white">
               Recent Activity
             </h3>
 
-            <div class="space-y-3 max-h-[450px] overflow-y-auto overflow-x-hidden custom-scroll">
-
-              <div v-for="(item, i) in recentActivities" :key="i" @click="item.link ? $inertia.visit(item.link) : null"
-                class="flex justify-between items-start gap-4 px-4 py-2 rounded-xl border transition-all duration-300 cursor-pointer hover:shadow-md"
+            <div class="custom-scroll max-h-[460px] space-y-3 overflow-y-auto pr-1">
+              <div
+                v-for="(item, i) in recentActivities"
+                :key="i"
+                @click="item.link ? $inertia.visit(item.link) : null"
+                class="cursor-pointer rounded-2xl border px-4 py-3 transition-all duration-300 hover:shadow-md"
                 :class="[
-    item.status === 'pending'
-      ? 'border-orange-200 dark:border-orange-900 hover:bg-orange-50 dark:hover:bg-orange-900/20'
-      : item.status === 'approved'
-        ? 'border-green-200 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/20'
-        : item.status === 'rejected'
-          ? 'border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
-          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/20'
-  ]">
+                  item.status === 'pending'
+                    ? 'border-orange-200 hover:bg-orange-50 dark:border-orange-900/40 dark:hover:bg-orange-500/5'
+                    : item.status === 'approved'
+                      ? 'border-emerald-200 hover:bg-emerald-50 dark:border-emerald-900/40 dark:hover:bg-emerald-500/5'
+                      : item.status === 'rejected'
+                        ? 'border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:hover:bg-rose-500/5'
+                        : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40'
+                ]"
+              >
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0 flex-1">
+                    <p class="break-words text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {{ item.description }}
+                    </p>
 
-                <!-- LEFT CONTENT -->
-                <div class="min-w-0 flex-1">
+                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                      <span>{{ new Date(item.time).toLocaleString() }}</span>
 
-                  <!-- Description -->
-                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300 break-words">
-                    {{ item.description }}
-                  </p>
+                      <span
+                        v-if="item.status"
+                        class="rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
+                        :class="[
+                          item.status === 'pending'
+                            ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-300'
+                            : item.status === 'approved'
+                              ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300'
+                              : item.status === 'rejected'
+                                ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300'
+                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                        ]"
+                      >
+                        {{ item.status }}
+                      </span>
 
-                  <!-- Meta Row -->
-                  <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400 dark:text-gray-400">
-
-                    <span>
-                      {{ new Date(item.time).toLocaleString() }}
-                    </span>
-
-                    <!-- Status Badge -->
-                    <span v-if="item.status" :class="[
-    'px-2 py-0.5 rounded-full font-semibold text-xs whitespace-nowrap',
-    item.status === 'pending'
-      ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300'
-      : item.status === 'approved'
-        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300'
-        : item.status === 'rejected'
-          ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300'
-          : ''
-  ]">
-                      {{ item.status }}
-                    </span>
-
-                    <!-- Click to View -->
-                    <span v-if="item.status === 'pending'"
-                      class="text-orange-500 dark:text-orange-300 font-semibold whitespace-nowrap">
-                      Click to view →
-                    </span>
-
+                      <span
+                        v-if="item.status === 'pending'"
+                        class="font-medium text-orange-500"
+                      >
+                        Click to view →
+                      </span>
+                    </div>
                   </div>
 
+                  <div class="shrink-0 whitespace-nowrap text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <span v-if="item.amount">
+                      Ksh {{ Number(item.amount).toLocaleString() }}
+                    </span>
+                  </div>
                 </div>
-
-                <!-- RIGHT SIDE (Amount) -->
-                <div
-                  class="flex-shrink-0 text-sm font-semibold text-gray-700 dark:text-gray-300 text-right whitespace-nowrap">
-                  <span v-if="item.amount">
-                    Ksh {{ Number(item.amount).toLocaleString() }}
-                  </span>
-                </div>
-
               </div>
-
             </div>
           </div>
         </div>
 
-        <!-- RIGHT: System & Tools -->
-        <div class="space-y-4">
-
+        <!-- RIGHT -->
+        <div class="space-y-6">
           <!-- System Health -->
-          <div
-            class="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition-all duration-500">
-            <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">System Health</h3>
+          <div class="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <h3 class="mb-6 text-lg font-semibold text-slate-900 dark:text-white">
+              System Health
+            </h3>
+
             <div class="space-y-4 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-300">Database</span>
-                <span class="text-green-600 dark:text-green-700 font-semibold">{{ systemHealth.database_status }}</span>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 dark:text-slate-400">Database</span>
+                <span class="font-semibold text-emerald-600 dark:text-emerald-400">
+                  {{ systemHealth.database_status }}
+                </span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-300">Active Users</span>
-                <span class="font-bold dark:text-white">{{ systemHealth.active_users }}</span>
+
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 dark:text-slate-400">Active Users</span>
+                <span class="font-bold text-slate-900 dark:text-white">
+                  {{ systemHealth.active_users }}
+                </span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-300">System Errors</span>
-                <span class="text-red-400 dark:text-red-500 font-semibold">{{ systemHealth.system_errors }}</span>
+
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 dark:text-slate-400">System Errors</span>
+                <span class="font-semibold text-rose-500 dark:text-rose-400">
+                  {{ systemHealth.system_errors }}
+                </span>
               </div>
             </div>
           </div>
 
           <!-- Admin Tools -->
-          <div
-            class="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition-all duration-500">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Administrative Tools</h3>
-            <div class="space-y-4">
-              <div v-for="setup in setupItems" :key="setup.title" @click="$inertia.visit(setup.link)"
-                class="flex justify-between items-center p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 cursor-pointer transition hover:scale-[1.02]">
-                <span class="text-sm text-gray-600 dark:text-gray-300">{{ setup.title }}</span>
-                <component :is="setup.icon" class="h-5 w-5 text-orange-500 dark:text-orange-300" />
+          <div class="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <h3 class="mb-6 text-lg font-semibold text-slate-900 dark:text-white">
+              Administrative Tools
+            </h3>
+
+            <div class="space-y-3">
+              <div
+                v-for="setup in setupItems"
+                :key="setup.title"
+                @click="$inertia.visit(setup.link)"
+                class="flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition-all duration-300 hover:border-orange-300 hover:bg-orange-50 dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-orange-500/40 dark:hover:bg-orange-500/5"
+              >
+                <div>
+                  <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {{ setup.title }}
+                  </p>
+                  <p class="text-xs text-slate-400">
+                    {{ setup.desc }}
+                  </p>
+                </div>
+
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100 text-orange-500 dark:bg-orange-500/10 dark:text-orange-300">
+                  <component :is="setup.icon" class="h-5 w-5" />
+                </div>
               </div>
             </div>
           </div>
-
         </div>
-
       </div>
 
       <!-- Footer -->
-      <div
-        class="text-center text-xs text-gray-400 dark:text-gray-500 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div class="border-t border-slate-200 px-6 py-5 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500 sm:px-8">
         © {{ new Date().getFullYear() }} SEPU SACCO — Administrative Suite
       </div>
-
     </div>
   </AppLayout>
 </template>
+
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue'
+import { Head } from '@inertiajs/vue3'
+import {
+  Activity,
+  Users,
+  Banknote,
+  FileWarning,
+  Clock,
+  ShieldCheck,
+  BarChart3
+} from 'lucide-vue-next'
+
+const props = defineProps([
+  'stats',
+  'recentActivities',
+  'pendingApprovals',
+  'systemHealth'
+])
+
+const formatMoney = (num: number | null) => {
+  if (num == null) return 'Ksh 0'
+  return 'Ksh ' + Number(num).toLocaleString()
+}
+
+const quickStats = [
+  {
+    title: 'Total Members',
+    value: props.stats.members.total,
+    sub: `Active: ${props.stats.members.active}`,
+    icon: Users
+  },
+  {
+    title: 'Total Share Deposits',
+    value: formatMoney(props.stats.financial.total_share_deposits),
+    sub: `Share Capital: ${formatMoney(props.stats.financial.total_share_capital)}`,
+    icon: Banknote
+  },
+  {
+    title: 'Active Loans',
+    value: props.stats.loans.active_loans,
+    sub: `Pending: ${props.stats.loans.pending_applications}`,
+    icon: Activity
+  },
+  {
+    title: 'Transactions Today',
+    value: props.stats.transactions.today,
+    sub: `This Month: ${props.stats.transactions.this_month}`,
+    icon: FileWarning
+  }
+]
+
+const approvalItems = [
+  {
+    label: 'Loans',
+    value: props.pendingApprovals.loans,
+    link: '/loans'
+  },
+  {
+    label: 'Vouchers',
+    value: props.pendingApprovals.vouchers,
+    link: '/vouchers'
+  },
+  {
+    label: 'Members',
+    value: props.pendingApprovals.member_applications,
+    link: '/admin/pending-members'
+  },
+  {
+    label: 'Member Activation',
+    value: props.pendingApprovals.pending_activation,
+    link: '/admin/pending-members'
+  }
+]
+
+const setupItems = [
+  {
+    title: 'Loan Rates',
+    desc: 'Define loan interest and limits',
+    icon: BarChart3,
+    link: '/admin/settings/loan'
+  },
+  {
+    title: 'Repayment Periods',
+    desc: 'Set repayment durations',
+    icon: Clock,
+    link: '/admin/settings/loan'
+  },
+  {
+    title: 'System Users',
+    desc: 'Manage user roles',
+    icon: Users,
+    link: '/system-users'
+  },
+  {
+    title: 'System Approvals',
+    desc: 'Define workflows',
+    icon: ShieldCheck,
+    link: '/admin/settings'
+  }
+]
+</script>
 
 <style scoped>
 .custom-scroll::-webkit-scrollbar {
@@ -210,136 +342,11 @@
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(248, 113, 24, 0.4);
+  background-color: rgba(249, 115, 22, 0.35);
   border-radius: 9999px;
 }
 
 .custom-scroll::-webkit-scrollbar-track {
   background-color: transparent;
 }
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 </style>
-
-
-<script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head } from '@inertiajs/vue3'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Activity, Users, Banknote, FileWarning, ArrowRightCircle, Clock, Database, AlertTriangle, Settings, ShieldCheck, BarChart3, Handshake } from 'lucide-vue-next'
-
-const props = defineProps([
-  'stats', 'recentActivities', 'pendingApprovals', 'systemHealth'
-])
-
-const formatMoney = (num) => {
-  if (num == null) return 'Ksh 0';
-  return 'Ksh ' + Number(num).toLocaleString();
-};
-
-
-const quickStats = [
-  {
-    title: 'Total Members',
-    value: props.stats.members.total,
-    sub: `Active: ${props.stats.members.active}`,
-    icon: Users,
-    color: 'bg-blue-900/10 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300'
-  },
-  {
-    title: 'Total Share Deposits',
-    value: formatMoney(props.stats.financial.total_share_deposits),
-    sub: `Share Capital: ${formatMoney(props.stats.financial.total_share_capital)}`,
-    icon: Banknote,
-  },
-  {
-    title: 'Active Loans',
-    value: props.stats.loans.active_loans,
-    sub: `Pending: ${props.stats.loans.pending_applications}`,
-    icon: Activity,
-    color: 'bg-blue-900/10 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300'
-  },
-  {
-    title: 'Transactions Today',
-    value: props.stats.transactions.today,
-    sub: `This Month: ${props.stats.transactions.this_month}`,
-    icon: FileWarning,
-    color: 'bg-orange-100 text-orange-600 dark:bg-orange-700/30 dark:text-orange-300'
-  }
-]
-
-
-const approvalItems = [
-  {
-    label: 'Loans',
-    value: props.pendingApprovals.loans,
-    badge: 'px-2 pb-0.5 rounded-lg bg-orange-100 text-orange-700 font-semibold dark:bg-orange-700/30 dark:text-orange-300',
-    link: '/loans'
-  },
-  {
-    label: 'Vouchers',
-    value: props.pendingApprovals.vouchers,
-    badge: 'px-2 py-0.5 rounded-lg bg-blue-900/10 text-blue-900 font-semibold dark:bg-blue-900/40 dark:text-blue-300',
-    link: '/vouchers'
-  },
-  {
-    label: 'Members',
-    value: props.pendingApprovals.member_applications,
-    badge: 'px-2 py-0.5 rounded-lg bg-green-100 text-green-700 font-semibold dark:bg-green-700/30 dark:text-green-300',
-    link: '/admin/pending-members'
-  },
-  {
-    label: 'Member activation',
-    value: props.pendingApprovals.pending_activation,
-    badge: 'px-2 py-0.5 rounded-lg bg-yellow-100 text-yellow-700 font-semibold dark:bg-yellow-700/30 dark:text-yellow-300',
-    link: '/admin/pending-members'
-  }
-]
-
-
-const setupItems = [
-  {
-    title: 'Loan Rates',
-    desc: 'Define loan interest and limits',
-    icon: BarChart3,
-    color: 'bg-orange-100 text-orange-600 dark:bg-orange-700/30 dark:text-orange-300',
-    link: '/admin/settings/loan'
-  },
-  {
-    title: 'Repayment Periods',
-    desc: 'Set repayment durations',
-    icon: Clock,
-    color: 'bg-blue-900/10 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300',
-    link: '/admin/settings/loan'
-  },
-  {
-    title: 'System Users',
-    desc: 'Manage user roles',
-    icon: Users,
-    color: 'bg-green-100 text-green-700 dark:bg-green-700/30 dark:text-green-300',
-    link: '/system-users'
-  },
-  {
-    title: 'System Approvals',
-    desc: 'Define workflows',
-    icon: ShieldCheck,
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300',
-    link: '/admin/settings'
-  }
-]
-
-</script>
