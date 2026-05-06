@@ -122,6 +122,13 @@ class DividendController extends Controller
         $totalInterest = 0.0;
         $breakdown = [];
 
+        if (!$account) {
+            return [
+                'total_qualifying_deposits' => 0,
+                'total_interest' => 0,
+                'monthly_breakdown' => [],
+            ];
+        }
         foreach ($daysInMonth as $month => $days) {
 
             $lastDay = date('Y-m-t', strtotime("$year-$month-01"));
@@ -145,11 +152,11 @@ class DividendController extends Controller
             }
 
             // CORE FORMULA
-            $qualifying = ($days / 365) * $balance;
-            $interest = $qualifying * ($interestRate / 100);
+            $qualifying = round(($days / 365) * $balance, 2);
+            $interest   = round($qualifying * ($interestRate / 100), 2);
 
-            $totalQualifying += $qualifying;
-            $totalInterest += $interest;
+           $totalQualifying = round($totalQualifying + $qualifying, 2);
+            $totalInterest   = round($totalInterest + $interest, 2);
 
             $breakdown[] = [
                 'month' => $month,
