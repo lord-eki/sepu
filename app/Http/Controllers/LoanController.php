@@ -802,10 +802,19 @@ public function disburse(Request $request, $id)
         // -----------------------------------
         // Member account (reference only)
         // -----------------------------------
-        $savingsAccount = Account::where('member_id', $member->id)
-            ->where('account_type', 'share_deposits')
-            ->first();
-
+        $loanAccount = Account::firstOrCreate(
+            [
+                'member_id'   => $member->id,
+                'account_type'=> 'loan_outstanding',
+            ],
+            [
+                'account_number'   => $this->generateAccountNumber(),
+                'account_name'     => 'Loan Outstanding Account',
+                'balance'          => 0,
+                'available_balance'=> 0,
+                'status'           => 'active',
+            ]
+        );
         // -----------------------------------
         // Create transaction
         // -----------------------------------
@@ -854,6 +863,13 @@ public function disburse(Request $request, $id)
             'principal_balance'   => $loan->approved_amount,
             'interest_balance'    => $loan->interest_balance,
         ]);
+
+        $loanAccount->increment('balance', $loan->approved_amount);
+
+        $loanAccount->increment(
+            'available_balance',
+            $loan->approved_amount
+        );
 
        // -----------------------------------
         // Generate + STORE repayment schedule

@@ -32,7 +32,7 @@
 
     <!-- Header -->
     <div
-      class="flex flex-col m-4 sm:flex-row justify-between items-start sm:items-center bg-[#0B2B40] text-white rounded-xl p-5 shadow-md mb-6"
+      class="flex flex-col m-4 sm:flex-row justify-between items-start sm:items-center bg-blue-950 text-white rounded-xl p-5 shadow-md mb-6"
     >
       <div>
         <h1 class="text-xl font-semibold mb-1">Loan Products</h1>

@@ -73,11 +73,11 @@ const menuOpen = ref(false)
               <p class="text-gray-500 dark:text-gray-400">Active Members</p>
             </div>
             <div>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">KES 500K+</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">KES 500M+</p>
               <p class="text-gray-500 dark:text-gray-400">Loans Issued</p>
             </div>
             <div>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">10+ Years</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">30+ Years</p>
               <p class="text-gray-500 dark:text-gray-400">Trusted Service</p>
             </div>
           </div>
