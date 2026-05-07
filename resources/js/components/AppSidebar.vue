@@ -166,8 +166,8 @@ const adminNavItems: NavItem[] = [
       },
       {
           title: 'Loan Guarantors',
-          href: route('loans.guarantors'),
-          routeName: 'loans.guarantors',
+          href: route('loans.all-guarantors'),
+          routeName: 'loans.all-guarantors',
           icon: Shield,
         },
         {

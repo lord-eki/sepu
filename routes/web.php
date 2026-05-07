@@ -205,6 +205,8 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
 
     // ── Loans
     Route::prefix('loans')->name('loans.')->group(function () {
+        Route::get('/guarantors', [LoanController::class, 'allGuarantees'])
+        ->name('all-guarantors');
         Route::get('/',            [LoanController::class, 'index'])->name('index');
         Route::get('/create',      [LoanController::class, 'create'])->name('create');
         Route::post('/',           [LoanController::class, 'store'])->name('store');
@@ -631,4 +633,5 @@ Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsR
 Route::get('/guarantor-requests/{loan}', [LoanController::class, 'guarantorRequestPage']);
 Route::get('/my-guarantees', [LoanController::class, 'myGuarantees'])->name('my-guarantees');
 
-Route::get('/loans/guarantors', [LoanController::class, 'allGuarantees'])->name('loans.guarantors');
+
+

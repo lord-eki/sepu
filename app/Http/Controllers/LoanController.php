@@ -1252,6 +1252,8 @@ public function guarantorRequestPage(Loan $loan)
     ]);
 }
 
+
+
 public function allGuarantees(Request $request)
 {
     $query = LoanGuarantor::with([
