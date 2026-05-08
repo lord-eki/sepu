@@ -66,7 +66,7 @@
         <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Dividends
+              Dividends Management
             </h1>
             <p class="mt-2 max-w-2xl text-sm text-slate-300">
               Track, approve, and distribute member dividends with clarity and control.

@@ -63,7 +63,7 @@ Route::get('/awaiting-payment',    fn () => Inertia::render('Profile/AwaitingPay
 
 Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {
 
-    // ── Dashboard ─────────────────────────────────────────────────────────
+    // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('members')->name('members.')->group(function () {
