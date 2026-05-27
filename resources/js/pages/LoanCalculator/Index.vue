@@ -1,445 +1,866 @@
 <template>
-   <AppLayout :breadcrumbs="[
-    { title: 'Loans', href: route('loans.index') },
-    { title: 'Loan Calculator' }
-  ]">
-
+  <AppLayout
+    :breadcrumbs="[
+      { title: 'Loans', href: route('loans.index') },
+      { title: 'Loan Calculator' },
+    ]"
+  >
     <Head title="Calculator" />
-    <div class="loan-calculator max-sm:px-3">
-      <!-- Page Header -->
-      <div class="bg-gradient-to-r from-orange-500 to-blue-900 shadow-md mt-2 sm:mx-6 rounded-xl px-6 py-5 sm:px-6">
-        <div class="md:flex md:items-center md:justify-between">
-          <div class="min-w-0 flex-1">
-            <h2 class="text-2xl font-bold leading-7 text-white">Loan Calculator</h2>
-            <p class="mt-1 text-sm text-gray-100">Calculate your loan repayment breakdown before applying</p>
+
+    <div
+      class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 sm:p-6"
+    >
+      <!-- HERO -->
+      <section
+        class="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#0F172A] via-[#132F57] to-[#1E3A8A] p-6 sm:p-8 shadow-2xl"
+      >
+        <div
+          class="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl"
+        ></div>
+
+        <div
+          class="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"
+        >
+          <div>
+            <div
+              class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-orange-500/90 px-3 py-1 backdrop-blur"
+            >
+              <span
+                class="h-2 w-2 rounded-full bg-emerald-400"
+              ></span>
+
+              <span class="text-xs text-white">
+                SEPU SACCO
+              </span>
+            </div>
+
+            <h1
+              class="mt-4 text-3xl font-bold tracking-tight text-white"
+            >
+              Loan Calculator
+            </h1>
+
+            <p class="mt-2 text-sm text-slate-300">
+              Calculate your loan repayments instantly before applying.
+            </p>
           </div>
-          <div v-if="isAdmin" class="mt-3 md:mt-0 self-end">
-            <span class="inline-flex items-center text-white text-xs font-semibold px-3 py-1 rounded">Viewing as
-              Admin</span>
+
+          <div
+            v-if="isAdmin"
+            class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white backdrop-blur-xl"
+          >
+            Viewing as Admin
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Tabs -->
-        <div class="bg-white shadow rounded-2xl border border-gray-200 mb-6">
-          <div class="px-4 py-3 border-b border-gray-100 flex gap-3 items-center">
+      <!-- MAIN -->
+      <section
+        class="mt-8 overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm"
+      >
+        <!-- TABS -->
+        <div
+          class="border-b border-slate-100 p-4"
+        >
+          <div
+            class="inline-flex rounded-2xl bg-slate-100 p-1"
+          >
             <button
-              :class="['px-3 py-2 rounded-md text-sm font-medium', activeTab === 'calculator' ? 'bg-blue-50 text-[#0a2342]' : 'text-gray-600 hover:bg-gray-50']"
-              @click="activeTab = 'calculator'">
+              :class="[
+                'rounded-xl px-5 py-2 text-sm font-medium transition-all',
+                activeTab === 'calculator'
+                  ? 'bg-white text-[#0F172A] shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700',
+              ]"
+              @click="activeTab = 'calculator'"
+            >
               Calculator
             </button>
-            <button v-if="isAdmin"
-              :class="['px-3 py-2 rounded-md text-sm font-medium', activeTab === 'setup' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50']"
-              @click="activeTab = 'setup'">
+
+            <button
+              v-if="isAdmin"
+              :class="[
+                'rounded-xl px-5 py-2 text-sm font-medium transition-all',
+                activeTab === 'setup'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700',
+              ]"
+              @click="activeTab = 'setup'"
+            >
               Setup
             </button>
           </div>
+        </div>
 
-          <div class="p-6">
-            <!-- SETUP TAB (admin only) -->
-            <div v-if="activeTab === 'setup' && isAdmin">
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Scope Selection -->
-                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                  <h4 class="text-sm font-semibold text-[#0a2342] mb-3">Edit Scope</h4>
-                  <p class="text-sm text-gray-600 mb-4">Choose whether to edit global defaults or a specific product.
-                  </p>
-                  <div class="space-y-4">
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-2">Scope</label>
-                      <select v-model="setupScope" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        <option value="global">Global Defaults</option>
-                        <option value="product">Specific Loan Product</option>
-                      </select>
-                    </div>
-                    <div v-if="setupScope === 'product'">
-                      <label class="block text-sm text-gray-700 mb-2">Select Product</label>
-                      <select v-model="adminForm.product_id" @change="onAdminProductChange"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        <option value="">-- Select product to edit --</option>
-                        <option v-for="p in loanProducts" :key="p.id" :value="p.id">{{ p.name }} ({{ p.code }})</option>
-                      </select>
-                    </div>
-                    <div class="pt-4 border-t">
-                      <button @click="resetAdminForm" type="button" class="text-sm text-gray-600 hover:underline">Reset
-                        form</button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Setup Form -->
-                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                  <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-sm font-semibold text-[#0a2342]">Loan Setup & Parameters</h4>
-                    <span v-if="setupSaved" class="text-green-600 text-sm font-medium">✔ Saved</span>
-                  </div>
-                  <form @submit.prevent="saveSetup" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-1">Interest Rate (% / month)</label>
-                      <input v-model.number="adminForm.interest_rate" type="number" step="0.1"
-                        class="w-full px-3 py-2 border rounded" />
-                    </div>
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-1">Processing Fee (%)</label>
-                      <input v-model.number="adminForm.processing_fee_rate" type="number" step="0.1"
-                        class="w-full px-3 py-2 border rounded" />
-                    </div>
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-1">Insurance Fee (%)</label>
-                      <input v-model.number="adminForm.insurance_rate" type="number" step="0.1"
-                        class="w-full px-3 py-2 border rounded" />
-                    </div>
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-1">Processing Fee Flat (optional)</label>
-                      <input v-model.number="adminForm.processing_fee_flat" type="number" step="1"
-                        class="w-full px-3 py-2 border rounded" />
-                    </div>
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-1">Min Amount (KSh)</label>
-                      <input v-model.number="adminForm.min_amount" type="number" step="100"
-                        class="w-full px-3 py-2 border rounded" />
-                    </div>
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-1">Max Amount (KSh)</label>
-                      <input v-model.number="adminForm.max_amount" type="number" step="100"
-                        class="w-full px-3 py-2 border rounded" />
-                    </div>
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-1">Min Term (Months)</label>
-                      <input v-model.number="adminForm.min_term_months" type="number"
-                        class="w-full px-3 py-2 border rounded" />
-                    </div>
-                    <div>
-                      <label class="block text-sm text-gray-700 mb-1">Max Term (Months)</label>
-                      <input v-model.number="adminForm.max_term_months" type="number"
-                        class="w-full px-3 py-2 border rounded" />
-                    </div>
-                    <div class="sm:col-span-2 flex justify-end gap-2 mt-2">
-                      <button type="button" @click="loadDefaults" class="px-4 py-2 border rounded text-sm">Load current
-                        defaults</button>
-                      <button type="submit" :disabled="savingSetup"
-                        class="px-5 py-2 bg-orange-500 text-white rounded text-sm flex items-center">
-                        <svg v-if="savingSetup" class="animate-spin -ml-1 mr-2 h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                          </circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
-                          </path>
-                        </svg>
-                        {{ savingSetup ? 'Saving...' : (setupScope === 'global' ? 'Save Global Defaults' :
-    'UpdateProduct') }}
-                      </button>
-                    </div>
-                  </form>
-                  <p v-if="setupError" class="mt-3 text-sm text-red-600">{{ setupError }}</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- CALCULATOR TAB -->
-            <div v-if="activeTab === 'calculator'">
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Calculator Form -->
-                <div class="bg-white shadow-lg rounded-2xl border border-gray-200">
-                  <div class="px-6 py-4 border-b border-gray-100 bg-blue-50 rounded-t-2xl">
-                    <h3 class="text-lg font-semibold text-[#0a2342]">Loan Details</h3>
-                    <p class="text-sm text-gray-600">Enter your loan requirements</p>
-                  </div>
-
-                  <form @submit.prevent="calculateLoan" class="p-6 space-y-6">
-                    <!-- Loan Product -->
-                    <div>
-                      <label for="loan_product_id" class="block text-sm font-medium text-gray-700 mb-2">Loan Product
-                        *</label>
-                      <select id="loan_product_id" v-model="form.loan_product_id" @change="onLoanProductChange"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-orange-500"
-                        required>
-                        <option value="">Select a loan product</option>
-                        <option v-for="product in loanProducts" :key="product.id" :value="product.id">
-                          {{ product.name }} ({{ product.code }})
-                        </option>
-                      </select>
-                    </div>
-
-                    <!-- Product Info -->
-                    <div v-if="selectedProduct" class="bg-blue-50 rounded-lg p-4 space-y-2">
-                      <h4 class="text-sm font-semibold text-[#0a2342]">Product Details</h4>
-                      <div class="grid grid-cols-2 gap-4 text-sm text-blue-700">
-                        <div><span class="font-medium">Interest Rate:</span> {{ selectedProduct.interest_rate }}% p.m.
-                        </div>
-                        <div><span class="font-medium">Processing Fee:</span> {{ selectedProduct.processing_fee_rate }}%
-                        </div>
-                        <div>
-                          <span class="font-medium">Amount Range:</span>
-                          KSh {{ formatNumber(selectedProduct.min_amount) }} – KSh {{
-    formatNumber(selectedProduct.max_amount) }}
-                        </div>
-                        <div>
-                          <span class="font-medium">Term Range:</span>
-                          {{ selectedProduct.min_term_months }} – {{ selectedProduct.max_term_months }} months
-                        </div>
-                        <div v-if="selectedProduct.grace_period_days">
-                          <span class="font-medium">Grace Period:</span> {{ selectedProduct.grace_period_days }} days
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Principal -->
-                    <div>
-                      <label for="principal_amount" class="block text-sm font-medium text-gray-700 mb-2">Loan Amount
-                        (KSh) *</label>
-                      <input id="principal_amount" type="number" v-model.number="form.principal_amount"
-                        :min="selectedProduct?.min_amount || 0" :max="selectedProduct?.max_amount || 999999999"
-                        step="100"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-orange-500"
-                        placeholder="Enter loan amount" required />
-                      <p v-if="selectedProduct" class="mt-1 text-xs text-gray-500">
-                        Range: KSh {{ formatNumber(selectedProduct.min_amount) }} – KSh {{
-    formatNumber(selectedProduct.max_amount) }}
-                      </p>
-                    </div>
-
-                    <!-- Term -->
-                    <div>
-                      <label for="term_months" class="block text-sm font-medium text-gray-700 mb-2">Repayment Period
-                        (Months) *</label>
-                      <input id="term_months" type="number" v-model.number="form.term_months"
-                        :min="selectedProduct?.min_term_months || 1" :max="selectedProduct?.max_term_months || 60"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-orange-500"
-                        placeholder="Enter repayment period" required />
-                      <p v-if="selectedProduct" class="mt-1 text-xs text-gray-500">
-                        Range: {{ selectedProduct.min_term_months }} – {{ selectedProduct.max_term_months }} months
-                      </p>
-                    </div>
-
-                    <!-- Submit -->
-                    <button type="submit" :disabled="loading || !isFormValid"
-                      class="w-full bg-[#0a2342] hover:bg-blue-800 hover:cursor-pointer disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200 flex items-center justify-center">
-                      <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                        </circle>
-                        <path class="opacity-75" fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                        </path>
-                      </svg>
-                      {{ loading ? 'Calculating...' : 'Calculate Loan' }}
-                    </button>
-                  </form>
-                </div>
-
-                <!-- Results Panel -->
-                <div class="space-y-6">
-                  <div v-if="calculation" id="loan-summary"
-                    class="bg-white shadow-lg rounded-2xl border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-blue-50 rounded-t-2xl">
-                      <h3 class="text-lg font-semibold text-[#0a2342]">Loan Summary</h3>
-                      <p class="text-xs text-gray-500 mt-1">
-                        {{ calculation.loan_details.term_months }} months ·
-                        {{ calculation.loan_details.monthly_rate ?? calculation.loan_product.interest_rate }}% p.m.
-                        ({{ calculation.loan_details.annual_rate ?? (calculation.loan_product.interest_rate *
-    12).toFixed(1) }}% p.a.)
-                      </p>
-                    </div>
-
-                    <div class="p-6">
-                      <!-- Key figures -->
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <div class="bg-green-50 rounded-lg p-4 sm:col-span-2">
-                          <h4 class="text-xs font-medium text-green-800 uppercase tracking-wide mb-1">Actual Monthly
-                            Installment</h4>
-                          <p class="text-2xl font-bold text-green-700">KSh {{
-    formatNumber(calculation.loan_details.monthly_payment) }}</p>
-                          <p class="text-xs text-green-600 mt-1">
-                            = Principal/mo (KSh {{ formatNumber(calculation.loan_details.principal_per_month) }})
-                            + M. Interest (KSh {{ formatNumber(calculation.loan_details.m_interest) }})
-                          </p>
-                        </div>
-
-                        <div class="bg-blue-50 rounded-lg p-4">
-                          <h4 class="text-xs font-medium text-blue-800 uppercase tracking-wide mb-1">Total Interest</h4>
-                          <p class="text-xl font-bold text-blue-700">KSh {{
-    formatNumber(calculation.loan_details.total_interest) }}</p>
-                        </div>
-                        <div class="bg-blue-50 rounded-lg p-4">
-                          <h4 class="text-xs font-medium text-blue-800 uppercase tracking-wide mb-1">Total Repayment
-                          </h4>
-                          <p class="text-xl font-bold text-blue-700">KSh {{
-    formatNumber(calculation.loan_details.total_repayment) }}</p>
-                        </div>
-                        <div class="bg-orange-50 rounded-lg p-4">
-                          <h4 class="text-xs font-medium text-orange-800 uppercase tracking-wide mb-1">Total Cost of
-                            Loan</h4>
-                          <p class="text-xl font-bold text-orange-700">KSh {{
-    formatNumber(calculation.loan_details.total_cost_of_loan) }}</p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                          <h4 class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Net Disbursement
-                          </h4>
-                          <p class="text-xl font-bold text-gray-700">KSh {{
-    formatNumber(calculation.loan_details.net_disbursement) }}</p>
-                        </div>
-                      </div>
-                      <!-- Breakdown -->
-                      <div class="mt-6">
-                        <h4 class="text-sm font-semibold text-[#0a2342] mb-3">Breakdown</h4>
-
-                        <div class="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span class="font-medium">Processing Fee:</span>
-                            KSh {{ formatNumber(calculation.loan_details.processing_fee) }}
-                          </div>
-
-                          <div>
-                            <span class="font-medium">Insurance Fee:</span>
-                            KSh {{ formatNumber(calculation.loan_details.insurance_fee) }}
-                          </div>
-
-                          <div>
-                            <span class="font-medium">Total Fees:</span>
-                            KSh {{ formatNumber(calculation.loan_details.total_fees) }}
-                          </div>
-
-                          <div>
-                            <span class="font-medium">Net Disbursement:</span>
-                            KSh {{ formatNumber(calculation.loan_details.net_disbursement) }}
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- ADD THIS inside SUMMARY -->
-                      <div class="border-t border-gray-200 pt-4 mt-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Repayment Timeline</h4>
-
-                        <div class="flex justify-between text-sm">
-                          <span class="text-gray-500">First Payment Date</span>
-                          <span class="font-medium">
-                            {{ formatDate(calculation.summary?.first_payment_date) }}
-                          </span>
-                        </div>
-
-                        <div class="flex justify-between text-sm mt-2">
-                          <span class="text-gray-500">Last Payment Date</span>
-                          <span class="font-medium">
-                            {{ formatDate(calculation.summary?.last_payment_date) }}
-                          </span>
-                        </div>
-                      </div>
-
-
-                      <!-- VIEW SCHEDULE BUTTON -->
-                      <div v-if="calculation && !showSchedule" class="text-center mt-4">
-                        <button @click="openSchedule"
-                          class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-md transition">
-                          View Repayment Schedule
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-            <!-- SCHEDULE  -->
-            <div v-if="calculation && showSchedule" ref="scheduleSection"
-              class="mt-8 bg-white shadow-lg rounded-2xl border border-gray-200">
-
-              <!-- Header -->
+        <div class="p-5 sm:p-7">
+          <!-- CALCULATOR -->
+        <div v-if="activeTab === 'calculator'">
+          <div
+            class="flex flex-col gap-6 xl:flex-row xl:items-start"
+          >
+            <!-- LEFT SIDE -->
+            <div
+              class="xl:sticky xl:top-6 xl:w-[420px] xl:flex-shrink-0"
+            >
+              <!-- FORM -->
               <div
-                class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-blue-50 rounded-t-2xl">
-                <h3 class="text-lg font-semibold text-[#0a2342]">Repayment Schedule</h3>
+                class="rounded-[28px] border border-slate-200 bg-white shadow-sm max-h-[calc(100vh-4rem)] overflow-y-auto"
+              >
+                <div
+                  class="border-b border-slate-100 p-6"
+                >
+                  <h3
+                    class="text-xl font-bold text-slate-900"
+                  >
+                    Loan Details
+                  </h3>
 
-                <button @click="closeSchedule" class="text-gray-500 hover:text-gray-700">
-                  ✕
-                </button>
-              </div>
+                  <p
+                    class="mt-1 text-sm text-slate-500"
+                  >
+                    Enter your loan requirements
+                  </p>
+                </div>
 
-              <!-- Table -->
-              <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+                <form
+                  @submit.prevent="calculateLoan"
+                  class="space-y-6 p-6"
+                >
+                  <!-- PRODUCT -->
+                  <div>
+                    <label
+                      class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                      Loan Product
+                    </label>
 
-                <table class="min-w-full text-sm">
+                    <select
+                      v-model="form.loan_product_id"
+                      @change="onLoanProductChange"
+                      class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm shadow-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    >
+                      <option value="">
+                        Select loan product
+                      </option>
 
-                  <!-- Header -->
-                  <thead class="bg-[#0a2342] text-white sticky top-0 z-10">
-                    <tr>
-                      <th class="px-4 py-3 text-center">#</th>
-                      <th class="px-4 py-3 text-left">Date</th>
-                      <th class="px-4 py-3 text-right">Opening</th>
-                      <th class="px-4 py-3 text-right">Principal</th>
-                      <th class="px-4 py-3 text-right">Interest</th>
-                      <th class="px-4 py-3 text-right">Installment</th>
-                      <th class="px-4 py-3 text-right">Balance</th>
-                    </tr>
-                  </thead>
+                      <option
+                        v-for="product in loanProducts"
+                        :key="product.id"
+                        :value="product.id"
+                      >
+                        {{ product.name }}
+                      </option>
+                    </select>
+                  </div>
 
-                  <!-- Body -->
-                  <tbody class="divide-y divide-gray-100">
-                    <tr v-for="row in calculation.amortization_schedule" :key="row.payment_number"
-                      :class="row.payment_number % 2 === 0 ? 'bg-gray-50' : 'bg-white'"
-                      class="hover:bg-blue-50 transition">
+                  <!-- PRODUCT INFO -->
+                  <div
+                    v-if="selectedProduct"
+                    class="rounded-2xl border border-blue-100 bg-blue-50 p-5"
+                  >
+                    <h4
+                      class="font-semibold text-[#0F172A]"
+                    >
+                      Product Details
+                    </h4>
 
-                      <td class="px-4 py-3 text-center font-medium">
-                        {{ row.payment_number }}
-                      </td>
+                    <div
+                      class="mt-4 grid grid-cols-2 gap-4 text-sm"
+                    >
+                      <div>
+                        <p class="text-slate-500">
+                          Interest Rate
+                        </p>
 
-                      <td class="px-4 py-3">
-                        {{ formatDate(row.payment_date) }}
-                      </td>
+                        <p
+                          class="font-semibold text-slate-800"
+                        >
+                          {{ selectedProduct.interest_rate }}%
+                        </p>
+                      </div>
 
-                      <td class="px-4 py-3 text-right">
-                        {{ formatNumber(row.opening_balance) }}
-                      </td>
+                      <div>
+                        <p class="text-slate-500">
+                          Processing Fee
+                        </p>
 
-                      <td class="px-4 py-3 text-right">
-                        {{ formatNumber(row.principal_amount) }}
-                      </td>
+                        <p
+                          class="font-semibold text-slate-800"
+                        >
+                          {{ selectedProduct.processing_fee_rate }}%
+                        </p>
+                      </div>
 
-                      <td class="px-4 py-3 text-right text-blue-700">
-                        {{ formatNumber(row.interest_amount) }}
-                      </td>
+                      <div class="col-span-2">
+                        <p class="text-slate-500">
+                          Amount Range
+                        </p>
 
-                      <td class="px-4 py-3 text-right font-semibold text-green-700">
-                        {{ formatNumber(row.payment_amount) }}
-                      </td>
+                        <p
+                          class="font-semibold text-slate-800"
+                        >
+                          KSh
+                          {{
+                            formatNumber(
+                              selectedProduct.min_amount
+                            )
+                          }}
+                          —
+                          KSh
+                          {{
+                            formatNumber(
+                              selectedProduct.max_amount
+                            )
+                          }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-                      <td class="px-4 py-3 text-right">
-                        {{ formatNumber(row.closing_balance) }}
-                      </td>
-                    </tr>
-                  </tbody>
+                  <!-- AMOUNT -->
+                  <div>
+                    <label
+                      class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                      Loan Amount
+                    </label>
 
-                  <!-- Footer -->
-                  <tfoot class="bg-[#0a2342] text-white font-semibold sticky bottom-0">
-                    <tr>
-                      <td colspan="2" class="px-4 py-3 text-center">TOTAL</td>
+                    <input
+                      type="number"
+                      v-model.number="form.principal_amount"
+                      class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm shadow-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                      placeholder="Enter amount"
+                    />
+                  </div>
 
-                      <td></td>
+                  <!-- TERM -->
+                  <div>
+                    <label
+                      class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                      Repayment Period
+                    </label>
 
-                      <td class="px-4 py-3 text-right">
-                        {{ formatNumber(calculation.summary?.total_principal_paid) }}
-                      </td>
+                    <input
+                      type="number"
+                      v-model.number="form.term_months"
+                      class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm shadow-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                      placeholder="Months"
+                    />
+                  </div>
 
-                      <td class="px-4 py-3 text-right">
-                        {{ formatNumber(calculation.summary?.total_interest_paid) }}
-                      </td>
+                  <!-- BUTTON -->
+                  <button
+                    type="submit"
+                    :disabled="loading || !isFormValid"
+                    class="flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 font-semibold text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <svg
+                      v-if="loading"
+                      class="mr-2 h-5 w-5 animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
 
-                      <td class="px-4 py-3 text-right">
-                        {{ formatNumber(calculation.loan_details.total_repayment) }}
-                      </td>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      ></path>
+                    </svg>
 
-                      <td></td>
-                    </tr>
-                  </tfoot>
-
-                </table>
+                    {{
+                      loading
+                        ? 'Calculating...'
+                        : 'Calculate Loan'
+                    }}
+                  </button>
+                </form>
               </div>
             </div>
-            <!-- end calculator -->
+
+            <!-- RIGHT SIDE -->
+            <div
+              class="min-w-0 flex-1 space-y-6"
+            >
+              <!-- SUMMARY -->
+              <div
+                v-if="calculation"
+                id="loan-summary"
+                class="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm"
+              >
+                <!-- HEADER -->
+                <div
+                  class="border-b border-slate-100 p-6"
+                >
+                  <h3
+                    class="text-2xl font-bold text-slate-900"
+                  >
+                    Loan Summary
+                  </h3>
+
+                  <p
+                    class="mt-2 text-sm text-slate-500"
+                  >
+                    {{
+                      calculation.loan_details.term_months
+                    }}
+                    months repayment plan
+                  </p>
+                </div>
+
+                <div class="p-6">
+                  <!-- BIG CARD -->
+                  <div
+                    class="rounded-[28px] bg-gradient-to-br from-blue-500 to-green-600 p-6 text-white shadow-xl"
+                  >
+                    <p class="text-sm text-white/80">
+                      Monthly Installment
+                    </p>
+
+                    <h2
+                      class="mt-2 text-2xl font-bold tracking-tight"
+                    >
+                      KSh
+                      {{
+                        formatNumber(
+                          calculation.loan_details.monthly_payment
+                        )
+                      }}
+                    </h2>
+
+                    <p
+                      class="mt-3 text-sm text-white/80"
+                    >
+                      Principal + Interest
+                    </p>
+                  </div>
+
+                  <!-- STATS -->
+                  <div
+                    class="mt-6 grid gap-4 sm:grid-cols-2"
+                  >
+                    <div
+                      class="rounded-2xl bg-slate-50 p-5"
+                    >
+                      <p class="text-sm text-slate-500">
+                        Total Interest
+                      </p>
+
+                      <h3
+                        class="mt-2 text-2xl font-bold text-slate-900"
+                      >
+                        KSh
+                        {{
+                          formatNumber(
+                            calculation.loan_details.total_interest
+                          )
+                        }}
+                      </h3>
+                    </div>
+
+                    <div
+                      class="rounded-2xl bg-slate-50 p-5"
+                    >
+                      <p class="text-sm text-slate-500">
+                        Total Repayment
+                      </p>
+
+                      <h3
+                        class="mt-2 text-2xl font-bold text-slate-900"
+                      >
+                        KSh
+                        {{
+                          formatNumber(
+                            calculation.loan_details.total_repayment
+                          )
+                        }}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <!-- TIMELINE -->
+                  <div
+                    class="mt-6 rounded-2xl border border-slate-200 p-5"
+                  >
+                    <h4
+                      class="font-semibold text-slate-800"
+                    >
+                      Repayment Timeline
+                    </h4>
+
+                    <div
+                      class="mt-4 flex items-center justify-between text-sm"
+                    >
+                      <span class="text-slate-500">
+                        First Payment
+                      </span>
+
+                      <span
+                        class="font-medium text-slate-800"
+                      >
+                        {{
+                          formatDate(
+                            calculation.summary?.first_payment_date
+                          )
+                        }}
+                      </span>
+                    </div>
+
+                    <div
+                      class="mt-3 flex items-center justify-between text-sm"
+                    >
+                      <span class="text-slate-500">
+                        Last Payment
+                      </span>
+
+                      <span
+                        class="font-medium text-slate-800"
+                      >
+                        {{
+                          formatDate(
+                            calculation.summary?.last_payment_date
+                          )
+                        }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- BUTTON -->
+                  <div
+                    v-if="calculation && !showSchedule"
+                    class="mt-6"
+                  >
+                    <button
+                      @click="openSchedule"
+                      class="flex h-12 w-full items-center justify-center rounded-2xl bg-blue-900 font-semibold text-white shadow-lg transition hover:bg-slate-800"
+                    >
+                      View Repayment Schedule
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- EMPTY -->
+              <div
+                v-else
+                class="flex min-h-[450px] flex-col items-center justify-center rounded-[30px] border border-dashed border-slate-300 bg-white p-10 text-center"
+              >
+                <div
+                  class="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100"
+                >
+                  💰
+                </div>
+
+                <h3
+                  class="mt-5 text-xl font-bold text-slate-900"
+                >
+                  Loan Calculator
+                </h3>
+
+                <p
+                  class="mt-2 max-w-sm text-sm text-slate-500"
+                >
+                  Fill in your loan details to see repayment estimates and schedules.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+          <!-- SCHEDULE -->
+          <div
+            v-if="calculation && showSchedule"
+            ref="scheduleSection"
+            class="mt-8 overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm"
+          >
+            <!-- HEADER -->
+            <div
+              class="flex items-center justify-between border-b border-slate-100 p-6"
+            >
+              <div>
+                <h3
+                  class="text-xl font-bold text-slate-900"
+                >
+                  Repayment Schedule
+                </h3>
+
+                <p
+                  class="mt-1 text-sm text-slate-500"
+                >
+                  Monthly repayment breakdown
+                </p>
+              </div>
+
+              <button
+                @click="closeSchedule"
+                class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- TABLE -->
+            <div
+              class="max-h-[600px] overflow-auto"
+            >
+              <table class="min-w-full text-sm">
+                <thead
+                  class="sticky top-0 bg-blue-900 text-white"
+                >
+                  <tr>
+                    <th
+                      class="px-5 py-4 text-center"
+                    >
+                      #
+                    </th>
+
+                    <th
+                      class="px-5 py-4 text-left"
+                    >
+                      Date
+                    </th>
+
+                    <th
+                      class="px-5 py-4 text-right"
+                    >
+                      Opening
+                    </th>
+
+                    <th
+                      class="px-5 py-4 text-right"
+                    >
+                      Principal
+                    </th>
+
+                    <th
+                      class="px-5 py-4 text-right"
+                    >
+                      Interest
+                    </th>
+
+                    <th
+                      class="px-5 py-4 text-right"
+                    >
+                      Installment
+                    </th>
+
+                    <th
+                      class="px-5 py-4 text-right"
+                    >
+                      Balance
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr
+                    v-for="row in calculation.amortization_schedule"
+                    :key="row.payment_number"
+                    class="border-b transition hover:bg-slate-50"
+                  >
+                    <td
+                      class="px-5 py-4 text-center"
+                    >
+                      {{ row.payment_number }}
+                    </td>
+
+                    <td class="px-5 py-4">
+                      {{
+                        formatDate(
+                          row.payment_date
+                        )
+                      }}
+                    </td>
+
+                    <td
+                      class="px-5 py-4 text-right"
+                    >
+                      {{
+                        formatNumber(
+                          row.opening_balance
+                        )
+                      }}
+                    </td>
+
+                    <td
+                      class="px-5 py-4 text-right font-medium"
+                    >
+                      {{
+                        formatNumber(
+                          row.principal_amount
+                        )
+                      }}
+                    </td>
+
+                    <td
+                      class="px-5 py-4 text-right text-blue-600"
+                    >
+                      {{
+                        formatNumber(
+                          row.interest_amount
+                        )
+                      }}
+                    </td>
+
+                    <td
+                      class="px-5 py-4 text-right font-bold text-emerald-600"
+                    >
+                      {{
+                        formatNumber(
+                          row.payment_amount
+                        )
+                      }}
+                    </td>
+
+                    <td
+                      class="px-5 py-4 text-right"
+                    >
+                      {{
+                        formatNumber(
+                          row.closing_balance
+                        )
+                      }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SETUP -->
+          <div
+            v-if="activeTab === 'setup' && isAdmin"
+            class="grid gap-6 lg:grid-cols-2"
+          >
+            <div
+              class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <h3
+                class="text-lg font-bold text-slate-900"
+              >
+                Edit Scope
+              </h3>
+
+              <p
+                class="mt-1 text-sm text-slate-500"
+              >
+                Configure loan calculator settings.
+              </p>
+
+              <div class="mt-6 space-y-5">
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Scope
+                  </label>
+
+                  <select
+                    v-model="setupScope"
+                    class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4"
+                  >
+                    <option value="global">
+                      Global Defaults
+                    </option>
+
+                    <option value="product">
+                      Specific Product
+                    </option>
+                  </select>
+                </div>
+
+                <div
+                  v-if="
+                    setupScope === 'product'
+                  "
+                >
+                  <label
+                    class="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Product
+                  </label>
+
+                  <select
+                    v-model="
+                      adminForm.product_id
+                    "
+                    @change="
+                      onAdminProductChange
+                    "
+                    class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4"
+                  >
+                    <option value="">
+                      Select Product
+                    </option>
+
+                    <option
+                      v-for="p in loanProducts"
+                      :key="p.id"
+                      :value="p.id"
+                    >
+                      {{ p.name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- FORM -->
+            <div
+              class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <h3
+                  class="text-lg font-bold text-slate-900"
+                >
+                  Loan Setup
+                </h3>
+
+                <span
+                  v-if="setupSaved"
+                  class="text-sm font-medium text-emerald-600"
+                >
+                  ✔ Saved
+                </span>
+              </div>
+
+              <form
+                @submit.prevent="saveSetup"
+                class="mt-6 grid gap-5 sm:grid-cols-2"
+              >
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Interest Rate
+                  </label>
+
+                  <input
+                    v-model.number="
+                      adminForm.interest_rate
+                    "
+                    type="number"
+                    class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Processing Fee
+                  </label>
+
+                  <input
+                    v-model.number="
+                      adminForm.processing_fee_rate
+                    "
+                    type="number"
+                    class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Insurance Fee
+                  </label>
+
+                  <input
+                    v-model.number="
+                      adminForm.insurance_rate
+                    "
+                    type="number"
+                    class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Processing Flat
+                  </label>
+
+                  <input
+                    v-model.number="
+                      adminForm.processing_fee_flat
+                    "
+                    type="number"
+                    class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Min Amount
+                  </label>
+
+                  <input
+                    v-model.number="
+                      adminForm.min_amount
+                    "
+                    type="number"
+                    class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Max Amount
+                  </label>
+
+                  <input
+                    v-model.number="
+                      adminForm.max_amount
+                    "
+                    type="number"
+                    class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4"
+                  />
+                </div>
+
+                <div class="sm:col-span-2">
+                  <button
+                    type="submit"
+                    :disabled="savingSetup"
+                    class="flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 font-semibold text-white shadow-lg transition hover:shadow-xl"
+                  >
+                    {{
+                      savingSetup
+                        ? 'Saving...'
+                        : 'Save Setup'
+                    }}
+                  </button>
+                </div>
+              </form>
+
+              <p
+                v-if="setupError"
+                class="mt-4 text-sm text-red-600"
+              >
+                {{ setupError }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </AppLayout>
 </template>
@@ -605,9 +1026,39 @@ const formatNumber = (n) => new Intl.NumberFormat().format(n || 0)
 
 .loan-calculator select,
 .loan-calculator input {
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
+/* Desktop sticky calculator */
+@media (min-width: 1280px) {
+  .xl\:sticky {
+    position: sticky;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Mobile responsiveness */
 @media (max-width: 640px) {
   .loan-calculator .grid {
     grid-template-columns: 1fr;

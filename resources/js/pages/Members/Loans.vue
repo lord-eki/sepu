@@ -122,178 +122,386 @@ const currentLoanMessage = computed(() => {
 
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Loans', href: '/my-loans' }]">
-    <div class="min-h-screen bg-[#f9fafb] p-6 space-y-10">
-      <Head title="My loans" />
-      <!-- HEADER -->
-      <header class="bg-gradient-to-r from-blue-900 to-orange-400 text-white p-6 rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight">My Loans</h1>
-          <p class="text-sm text-white">Track, manage, and apply for SEPU SACCO loans</p>
-        </div>
+    <Head title="My loans" />
 
-        <div v-if="canApplyLoan && (!isMemberRole || isEligible)" class="mt-4 sm:mt-0">
-          <Link :href="route('loans.create', { member: props.member.id })">
-            <Button class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition-transform hover:scale-[1.02]">
-              <Plus class="w-5 h-5" />
-              <span>Apply for Loan</span>
-            </Button>
-          </Link>
-        </div>
-      </header>
+    <div
+      class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 sm:p-6"
+    >
+      <!-- HERO -->
+      <section
+        class="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#0F172A] via-[#132F57] to-[#1E3A8A] p-6 sm:p-8 shadow-2xl"
+      >
+        <!-- Glow -->
+        <div
+          class="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl"
+        ></div>
 
-      <!-- ELIGIBILITY ALERT -->
+        <div
+          class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"
+        >
+          <div>
+            <div
+              class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-orange-500/90 px-3 py-1 backdrop-blur"
+            >
+              <span
+                class="h-2 w-2 rounded-full bg-emerald-400"
+              ></span>
+
+              <span class="text-xs text-white">
+                SEPU SACCO
+              </span>
+            </div>
+
+            <h1
+              class="mt-4 text-2xl font-bold tracking-tight text-white"
+            >
+              My Loans
+            </h1>
+
+            <p class="mt-2 text-sm text-slate-300">
+              Track, manage and monitor your loans easily.
+            </p>
+          </div>
+
+          <div
+            v-if="canApplyLoan && (!isMemberRole || isEligible)"
+          >
+            <Link
+              :href="route('loans.create', { member: props.member.id })"
+            >
+              <Button
+                class="h-12 rounded-2xl bg-orange-500 px-6 text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-orange-600"
+              >
+                <Plus class="mr-2 h-5 w-5" />
+                Apply for Loan
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <!-- ALERT -->
       <transition
-        enter-active-class="transition ease-out duration-300"
+        enter-active-class="transition duration-300"
         enter-from-class="opacity-0 -translate-y-2"
         enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-2"
+        leave-active-class="transition duration-200"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
       >
         <div
           v-if="alertType"
           :class="[
-            'rounded-lg p-4 flex items-start gap-3 border-l-4',
-            alertType === 'success' && 'bg-green-50 border-green-500 text-green-700',
-            alertType === 'error' && 'bg-red-50 border-red-500 text-red-700',
-            alertType === 'info' && 'bg-blue-50 border-blue-400 text-blue-700'
+            'mt-6 rounded-2xl border p-5 shadow-sm',
+            alertType === 'success' &&
+              'border-emerald-200 bg-emerald-50 text-emerald-700',
+            alertType === 'error' &&
+              'border-rose-200 bg-rose-50 text-rose-700',
+            alertType === 'info' &&
+              'border-blue-200 bg-blue-50 text-blue-700',
           ]"
         >
-          <div class="flex-1">
-            <p class="font-semibold">{{ alertMessage }}</p>
+          <p class="font-semibold">
+            {{ alertMessage }}
+          </p>
 
-            <!-- Show reasons if not eligible -->
-            <ul v-if="!isEligible && reasons.length" class="list-disc list-inside text-sm mt-2 text-red-600">
-              <li v-for="reason in reasons" :key="reason">{{ reason }}</li>
-            </ul>
+          <ul
+            v-if="!isEligible && reasons.length"
+            class="mt-3 list-disc space-y-1 pl-5 text-sm"
+          >
+            <li
+              v-for="reason in reasons"
+              :key="reason"
+            >
+              {{ reason }}
+            </li>
+          </ul>
 
-            <!-- Show note if eligible -->
-            <p v-else-if="isEligible" class="text-sm mt-2 text-gray-600 italic">
-              NB: Only applicable if you have no active unpaid loans.
-            </p>
-          </div>
+          <p
+            v-else-if="isEligible"
+            class="mt-2 text-sm opacity-80"
+          >
+            NB: Only applicable if you have no active unpaid loans.
+          </p>
         </div>
       </transition>
 
-      <div v-if="checking" class="flex items-center gap-2 text-gray-600 animate-pulse">
-        <span class="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin"></span>
+      <!-- LOADING -->
+      <div
+        v-if="checking"
+        class="mt-5 flex items-center gap-3 text-slate-600"
+      >
+        <span
+          class="h-5 w-5 animate-spin rounded-full border-2 border-orange-400 border-t-transparent"
+        ></span>
+
         Checking eligibility...
       </div>
 
+      <!-- STATS -->
+      <section
+        class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3"
+      >
+        <!-- CARD -->
+        <Card
+          class="rounded-[28px] border-0 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+        >
+          <CardContent class="p-6">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm text-slate-500">
+                  Active Loans
+                </p>
 
-      <!-- SUMMARY CARDS -->
-      <section class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <Card class="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition">
-          <CardHeader class="pb-2 flex items-center justify-between">
-            <CardTitle class="text-gray-800 text-base font-semibold">Total Active Loans</CardTitle>
-            <div class="p-2 bg-orange-100 text-orange-600 rounded-xl">
-              <Plus class="h-5 w-5" />
+                <h3
+                  class="mt-3 text-2xl font-bold text-slate-900"
+                >
+                  {{ activeLoans.length }}
+                </h3>
+              </div>
+
+              <div
+                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg"
+              >
+                <Plus class="h-6 w-6" />
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <p class="text-xl font-bold text-[#0B2B40]">{{ activeLoans.length }}</p>
           </CardContent>
         </Card>
 
-        <Card class="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition">
-          <CardHeader class="pb-2 flex items-center justify-between">
-            <CardTitle class="text-gray-800 text-base font-semibold">Total Balance Due</CardTitle>
-            <div class="p-2 bg-blue-50 text-[#0B2B40] rounded-xl">
-              <span class="font-semibold">Ksh</span>
+        <!-- CARD -->
+        <Card
+          class="rounded-[28px] border-0 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+        >
+          <CardContent class="p-6">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm text-slate-500">
+                  Total Balance Due
+                </p>
+
+                <h3
+                  class="mt-3 text-2xl font-bold text-slate-900"
+                >
+                  KES {{ formattedTotalAmount }}
+                </h3>
+              </div>
+
+              <div
+                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg"
+              >
+                <span class="font-bold">Ksh</span>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <p class="text-xl font-bold text-[#0B2B40]">KES {{ formattedTotalAmount }}</p>
           </CardContent>
         </Card>
 
-        <Card class="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition">
-          <CardHeader class="pb-2 flex items-center justify-between">
-            <CardTitle class="text-gray-800 text-base font-semibold">Current Loan Status</CardTitle>
-            <div class="p-2 bg-orange-100 text-orange-600 rounded-xl">
-              <span class="font-bold">⚙️</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p
-              class="text-base font-medium capitalize"
-              :class="{
-                'text-green-700': currentLoanStatus === 'completed' || currentLoanStatus === 'approved',
-                'text-orange-600': currentLoanStatus === 'active',
-                'text-blue-600': currentLoanStatus === 'disbursed',
-                'text-yellow-600': currentLoanStatus === 'pending' || currentLoanStatus === 'under_review',
-                'text-red-600': currentLoanStatus === 'rejected' || currentLoanStatus === 'defaulted',
-                'text-slate-500': !currentLoanStatus
-              }"
-            >
-              {{ currentLoanMessage }}
-            </p>
+        <!-- CARD -->
+        <Card
+          class="rounded-[28px] border-0 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+        >
+          <CardContent class="p-6">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm text-slate-500">
+                  Current Status
+                </p>
 
+                <h3
+                  class="mt-3 text-sm font-semibold capitalize"
+                  :class="{
+                    'text-green-700':
+                      currentLoanStatus === 'completed' ||
+                      currentLoanStatus === 'approved',
+                    'text-orange-600':
+                      currentLoanStatus === 'active',
+                    'text-blue-600':
+                      currentLoanStatus === 'disbursed',
+                    'text-yellow-600':
+                      currentLoanStatus === 'pending' ||
+                      currentLoanStatus === 'under_review',
+                    'text-red-600':
+                      currentLoanStatus === 'rejected' ||
+                      currentLoanStatus === 'defaulted',
+                    'text-slate-500': !currentLoanStatus,
+                  }"
+                >
+                  {{ currentLoanMessage }}
+                </h3>
+              </div>
+
+              <div
+                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 text-white shadow-lg"
+              >
+                ⚙️
+              </div>
+            </div>
           </CardContent>
         </Card>
       </section>
 
-      <!-- LOANS TABLE -->
-      <section class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <!-- LOANS -->
+      <section
+        class="mt-10 overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm"
+      >
+        <!-- HEADER -->
+        <div
+          class="flex items-center justify-between border-b p-6"
+        >
+          <div>
+            <h2
+              class="text-lg font-semibold text-slate-900"
+            >
+              Loan History
+            </h2>
+
+            <p class="mt-1 text-sm text-slate-500">
+              All your loan applications and repayments.
+            </p>
+          </div>
+        </div>
+
+        <!-- TABLE -->
         <div class="overflow-x-auto">
-          <table class="min-w-full text-sm text-left">
-            <thead class="bg-blue-100 text-blue-900 uppercase text-xs tracking-wide">
-              <tr>
-                <th class="px-6 py-3">Loan #</th>
-                <th class="px-6 py-3">Product</th>
-                <th class="px-6 py-3">Amount</th>
-                <th class="px-6 py-3">Balance</th>
-                <th class="px-6 py-3">Next Repayment</th>
-                <th class="px-6 py-3">Status</th>
-                <th class="px-6 py-3 text-center">Actions</th>
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-50">
+              <tr class="text-slate-500">
+                <th class="px-6 py-4 text-left font-medium">
+                  Loan #
+                </th>
+
+                <th class="px-6 py-4 text-left font-medium">
+                  Product
+                </th>
+
+                <th class="px-6 py-4 text-left font-medium">
+                  Amount
+                </th>
+
+                <th class="px-6 py-4 text-left font-medium">
+                  Balance
+                </th>
+
+                <th class="px-6 py-4 text-left font-medium">
+                  Next Repayment
+                </th>
+
+                <th class="px-6 py-4 text-left font-medium">
+                  Status
+                </th>
+
+                <th class="px-6 py-4 text-center font-medium">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="loan in props.loans" :key="loan.id" class="hover:bg-orange-50 transition">
-                <td class="px-6 py-4">{{ loan.loan_number }}</td>
-                <td class="px-6 py-4">{{ loan.loan_product?.name }}</td>
-                <td class="px-6 py-4 font-medium text-gray-700">
-                  KES {{ Number(loan.approved_amount || loan.applied_amount).toLocaleString() }}
+
+            <tbody>
+              <tr
+                v-for="loan in props.loans"
+                :key="loan.id"
+                class="border-t transition hover:bg-slate-50"
+              >
+                <td class="px-6 py-5 font-medium text-slate-800">
+                  {{ loan.loan_number }}
                 </td>
-                <td class="px-6 py-4 font-medium text-gray-700">
-                  KES {{
-                    ['active', 'disbursed'].includes(loan.status)
-                      ? Number(loan.outstanding_balance).toLocaleString()
+
+                <td class="px-6 py-5">
+                  {{ loan.loan_product?.name }}
+                </td>
+
+                <td class="px-6 py-5 font-semibold">
+                  KES
+                  {{
+                    Number(
+                      loan.approved_amount ||
+                        loan.applied_amount
+                    ).toLocaleString()
+                  }}
+                </td>
+
+                <td class="px-6 py-5 font-semibold">
+                  KES
+                  {{
+                    ['active', 'disbursed'].includes(
+                      loan.status
+                    )
+                      ? Number(
+                          loan.outstanding_balance
+                        ).toLocaleString()
                       : '0'
                   }}
                 </td>
-                <td class="px-6 py-4">{{ formatDate(getNextRepaymentDate(loan)) }}</td>
-                <td class="px-6 py-4">
+
+                <td class="px-6 py-5">
+                  {{
+                    formatDate(
+                      getNextRepaymentDate(loan)
+                    )
+                  }}
+                </td>
+
+                <td class="px-6 py-5">
                   <span
-                    class="px-3 py-1 text-xs rounded-full font-medium capitalize"
+                    class="rounded-full px-3 py-1 text-xs font-semibold capitalize"
                     :class="{
-                      'text-green-700 bg-green-100': ['completed', 'approved'].includes(loan.status),
-                      'text-orange-700 bg-orange-100': ['active', 'under_review'].includes(loan.status),
-                      'text-yellow-700 bg-yellow-100': loan.status === 'pending',
-                      'text-red-700 bg-red-100': loan.status === 'rejected',
-                      'text-gray-700 bg-gray-100': loan.status === 'defaulted',
-                      'text-blue-700 bg-blue-100': loan.status === 'disbursed'
+                      'bg-green-100 text-green-700':
+                        ['completed', 'approved'].includes(
+                          loan.status
+                        ),
+                      'bg-orange-100 text-orange-700':
+                        ['active', 'under_review'].includes(
+                          loan.status
+                        ),
+                      'bg-yellow-100 text-yellow-700':
+                        loan.status === 'pending',
+                      'bg-red-100 text-red-700':
+                        loan.status === 'rejected',
+                      'bg-slate-100 text-slate-700':
+                        loan.status === 'defaulted',
+                      'bg-blue-100 text-blue-700':
+                        loan.status === 'disbursed',
                     }"
                   >
                     {{ loan.status }}
                   </span>
                 </td>
-                <td class="px-6 py-4 text-center">
+
+                <td class="px-6 py-5 text-center">
                   <Link
                     :href="route('loans.show', loan.id)"
-                    class="text-orange-600 hover:text-orange-700 font-semibold hover:underline transition"
+                    class="inline-flex items-center rounded-xl bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:bg-orange-100"
                   >
                     View
                   </Link>
                 </td>
               </tr>
 
+              <!-- EMPTY -->
               <tr v-if="!props.loans.length">
-                <td colspan="7" class="px-6 py-10 text-center text-gray-500">
-                  <div class="flex flex-col items-center space-y-2">
-                    <p class="font-medium text-base text-[#0B2B40]">No loans</p>
-                    <p class="text-sm text-gray-500">Once you apply for a loan, it will appear here.</p>
+                <td
+                  colspan="7"
+                  class="px-6 py-16 text-center"
+                >
+                  <div
+                    class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100"
+                  >
+                    <Plus
+                      class="h-8 w-8 text-slate-400"
+                    />
                   </div>
+
+                  <h3
+                    class="mt-5 text-lg font-semibold text-slate-800"
+                  >
+                    No Loans Found
+                  </h3>
+
+                  <p
+                    class="mx-auto mt-2 max-w-md text-sm text-slate-500"
+                  >
+                    Once you apply for a loan, it will appear here.
+                  </p>
                 </td>
               </tr>
             </tbody>

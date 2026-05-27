@@ -1,14 +1,31 @@
 <script setup lang="ts">
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Download, ArrowDownCircle, Eye, EyeOff } from 'lucide-vue-next'
-import { Button } from "@/components/ui/button"
-import { Link, usePage } from "@inertiajs/vue3"
-import { computed, onMounted, reactive } from "vue"
 import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, Link, usePage } from '@inertiajs/vue3'
+import { computed, onMounted, reactive } from 'vue'
+
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+
+import {
+  ArrowDownCircle,
+  Download,
+  Eye,
+  EyeOff,
+  Wallet,
+  CreditCard,
+  Activity,
+} from 'lucide-vue-next'
+
 const page = usePage()
+
+const props = defineProps<{
+  member: any
+  accounts: any[]
+}>()
 
 onMounted(() => {
   const flash = page.props.flash
+
   if (flash?.success) {
     showMessage('success', flash.success)
   } else if (flash?.error) {
@@ -16,231 +33,491 @@ onMounted(() => {
   }
 })
 
+const totalBalanceVisible = reactive({
+  value: true,
+})
 
-const props = defineProps<{
-  member: any
-  accounts: any[]
-}>()
-
-const totalBalanceVisible = reactive({ value: false })
+const balanceVisibility = reactive<{ [key: number]: boolean }>({})
 
 const totalBalance = computed(() =>
-  props.accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0)
+  props.accounts.reduce((sum, acc) => {
+    return sum + Number(acc.balance || 0)
+  }, 0)
 )
 
 const formattedTotalBalance = computed(() =>
-  Number(totalBalance.value).toLocaleString()
+  Number(totalBalance.value || 0).toLocaleString()
 )
-
-// Track visibility per account
-const balanceVisibility = reactive<{ [key: number]: boolean }>({})
 
 const memberName = computed(() => {
   if (!props.member) return 'N/A'
+
   const { first_name, middle_name, last_name } = props.member
+
   return [first_name, middle_name, last_name]
-    .filter(name => name && name.trim() !== '') // skip null/empty
+    .filter((name) => name && name.trim() !== '')
     .join(' ')
+})
+
+const shareDeposits = computed(() => {
+  return Number(
+    props.accounts.find(
+      (acc) => acc.account_type === 'share_deposits'
+    )?.balance || 0
+  ).toLocaleString()
+})
+
+const totalTransactions = computed(() => {
+  return props.accounts.reduce((sum, acc) => {
+    return sum + (acc.transactions?.length || 0)
+  }, 0)
 })
 
 const formatAccountLabel = (type: string) => {
   switch (type) {
     case 'share_capital':
       return 'Share Capital'
+
     case 'share_deposits':
       return 'Share Deposits'
+
     default:
       return type
+  }
+}
+
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-emerald-100 text-emerald-700'
+
+    case 'pending':
+      return 'bg-amber-100 text-amber-700'
+
+    case 'failed':
+      return 'bg-red-100 text-red-700'
+
+    default:
+      return 'bg-slate-100 text-slate-700'
   }
 }
 </script>
 
 <template>
   <AppLayout :breadcrumbs="[{ title: 'Accounts', href: '/my-accounts' }]">
-    <div class="space-y-8 p-5 sm:p-6">
-      <Head title="Accounts" />
+    <Head title="Accounts" />
 
-      <!-- Header -->
-      <div class="rounded-2xl bg-gradient-to-r from-blue-900 to-orange-500 p-6 shadow-md text-white">
-        <div class="flex items-center justify-between">
-          <!-- Accounts -->
-          <div>
-            <h1 class="text-2xl font-semibold">
-              Accounts
-            </h1>
-            <p class="text-sm max-sm:w-[90%] opacity-90 mt-1">
-              Overview of your balances and transactions
-            </p>
-          </div>
+    <div class="min-h-screen bg-slate-50">
+      <div class="mx-auto max-w-7xl space-y-8 p-4 sm:p-6">
+        <!-- Hero -->
+        <div
+          class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-900 to-indigo-700 p-6 sm:p-8 text-white shadow-2xl"
+        >
+          <div
+            class="absolute right-0 top-0 h-40 w-40 rounded-full bg-white/10 blur-3xl"
+          />
+          <div
+            class="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-blue-400/20 blur-2xl"
+          />
 
-          <!-- Account Holder -->
-          <div class="text-right self-start">
-            <p class="text-sm font-bold text-blue-900 opacity-75">Acc. Name</p>
-            <h2 class="text-base sm:text-lg font-medium text-white">
-              {{ memberName }}
-            </h2>
-          </div>
-        </div>
-      </div>
-
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- My Accounts -->
-        <Card
-          class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-[#0a2342] transition-all duration-300">
-          <CardHeader>
-            <CardTitle class="text-[#0a2342]">My Accounts</CardTitle>
-          </CardHeader>
-          <CardContent class="flex flex-col sm:flex-row justify-between gap-4">
-            <div>
-              <p class="text-sm text-gray-500">Total Accounts</p>
-              <p class="text-lg font-medium sm:text-xl text-[#0a2342]">
-                {{ props.accounts.length }}
-              </p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Status</p>
-              <p class="text-lg font-medium sm:text-xl text-orange-600">
-                {{ props.accounts.length > 0 ? `${props.accounts.length} active` : "No accounts" }}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <!-- Total Balance -->
-        <Card
-          class="rounded-2xl bg-white shadow-md hover:shadow-xl border-l-4 border-orange-500 transition-all duration-300">
-          <CardHeader>
-            <CardTitle class="text-[#0a2342] flex items-center justify-between">
-              Total Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent class="flex justify-between mr-5 items-center">
-            <p class="text-lg font-medium sm:text-xl text-[#0a2342]">
-              <span :class="totalBalanceVisible.value ? '' : 'blur-sm select-none'">
-                KES {{ formattedTotalBalance }}
-                <p class="text-sm font-normal text-gray-800">
-                  share deposits:
-                  {{
-                    props.accounts.find(acc => acc.account_type === 'share_deposits')?.balance?.toLocaleString() || 0
-                  }}
-                </p>
-              </span>
-            </p>
-            <button @click="totalBalanceVisible.value = !totalBalanceVisible.value"
-              class="text-gray-500 hover:text-blue-700 transition">
-              <component :is="totalBalanceVisible.value ? EyeOff : Eye" class="w-5 h-5" />
-            </button>
-          </CardContent>
-        </Card>
-      </div>
-
-      <!-- Accounts List -->
-      <div
-        v-for="account in props.accounts"
-        :key="account.id"
-        class="bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 p-6 space-y-4"
-      >
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
-          <div>
-            <h2 class="text-base sm:text-lg font-medium text-blue-900">
-              <span class="font-normal text-gray-900">Account No:</span> {{ account.account_number }} - <span class="font-normal text-sm">{{ formatAccountLabel(account.account_type) }}</span>
-            </h2>
-            <p class="text-sm sm:text-base text-gray-500 flex items-center gap-3">
-              Balance:
-              <span class="font-medium text-[#0a2342]">
-                <span :class="balanceVisibility[account.id] ? '' : 'blur-sm select-none'" class="text-base sm:text-lg">
-                  KES {{ Number(account.balance).toLocaleString() }}
-                </span>
-              </span>
-              <button
-                @click="balanceVisibility[account.id] = !balanceVisibility[account.id]"
-                class="text-gray-500 hover:text-gray-700 transition"
+          <div
+            class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"
+          >
+            <div class="space-y-3">
+              <div
+                class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-orange-500/90 px-4 py-1 text-sm backdrop-blur"
               >
-                <component :is="balanceVisibility[account.id] ? EyeOff : Eye" class="w-4 h-4" />
-              </button>
-            </p>
-          </div>
+                <Wallet class="h-4 w-4" />
+                My Accounts
+              </div>
 
-          <div class="flex gap-2 sm:gap-3 flex-wrap">
-            <!--  Deposit -->
-            <Link
-              v-if="account.account_type === 'share_deposits'"
-              :href="route('members.accounts.deposit.show', { member: account.member_id, account: account.id })"
-            >
-              <Button
-                class="bg-blue-900 hover:bg-blue-800 hover:cursor-pointer font-normal text-white max-sm:text-xs shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition"
-              >
-                <ArrowDownCircle class="w-3 sm:w-4 h-3 sm:h-4" />
-                Deposit
-              </Button>
-            </Link>
-
-            <!--  Statement -->
-            <Link
-              v-if="account.transactions.length"
-              :href="route('my-accounts.statement', { member: account.member_id, account: account.id })"
-            >
-              <Button
-                class="border border-orange-500 bg-white hover:bg-orange-500 font-normal hover:cursor-pointer text-orange-500 hover:text-white max-sm:text-xs text-sm shadow px-3 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition"
-              >
-                <Download class="w-3 sm:w-4 h-3 sm:h-4" />
-                Download Statement
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        <!-- Recent Transactions -->
-        <div>
-          <h3 class="text-sm font-semibold text-gray-500 mb-2">Recent Transactions</h3>
-          <div v-if="account.transactions.length" class="overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
-            <table class="min-w-full text-sm text-left text-gray-600">
-              <thead class="bg-gradient-to-r from-blue-50 to-blue-100 text-xs uppercase font-medium text-gray-600">
-                <tr>
-                  <th class="px-4 py-3">Date</th>
-                  <th class="px-4 py-3">Type</th>
-                  <th class="px-4 py-3">Amount</th>
-                  <th class="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 bg-white">
-                <tr
-                  v-for="tx in account.transactions"
-                  :key="tx.id"
-                  class="hover:bg-gray-50 transition"
+              <div>
+                <h1
+                  class="text-lg font-bold tracking-tight sm:text-xl lg:text-3xl"
                 >
-                  <td class="px-4 py-3">{{ new Date(tx.created_at).toLocaleDateString() }}</td>
-                  <td class="px-4 py-3 capitalize">{{ tx.transaction_type }}</td>
-                  <td class="px-4 py-3 font-medium">KES {{ Number(tx.amount).toLocaleString() }}</td>
-                  <td class="px-4 py-3">
-                    <span
-                      class="px-2 py-1 text-xs rounded-full"
-                      :class="{
-                        'text-green-700 bg-green-100': tx.status === 'completed',
-                        'text-yellow-700 bg-yellow-100': tx.status === 'pending',
-                        'text-red-700 bg-red-100': tx.status === 'failed'
-                      }"
-                    >
-                      {{ tx.status }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p v-else class="text-gray-500 text-sm">No recent transactions.</p>
-        </div>
-      </div>
+                  Welcome,
+                  {{ memberName }}
+                </h1>
 
-      <!-- Empty state -->
-      <div v-if="!props.accounts.length" class="text-center text-gray-500 py-12">
-        <p class="text-lg">No accounts found for this member.</p>
-        <Link :href="route('accounts.create', { member: props.member.id })">
-          <Button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md transition">
-            Open Your First Account
-          </Button>
-        </Link>
+                <p class="mt-2 max-w-xl text-sm text-blue-100 sm:text-base">
+                  Track your balances, deposits, and account activity.
+                </p>
+              </div>
+            </div>
+
+            <!-- Balance Card -->
+            <div
+              class="w-full max-w-sm rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-xl"
+            >
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-sm text-blue-100">
+                    Total Balance
+                  </p>
+
+                  <h2
+                    class="mt-2 text-lg font-bold tracking-tight sm:text-xl"
+                  >
+                    <span
+                      :class="
+                        totalBalanceVisible.value
+                          ? ''
+                          : 'blur-md select-none'
+                      "
+                    >
+                      KES {{ formattedTotalBalance }}
+                    </span>
+                  </h2>
+                </div>
+
+                <button
+                  @click="totalBalanceVisible.value = !totalBalanceVisible.value"
+                  class="rounded-full bg-white/10 p-2 transition hover:bg-white/20"
+                >
+                  <component
+                    :is="totalBalanceVisible.value ? EyeOff : Eye"
+                    class="h-5 w-5"
+                  />
+                </button>
+              </div>
+
+              <div
+                class="mt-5 flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3"
+              >
+                <div>
+                  <p class="text-xs text-blue-100">
+                    Share Deposits
+                  </p>
+
+                  <p class="text-base font-semibold">
+                    KES {{ shareDeposits }}
+                  </p>
+                </div>
+
+                <CreditCard class="h-8 w-8 text-blue-100" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <Card
+            class="rounded-3xl border-0 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+          >
+            <CardContent class="p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-slate-500">
+                    Total Accounts
+                  </p>
+
+                  <h3 class="mt-2 text-2xl font-bold text-slate-900">
+                    {{ props.accounts.length }}
+                  </h3>
+                </div>
+
+                <div
+                  class="rounded-2xl bg-blue-100 p-3 text-blue-700"
+                >
+                  <Wallet class="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            class="rounded-3xl border-0 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+          >
+            <CardContent class="p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-slate-500">
+                    Active Accounts
+                  </p>
+
+                  <h3 class="mt-2 text-2xl font-bold text-slate-900">
+                    {{ props.accounts.length }}
+                  </h3>
+                </div>
+
+                <div
+                  class="rounded-2xl bg-emerald-100 p-3 text-emerald-700"
+                >
+                  <Activity class="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            class="rounded-3xl border-0 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+          >
+            <CardContent class="p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-slate-500">
+                    Transactions
+                  </p>
+
+                  <h3 class="mt-2 text-2xl font-bold text-slate-900">
+                    {{ totalTransactions }}
+                  </h3>
+                </div>
+
+                <div
+                  class="rounded-2xl bg-orange-100 p-3 text-orange-700"
+                >
+                  <ArrowDownCircle class="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <!-- Accounts -->
+        <div
+          v-if="props.accounts.length"
+          class="grid gap-6"
+        >
+          <div
+            v-for="account in props.accounts"
+            :key="account.id"
+            class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl"
+          >
+            <!-- Top -->
+            <div
+              class="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white p-6"
+            >
+              <div
+                class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"
+              >
+                <div class="space-y-2">
+                  <div
+                    class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
+                  >
+                    {{ formatAccountLabel(account.account_type) }}
+                  </div>
+
+                  <div>
+                    <h2
+                      class="text-lg font-semibold text-slate-900 sm:text-xl"
+                    >
+                      {{ account.account_number }}
+                    </h2>
+
+                    <div
+                      class="mt-2 flex items-center gap-3 text-sm text-slate-500"
+                    >
+                      <span>Available Balance</span>
+
+                      <span
+                        class="text-base font-semibold text-slate-900"
+                      >
+                        <span
+                          :class="
+                            balanceVisibility[account.id]
+                              ? ''
+                              : 'blur-md select-none'
+                          "
+                        >
+                          KES
+                          {{ Number(account.balance || 0).toLocaleString() }}
+                        </span>
+                      </span>
+
+                      <button
+                        @click="
+                          balanceVisibility[account.id] =
+                            !balanceVisibility[account.id]
+                        "
+                        class="text-slate-400 transition hover:text-slate-700"
+                      >
+                        <component
+                          :is="
+                            balanceVisibility[account.id]
+                              ? EyeOff
+                              : Eye
+                          "
+                          class="h-4 w-4"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-wrap gap-3">
+                  <Link
+                    v-if="account.account_type === 'share_deposits'"
+                    :href="
+                      route('members.accounts.deposit.show', {
+                        member: account.member_id,
+                        account: account.id,
+                      })
+                    "
+                  >
+                    <Button
+                      class="h-11 rounded-2xl bg-blue-900 px-5 text-white hover:bg-blue-800"
+                    >
+                      <ArrowDownCircle class="mr-2 h-4 w-4" />
+                      Deposit
+                    </Button>
+                  </Link>
+
+                  <Link
+                    v-if="account.transactions.length"
+                    :href="
+                      route('my-accounts.statement', {
+                        member: account.member_id,
+                        account: account.id,
+                      })
+                    "
+                  >
+                    <Button
+                      variant="outline"
+                      class="h-11 rounded-2xl border-orange-300 bg-orange-50 px-5 text-orange-700 hover:bg-orange-100"
+                    >
+                      <Download class="mr-2 h-4 w-4" />
+                      Statement
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <!-- Transactions -->
+            <div class="p-6">
+              <div
+                class="mb-4 flex items-center justify-between"
+              >
+                <div>
+                  <h3 class="text-base font-semibold text-slate-900">
+                    Recent Transactions
+                  </h3>
+
+                  <p class="text-sm text-slate-500">
+                    Latest activity on this account
+                  </p>
+                </div>
+              </div>
+
+              <div
+                v-if="account.transactions.length"
+                class="overflow-hidden rounded-2xl border border-slate-200"
+              >
+                <div class="overflow-x-auto">
+                  <table class="min-w-full">
+                    <thead class="bg-slate-50">
+                      <tr>
+                        <th
+                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                        >
+                          Date
+                        </th>
+
+                        <th
+                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                        >
+                          Type
+                        </th>
+
+                        <th
+                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                        >
+                          Amount
+                        </th>
+
+                        <th
+                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                        >
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                      <tr
+                        v-for="tx in account.transactions"
+                        :key="tx.id"
+                        class="transition hover:bg-slate-50"
+                      >
+                        <td class="px-5 py-4 text-sm text-slate-700">
+                          {{
+                            new Date(
+                              tx.created_at
+                            ).toLocaleDateString()
+                          }}
+                        </td>
+
+                        <td
+                          class="px-5 py-4 text-sm capitalize text-slate-700"
+                        >
+                          {{ tx.transaction_type }}
+                        </td>
+
+                        <td
+                          class="px-5 py-4 text-sm font-semibold text-slate-900"
+                        >
+                          KES
+                          {{ Number(tx.amount).toLocaleString() }}
+                        </td>
+
+                        <td class="px-5 py-4">
+                          <span
+                            class="rounded-full px-3 py-1 text-xs font-medium"
+                            :class="getStatusClass(tx.status)"
+                          >
+                            {{ tx.status }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div
+                v-else
+                class="rounded-2xl border border-dashed border-slate-300 py-10 text-center"
+              >
+                <p class="text-sm text-slate-500">
+                  No recent transactions found.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty -->
+        <div
+          v-else
+          class="rounded-3xl border border-dashed border-slate-300 bg-white py-20 text-center shadow-sm"
+        >
+          <div
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100"
+          >
+            <Wallet class="h-8 w-8 text-slate-500" />
+          </div>
+
+          <h2 class="text-xl font-semibold text-slate-900">
+            No Accounts Found
+          </h2>
+
+          <p class="mt-2 text-sm text-slate-500">
+            Open your first SACCO account to get started.
+          </p>
+
+          <Link
+            :href="route('accounts.create', { member: props.member.id })"
+          >
+            <Button
+              class="mt-6 h-11 rounded-2xl bg-blue-900 px-6 hover:bg-blue-800"
+            >
+              Open Account
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   </AppLayout>
