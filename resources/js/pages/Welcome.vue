@@ -1,9 +1,38 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import PublicLayout from '@/layouts/PublicLayout.vue'
+import { ref, onMounted } from 'vue'
 
-const menuOpen = ref(false)
+// Animated counters
+const members = ref(0)
+const loans = ref(0)
+const years = ref(0)
+
+const animateValue = (
+  target: number,
+  duration: number,
+  callback: (value: number) => void
+) => {
+  let start = 0
+  const increment = target / (duration / 16)
+
+  const timer = setInterval(() => {
+    start += increment
+
+    if (start >= target) {
+      callback(target)
+      clearInterval(timer)
+    } else {
+      callback(Math.floor(start))
+    }
+  }, 16)
+}
+
+onMounted(() => {
+  animateValue(100, 1800, (val) => (members.value = val))
+  animateValue(500, 2200, (val) => (loans.value = val))
+  animateValue(30, 1600, (val) => (years.value = val))
+})
 </script>
 
 <template>
@@ -11,110 +40,155 @@ const menuOpen = ref(false)
 
     <Head title="Welcome" />
 
-    <!-- Hero Section -->
-    <main class="relative flex-grow overflow-hidden 
-             bg-gradient-to-br from-slate-50 via-white to-blue-50
-             dark:from-gray-900 dark:via-gray-950 dark:to-blue-950">
+    <main class="relative overflow-hidden min-h-screen
+      bg-[#f8fafc] dark:bg-[#020617]">
+      <!-- Background Effects -->
+      <div class="absolute top-0 left-1/2 -translate-x-1/2
+        w-[900px] h-[900px]
+        bg-blue-500/10 blur-3xl rounded-full"></div>
 
-      <!-- Soft Background Accents -->
-      <div class="absolute -top-40 -right-40 w-[500px] h-[500px] 
-                  rounded-full blur-[120px] opacity-40 
-                  bg-white-200 dark:bg-gray-700/30"></div>
-      <div class="absolute bottom-0 -left-40 w-[500px] h-[500px] 
-                  rounded-full blur-[120px] opacity-40 
-                  bg-orange-200 dark:bg-orange-900/30"></div>
+      <div class="absolute bottom-0 right-0
+        w-[500px] h-[500px]
+        bg-orange-500/10 blur-3xl rounded-full"></div>
 
-      <div class="relative max-w-7xl mx-auto px-6 py-10 lg:py-20 grid lg:grid-cols-2 gap-16 items-center">
+      <section class="relative max-w-7xl mx-auto
+        px-6 lg:px-8
+        pt-10 sm:pt-16 lg:pt-24
+        pb-24">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+          <!-- LEFT -->
+          <div>
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2
+              px-4 py-2 mb-8
+              rounded-full
+              border border-blue-100 dark:border-blue-900
+              bg-white/20 dark:bg-slate-900/70
+              backdrop-blur-xl
+              text-xs text-orange-500 dark:text-slate-300">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Trusted SACCO Platform
+            </div>
 
-        <!-- LEFT CONTENT -->
-        <div class="space-y-8">
+            <!-- Heading -->
+            <h1 class="text-5xl lg:text-6xl
+              font-black tracking-tight
+              leading-[1.10]
+              text-slate-900 dark:text-white">
+              Banking built for
+              <span class="bg-gradient-to-r
+                from-blue-600 via-blue-500 to-orange-500
+                bg-clip-text text-transparent">
+                modern members !
+              </span>
+            </h1>
 
-          <!-- Heading -->
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight 
-                     text-gray-900 dark:text-gray-100">
-            Smart Banking for
-            <span
-              class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-500 dark:from-blue-400 dark:to-orange-400">
-              Modern Members
-            </span>
-          </h1>
+            <!-- Description -->
+            <p class="mt-8 max-w-2xl
+              text-lg sm:text-xl
+              leading-relaxed
+              text-slate-600 dark:text-slate-300">
+              SEPU SACCO delivers secure savings, affordable loans,
+              and intelligent financial tools that help members grow
+              with confidence.
+            </p>
 
-          <!-- Description -->
-          <p class="sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl">
-            SEPU SACCO empowers you with innovative savings solutions,
-            affordable loans, and a transparent financial ecosystem
-            designed for sustainable growth.
-          </p>
+            <!-- CTA -->
+            <div class="flex flex-wrap gap-4 mt-10">
+              <Link :href="route('register')" class="px-8 py-4 rounded-2xl
+                bg-gradient-to-r from-blue-950 to-blue-900
+                hover:from-blue-800 hover:to-blue-900
+                text-white font-semibold
+                shadow-xl shadow-blue-500/20
+                transition-all duration-300
+                hover:-translate-y-1">
+              Get Started
+              </Link>
 
-          <!-- Buttons -->
-          <div class="flex flex-wrap gap-5 pt-4">
-            <Link :href="route('login')" class="px-8 py-3 rounded-xl font-semibold text-white
-                         bg-blue-900 shadow-lg shadow-blue-200
-                         hover:bg-blue-800 hover:shadow-blue-300
-                         dark:bg-blue-700 dark:shadow-blue-800/50 dark:hover:bg-blue-600
-                         transition-all duration-300 hover:scale-105">
-            Log In
-            </Link>
+              <Link :href="route('login')" class="px-8 py-4 rounded-2xl
+                border border-slate-200 dark:border-slate-700
+                bg-white/70 dark:bg-slate-900/70
+                backdrop-blur-xl
+                text-slate-800 dark:text-white hover:text-white font-semibold
+                hover:bg-orange-500/90 dark:hover:bg-slate-800
+                transition-all duration-300">
+              Login
+              </Link>
+            </div>
 
-            <Link :href="route('register')" class="px-8 py-3 rounded-xl font-semibold
-                         border border-gray-300 bg-white
-                         hover:bg-gray-50 hover:border-gray-400
-                         dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200
-                         dark:hover:bg-gray-700 dark:hover:border-gray-500
-                         transition-all duration-300">
-            Register
-            </Link>
+            <!-- Stats -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8
+              mt-16 pt-10
+              border-t border-slate-200 dark:border-slate-800">
+              <div>
+                <h3 class="text-2xl sm:text-3xl font-black
+                  text-slate-900 dark:text-white">
+                  {{ members }}+
+                </h3>
+
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Active Members
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-2xl sm:text-3xl font-black
+                  text-slate-900 dark:text-white">
+                  KES {{ loans }}M+
+                </h3>
+
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Loans Issued
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-2xl sm:text-3xl font-black
+                  text-slate-900 dark:text-white">
+                  {{ years }}+
+                </h3>
+
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Years Trusted
+                </p>
+              </div>
+            </div>
           </div>
 
-          <!-- Stats -->
-          <div class="flex gap-5 sm:gap-10 pt-10 text-sm">
-            <div>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">100+</p>
-              <p class="text-gray-500 dark:text-gray-400">Active Members</p>
-            </div>
-            <div>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">KES 500M+</p>
-              <p class="text-gray-500 dark:text-gray-400">Loans Issued</p>
-            </div>
-            <div>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">30+ Years</p>
-              <p class="text-gray-500 dark:text-gray-400">Trusted Service</p>
+          <!-- RIGHT -->
+          <div class="relative lg:pl-10">
+            <!-- Floating Card -->
+            <div class="relative
+              rounded-[2rem]
+              overflow-hidden
+              border border-white/20
+              bg-white/60 dark:bg-slate-900/60
+              backdrop-blur-2xl
+              shadow-2xl">
+              <img src="/sacco.png" alt="SEPU SACCO" class="w-full h-full object-cover" />
+
+              <!-- Overlay -->
+              <div class="absolute inset-0
+                bg-gradient-to-t
+                from-slate-950/50
+                via-transparent
+                to-transparent"></div>
+
+              <!-- Bottom Info -->
+              <div class="absolute bottom-0 left-0 right-0
+                p-6">
+                <div class="inline-flex items-center gap-2
+                  px-4 py-2 rounded-xl
+                  bg-white/10 backdrop-blur-xl
+                  border border-white/20
+                  text-white text-sm">
+                  #EmpoweringMembers
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- RIGHT SIDE -->
-        <div class="relative">
-
-          <!-- Glass Card -->
-          <div class="relative p-6 rounded-3xl bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl
-                      border border-gray-200 dark:border-gray-700 shadow-2xl
-                      hover:shadow-3xl transition-all duration-700">
-
-            <img src="/sacco.png" alt="SEPU SACCO platform" class="rounded-2xl w-full object-cover" />
-
-            <!-- Floating Tag -->
-            <div class="absolute -bottom-6 left-8 px-6 py-3 rounded-xl
-                        bg-gradient-to-r from-orange-500 to-orange-400 dark:from-orange-600 dark:to-orange-500
-                        text-white text-sm font-semibold shadow-lg">
-              #EmpoweringMembers
-            </div>
-          </div>
-
-          <!-- Badge -->
-          <div class="inline-flex items-center gap-2 px-4 mt-10 py-2 rounded-full 
-                      bg-white/5 dark:bg-gray-700/20 shadow-sm text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-            SEPU SACCO<span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-            Trusted & Secure Cooperative Platform
-          </div>
-
-          <!-- Decorative Accent Card -->
-          <div class="absolute -top-10 -right-10 w-40 bg-blue-100 dark:bg-blue-700 rounded-3xl blur-2xl opacity-70">
-          </div>
-
-        </div>
-
-      </div>
+      </section>
     </main>
   </PublicLayout>
 </template>

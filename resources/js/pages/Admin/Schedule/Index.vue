@@ -141,7 +141,7 @@ const getStatusIcon = (status: string) => {
               </h1>
 
               <p
-                class="mt-4 max-w-2xl text-sm leading-7 text-orange-300 dark:text-slate-400"
+                class="mt-4 max-w-2xl text-sm leading-7 text-white dark:text-slate-400"
               >
                 Automate deposits, loan repayments, disbursements, dividend
                 distributions, and financial scheduling workflows with full

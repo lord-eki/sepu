@@ -3,14 +3,24 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, useForm, usePage } from '@inertiajs/vue3'
 import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { Save, User, Pencil } from 'lucide-vue-next'
+import {
+  Save,
+  User,
+  Pencil,
+  Camera,
+  ShieldCheck,
+  MapPin,
+  Phone,
+  Briefcase,
+  X,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-vue-next'
 import { route } from 'ziggy-js'
-
 import { PageProps as InertiaPageProps } from '@inertiajs/core'
 
+/* ---------------- INTERFACES ---------------- */
 
-
-//  Define interfaces FIRST
 interface Member {
   id: number
   membership_id: string
@@ -64,33 +74,38 @@ interface PageProps extends InertiaPageProps {
   }
 }
 
-// usePage with type
+/* ---------------- PAGE ---------------- */
+
 const page = usePage<PageProps>()
 
+/* ---------------- FLASH ---------------- */
 
-// Flash messages
-const flashMessage = ref<string | null>(null)
-const flashType = ref<'success' | 'error'>('success')
+const flashVisible = ref(true)
 
-watch(
-  () => page.props.flash,
-  (flash) => {
-    if (flash?.success) {
-      flashMessage.value = flash.success
-      flashType.value = 'success'
-    } else if (flash?.error) {
-      flashMessage.value = flash.error
-      flashType.value = 'error'
-    }
-
-    if (flashMessage.value) {
-      setTimeout(() => (flashMessage.value = null), 5000)
-    }
-  },
-  { immediate: true, deep: true }
+const successMessage = computed(() =>
+  flashVisible.value ? page.props.flash?.success || null : null
 )
 
-//  Computed props
+const errorMessage = computed(() =>
+  flashVisible.value ? page.props.flash?.error || null : null
+)
+
+watch(
+  () => [page.props.flash?.success, page.props.flash?.error],
+  ([success, error]) => {
+    if (success || error) {
+      flashVisible.value = true
+
+      setTimeout(() => {
+        flashVisible.value = false
+      }, 4000)
+    }
+  },
+  { immediate: true }
+)
+
+/* ---------------- COMPUTED ---------------- */
+
 const member = computed(() => page.props.member)
 const user = computed(() => page.props.user)
 
@@ -99,7 +114,13 @@ const isEditing = ref(false)
 const formatDate = (date: string | null | undefined) =>
   date ? new Date(date).toLocaleDateString('en-GB') : '-'
 
-// ✅ Form setup
+const formatCurrency = (amount: number | null | undefined) =>
+  amount
+    ? new Intl.NumberFormat('en-KE').format(amount)
+    : '0'
+
+/* ---------------- FORM ---------------- */
+
 const form = useForm({
   middle_name: member.value.middle_name,
   occupation: member.value.occupation,
@@ -120,13 +141,19 @@ const form = useForm({
 })
 
 const previewUrl = ref<string | null>(null)
+const imageError = ref(false)
+
+/* ---------------- PHOTO ---------------- */
 
 function handlePhotoUpload(event: Event) {
   const target = event.target as HTMLInputElement
+
   if (target.files && target.files[0]) {
     const file = target.files[0]
+
     form.profile_photo = file
     previewUrl.value = URL.createObjectURL(file)
+
     form.post(route('member.updatePhoto'), {
       forceFormData: true,
       preserveScroll: true,
@@ -134,213 +161,383 @@ function handlePhotoUpload(event: Event) {
   }
 }
 
+/* ---------------- SUBMIT ---------------- */
+
 function submit() {
   form.put(route('member.updateProfile'), {
-    onSuccess: () => (isEditing.value = false),
+    preserveScroll: true,
+    onSuccess: () => {
+      isEditing.value = false
+    },
   })
-
 }
-
-
 </script>
-
 
 <template>
 
   <Head title="My Profile" />
 
-  <AppLayout :breadcrumbs="[{ title: 'My Profile', href: '/member/profile' }]">
-    <div class="py-4 px-6 md:px-10 bg-gradient-to-b from-slate-50 to-white min-h-screen">
-
-      <!-- Flash Message -->
-      <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
-        <div v-if="flashMessage" :class="[
-    flashType === 'success'
-      ? 'bg-green-50 border border-green-200 text-green-800'
-      : 'bg-red-50 border border-red-200 text-red-800',
-    'max-w-3xl mx-auto px-6 py-3 rounded-xl flex items-center shadow-sm mb-8 backdrop-blur-sm',
+  <AppLayout :breadcrumbs="[
+    { title: 'My Profile', href: '/member/profile' },
   ]">
-          <span class="flex-1 font-medium">{{ flashMessage }}</span>
-          <button type="button" class="ml-3 text-gray-500 hover:text-gray-700" @click="flashMessage = null">
-            ✕
-          </button>
-        </div>
-      </transition>
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 sm:p-6 lg:p-8">
 
-      <!-- Content Grid -->
-      <div class="w-full mx-auto grid grid-cols-1 lg:grid-cols-3 md:gap-8 sm:p-2">
-        <!-- Profile Card -->
-        <div
-          class="bg-white/90 backdrop-blur-xl rounded-2xl max-sm:mb-6 border border-slate-100 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div class="bg-gradient-to-r from-[#0a2342] to-blue-800 p-8 text-center text-white rounded-t-2xl">
-            <div class="relative group">
-              <img v-if="previewUrl" :src="previewUrl" alt="Preview"
-                class="w-28 h-28 mx-auto rounded-full object-cover border-4 border-white shadow-md transition-transform group-hover:scale-105" />
-              <img v-else-if="member.profile_photo" :src="`/storage/${member.profile_photo}`" alt="Profile"
-                class="w-28 h-28 mx-auto rounded-full object-cover border-4 border-white shadow-md transition-transform group-hover:scale-105" />
-              <div v-else
-                class="w-28 h-28 mx-auto bg-white/20 flex items-center justify-center rounded-full border-4 border-white shadow-md">
-                <User class="h-12 w-12 text-white/80" />
+      <div class="mx-auto max-w-7xl space-y-6">
+
+        <!-- FLASH -->
+        <transition enter-active-class="transition duration-300" enter-from-class="opacity-0 -translate-y-3"
+          enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200"
+          leave-to-class="opacity-0 -translate-y-3">
+          <div v-if="successMessage || errorMessage" :class="[
+    successMessage
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      : 'border-rose-200 bg-rose-50 text-rose-700',
+    'flex items-center gap-3 rounded-2xl border px-5 py-4 shadow-sm backdrop-blur-xl',
+  ]">
+            <component :is="successMessage ? CheckCircle2 : AlertCircle" class="h-5 w-5 shrink-0" />
+
+            <p class="flex-1 text-sm font-medium">
+              {{ successMessage || errorMessage }}
+            </p>
+
+            <button @click="flashVisible = false" class="rounded-lg p-1 hover:bg-black/5 transition">
+              <X class="h-4 w-4" />
+            </button>
+          </div>
+        </transition>
+
+        <!-- HERO -->
+        <section
+          class="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#0F172A] via-[#132F57] to-[#1E3A8A] p-6 sm:p-8 shadow-2xl">
+          <div class="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-orange-400/20 blur-3xl"></div>
+
+          <div class="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl"></div>
+
+          <div class="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+
+            <!-- LEFT -->
+            <div class="flex items-center gap-5">
+              <div class="relative group">
+                <!-- PREVIEW -->
+                <img v-if="previewUrl" :src="previewUrl" alt="Preview"
+                  class="h-28 w-28 rounded-3xl object-cover border-4 border-white/20 shadow-2xl" />
+
+                <!-- SAVED IMAGE -->
+                <img v-else-if="member.profile_photo && !imageError" :src="`/storage/${member.profile_photo}`"
+                  alt="Profile" @error="imageError = true"
+                  class="h-28 w-28 rounded-3xl object-cover border-4 border-white/20 shadow-2xl" />
+
+                <!-- DEFAULT AVATAR -->
+                <div v-else
+                  class="flex h-28 w-28 items-center justify-center rounded-3xl border border-white/20 bg-gradient-to-br from-slate-200/20 to-slate-400/20 backdrop-blur-xl shadow-2xl">
+                  <User class="h-12 w-12 text-white/80" />
+                </div>
+
+                <!-- Upload -->
+                <label
+                  class="absolute -bottom-2 -right-2 flex h-10 w-10 cursor-pointer items-center justify-center rounded-2xl bg-orange-500 text-white shadow-lg transition hover:scale-105 hover:bg-orange-600">
+                  <Camera class="h-4 w-4" />
+
+                  <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
+                </label>
+
               </div>
 
-              <label
-                class="absolute -bottom-1 ml-10 left-1/2 -translate-x-1/2 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-105 transition-all cursor-pointer"
-                title="Edit Photo">
-                <div class="relative rounded-sm p-1">
-                  <Pencil class="w-4 h-4 text-white z-10" />
-                  <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
-                  <div
-                    class="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-5 bg-amber-400 rounded-b-lg border-t border-orange-300 shadow-sm">
-                  </div>
+              <div>
+                <div
+                  class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-1.5 backdrop-blur">
+                  <ShieldCheck class="h-4 w-4 text-emerald-400" />
+
+                  <span class="text-xs font-medium text-white">
+                    Verified Member
+                  </span>
                 </div>
-              </label>
+
+                <h1 class="mt-4 text-3xl font-bold tracking-tight text-white">
+                  {{ member.first_name }} {{ member.last_name }}
+                </h1>
+
+                <p class="mt-2 text-sm text-slate-300">
+                  Membership ID:
+                  <span class="font-semibold text-white">
+                    {{ member.membership_id }}
+                  </span>
+                </p>
+              </div>
             </div>
 
-            <h2 class="mt-4 text-xl font-semibold">
-              {{ member.first_name }} {{ member.last_name }}
-            </h2>
-            <p class="text-sm text-blue-100">M/ship ID: {{ member.membership_id }}</p>
-          </div>
+            <!-- ACTIONS -->
+            <div class="flex flex-wrap gap-3">
+              <Button v-if="!isEditing" @click="isEditing = true"
+                class="h-12 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 px-5 font-semibold shadow-xl">
+                <Pencil class="mr-2 h-4 w-4" />
+                Edit Profile
+              </Button>
 
-          <!-- Profile Details -->
-          <div class="p-6 space-y-4">
-            <div v-for="info in [
+              <template v-if="isEditing">
+                <Button @click="isEditing = false"
+                  class="h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5">
+                  Cancel
+                </Button>
+
+                <Button @click="submit" :disabled="form.processing"
+                  class="h-12 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white px-5 font-semibold shadow-xl">
+                  <Save class="mr-2 h-4 w-4" />
+
+                  {{ form.processing ? 'Saving...' : 'Save Changes' }}
+                </Button>
+              </template>
+            </div>
+          </div>
+        </section>
+
+        <!-- CONTENT -->
+        <div class="grid gap-6 xl:grid-cols-[360px,1fr]">
+
+          <!-- SIDEBAR -->
+          <div class="space-y-6">
+
+            <!-- INFO CARD -->
+            <div class="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
+
+              <h2 class="text-lg font-bold text-slate-900">
+                Profile Overview
+              </h2>
+
+              <div class="mt-6 space-y-4">
+
+                <div v-for="info in [
     { label: 'Username', value: user.username || 'N/A' },
     { label: 'ID Number', value: member.id_number || '-' },
     { label: 'Date of Birth', value: formatDate(member.date_of_birth) },
     { label: 'Gender', value: member.gender || '-' },
-    { label: 'Membership Status', value: member.membership_status },
+    { label: 'Membership Status', value: member.membership_status || '-' },
     { label: 'Joined On', value: formatDate(member.membership_date) },
-  ]" :key="info.label" class="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors">
-              <label class="text-xs text-slate-600 font-medium">{{ info.label }}</label>
-              <p class="mt-1 font-semibold text-slate-800">{{ info.value }}</p>
-            </div>
-          </div>
-        </div>
+  ]" :key="info.label" class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <p class="text-xs uppercase tracking-wide text-slate-500">
+                    {{ info.label }}
+                  </p>
 
-        <!-- Editable Form -->
-        <div
-          class="col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-100 shadow-lg p-8 transition-all duration-300">
-          <div class="flex flex-wrap justify-between items-center mb-6">
-            <h3 class="text-xl font-semibold text-[#0a2342]">Personal Information</h3>
-            <div class="flex gap-3">
-              <Button v-if="!isEditing" @click="isEditing = true"
-                class="bg-[#0a2342] hover:bg-blue-900 text-white rounded-md px-4 py-2 flex items-center gap-2 shadow-sm">
-                <Pencil class="w-4 h-4" /> Edit
-              </Button>
-              <Button v-if="isEditing" @click="isEditing = false"
-                class="bg-gray-400 hover:bg-gray-500 text-white rounded-md px-4 py-2">
-                Cancel
-              </Button>
-              <Button v-if="isEditing" type="button" @click="submit"
-                class="bg-orange-500 hover:bg-orange-600 text-white rounded-md px-4 py-2 flex items-center gap-2">
-                <Save class="w-4 h-4" /> Save
-              </Button>
+                  <p class="mt-1 font-semibold text-slate-800">
+                    {{ info.value }}
+                  </p>
+                </div>
+
+              </div>
             </div>
+
+            <!-- QUICK STATS -->
+            <div class="rounded-[30px] bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white shadow-xl">
+              <div class="flex items-center gap-3">
+                <Briefcase class="h-6 w-6" />
+
+                <h3 class="text-lg font-bold">
+                  Employment
+                </h3>
+              </div>
+
+              <div class="mt-5 space-y-4">
+                <div>
+                  <p class="text-sm text-orange-100">
+                    Occupation
+                  </p>
+
+                  <p class="font-semibold">
+                    {{ member.occupation || 'Not Provided' }}
+                  </p>
+                </div>
+
+                <div>
+                  <p class="text-sm text-orange-100">
+                    Monthly Income
+                  </p>
+
+                  <p class="font-semibold">
+                    KES {{ formatCurrency(member.monthly_income) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Inputs -->
-          <div class="space-y-10">
-            <!-- Personal Fields -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <template v-for="field in [
+          <!-- MAIN FORM -->
+          <div class="rounded-[30px] border border-slate-200 bg-white shadow-sm overflow-hidden">
+
+            <!-- HEADER -->
+            <div class="border-b border-slate-100 px-6 py-5">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Personal Information
+              </h2>
+
+              <p class="mt-1 text-sm text-slate-500">
+                Manage your personal details and emergency contacts
+              </p>
+            </div>
+
+            <!-- FORM -->
+            <div class="space-y-10 p-6">
+
+              <!-- BASIC -->
+              <section>
+                <div class="mb-5 flex items-center gap-2">
+                  <User class="h-5 w-5 text-blue-600" />
+
+                  <h3 class="text-lg font-semibold text-slate-900">
+                    Basic Information
+                  </h3>
+                </div>
+
+                <div class="grid gap-5 md:grid-cols-2">
+
+                  <template v-for="field in [
     { key: 'first_name', label: 'First Name', disabled: true },
     { key: 'last_name', label: 'Last Name', disabled: true },
     { key: 'middle_name', label: 'Middle Name' },
     { key: 'email', label: 'Email', disabled: true },
     { key: 'phone', label: 'Phone', disabled: true },
-    { key: 'marital_status', label: 'Marital Status', type: 'select' },
     { key: 'occupation', label: 'Occupation' },
     { key: 'employer', label: 'Employer' },
     { key: 'monthly_income', label: 'Monthly Income', type: 'number' },
   ]" :key="field.key">
-                <div>
-                  <label class="block text-sm font-medium mb-1 text-slate-700">{{ field.label }}</label>
+                    <div>
+                      <label class="mb-2 block text-sm font-medium text-slate-700">
+                        {{ field.label }}
+                      </label>
 
-                  <input v-if="['first_name', 'last_name', 'email', 'phone'].includes(field.key)" :value="field.key === 'email' ? user.email :
-    field.key === 'phone' ? user.phone :
-      member[field.key]" type="text" class="w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 shadow-sm"
-                    disabled />
+                      <input v-if="['first_name', 'last_name', 'email', 'phone'].includes(field.key)" :value="field.key === 'email'
+      ? user.email
+      : field.key === 'phone'
+        ? user.phone
+        : member[field.key]
+    " type="text" disabled class="input-modern bg-slate-100" />
 
-                  <select v-else-if="field.key === 'marital_status'" v-model="form.marital_status"
-                    class="w-full rounded-lg border border-slate-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
-                    :disabled="!isEditing">
-                    <option value="" disabled>Select status</option>
-                    <option value="single">Single</option>
-                    <option value="married">Married</option>
-                    <option value="divorced">Divorced</option>
-                    <option value="widowed">Widowed</option>
-                  </select>
+                      <input v-else v-model="form[field.key as keyof typeof form]" :type="field.type || 'text'"
+                        :disabled="!isEditing" class="input-modern" />
+                    </div>
+                  </template>
 
-                  <input v-else v-model="form[field.key as keyof typeof form]" :type="field.type || 'text'"
-                    class="w-full rounded-lg border border-slate-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200 bg-white"
-                    :disabled="!isEditing" />
+                  <!-- MARITAL -->
+                  <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                      Marital Status
+                    </label>
+
+                    <select v-model="form.marital_status" :disabled="!isEditing" class="input-modern">
+                      <option value="">Select Status</option>
+                      <option value="single">Single</option>
+                      <option value="married">Married</option>
+                      <option value="divorced">Divorced</option>
+                      <option value="widowed">Widowed</option>
+                    </select>
+                  </div>
+
                 </div>
-              </template>
-            </div>
+              </section>
 
-            <!-- Address -->
-            <section>
-              <h3 class="text-lg font-semibold text-[#0a2342] mb-4">Address</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div v-for="field in [
+              <!-- ADDRESS -->
+              <section>
+                <div class="mb-5 flex items-center gap-2">
+                  <MapPin class="h-5 w-5 text-orange-500" />
+
+                  <h3 class="text-lg font-semibold text-slate-900">
+                    Address Information
+                  </h3>
+                </div>
+
+                <div class="grid gap-5 md:grid-cols-2">
+
+                  <div v-for="field in [
     { key: 'physical_address', label: 'Physical Address' },
     { key: 'postal_address', label: 'Postal Address' },
     { key: 'city', label: 'City' },
     { key: 'county', label: 'County' },
   ]" :key="field.key">
-                  <label class="block text-sm font-medium mb-1 text-slate-700">{{ field.label }}</label>
-                  <input v-model="form[field.key as keyof typeof form]" type="text"
-                    class="w-full rounded-lg border border-slate-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
-                    :disabled="!isEditing" />
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                      {{ field.label }}
+                    </label>
+
+                    <input v-model="form[field.key as keyof typeof form]" type="text" :disabled="!isEditing"
+                      class="input-modern" />
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                      Country
+                    </label>
+
+                    <select v-model="form.country" :disabled="!isEditing" class="input-modern">
+                      <option value="">Select Country</option>
+                      <option value="Kenya">Kenya</option>
+                      <option value="Uganda">Uganda</option>
+                      <option value="Tanzania">Tanzania</option>
+                      <option value="Rwanda">Rwanda</option>
+                      <option value="Burundi">Burundi</option>
+                      <option value="South Sudan">South Sudan</option>
+                    </select>
+                  </div>
+
+                </div>
+              </section>
+
+              <!-- EMERGENCY -->
+              <section>
+                <div class="mb-5 flex items-center gap-2">
+                  <Phone class="h-5 w-5 text-emerald-600" />
+
+                  <h3 class="text-lg font-semibold text-slate-900">
+                    Emergency Contact
+                  </h3>
                 </div>
 
-                <div>
-                  <label class="block text-sm font-medium mb-1 text-slate-700">Country</label>
-                  <select v-model="form.country"
-                    class="w-full rounded-lg border border-slate-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
-                    :disabled="!isEditing">
-                    <option value="" disabled>Select country</option>
-                    <option value="Kenya">Kenya</option>
-                    <option value="Uganda">Uganda</option>
-                    <option value="Tanzania">Tanzania</option>
-                    <option value="Rwanda">Rwanda</option>
-                    <option value="Burundi">Burundi</option>
-                    <option value="South Sudan">South Sudan</option>
-                  </select>
-                </div>
-              </div>
-            </section>
+                <div class="grid gap-5 md:grid-cols-2">
 
-            <!-- Emergency -->
-            <section>
-              <h3 class="text-lg font-semibold text-[#0a2342] mb-4">Emergency Contact</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div v-for="field in [
+                  <div v-for="field in [
     { key: 'emergency_contact_name', label: 'Contact Name' },
     { key: 'emergency_contact_phone', label: 'Contact Phone' },
     { key: 'emergency_contact_relationship', label: 'Relationship' },
   ]" :key="field.key">
-                  <label class="block text-sm font-medium mb-1 text-slate-700">{{ field.label }}</label>
-                  <input v-model="form[field.key as keyof typeof form]" type="text"
-                    class="w-full rounded-lg border border-slate-300 p-2.5 shadow-sm focus:ring focus:ring-orange-200"
-                    :disabled="!isEditing" />
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                      {{ field.label }}
+                    </label>
+
+                    <input v-model="form[field.key as keyof typeof form]" type="text" :disabled="!isEditing"
+                      class="input-modern" />
+                  </div>
+
                 </div>
-              </div>
-            </section>
+              </section>
+
+            </div>
           </div>
+
         </div>
       </div>
     </div>
   </AppLayout>
 </template>
 
-
 <style>
-.inputsborder input,
-select {
-  border: 1px solid #cbd5e1;
+.input-modern {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid #dbe3ee;
+  background: white;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input-modern:focus {
+  border-color: #fb923c;
+  box-shadow: 0 0 0 4px rgba(251, 146, 60, 0.15);
+}
+
+.input-modern:disabled {
+  cursor: not-allowed;
+  background: #f8fafc;
+  color: #64748b;
 }
 </style>
