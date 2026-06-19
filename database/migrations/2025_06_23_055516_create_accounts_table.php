@@ -15,7 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('member_id')->constrained()->onDelete('cascade');
             $table->string('account_number')->unique();
-            $table->enum('account_type', ['savings', 'shares', 'deposits']);
+            $table->enum('account_type', [
+                        'share_capital',
+                        'share_deposits',
+                        'loan_outstanding'
+                    ]);
             $table->decimal('balance', 15, 2)->default(0.00);
             $table->decimal('available_balance', 15, 2)->default(0.00);
             $table->boolean('is_active')->default(true);

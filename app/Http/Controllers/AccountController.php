@@ -69,8 +69,9 @@ class AccountController extends Controller
                 'share_deposits_balance' => Account::where('account_type', 'share_deposits')->sum('balance'),
             ],
             'accountTypes' => [
-                'share_capital' => 'Share Capital',
-                'share_deposits' => 'Share Deposits'
+                'share_capital'   => 'Share Capital',
+                'share_deposits'  => 'Share Deposits',
+                'loan_outstanding'=> 'Loan Outstanding'
             ]
         ]);
     }
@@ -93,8 +94,9 @@ class AccountController extends Controller
                     ];
                 }),
             'accountTypes' => [
-                'share_capital' => 'Share Capital',
-                'share_deposits' => 'Share Deposits'
+                'share_capital'   => 'Share Capital',
+                'share_deposits'  => 'Share Deposits',
+                'loan_outstanding'=> 'Loan Outstanding'
             ]
         ]);
     }
@@ -191,8 +193,9 @@ class AccountController extends Controller
         return Inertia::render('Accounts/Edit', [
             'account' => $account,
             'accountTypes' => [
-                'share_capital' => 'Share Capital',
-                'share_deposits' => 'Share Deposits'
+                'share_capital'   => 'Share Capital',
+                'share_deposits'  => 'Share Deposits',
+                'loan_outstanding'=> 'Loan Outstanding'
             ]
         ]);
     }

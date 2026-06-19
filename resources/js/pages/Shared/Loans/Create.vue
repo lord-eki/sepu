@@ -368,10 +368,12 @@
             <div class="p-6 space-y-4">
               <!-- Instructions -->
               <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg text-sm text-blue-900">
-                <strong>Important:</strong>
+                <strong>Important: document(s) with asterisk(*) are mandatory</strong>
                 <ul class="list-disc pl-6 mt-1 space-y-1">
-                  <li> Click 'Choose Document' button to select each document separately (Payslip, ID, Bank Statement,
-                    Employment Letter, Guarantor Form).</li>
+                  <li>Current Payslip&nbsp;<span class="text-red-600 font-semibold text-lg">*</span></li>
+                  <li>ID Copy</li>
+                  <li>Bank Statement</li>
+                  <li>Evidence of Business</li>
                 </ul>
               </div>
 
@@ -411,13 +413,13 @@
 
                 <!-- Remove All -->
                 <div v-if="uploadedFiles.multiple.length" class="flex flex-col gap-2">
-                  <p v-if="remainingDocCount > 0" class="text-blue-700 mt-3 text-sm font-medium">
-                    {{ remainingDocCount }} attachment<span v-if="remainingDocCount > 1">s</span> remaining to complete all required documents.
-                  </p>
-                  <p v-else class="text-emerald-700 mt-3 text-sm font-medium">
-                    ✅ All required documents have been attached.
-                  </p>
+                  <p v-if="!hasMandatoryPayslip" class="text-red-600 text-sm">
+                      Current Payslip is required.
+                    </p>
 
+                    <p v-else class="text-green-600 text-sm">
+                      ✅ Mandatory document uploaded.
+                    </p>
                   <button type="button" @click="removeSupportFiles" class="text-sm text-rose-600 hover:text-rose-800">
                     Remove All
                   </button>
@@ -430,9 +432,19 @@
                 <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
                   <h4 class="text-lg font-semibold mb-4">Select Document Type</h4>
                   <div class="space-y-3">
-                    <button v-for="type in remainingDocTypes" :key="type" @click="chooseDocType(type)"
-                      class="w-full text-left px-4 py-2 hover:cursor-pointer border rounded-lg hover:bg-blue-50 transition">
-                      {{ type }}
+                    <button
+                      v-for="doc in remainingDocTypes"
+                      :key="doc.name"
+                      @click="chooseDocType(doc.name)"
+                      class="w-full text-left px-4 py-2 border rounded-lg hover:bg-blue-50"
+                    >
+                      {{ doc.name }}
+                      <span
+                        v-if="doc.required"
+                        class="text-red-600 font-bold"
+                      >
+                        *
+                      </span>
                     </button>
                   </div>
                   <div class="flex justify-end mt-4">
@@ -785,10 +797,17 @@ const showDocTypeSelector = ref(false)
 const selectedDocType = ref(null)
 const supportFileInput = ref(null)
 
-const docTypes = ['Payslip', 'ID Copy', 'Bank Statement', 'Employment Letter', 'Guarantor Form']
+const docTypes = [
+  { name: 'Current Payslip', required: true },
+  { name: 'ID Copy', required: false },
+  { name: 'Bank Statement', required: false },
+  { name: 'Evidence of Business', required: false }
+]
 
 const remainingDocTypes = computed(() =>
-  docTypes.filter(type => !uploadedFiles.multiple.some(f => f.type === type))
+  docTypes.filter(doc =>
+    !uploadedFiles.multiple.some(f => f.type === doc.name)
+  )
 )
 
 function chooseDocType(type) {
@@ -947,23 +966,15 @@ watch(() => form.loan_product_id, () => { triggerEligibilityCheckDebounced() })
 watch(() => form.applied_amount, () => { triggerEligibilityCheckDebounced() })
 
 
-const requiredDocTypes = [
-  "Payslip",
-  "ID",
-  "Bank Statement",
-  "Employment Letter",
-  "Guarantor Form",
-];
-
-const remainingDocCount = computed(() => {
-  return requiredDocTypes.length - uploadedFiles.multiple.length;
-});
-
 const hasSelfGuarantor = computed(() => {
   return form.guarantors.some(g => g.member_id == form.member_id)
 })
 
-const allDocsUploaded = computed(() => remainingDocCount.value === 0);
+const hasMandatoryPayslip = computed(() =>
+  uploadedFiles.multiple.some(
+    f => f.type === 'Current Payslip'
+  )
+)
 
 const hasGuarantor = computed(() => form.guarantors.some(g => g.member_id));
 
@@ -1003,7 +1014,7 @@ const canSubmit = computed(() => {
        hasDocuments &&
        eligibilityOk &&
        hasGuarantor.value &&
-       allDocsUploaded.value &&
+       hasMandatoryPayslip.value &&
        !hasSelfGuarantor.value
 })
 
@@ -1059,9 +1070,35 @@ const submitApplication = () => {
     showMessage('error', 'Applicant cannot be their own guarantor.')
     return
   }
-  if (!allDocsUploaded.value) {
-    errorMessages.value = { general: `Please upload all ${requiredDocTypes.length} required documents before submitting.` };
+  if (!hasMandatoryPayslip.value) {
+    errorMessages.value = {
+      general: ['Current Payslip is mandatory.']
+    };
     return;
+  }
+
+const isSepuStaff = memberInfo.value?.employer === 'SEPU'
+
+  if (!isSepuStaff) {
+
+    const hasBankStatement =
+      uploadedFiles.multiple.some(
+        f => f.type === 'Bank Statement'
+      )
+
+    const hasBusinessEvidence =
+      uploadedFiles.multiple.some(
+        f => f.type === 'Evidence of Business'
+      )
+
+    if (!hasBankStatement && !hasBusinessEvidence) {
+      errorMessages.value = {
+        general: [
+          'Non-SEPU staff must upload either a Bank Statement or Evidence of Business.'
+        ]
+      }
+      return
+    }
   }
 
   showConfirm.value = false 

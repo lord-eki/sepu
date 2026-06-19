@@ -819,13 +819,13 @@ public function disburse(Request $request, $id)
         // Create transaction
         // -----------------------------------
         $transaction = Transaction::create([
-            'transaction_id'     => $this->generateTransactionId(),
-            'account_id'         => $savingsAccount?->id,
+            'transaction_id' => $this->generateTransactionId(),
+            'account_id' => $loanAccount->id,
             'member_id'          => $member->id,
             'transaction_type'   => 'loan_disbursement',
             'amount'             => $netDisbursement,
-            'balance_before'     => $savingsAccount?->balance ?? 0,
-            'balance_after'      => $savingsAccount?->balance ?? 0, // unchanged
+            'balance_before' => $loanAccount->balance,
+            'balance_after'  => $loanAccount->balance + $loan->approved_amount,
             'description'        => "Loan disbursement for loan {$loan->loan_number}",
             'reference_number'   => $request->disbursement_reference,
             'payment_method'     => $request->disbursement_method,

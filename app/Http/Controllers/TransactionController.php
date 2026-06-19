@@ -369,21 +369,32 @@ class TransactionController extends Controller
                 // ✅ Capture balance before
                 $balanceBefore = $account->balance;
     
-                if ($transaction->transaction_type === 'withdrawal') {
-    
-                    if ($account->available_balance < $transaction->amount) {
-                        throw new \Exception('Insufficient available balance at approval time.');
-                    }
-    
-                    $account->balance -= $transaction->amount;
-                    $account->available_balance -= $transaction->amount;
-    
-                } else { // deposit
-    
-                    $account->balance += $transaction->amount;
-                    $account->available_balance += $transaction->amount;
+                switch ($transaction->transaction_type) {
+
+                    case 'deposit':
+                    case 'share_capital_contribution':
+
+                        $account->balance += $transaction->amount;
+                        $account->available_balance += $transaction->amount;
+                        break;
+
+                    case 'withdrawal':
+
+                        $account->balance -= $transaction->amount;
+                        $account->available_balance -= $transaction->amount;
+                        break;
+
+                    case 'loan_disbursement':
+
+                        $account->balance += $transaction->amount;
+                        break;
+
+                    case 'loan_repayment':
+
+                        $account->balance -= $transaction->amount;
+                        break;
                 }
-    
+                    
                 $account->save();
     
                 // ✅ Capture balance after
