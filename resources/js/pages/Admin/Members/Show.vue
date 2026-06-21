@@ -249,6 +249,18 @@
                     <dt class="text-sm font-medium text-gray-500">Username</dt>
                     <dd class="text-sm text-gray-900">{{ capitalize(member.user.username) }}</dd>
                   </div>
+                  <div>
+                  <dt class="text-sm font-medium text-gray-500">Membership Date</dt>
+                    <dd class="text-sm text-gray-900">
+                        {{
+                            new Date(member.membership_date).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric'
+                            })
+                        }}
+                    </dd>
+                </div>
                 </dl>
               </div>
               <div>

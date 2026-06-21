@@ -278,6 +278,25 @@ class LoanController extends Controller
 
             $totalRepayable = $monthlyRepayment * $request->term_months;
 
+            $documents = [];
+
+            if ($request->hasFile('documents')) {
+
+                foreach ($request->file('documents') as $index => $file) {
+
+                   
+                    $filename = \Str::uuid().'.'.$file->getClientOriginalExtension();
+                    $path = $file->storeAs('loan-documents', $filename, 'public');
+
+                    $documents[] = [
+                        'type' => $request->document_types[$index] ?? 'Document',
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'url'  => asset('storage/' . $path),
+                    ];
+                }
+            }
+
             /**
              * CREATE LOAN
              */
@@ -298,7 +317,7 @@ class LoanController extends Controller
                 'status' => 'pending_guarantor_approval',
 
                 'application_date' => now(),
-                'documents' => $request->documents ?? [],
+                'documents' => $documents,
 
                 'outstanding_balance' => 0,
                 'principal_balance' => 0,

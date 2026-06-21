@@ -7,28 +7,18 @@
     <Head title="Loan Details" />
 
     <!-- ================= TOAST ================= -->
-    <transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0 -translate-y-3 scale-95"
-      enter-to-class="opacity-100 translate-y-0 scale-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-3"
-    >
-      <div
-        v-if="visible"
-        class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-md
+    <transition enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 -translate-y-3 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-3">
+      <div v-if="visible" class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-md
         rounded-2xl border border-white/60 bg-white/90 backdrop-blur-xl
-        shadow-2xl px-5 py-4 flex items-start gap-3"
-      >
-        <div
-          class="h-9 w-9 rounded-xl flex items-center justify-center text-white font-bold shadow"
-          :class="type === 'success'
-            ? 'bg-emerald-500'
-            : type === 'error'
-            ? 'bg-rose-500'
-            : 'bg-slate-500'"
-        >
+        shadow-2xl px-5 py-4 flex items-start gap-3">
+        <div class="h-9 w-9 rounded-xl flex items-center justify-center text-white font-bold shadow" :class="type === 'success'
+    ? 'bg-emerald-500'
+    : type === 'error'
+      ? 'bg-rose-500'
+      : 'bg-slate-500'">
           {{ type === 'success' ? '✓' : '!' }}
         </div>
 
@@ -54,11 +44,9 @@
             <!-- LEFT -->
             <div class="flex items-start gap-3 sm:gap-4">
 
-              <div
-                class="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl sm:rounded-3xl
+              <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl sm:rounded-3xl
                 bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900
-                flex items-center justify-center shadow-xl flex-shrink-0"
-              >
+                flex items-center justify-center shadow-xl flex-shrink-0">
                 <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3" />
                 </svg>
@@ -74,11 +62,13 @@
                 </h1>
 
                 <div class="mt-2 sm:mt-3 flex flex-wrap gap-2">
-                  <span class="px-2 sm:px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] sm:text-xs font-semibold">
+                  <span
+                    class="px-2 sm:px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] sm:text-xs font-semibold">
                     {{ loan.loan_product?.name || 'Loan Product' }}
                   </span>
 
-                  <span class="px-2 sm:px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-semibold">
+                  <span
+                    class="px-2 sm:px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-semibold">
                     Applied {{ formatDate(loan.application_date || loan.created_at) }}
                   </span>
                 </div>
@@ -87,31 +77,28 @@
             </div>
 
             <!-- RIGHT -->
-          <div class="flex items-center justify-between w-full lg:flex-col lg:items-end gap-3">
+            <div class="flex items-center justify-between w-full lg:flex-col lg:items-end gap-3">
 
-            <!-- Member info (left on mobile) -->
-            <div class="min-w-0">
-              <p class="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-400">
-                Member
-              </p>
+              <!-- Member info (left on mobile) -->
+              <div class="min-w-0">
+                <p class="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-400">
+                  Member
+                </p>
 
-              <h2 class="text-base sm:text-xl font-bold text-slate-900 mt-1 truncate">
-                {{ loan.member?.first_name }} {{ loan.member?.last_name }}
-              </h2>
-            </div>
+                <h2 class="text-base sm:text-xl font-bold text-slate-900 mt-1 truncate">
+                  {{ loan.member?.first_name }} {{ loan.member?.last_name }}
+                </h2>
+              </div>
 
-            <!-- Back button (right on mobile) -->
-            <div class="flex-shrink-0">
-              <Link
-                :href="isMemberRole ? route('my-loans') : route('loans.index')"
-                class="px-3 sm:px-4 py-2 rounded-xl sm:rounded-2xl bg-white border border-slate-200
-                      text-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-50"
-              >
+              <!-- Back button (right on mobile) -->
+              <div class="flex-shrink-0">
+                <Link :href="isMemberRole ? route('my-loans') : route('loans.index')" class="px-3 sm:px-4 py-2 rounded-xl sm:rounded-2xl bg-white border border-slate-200
+                      text-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-50">
                 Back
-              </Link>
-            </div>
+                </Link>
+              </div>
 
-          </div>
+            </div>
 
           </div>
 
@@ -120,17 +107,13 @@
 
       <!-- ================= STATUS BAR ================= -->
       <div class="max-w-7xl mx-auto px-6 pt-2">
-        <div
-          class="rounded-3xl bg-white/90 backdrop-blur-xl border border-white shadow-xl p-5
-          flex flex-col md:flex-row md:items-center gap-4 justify-between"
-        >
+        <div class="rounded-3xl bg-white/90 backdrop-blur-xl border border-white shadow-xl p-5
+          flex flex-col md:flex-row md:items-center gap-4 justify-between">
 
           <div class="flex items-center gap-4">
 
-            <div
-              class="h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-lg"
-              :class="getStatusBannerClass(loan.status)"
-            >
+            <div class="h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-lg"
+              :class="getStatusBannerClass(loan.status)">
               !
             </div>
 
@@ -160,44 +143,29 @@
 
           <div class="flex flex-wrap gap-3">
 
-            <button
-              v-if="canApprove"
-              @click="openApprovalModal"
-              class="px-4 py-2.5 rounded-2xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"
-            >
+            <button v-if="canApprove" @click="openApprovalModal"
+              class="px-4 py-2.5 rounded-2xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">
               Approve
             </button>
 
-            <button
-              v-if="canReject"
-              @click="openRejectModal"
-              class="px-4 py-2.5 rounded-2xl bg-rose-600 text-white text-sm font-medium hover:bg-rose-700"
-            >
+            <button v-if="canReject" @click="openRejectModal"
+              class="px-4 py-2.5 rounded-2xl bg-rose-600 text-white text-sm font-medium hover:bg-rose-700">
               Reject
             </button>
 
-            <button
-              v-if="canDisburse"
-              @click="openDisbursementModal"
-              class="px-4 py-2.5 rounded-2xl bg-blue-700 text-white text-sm font-medium hover:bg-blue-800"
-            >
+            <button v-if="canDisburse" @click="openDisbursementModal"
+              class="px-4 py-2.5 rounded-2xl bg-blue-700 text-white text-sm font-medium hover:bg-blue-800">
               Disburse
             </button>
 
-            <Link
-              v-if="canViewSchedule"
-              :href="route('loans.schedule', loan.id)"
-              class="px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200"
-            >
-              Schedule
+            <Link v-if="canViewSchedule" :href="route('loans.schedule', loan.id)"
+              class="px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
+            Schedule
             </Link>
 
-            <Link
-              v-if="canViewRepayments"
-              :href="route('loans.repayments', loan.id)"
-              class="px-4 py-2.5 rounded-2xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600"
-            >
-              Repayments
+            <Link v-if="canViewRepayments" :href="route('loans.repayments', loan.id)"
+              class="px-4 py-2.5 rounded-2xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600">
+            Repayments
             </Link>
 
           </div>
@@ -272,21 +240,15 @@
           </div>
 
           <!-- GUARANTORS -->
-          <div
-            v-if="loan.guarantors?.length"
-            class="rounded-3xl bg-white border border-slate-100 shadow-sm p-6"
-          >
+          <div v-if="loan.guarantors?.length" class="rounded-3xl bg-white border border-slate-100 shadow-sm p-6">
             <h2 class="text-lg font-bold text-slate-900 mb-5">
               Guarantors
             </h2>
 
             <div class="space-y-3">
 
-              <div
-                v-for="g in loan.guarantors"
-                :key="g.id"
-                class="rounded-2xl border border-slate-100 p-4 flex items-center justify-between"
-              >
+              <div v-for="g in loan.guarantors" :key="g.id"
+                class="rounded-2xl border border-slate-100 p-4 flex items-center justify-between">
                 <div>
                   <p class="font-semibold text-slate-900">
                     {{ g.guarantor_member.first_name }}
@@ -312,6 +274,124 @@
             </div>
           </div>
 
+        </div>
+
+        <!-- SUPPORTING DOCUMENTS -->
+        <div v-if="loan.documents?.length" class="rounded-3xl bg-white border border-slate-100 shadow-sm p-6">
+
+          <!-- HEADER -->
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-bold text-slate-900">
+              Supporting Documents
+            </h2>
+
+            <span class="text-xs text-slate-400 uppercase tracking-widest">
+              {{ loan.documents.length }} File(s)
+            </span>
+          </div>
+
+          <div class="space-y-3">
+
+            <!-- PREVIEW (first 3) -->
+            <div
+              v-for="(doc, index) in loan.documents.slice(0, 3)"
+              :key="index"
+              class="flex items-center justify-between p-4 border border-slate-200 rounded-2xl hover:bg-slate-50 transition"
+            >
+              <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                  📄
+                </div>
+
+                <div>
+                  <p class="font-semibold text-slate-900">
+                    {{ doc.name || `Document ${index + 1}` }}
+                  </p>
+                  <p class="text-sm text-slate-500">Supporting attachment</p>
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <a :href="doc.url || doc" target="_blank"
+                  class="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm hover:bg-blue-700">
+                  View
+                </a>
+
+                <a :href="doc.url || doc" download
+                  class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm hover:bg-slate-100">
+                  Download
+                </a>
+              </div>
+            </div>
+
+            <!-- VIEW ALL BUTTON -->
+            <div v-if="loan.documents.length > 3" class="flex justify-center pt-2">
+              <button
+                @click="showDocsModal = true"
+                class="px-5 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800"
+              >
+                View All Documents ({{ loan.documents.length }})
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===================== -->
+        <!-- DOCUMENTS MODAL -->
+        <!-- ===================== -->
+        <div v-if="showDocsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+
+          <div class="bg-white w-full max-w-2xl rounded-2xl shadow-lg p-6 relative">
+
+            <!-- CLOSE -->
+            <button
+              @click="showDocsModal = false"
+              class="absolute top-3 right-3 text-slate-500 hover:text-slate-800"
+            >
+              ✕
+            </button>
+
+            <h2 class="text-lg font-bold text-slate-900 mb-4">
+              All Supporting Documents
+            </h2>
+
+            <!-- LIST -->
+            <div class="space-y-3 max-h-[70vh] overflow-y-auto">
+
+              <div
+                v-for="(doc, index) in loan.documents"
+                :key="index"
+                class="flex items-center justify-between p-4 border rounded-2xl hover:bg-slate-50 transition"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                    📄
+                  </div>
+
+                  <div>
+                    <p class="font-semibold text-slate-900">
+                      {{ doc.name || `Document ${index + 1}` }}
+                    </p>
+                    <p class="text-sm text-slate-500">Supporting attachment</p>
+                  </div>
+                </div>
+
+                <div class="flex gap-2">
+                  <a :href="doc.url || doc" target="_blank"
+                    class="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm hover:bg-blue-700">
+                    View
+                  </a>
+
+                  <a :href="doc.url || doc" download
+                    class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm hover:bg-slate-100">
+                    Download
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
 
         <!-- RIGHT -->
@@ -382,195 +462,160 @@
 
     </div>
 
-  <!-- ================= APPROVAL MODAL ================= -->
-<div
-  v-if="showApprovalModal"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
->
-  <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl p-6">
+    <!-- ================= APPROVAL MODAL ================= -->
+    <div v-if="showApprovalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl p-6">
 
-    <h2 class="text-xl font-bold text-slate-900 mb-5">
-      Approve Loan
-    </h2>
+        <h2 class="text-xl font-bold text-slate-900 mb-5">
+          Approve Loan
+        </h2>
 
-    <!-- Applied Amount -->
-    <div class="mb-4 rounded-2xl bg-slate-50 p-4">
-      <p class="text-sm text-slate-500">Applied Amount</p>
-      <p class="text-2xl font-bold text-slate-900">
-        KES {{ formatCurrency(loan.applied_amount) }}
-      </p>
+        <!-- Applied Amount -->
+        <div class="mb-4 rounded-2xl bg-slate-50 p-4">
+          <p class="text-sm text-slate-500">Applied Amount</p>
+          <p class="text-2xl font-bold text-slate-900">
+            KES {{ formatCurrency(loan.applied_amount) }}
+          </p>
+        </div>
+
+        <!-- Amount To Approve -->
+        <div class="mb-4">
+          <label class="text-sm font-semibold text-slate-700">
+            Amount To Approve
+          </label>
+
+          <input v-model="approvalForm.approved_amount" type="number" class="w-full mt-2 border rounded-2xl p-3"
+            placeholder="Enter approved amount" />
+        </div>
+
+        <!-- Preview -->
+        <div class="mb-4 rounded-2xl bg-blue-50 p-4">
+          <p class="text-sm text-blue-600">Monthly Repayment</p>
+          <p class="text-xl font-bold text-blue-800">
+            KES {{ formatCurrency(monthlyPreview) }}
+          </p>
+        </div>
+
+        <div class="mb-4 rounded-2xl bg-orange-50 p-4">
+          <p class="text-sm text-orange-600">Total Interest</p>
+          <p class="text-xl font-bold text-orange-700">
+            KES {{ formatCurrency(totalInterestPreview) }}
+          </p>
+        </div>
+
+        <div class="mb-4 rounded-2xl bg-slate-50 p-4">
+          <p class="text-sm text-slate-600">Net Disbursement</p>
+          <p class="text-xl font-bold text-slate-900">
+            KES {{ formatCurrency(netDisbursementPreview) }}
+          </p>
+        </div>
+
+        <textarea v-model="approvalForm.approval_notes" class="w-full border rounded-2xl p-3 mb-5"
+          placeholder="Approval Notes (optional)"></textarea>
+
+        <div class="flex justify-end gap-3">
+          <button @click="closeApprovalModal" class="px-4 py-2 border rounded-xl">
+            Cancel
+          </button>
+
+          <button @click="approveLoan" :disabled="loading.approve"
+            class="px-5 py-2 bg-emerald-600 text-white rounded-xl flex items-center gap-2">
+            <span v-if="loading.approve"
+              class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            <span>{{ loading.approve ? 'Processing...' : 'Approve Loan' }}</span>
+          </button>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Amount To Approve -->
-    <div class="mb-4">
-      <label class="text-sm font-semibold text-slate-700">
-        Amount To Approve
-      </label>
+    <div v-if="showRejectionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
+        <h2 class="text-xl font-bold text-red-600 mb-4">Reject Loan</h2>
 
-      <input
-        v-model="approvalForm.approved_amount"
-        type="number"
-        class="w-full mt-2 border rounded-2xl p-3"
-        placeholder="Enter approved amount"
-      />
+        <textarea v-model="rejectionForm.rejection_reason" class="w-full border rounded-2xl p-3 mb-4"
+          placeholder="Reason for rejection"></textarea>
+
+        <div class="flex justify-end gap-3">
+          <button @click="closeRejectModal" class="px-4 py-2 border rounded-xl">
+            Cancel
+          </button>
+
+          <button @click="rejectLoan" :disabled="loading.reject"
+            class="px-5 py-2 bg-red-600 text-white rounded-xl flex items-center gap-2">
+            <span v-if="loading.reject"
+              class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            <span>{{ loading.reject ? 'Processing...' : 'Reject' }}</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Preview -->
-    <div class="mb-4 rounded-2xl bg-blue-50 p-4">
-      <p class="text-sm text-blue-600">Monthly Repayment</p>
-      <p class="text-xl font-bold text-blue-800">
-        KES {{ formatCurrency(monthlyPreview) }}
-      </p>
+
+    <!-- ================= DISBURSEMENT MODAL ================= -->
+    <div v-if="showDisbursementModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
+
+        <h2 class="text-xl font-bold text-slate-900 mb-5">
+          Disburse Loan
+        </h2>
+
+        <!-- Approved Amount -->
+        <div class="mb-4 rounded-2xl bg-blue-50 p-4">
+          <p class="text-sm text-blue-600">Approved Amount</p>
+          <p class="text-2xl font-bold text-blue-700">
+            KES {{ formatCurrency(loan.approved_amount) }}
+          </p>
+        </div>
+
+        <!-- Net Disbursement -->
+        <div class="mb-6 rounded-2xl bg-emerald-50 p-4">
+          <p class="text-sm text-emerald-600">Net Disbursement</p>
+          <p class="text-2xl font-bold text-emerald-700">
+            KES {{
+    formatCurrency(loan.approved_amount - (
+      (loan.approved_amount * (loan.loan_product?.processing_fee_rate || 0) / 100) +
+      (loan.approved_amount * (loan.loan_product?.insurance_rate || 0) / 100)
+    ))
+  }}
+          </p>
+        </div>
+
+        <!-- Disbursement Method -->
+        <select v-model="disbursementForm.disbursement_method"
+          class="w-full border rounded-2xl p-3 mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+          <option value="">Select Method</option>
+          <option value="cash">Cash</option>
+          <option value="mobile_money">Mobile Money</option>
+          <option value="bank_transfer">Bank Transfer</option>
+        </select>
+
+        <!-- Reference -->
+        <input v-model="disbursementForm.disbursement_reference"
+          class="w-full border rounded-2xl p-3 mb-5 focus:ring-2 focus:ring-blue-500 outline-none"
+          placeholder="Reference Number" />
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3">
+
+          <button @click="closeDisbursementModal" class="px-4 py-2 border rounded-xl hover:bg-slate-50">
+            Cancel
+          </button>
+
+          <button @click="disburseLoan" :disabled="loading.disburse"
+            class="px-5 py-2 bg-blue-700 text-white rounded-xl flex items-center gap-2 hover:bg-blue-800 disabled:opacity-60">
+            <span v-if="loading.disburse"
+              class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+
+            <span>
+              {{ loading.disburse ? 'Processing...' : 'Confirm Disbursement' }}
+            </span>
+          </button>
+
+        </div>
+
+      </div>
     </div>
-
-    <div class="mb-4 rounded-2xl bg-orange-50 p-4">
-      <p class="text-sm text-orange-600">Total Interest</p>
-      <p class="text-xl font-bold text-orange-700">
-        KES {{ formatCurrency(totalInterestPreview) }}
-      </p>
-    </div>
-
-    <div class="mb-4 rounded-2xl bg-slate-50 p-4">
-      <p class="text-sm text-slate-600">Net Disbursement</p>
-      <p class="text-xl font-bold text-slate-900">
-        KES {{ formatCurrency(netDisbursementPreview) }}
-      </p>
-    </div>
-
-    <textarea
-      v-model="approvalForm.approval_notes"
-      class="w-full border rounded-2xl p-3 mb-5"
-      placeholder="Approval Notes (optional)"
-    ></textarea>
-
-    <div class="flex justify-end gap-3">
-      <button
-        @click="closeApprovalModal"
-        class="px-4 py-2 border rounded-xl"
-      >
-        Cancel
-      </button>
-
-      <button
-        @click="approveLoan"
-        :disabled="loading.approve"
-        class="px-5 py-2 bg-emerald-600 text-white rounded-xl flex items-center gap-2"
-      >
-        <span v-if="loading.approve" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-        <span>{{ loading.approve ? 'Processing...' : 'Approve Loan' }}</span>
-      </button>
-    </div>
-
-  </div>
-</div>
-
-<div v-if="showRejectionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-  <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
-    <h2 class="text-xl font-bold text-red-600 mb-4">Reject Loan</h2>
-
-    <textarea
-      v-model="rejectionForm.rejection_reason"
-      class="w-full border rounded-2xl p-3 mb-4"
-      placeholder="Reason for rejection"
-    ></textarea>
-
-    <div class="flex justify-end gap-3">
-      <button @click="closeRejectModal" class="px-4 py-2 border rounded-xl">
-        Cancel
-      </button>
-
-      <button
-          @click="rejectLoan"
-          :disabled="loading.reject"
-          class="px-5 py-2 bg-red-600 text-white rounded-xl flex items-center gap-2"
-        >
-          <span v-if="loading.reject" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-          <span>{{ loading.reject ? 'Processing...' : 'Reject' }}</span>
-        </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- ================= DISBURSEMENT MODAL ================= -->
-<div
-  v-if="showDisbursementModal"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
->
-  <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
-
-    <h2 class="text-xl font-bold text-slate-900 mb-5">
-      Disburse Loan
-    </h2>
-
-    <!-- Approved Amount -->
-    <div class="mb-4 rounded-2xl bg-blue-50 p-4">
-      <p class="text-sm text-blue-600">Approved Amount</p>
-      <p class="text-2xl font-bold text-blue-700">
-        KES {{ formatCurrency(loan.approved_amount) }}
-      </p>
-    </div>
-
-    <!-- Net Disbursement -->
-    <div class="mb-6 rounded-2xl bg-emerald-50 p-4">
-      <p class="text-sm text-emerald-600">Net Disbursement</p>
-      <p class="text-2xl font-bold text-emerald-700">
-        KES {{
-          formatCurrency(loan.approved_amount - (
-              (loan.approved_amount * (loan.loan_product?.processing_fee_rate || 0) / 100) +
-              (loan.approved_amount * (loan.loan_product?.insurance_rate || 0) / 100)
-            ))
-        }}
-      </p>
-    </div>
-
-    <!-- Disbursement Method -->
-    <select
-      v-model="disbursementForm.disbursement_method"
-      class="w-full border rounded-2xl p-3 mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
-    >
-      <option value="">Select Method</option>
-      <option value="cash">Cash</option>
-      <option value="mobile_money">Mobile Money</option>
-      <option value="bank_transfer">Bank Transfer</option>
-    </select>
-
-    <!-- Reference -->
-    <input
-      v-model="disbursementForm.disbursement_reference"
-      class="w-full border rounded-2xl p-3 mb-5 focus:ring-2 focus:ring-blue-500 outline-none"
-      placeholder="Reference Number"
-    />
-
-    <!-- Actions -->
-    <div class="flex justify-end gap-3">
-
-      <button
-        @click="closeDisbursementModal"
-        class="px-4 py-2 border rounded-xl hover:bg-slate-50"
-      >
-        Cancel
-      </button>
-
-      <button
-        @click="disburseLoan"
-        :disabled="loading.disburse"
-        class="px-5 py-2 bg-blue-700 text-white rounded-xl flex items-center gap-2 hover:bg-blue-800 disabled:opacity-60"
-      >
-        <span
-          v-if="loading.disburse"
-          class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"
-        ></span>
-
-        <span>
-          {{ loading.disburse ? 'Processing...' : 'Confirm Disbursement' }}
-        </span>
-      </button>
-
-    </div>
-
-  </div>
-</div>
 
   </AppLayout>
 </template>
@@ -768,16 +813,16 @@ const approveLoan = async () => {
     validationErrors.approved_amount = ['Cannot approve more than applied amount']
     return
   }
-   
-  if (!approvalForm.approved_amount || approvalForm.approved_amount <= 0) {
-  validationErrors.approved_amount = ['Enter a valid amount']
-  return
-}
 
-if (approvalForm.approved_amount > props.loan.applied_amount) {
-  validationErrors.approved_amount = ['Cannot approve more than applied amount']
-  return
-}
+  if (!approvalForm.approved_amount || approvalForm.approved_amount <= 0) {
+    validationErrors.approved_amount = ['Enter a valid amount']
+    return
+  }
+
+  if (approvalForm.approved_amount > props.loan.applied_amount) {
+    validationErrors.approved_amount = ['Cannot approve more than applied amount']
+    return
+  }
   loading.approve = true
   try {
     const { data } = await axios.post(route('loans.approve', props.loan.id), approvalForm)
@@ -849,4 +894,6 @@ watch(showApprovalModal, (val) => {
     approvalForm.approval_notes = ''
   }
 })
+
+const showDocsModal = ref(false)
 </script>
