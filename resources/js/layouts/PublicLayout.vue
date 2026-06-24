@@ -89,29 +89,43 @@ const isActive = (url: string) => page.url === url
 
         </nav>
 
-        <!-- Actions -->
-        <div class="hidden md:flex items-center gap-4">
+       <!-- Actions -->
+      <div class="hidden md:flex items-center gap-4">
 
-          <Link href="/login" class="px-5 py-2.5 rounded-xl
-            text-slate-700 dark:text-white
-            hover:bg-slate-100 dark:hover:bg-slate-800
-            transition">
+        <!-- Login (FIXED VISIBILITY) -->
+        <Link
+          href="/login"
+          class="px-5 py-2.5 rounded-xl
+          border border-blue-700
+          text-blue-700 dark:text-blue-300
+          font-semibold
+
+          hover:bg-blue-800 hover:text-white
+          hover:border-blue-800
+
+          shadow-sm hover:shadow-md
+          transition-all duration-300"
+        >
           Login
-          </Link>
+        </Link>
 
-          <Link href="/register" class="px-5 py-2.5 rounded-xl
-            bg-gradient-to-r
-            from-blue-950 to-blue-900
-            hover:from-blue-800 hover:to-blue-900
-            text-white font-semibold
-            shadow-lg shadow-blue-500/20
-            transition-all duration-300
-            hover:-translate-y-0.5">
+        <!-- Primary CTA -->
+        <Link
+          href="/register"
+          class="px-5 py-2.5 rounded-xl
+          bg-gradient-to-r from-blue-700 to-blue-900
+          hover:from-blue-800 hover:to-blue-950
+
+          text-white font-semibold
+          shadow-lg shadow-blue-500/25
+
+          transition-all duration-300
+          hover:-translate-y-0.5"
+        >
           Get Started
-          </Link>
+        </Link>
 
-        </div>
-
+      </div>
         <!-- Mobile Toggle -->
         <button @click="menuOpen = !menuOpen" class="md:hidden p-2 rounded-xl
           hover:bg-slate-100 dark:hover:bg-slate-800
@@ -149,23 +163,30 @@ const isActive = (url: string) => page.url === url
 
             </nav>
 
-            <div class="mt-6 pt-6
-              border-t border-slate-200 dark:border-slate-800
-              flex flex-col gap-3">
-
-              <Link href="/login" class="w-full py-3 rounded-xl
-                text-center
-                border border-slate-200 dark:border-slate-700">
+            <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
+            <!-- Login -->
+            <Link href="/login"
+              class="w-full py-3 rounded-xl text-center
+              border border-blue-800
+              text-blue-700 dark:text-blue-300
+              font-semibold
+              hover:bg-blue-800 hover:text-white
+              transition"
+            >
               Login
-              </Link>
+            </Link>
 
-              <Link href="/register" class="w-full py-3 rounded-xl
-                text-center
-                bg-blue-900 text-white">
+            <!-- Register -->
+            <Link href="/register"
+              class="w-full py-3 rounded-xl text-center
+              bg-blue-800 hover:bg-blue-900
+              text-white font-semibold
+              shadow-md"
+            >
               Get Started
-              </Link>
+            </Link>
 
-            </div>
+          </div>
 
           </div>
 

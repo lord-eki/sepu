@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use App\Models\PaymentVoucher;
 use App\Models\Notification;
 use Carbon\Carbon;
+use App\Models\Budget;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -421,21 +422,29 @@ class DashboardController extends Controller
 
     private function getPendingApprovals()
     {
+        $pendingMembers = Member::where('membership_status', 'pending')->count();
+
+        $pendingActivation = Member::where('membership_status', 'approved')
+            ->whereHas('accounts', function ($q) {
+                $q->where('account_type', 'share_deposits')
+                    ->where('available_balance', '>=', 7500);
+            })
+            ->whereHas('accounts', function ($q) {
+                $q->where('account_type', 'share_capital')
+                    ->where('available_balance', '>=', 5000);
+            })
+            ->count();
+
         return [
             'loans' => Loan::where('status', 'pending')->count(),
-            'vouchers' => PaymentVoucher::where('status', 'pending')->count(),
-            'member_applications' => Member::where('membership_status', 'pending')->count(),
-            'pending_activation' => Member::where('membership_status', 'approved')
-                ->whereHas('accounts', function ($q) {
-                    $q->where('account_type', 'share_deposits')
-                    ->where('available_balance', '>=', 7500);
-                })
-                ->whereHas('accounts', function ($q) {
-                    $q->where('account_type', 'share_capital')
-                    ->where('available_balance', '>=', 5000);
-                })
-                ->count(),
 
+            'vouchers' => PaymentVoucher::where('status', 'pending')->count(),
+
+            // combined member approvals
+            'members' => $pendingMembers + $pendingActivation,
+
+            // budget approvals
+            'budgets' => Budget::where('status', 'pending')->count(),
         ];
     }
 

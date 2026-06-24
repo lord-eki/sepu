@@ -109,20 +109,20 @@ onMounted(() => {
 
               <!-- Secondary Button (FIXED LOGIN) -->
               <Link :href="route('login')" class="px-8 py-4 rounded-2xl
-  border-2 border-blue-600
-  bg-white dark:bg-slate-900
-  text-blue-700 dark:text-white
-  font-semibold
+              border-1 border-blue-600
+              bg-white dark:bg-slate-900
+              text-blue-700 dark:text-white
+              font-semibold
 
-  hover:bg-blue-600
-  hover:text-white
-  hover:border-blue-600
+              hover:bg-blue-800
+              hover:text-white
+              hover:border-blue-800
 
-  shadow-sm hover:shadow-lg
-  transition-all duration-300
-  hover:-translate-y-1">
-              Login
-              </Link>
+              shadow-sm hover:shadow-lg
+              transition-all duration-300
+              hover:-translate-y-1">
+                          Login
+                          </Link>
 
             </div>
             <!-- Stats -->

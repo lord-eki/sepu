@@ -287,13 +287,13 @@ const approvalItems = [
   },
   {
     label: 'Members',
-    value: props.pendingApprovals.member_applications,
+    value: props.pendingApprovals.members,
     link: '/admin/pending-members'
   },
   {
-    label: 'Member Activation',
-    value: props.pendingApprovals.pending_activation,
-    link: '/admin/pending-members'
+    label: 'Budgets',
+    value: props.pendingApprovals.budgets,
+    link: '/budgets'
   }
 ]
 

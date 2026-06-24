@@ -41,7 +41,7 @@
 
             <Link
               :href="route('loans.all-guarantors')"
-              class="inline-flex items-center rounded-2xl bg-blue-800 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-purple-700"
+              class="inline-flex items-center rounded-2xl bg-blue-700 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-purple-700"
             >
               Guarantors
             </Link>

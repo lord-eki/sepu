@@ -1061,10 +1061,24 @@ const submitApplication = () => {
   // attempt to run a final eligibility check before showing confirm modal.
   // If eligibility fails, show error and don't open confirm modal.
   // If check throws network error, we block submission and show message.
-  if (!hasGuarantor.value) {
-    errorMessages.value = { general: "Please add at least one guarantor before submitting." };
-    return;
-  }
+if (!hasGuarantor.value) {
+  showMessage(
+    'error',
+    'Please add at least one guarantor before submitting.'
+  )
+  return
+}
+
+if (!hasMandatoryPayslip.value) {
+  showMessage(
+    'error',
+    null,
+    {
+      general: ['Current Payslip is mandatory.']
+    }
+  )
+  return
+}
 
   if (hasSelfGuarantor.value) {
     showMessage('error', 'Applicant cannot be their own guarantor.')
@@ -1092,11 +1106,15 @@ const isSepuStaff = memberInfo.value?.employer === 'SEPU'
       )
 
     if (!hasBankStatement && !hasBusinessEvidence) {
-      errorMessages.value = {
-        general: [
-          'Non-SEPU staff must upload either a Bank Statement or Evidence of Business.'
-        ]
-      }
+      showMessage(
+        'error',
+        null,
+        {
+          general: [
+            'Non-SEPU staff must upload either a Bank Statement or Evidence of Business.'
+          ]
+        }
+      )
       return
     }
   }
