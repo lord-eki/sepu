@@ -95,27 +95,36 @@ onMounted(() => {
 
             <!-- CTA -->
             <div class="flex flex-wrap gap-4 mt-10">
+
+              <!-- Primary Button -->
               <Link :href="route('register')" class="px-8 py-4 rounded-2xl
-                bg-gradient-to-r from-blue-950 to-blue-900
-                hover:from-blue-800 hover:to-blue-900
-                text-white font-semibold
-                shadow-xl shadow-blue-500/20
-                transition-all duration-300
-                hover:-translate-y-1">
+  bg-gradient-to-r from-blue-600 to-blue-800
+  hover:from-blue-700 hover:to-blue-900
+  text-white font-semibold
+  shadow-lg shadow-blue-500/30
+  transition-all duration-300
+  hover:-translate-y-1">
               Get Started
               </Link>
 
+              <!-- Secondary Button (FIXED LOGIN) -->
               <Link :href="route('login')" class="px-8 py-4 rounded-2xl
-                border border-slate-200 dark:border-slate-700
-                bg-white/70 dark:bg-slate-900/70
-                backdrop-blur-xl
-                text-slate-800 dark:text-white hover:text-white font-semibold
-                hover:bg-orange-500/90 dark:hover:bg-slate-800
-                transition-all duration-300">
+  border-2 border-blue-600
+  bg-white dark:bg-slate-900
+  text-blue-700 dark:text-white
+  font-semibold
+
+  hover:bg-blue-600
+  hover:text-white
+  hover:border-blue-600
+
+  shadow-sm hover:shadow-lg
+  transition-all duration-300
+  hover:-translate-y-1">
               Login
               </Link>
-            </div>
 
+            </div>
             <!-- Stats -->
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8
               mt-16 pt-10
