@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import { ref, onMounted } from 'vue'
 
-// Animated counters
+// Animated Counters
 const members = ref(0)
 const loans = ref(0)
 const years = ref(0)
@@ -37,165 +37,239 @@ onMounted(() => {
 
 <template>
   <PublicLayout>
-
     <Head title="Welcome" />
 
-    <main class="relative overflow-hidden min-h-screen
-      bg-[#f8fafc] dark:bg-[#020617]">
+    <main
+      class="relative min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950"
+    >
       <!-- Background Effects -->
-      <div class="absolute top-0 left-1/2 -translate-x-1/2
-        w-[900px] h-[900px]
-        bg-blue-500/10 blur-3xl rounded-full"></div>
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          class="absolute top-0 left-1/2 -translate-x-1/2
+          w-[900px] h-[900px]
+          bg-blue-500/10 blur-[180px] rounded-full"
+        ></div>
 
-      <div class="absolute bottom-0 right-0
-        w-[500px] h-[500px]
-        bg-orange-500/10 blur-3xl rounded-full"></div>
+        <div
+          class="absolute bottom-0 right-0
+          w-[700px] h-[700px]
+          bg-orange-500/10 blur-[180px] rounded-full"
+        ></div>
 
-      <section class="relative max-w-7xl mx-auto
-        px-6 lg:px-8
-        pt-10 sm:pt-16 lg:pt-24
-        pb-24">
-        <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div
+          class="absolute top-1/3 left-0
+          w-[500px] h-[500px]
+          bg-indigo-500/10 blur-[180px] rounded-full"
+        ></div>
+      </div>
+
+      <!-- Hero -->
+      <section
+        class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-24"
+      >
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+
           <!-- LEFT -->
-          <div>
+          <div class="order-2 lg:order-1">
+
             <!-- Badge -->
-            <div class="inline-flex items-center gap-2
-              px-4 py-2 mb-8
-              rounded-full
-              border border-blue-100 dark:border-blue-900
-              bg-white/20 dark:bg-slate-900/70
-              backdrop-blur-xl
-              text-xs text-orange-500 dark:text-slate-300">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Trusted SACCO Platform
+            <div
+              class="inline-flex items-center gap-2
+              px-4 py-2 rounded-full
+              bg-blue-50 dark:bg-blue-950/40
+              border border-blue-200 dark:border-blue-900
+              text-blue-900 dark:text-blue-300
+              text-sm font-medium"
+            >
+              <span
+                class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
+              ></span>
+              Trusted Digital SACCO Platform
             </div>
 
             <!-- Heading -->
-            <h1 class="text-5xl lg:text-6xl
-              font-black tracking-tight
-              leading-[1.10]
-              text-slate-900 dark:text-white">
-              Banking built for
-              <span class="bg-gradient-to-r
-                from-blue-600 via-blue-500 to-orange-500
-                bg-clip-text text-transparent">
-                modern members !
+            <h1
+              class="mt-6 font-black tracking-tight
+              text-4xl sm:text-5xl md:text-6xl xl:text-7xl
+              leading-tight text-slate-900 dark:text-white"
+            >
+              Building Strong
+              <span
+                class="block bg-gradient-to-r
+                from-blue-600
+                via-indigo-500
+                to-orange-500
+                bg-clip-text text-transparent"
+              >
+                Financial Futures
               </span>
             </h1>
 
             <!-- Description -->
-            <p class="mt-8 max-w-2xl
-              text-lg sm:text-xl
+            <p
+              class="mt-6 max-w-2xl
+              text-base sm:text-lg lg:text-xl
               leading-relaxed
-              text-slate-600 dark:text-slate-300">
-              SEPU SACCO delivers secure savings, affordable loans,
-              and intelligent financial tools that help members grow
-              with confidence.
+              text-slate-600 dark:text-slate-300"
+            >
+              Experience smarter savings, faster loan processing,
+              secure transactions, and seamless financial management
+              from anywhere with SEPU SACCO.
             </p>
 
             <!-- CTA -->
-            <div class="flex flex-wrap gap-4 mt-10">
+            <div class="flex gap-4 mt-10">
 
-              <!-- Primary Button -->
-              <Link :href="route('register')" class="px-8 py-4 rounded-2xl
-  bg-gradient-to-r from-blue-600 to-blue-800
-  hover:from-blue-700 hover:to-blue-900
-  text-white font-semibold
-  shadow-lg shadow-blue-500/30
-  transition-all duration-300
-  hover:-translate-y-1">
-              Get Started
+              <Link
+                :href="route('register')"
+                class="inline-flex justify-center items-center
+                px-8 py-4 rounded-2xl
+                bg-gradient-to-r
+                from-blue-600
+                to-indigo-700
+                hover:from-blue-700
+                hover:to-indigo-800
+                text-white font-semibold
+                shadow-xl shadow-blue-500/20
+                transition-all duration-300
+                hover:-translate-y-1"
+              >
+                Sign Up
               </Link>
 
-              <!-- Secondary Button (FIXED LOGIN) -->
-              <Link :href="route('login')" class="px-8 py-4 rounded-2xl
-              border-1 border-blue-600
-              bg-white dark:bg-slate-900
-              text-blue-700 dark:text-white
-              font-semibold
-
-              hover:bg-blue-800
-              hover:text-white
-              hover:border-blue-800
-
-              shadow-sm hover:shadow-lg
-              transition-all duration-300
-              hover:-translate-y-1">
-                          Login
-                          </Link>
+              <Link
+                :href="route('login')"
+                class="inline-flex justify-center items-center
+                px-8 py-4 rounded-2xl
+                border border-slate-300 dark:border-slate-700
+                bg-white/80 dark:bg-slate-900/80
+                backdrop-blur-xl
+                text-slate-700 dark:text-slate-200
+                font-semibold
+                hover:bg-slate-700 hover:text-white dark:hover:bg-slate-800
+                transition-all duration-300
+                hover:-translate-y-1"
+              >
+                Login
+              </Link>
 
             </div>
+
             <!-- Stats -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8
-              mt-16 pt-10
-              border-t border-slate-200 dark:border-slate-800">
-              <div>
-                <h3 class="text-2xl sm:text-3xl font-black
-                  text-slate-900 dark:text-white">
+            <div
+              class="grid grid-cols-3 gap-2 sm:gap-4 mt-14"
+            >
+              <div
+                class="rounded-3xl p-5
+                bg-white/80 dark:bg-slate-900/80
+                backdrop-blur-xl
+                border border-slate-200 dark:border-slate-800
+                shadow-sm"
+              >
+                <h3
+                  class="text-xl sm:text-2xl font-black
+                  text-slate-900 dark:text-white"
+                >
                   {{ members }}+
                 </h3>
 
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="mt-1 text-sm
+                  text-slate-500 dark:text-slate-400"
+                >
                   Active Members
                 </p>
               </div>
 
-              <div>
-                <h3 class="text-2xl sm:text-3xl font-black
-                  text-slate-900 dark:text-white">
+              <div
+                class="rounded-3xl p-5
+                bg-white/80 dark:bg-slate-900/80
+                backdrop-blur-xl
+                border border-slate-200 dark:border-slate-800
+                shadow-sm"
+              >
+                <h3
+                  class="text-xl sm:text-2xl font-black
+                  text-slate-900 dark:text-white"
+                >
                   KES {{ loans }}M+
                 </h3>
 
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="mt-1 text-sm
+                  text-slate-500 dark:text-slate-400"
+                >
                   Loans Issued
                 </p>
               </div>
 
-              <div>
-                <h3 class="text-2xl sm:text-3xl font-black
-                  text-slate-900 dark:text-white">
+              <div
+                class="rounded-3xl p-5
+                bg-white/80 dark:bg-slate-900/80
+                backdrop-blur-xl
+                border border-slate-200 dark:border-slate-800
+                shadow-sm"
+              >
+                <h3
+                  class="text-lg sm:text-2xl font-black
+                  text-slate-900 dark:text-white"
+                >
                   {{ years }}+
                 </h3>
 
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="mt-1 text-sm
+                  text-slate-500 dark:text-slate-400"
+                >
                   Years Trusted
                 </p>
               </div>
             </div>
+
           </div>
 
           <!-- RIGHT -->
-          <div class="relative lg:pl-10">
-            <!-- Floating Card -->
-            <div class="relative
-              rounded-[2rem]
-              overflow-hidden
+          <div class="relative order-1 lg:order-2">
+
+            <!-- Main Card -->
+            <div
+              class="relative overflow-hidden rounded-[32px]
               border border-white/20
-              bg-white/60 dark:bg-slate-900/60
+              bg-white/70 dark:bg-slate-900/70
               backdrop-blur-2xl
-              shadow-2xl">
-              <img src="/sacco.png" alt="SEPU SACCO" class="w-full h-full object-cover" />
+              shadow-[0_20px_80px_rgba(0,0,0,0.15)]"
+            >
+              <img
+                src="/sacco.png"
+                alt="SEPU SACCO"
+                class="w-full h-[300px] sm:h-[500px] object-cover"
+              />
 
-              <!-- Overlay -->
-              <div class="absolute inset-0
+              <div
+                class="absolute inset-0
                 bg-gradient-to-t
-                from-slate-950/50
+                from-slate-950/70
                 via-transparent
-                to-transparent"></div>
+                to-transparent"
+              ></div>
 
-              <!-- Bottom Info -->
-              <div class="absolute bottom-0 left-0 right-0
-                p-6">
-                <div class="inline-flex items-center gap-2
-                  px-4 py-2 rounded-xl
+              <!-- Bottom Label -->
+              <div
+                class="absolute bottom-5 left-5"
+              >
+                <div
+                  class="px-4 py-2 rounded-xl
                   bg-white/10 backdrop-blur-xl
                   border border-white/20
-                  text-white text-sm">
+                  text-white text-sm font-medium"
+                >
                   #EmpoweringMembers
                 </div>
               </div>
             </div>
+
           </div>
+
         </div>
       </section>
     </main>

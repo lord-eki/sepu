@@ -96,12 +96,12 @@ const isActive = (url: string) => page.url === url
         <Link
           href="/login"
           class="px-5 py-2.5 rounded-xl
-          border border-blue-700
+          border border-slate-700
           text-blue-700 dark:text-blue-300
           font-semibold
 
-          hover:bg-blue-800 hover:text-white
-          hover:border-blue-800
+          hover:bg-slate-700 hover:text-white
+          hover:border-slate-800
 
           shadow-sm hover:shadow-md
           transition-all duration-300"
@@ -122,7 +122,7 @@ const isActive = (url: string) => page.url === url
           transition-all duration-300
           hover:-translate-y-0.5"
         >
-          Get Started
+          Sign Up
         </Link>
 
       </div>
@@ -183,7 +183,7 @@ const isActive = (url: string) => page.url === url
               text-white font-semibold
               shadow-md"
             >
-              Get Started
+              Sign Up
             </Link>
 
           </div>
