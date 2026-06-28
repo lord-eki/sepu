@@ -75,10 +75,10 @@ const memberNavItems: NavItem[] = [
     title: 'Loans',
     icon: BriefcaseConveyorBelt,
     children: [
-      {
+    {
         title: 'My Loans',
-        href: member ? route('members.loans', member.id) : '#',
-        routeName: 'members.loans',
+        href: route('my-loans'),
+        routeName: 'my-loans',
         icon: FileText,
       },
       {

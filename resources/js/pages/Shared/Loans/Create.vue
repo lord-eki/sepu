@@ -1258,7 +1258,6 @@ const checkEligibility = async () => {
 
     isEligible.value = data.eligible
     ineligibleReasons.value = data.reasons || data.messages || []
-    console.log('Eligibility data:', data)
   } catch (error) {
     console.error('Eligibility check failed:', error)
     isEligible.value = false

@@ -430,7 +430,7 @@ const openNotification = (n: any) => {
         <Tabs
           default-value="loans"
           class="w-full"
-        >
+          >
           <TabsList
             class="h-auto rounded-2xl border border-slate-200 bg-white p-1"
           >
