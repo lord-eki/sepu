@@ -170,7 +170,7 @@ const isActive = (url: string) => page.url === url
               border border-blue-800
               text-blue-700 dark:text-blue-300
               font-semibold
-              hover:bg-blue-800 hover:text-white
+              hover:bg-slate-600 hover:text-white
               transition"
             >
               Login
@@ -179,7 +179,7 @@ const isActive = (url: string) => page.url === url
             <!-- Register -->
             <Link href="/register"
               class="w-full py-3 rounded-xl text-center
-              bg-blue-800 hover:bg-blue-900
+              bg-blue-800 hover:bg-blue-700
               text-white font-semibold
               shadow-md"
             >

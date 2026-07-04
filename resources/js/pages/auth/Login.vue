@@ -12,6 +12,7 @@ import { ref, watch } from 'vue'
 
 defineProps<{
     status?: string
+    error?: string
     canResetPassword: boolean
 }>()
 
@@ -51,6 +52,13 @@ const submit = () => {
         <!-- Status -->
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600 dark:text-green-400">
             {{ status }}
+        </div>
+
+        <div
+            v-if="error"
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
+        >
+            {{ error }}
         </div>
 
         <!-- FORM -->

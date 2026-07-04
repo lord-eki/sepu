@@ -1164,9 +1164,40 @@ const updateStatus = () => {
 }
 
 const memberDocuments = computed(() => {
-  if (!props.member.documents) return []
-  try { return JSON.parse(props.member.documents) } catch { return [] }
-})
+    if (!props.member.documents) return [];
+
+    let docs = props.member.documents;
+
+    if (typeof docs === "string") {
+        try {
+            docs = JSON.parse(docs);
+        } catch {
+            return [];
+        }
+    }
+
+    return docs.map((doc) => {
+        // Old format: string
+        if (typeof doc === "string") {
+            return {
+                name: doc.split("/").pop(),
+                path: doc,
+                size: null,
+                type: doc.split(".").pop()?.toUpperCase() || "",
+                uploaded_at: null,
+            };
+        }
+
+        // New format: object
+        return {
+            name: doc.name,
+            path: doc.path,
+            size: doc.size,
+            type: doc.type,
+            uploaded_at: doc.uploaded_at,
+        };
+    });
+});
 
 const handleDocumentUpload = (event) => {
   const files = Array.from(event.target.files)

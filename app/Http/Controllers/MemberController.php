@@ -1084,25 +1084,47 @@ class MemberController extends Controller
         ]);
 
         if ($request->hasFile('documents')) {
-            $existingDocuments = json_decode($member->documents, true) ?? [];
-            $newDocuments = [];
+
+            $existingDocuments = $member->documents ?? [];
+
+            // Support old records that may still be stored as JSON strings
+            if (is_string($existingDocuments)) {
+                $existingDocuments = json_decode($existingDocuments, true) ?? [];
+            }
+
+            // Convert old string-format documents to object format
+            $existingDocuments = array_map(function ($doc) {
+                if (is_string($doc)) {
+                    return [
+                        'name' => basename($doc),
+                        'path' => $doc,
+                        'size' => null,
+                        'type' => strtoupper(pathinfo($doc, PATHINFO_EXTENSION)),
+                        'uploaded_at' => null,
+                    ];
+                }
+
+                return $doc;
+            }, $existingDocuments);
+
             foreach ($request->file('documents') as $file) {
-                $path = $file->store('members/documents', 'public');
-                $newDocuments[] = [
+                $path = $file->store('member_documents', 'public');
+
+                $existingDocuments[] = [
                     'name' => $file->getClientOriginalName(),
                     'path' => $path,
                     'size' => $file->getSize(),
-                    'type' => $file->getClientMimeType(),
-                    'uploaded_at' => now(),
+                    'type' => strtoupper($file->getClientOriginalExtension()),
+                    'uploaded_at' => now()->toDateTimeString(),
                 ];
             }
 
             $member->update([
-                'documents' => json_encode(array_merge($existingDocuments, $newDocuments)),
+                'documents' => $existingDocuments,
             ]);
         }
 
-        return back()->with('success', 'Documents uploaded successfully');
+        return back()->with('success', 'Documents uploaded successfully.');
     }
 
     /**
@@ -1110,24 +1132,43 @@ class MemberController extends Controller
      */
     public function deleteDocument(Member $member, $documentIndex): RedirectResponse
     {
-        $documents = json_decode($member->documents, true) ?? [];
+        $documents = $member->documents ?? [];
 
-        if (isset($documents[$documentIndex])) {
-            // Delete file from storage
-            Storage::disk('public')->delete($documents[$documentIndex]['path']);
-
-            // Remove from array
-            unset($documents[$documentIndex]);
-
-            // Reindex array
-            $documents = array_values($documents);
-
-            $member->update(['documents' => json_encode($documents)]);
+        if (is_string($documents)) {
+            $documents = json_decode($documents, true) ?? [];
         }
 
-        return back()->with('success', 'Document deleted successfully');
-    }
+        // Convert old string-format documents
+        $documents = array_map(function ($doc) {
+            if (is_string($doc)) {
+                return [
+                    'name' => basename($doc),
+                    'path' => $doc,
+                    'size' => null,
+                    'type' => strtoupper(pathinfo($doc, PATHINFO_EXTENSION)),
+                    'uploaded_at' => null,
+                ];
+            }
 
+            return $doc;
+        }, $documents);
+
+        if (!isset($documents[$documentIndex])) {
+            return back()->with('error', 'Document not found.');
+        }
+
+        if (!empty($documents[$documentIndex]['path'])) {
+            Storage::disk('public')->delete($documents[$documentIndex]['path']);
+        }
+
+        unset($documents[$documentIndex]);
+
+        $member->update([
+            'documents' => array_values($documents),
+        ]);
+
+        return back()->with('success', 'Document deleted successfully.');
+    }
     /**
      * Search members (API endpoint)
      */

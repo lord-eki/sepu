@@ -153,11 +153,21 @@ class ProfileController extends Controller
 
 
             if ($request->hasFile('documents')) {
-                $documentPaths = [];
+                $documents = [];
+            
                 foreach ($request->file('documents') as $doc) {
-                    $documentPaths[] = $doc->store('member_documents', 'public');
+                    $path = $doc->store('member_documents', 'public');
+            
+                    $documents[] = [
+                        'name' => $doc->getClientOriginalName(),
+                        'path' => $path,
+                        'size' => $doc->getSize(),
+                        'type' => strtoupper($doc->getClientOriginalExtension()),
+                        'uploaded_at' => now()->toDateTimeString(),
+                    ];
                 }
-                $validated['documents'] = $documentPaths; 
+            
+                $validated['documents'] = $documents;
             }
 
             DB::beginTransaction();

@@ -273,72 +273,87 @@
 
           <!-- Documents -->
           <section class="bg-white shadow-md rounded-xl p-6">
-            <h3 class="text-lg font-semibold text-[#081642]">Documents</h3>
-            <p class="text-sm text-gray-500 mb-4">Upload any supporting documents.</p>
-            <input
-              type="file"
-              multiple
-              class="hidden"
-              ref="documentsInput"
-              @change="handleDocumentsUpload"
-            />
-            <button
-              type="button"
-              @click="$refs.documentsInput.click()"
-              class="bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-md text-sm font-medium text-orange-700 border border-orange-200 shadow-sm"
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h3 class="text-lg font-semibold text-[#081642]">
+                  Supporting Documents
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  Please upload the following required documents as <strong>one combined PDF</strong>:
+                </p>
+
+                <div class="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+                  <h4 class="font-medium text-orange-800 mb-2">
+                    Required Documents
+                  </h4>
+
+                  <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">
+                    <li>National ID (Front and Back)</li>
+                    <li>Recent Passport-size Photo</li>
+                    <li>KRA PIN Certificate</li>
+                    <li>Any other relevant supporting documents (if applicable)</li>
+                  </ul>
+
+                  <p class="mt-3 text-xs text-orange-700">
+                    <strong>Note:</strong> Scan or combine all the above documents into a
+                    <strong>single PDF file</strong> before uploading. Maximum file size:
+                    <strong>10 MB</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <input
+                ref="documentsInput"
+                type="file"
+                accept=".pdf"
+                class="hidden"
+                @change="handleDocumentsUpload"
+              />
+
+              <button
+                type="button"
+                @click="$refs.documentsInput.click()"
+                class="inline-flex items-center rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 shadow-sm transition hover:bg-orange-100"
+              >
+                <FileIcon class="mr-2 h-4 w-4" />
+                Upload Combined PDF
+              </button>
+            </div>
+
+            <ul
+              v-if="selectedDocuments.length"
+              class="mt-5 space-y-3"
             >
-              Upload Documents
-            </button>
-            <ul class="mt-4 space-y-2">
               <li
                 v-for="(doc, index) in selectedDocuments"
                 :key="index"
-                class="flex items-center justify-between bg-gray-50 rounded-md p-2 text-sm shadow-sm"
+                class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
               >
-                <span class="flex items-center gap-2">
-                  <FileIcon class="w-4 h-4 text-gray-400" /> {{ doc.name }}
-                </span>
+                <div class="flex items-center gap-3">
+                  <FileIcon class="h-5 w-5 text-red-500" />
+
+                  <div>
+                    <p class="font-medium text-gray-800">
+                      {{ doc.name }}
+                    </p>
+
+                    <p class="text-xs text-gray-500">
+                      PDF Document
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   @click="removeDocument(index)"
-                  class="text-red-500 hover:text-red-700 text-xs"
+                  class="text-sm font-medium text-red-600 hover:text-red-800"
                 >
                   Remove
                 </button>
               </li>
             </ul>
-          </section>
-
-          <!-- Employment -->
-          <section class="bg-white shadow-md rounded-xl p-6">
-            <h3 class="text-lg font-semibold text-[#081642]">Employment Information</h3>
-            <p class="text-sm text-gray-500 mb-6">Your work details.</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium">Occupation</label>
-                <input
-                  v-model="form.occupation"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium">Employer</label>
-                <input
-                  v-model="form.employer"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium">Monthly Income</label>
-                <input
-                  v-model="form.monthly_income"
-                  type="number"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
-              </div>
-            </div>
           </section>
 
           <!-- Emergency Contact -->

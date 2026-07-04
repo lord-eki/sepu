@@ -300,7 +300,7 @@ class DashboardController extends Controller
 
             case 'rejected':
                 auth()->logout();
-                return redirect()->route('login')->with('error', 'Your membership application was rejected. Please reach out to support for clarification.');
+                return redirect()->route('login')->with('error', 'Your membership application was rejected. Please reach out to admin for clarification.');
 
             case 'active':
                 // proceed as normal
