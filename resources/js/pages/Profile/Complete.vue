@@ -6,41 +6,26 @@
         <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">
           Complete Your Profile
         </h2>
-        <Link
-          :href="route('logout')"
-          method="post"
-          class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition"
-        >
-          Logout
+        <Link :href="route('logout')" method="post"
+          class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition">
+        Logout
         </Link>
       </div>
     </header>
 
     <!-- Flash messages -->
     <div class="max-w-2xl mx-auto mt-4 px-4">
-      <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-2"
-      >
-        <div
-          v-if="flashMessage"
-          :class="[
-            flashType === 'success'
-              ? 'bg-green-100 text-green-800 border border-green-300'
-              : 'bg-red-100 text-red-800 border border-red-300',
-            'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
-          ]"
-        >
+      <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+        <div v-if="flashMessage" :class="[
+          flashType === 'success'
+            ? 'bg-green-100 text-green-800 border border-green-300'
+            : 'bg-red-100 text-red-800 border border-red-300',
+          'relative w-full px-6 py-3 rounded-lg mb-4 flex items-center shadow-sm'
+        ]">
           <span class="flex-1">{{ flashMessage }}</span>
-          <button
-            type="button"
-            class="ml-3 text-gray-500 hover:text-gray-700"
-            @click="flashMessage = null"
-          >
+          <button type="button" class="ml-3 text-gray-500 hover:text-gray-700" @click="flashMessage = null">
             ✕
           </button>
         </div>
@@ -65,31 +50,15 @@
             <p class="text-sm text-gray-500 mb-4">Upload a clear passport-style photo.</p>
             <div class="flex items-center gap-6">
               <div class="flex-shrink-0">
-                <img
-                  v-if="photoPreview"
-                  :src="photoPreview"
-                  alt="Profile preview"
-                  class="h-20 w-20 rounded-full object-cover ring-2 ring-orange-500"
-                />
-                <div
-                  v-else
-                  class="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center"
-                >
+                <img v-if="photoPreview" :src="photoPreview" alt="Profile preview"
+                  class="h-20 w-20 rounded-full object-cover ring-2 ring-orange-500" />
+                <div v-else class="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
                   <User class="h-10 w-10 text-gray-400" />
                 </div>
               </div>
-              <input
-                type="file"
-                ref="photoInput"
-                accept="image/*"
-                class="hidden"
-                @change="handlePhotoUpload"
-              />
-              <button
-                type="button"
-                @click="$refs.photoInput.click()"
-                class="bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-md text-sm font-medium text-orange-700 border border-orange-200 shadow-sm"
-              >
+              <input type="file" ref="photoInput" accept="image/*" class="hidden" @change="handlePhotoUpload" />
+              <button type="button" @click="$refs.photoInput.click()"
+                class="bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-md text-sm font-medium text-orange-700 border border-orange-200 shadow-sm">
                 Change Photo
               </button>
             </div>
@@ -103,54 +72,34 @@
               <!-- First Name -->
               <div>
                 <label class="block text-sm font-medium">First Name</label>
-                <input
-                  v-model="form.first_name"
-                  type="text"
-                  readonly
-                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.first_name" type="text" readonly
+                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- Last Name -->
               <div>
                 <label class="block text-sm font-medium">Last Name</label>
-                <input
-                  v-model="form.last_name"
-                  type="text"
-                  readonly
-                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.last_name" type="text" readonly
+                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- Other Names -->
               <div>
                 <label class="block text-sm font-medium">Other Names</label>
-                <input
-                  v-model="form.middle_name"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.middle_name" type="text"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- DOB -->
               <div>
                 <label class="block text-sm font-medium">Date of Birth</label>
-                <input
-                  v-model="form.date_of_birth"
-                  type="date"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.date_of_birth" type="date"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- Gender -->
               <div>
                 <label class="block text-sm font-medium">Gender</label>
-                <select
-                  v-model="form.gender"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                >
+                <select v-model="form.gender"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2">
                   <option value="">Select Gender</option>
-                  <option
-                    v-for="(label, value) in genders"
-                    :key="value"
-                    :value="value"
-                  >
+                  <option v-for="(label, value) in genders" :key="value" :value="value">
                     {{ label }}
                   </option>
                 </select>
@@ -158,16 +107,10 @@
               <!-- Marital -->
               <div>
                 <label class="block text-sm font-medium">Marital Status</label>
-                <select
-                  v-model="form.marital_status"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                >
+                <select v-model="form.marital_status"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2">
                   <option value="">Select Status</option>
-                  <option
-                    v-for="(label, value) in maritalStatuses"
-                    :key="value"
-                    :value="value"
-                  >
+                  <option v-for="(label, value) in maritalStatuses" :key="value" :value="value">
                     {{ label }}
                   </option>
                 </select>
@@ -183,58 +126,38 @@
               <!-- Email -->
               <div>
                 <label class="block text-sm font-medium">Email</label>
-                <input
-                  v-model="form.email"
-                  type="email"
-                  readonly
-                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.email" type="email" readonly
+                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- Phone -->
               <div>
                 <label class="block text-sm font-medium">Phone</label>
-                <input
-                  v-model="form.phone"
-                  type="text"
-                  readonly
-                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.phone" type="text" readonly
+                  class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- Physical Address -->
               <div class="sm:col-span-2">
                 <label class="block text-sm font-medium">Physical Address</label>
-                <input
-                  v-model="form.physical_address"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.physical_address" type="text"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- City -->
               <div>
                 <label class="block text-sm font-medium">City</label>
-                <input
-                  v-model="form.city"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.city" type="text"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- County -->
               <div>
                 <label class="block text-sm font-medium">County</label>
-                <input
-                  v-model="form.county"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.county" type="text"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
               <!-- Postal Address -->
               <div>
                 <label class="block text-sm font-medium">Postal Address</label>
-                <input
-                  v-model="form.postal_address"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.postal_address" type="text"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
             </div>
           </section>
@@ -246,27 +169,18 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-medium">ID Type</label>
-                <select
-                  v-model="form.id_type"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                >
+                <select v-model="form.id_type"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2">
                   <option value="">Select ID Type</option>
-                  <option
-                    v-for="(label, value) in idTypes"
-                    :key="value"
-                    :value="value"
-                  >
+                  <option v-for="(label, value) in idTypes" :key="value" :value="value">
                     {{ label }}
                   </option>
                 </select>
               </div>
               <div>
                 <label class="block text-sm font-medium">ID Number</label>
-                <input
-                  v-model="form.id_number"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.id_number" type="text"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
             </div>
           </section>
@@ -304,33 +218,18 @@
             </div>
 
             <div class="mt-6">
-              <input
-                ref="documentsInput"
-                type="file"
-                accept=".pdf"
-                class="hidden"
-                @change="handleDocumentsUpload"
-              />
+              <input ref="documentsInput" type="file" accept=".pdf" class="hidden" @change="handleDocumentsUpload" />
 
-              <button
-                type="button"
-                @click="$refs.documentsInput.click()"
-                class="inline-flex items-center rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 shadow-sm transition hover:bg-orange-100"
-              >
+              <button type="button" @click="$refs.documentsInput.click()"
+                class="inline-flex items-center rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 shadow-sm transition hover:bg-orange-100">
                 <FileIcon class="mr-2 h-4 w-4" />
                 Upload Combined PDF
               </button>
             </div>
 
-            <ul
-              v-if="selectedDocuments.length"
-              class="mt-5 space-y-3"
-            >
-              <li
-                v-for="(doc, index) in selectedDocuments"
-                :key="index"
-                class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
-              >
+            <ul v-if="selectedDocuments.length" class="mt-5 space-y-3">
+              <li v-for="(doc, index) in selectedDocuments" :key="index"
+                class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <div class="flex items-center gap-3">
                   <FileIcon class="h-5 w-5 text-red-500" />
 
@@ -345,11 +244,8 @@
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  @click="removeDocument(index)"
-                  class="text-sm font-medium text-red-600 hover:text-red-800"
-                >
+                <button type="button" @click="removeDocument(index)"
+                  class="text-sm font-medium text-red-600 hover:text-red-800">
                   Remove
                 </button>
               </li>
@@ -363,39 +259,26 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-medium">Name</label>
-                <input
-                  v-model="form.emergency_contact_name"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.emergency_contact_name" type="text"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
               <div>
                 <label class="block text-sm font-medium">Phone</label>
-                <input
-                  v-model="form.emergency_contact_phone"
-                  type="tel"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.emergency_contact_phone" type="tel"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
               <div class="sm:col-span-2">
                 <label class="block text-sm font-medium">Relationship</label>
-                <input
-                  v-model="form.emergency_contact_relationship"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2"
-                />
+                <input v-model="form.emergency_contact_relationship" type="text"
+                  class="mt-1 block w-full rounded-lg border border-gray-300 focus:ring-orange-500 focus:border-orange-500 shadow-sm sm:text-sm p-2" />
               </div>
             </div>
           </section>
 
           <!-- Submit -->
           <div class="flex justify-end max-sm:mr-5">
-            <button
-              type="submit"
-              :disabled="form.processing || !isFormValid"
-              class="inline-flex items-center px-6 py-3 rounded-lg text-white font-medium shadow-md
-                     bg-blue-900 hover:bg-orange-600 disabled:bg-gray-300 transition"
-            >
+            <button type="submit" :disabled="form.processing || !isFormValid" class="inline-flex items-center px-6 py-3 rounded-lg text-white font-medium shadow-md
+                     bg-blue-900 hover:bg-orange-600 disabled:bg-gray-300 transition">
               <span v-if="form.processing">Saving...</span>
               <span v-else>Complete Profile</span>
             </button>
@@ -431,7 +314,7 @@ watch(flash, (val) => {
   } else if (val.error) {
     flashMessage.value = val.error
     flashType.value = 'error'
-    form.reset() 
+    form.reset()
     photoPreview.value = null
     selectedDocuments.value = []
   }
@@ -516,18 +399,19 @@ const removeDocument = (index) => {
 
 
 const submit = () => {
-    form.post(route('profile.complete.store'), {
-      forceFormData: true,
-    })
+  form.post(route('profile.complete.store'), {
+    forceFormData: true,
+  })
 }
 
 
 </script>
 
 <style>
-.formprofile label {  
+.formprofile label {
   color: #081642ff;
 }
+
 button:hover {
   cursor: pointer;
 }

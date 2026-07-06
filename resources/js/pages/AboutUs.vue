@@ -42,11 +42,16 @@ const values = [
 
     <Head title="About Us" />
 
-    <main class="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+    <main
+      class="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
 
       <!-- Soft Background Accents -->
-      <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[120px] opacity-30 dark:bg-blue-800/30"></div>
-      <div class="absolute bottom-0 -left-40 w-[500px] h-[500px] bg-orange-200 rounded-full blur-[120px] opacity-30 dark:bg-orange-700/30"></div>
+      <div
+        class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[120px] opacity-30 dark:bg-blue-800/30">
+      </div>
+      <div
+        class="absolute bottom-0 -left-40 w-[500px] h-[500px] bg-orange-200 rounded-full blur-[120px] opacity-30 dark:bg-orange-700/30">
+      </div>
 
       <div class="relative max-w-7xl mx-auto px-6 py-10 sm:py-16 lg:py-24 space-y-24">
 
@@ -54,7 +59,8 @@ const values = [
         <section class="text-center space-y-6 max-w-3xl mx-auto">
           <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white">
             About
-            <span class="text-3xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-500 dark:from-blue-400 dark:to-orange-400">
+            <span
+              class="text-3xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-500 dark:from-blue-400 dark:to-orange-400">
               SEPU SACCO
             </span>
           </h1>
@@ -105,8 +111,7 @@ const values = [
           </h2>
 
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div v-for="(value, index) in values" :key="index" 
-                 class="group rounded-2xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-lg
+            <div v-for="(value, index) in values" :key="index" class="group rounded-2xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-lg
                         border border-gray-200 dark:border-gray-700 p-8 shadow-md
                         hover:shadow-xl hover:-translate-y-2
                         transition-all duration-500">
@@ -127,7 +132,9 @@ const values = [
         <!-- CTA -->
         <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-900 to-blue-800
                  dark:from-blue-800 dark:to-blue-900 p-14 text-center text-white shadow-2xl">
-          <div class="absolute -top-20 -right-20 w-64 h-64 bg-orange-400 rounded-full blur-3xl opacity-20 dark:bg-orange-700/30"></div>
+          <div
+            class="absolute -top-20 -right-20 w-64 h-64 bg-orange-400 rounded-full blur-3xl opacity-20 dark:bg-orange-700/30">
+          </div>
 
           <div class="relative space-y-6 max-w-2xl mx-auto">
             <h2 class="text-3xl sm:text-4xl font-bold">
@@ -144,14 +151,14 @@ const values = [
                        bg-orange-500 hover:bg-orange-600
                        dark:bg-orange-600 dark:hover:bg-orange-500
                        shadow-lg transition-all duration-300 hover:scale-105">
-                Become a Member
+              Become a Member
               </Link>
 
               <Link :href="route('login')" class="px-8 py-3 rounded-xl font-semibold
                        bg-white text-blue-900 hover:bg-gray-100
                        dark:bg-gray-700 dark:text-blue-400 dark:hover:bg-gray-600
                        shadow-lg transition-all duration-300 hover:scale-105">
-                Member Login
+              Member Login
               </Link>
             </div>
           </div>

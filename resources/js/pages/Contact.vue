@@ -15,11 +15,16 @@ const s = props.settings
 
     <Head title="Contact Us" />
 
-    <main class="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+    <main
+      class="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
 
       <!-- Soft Background Accents -->
-      <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[120px] opacity-30 dark:bg-blue-800/30"></div>
-      <div class="absolute bottom-0 -left-40 w-[500px] h-[500px] bg-orange-200 rounded-full blur-[120px] opacity-30 dark:bg-orange-700/30"></div>
+      <div
+        class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[120px] opacity-30 dark:bg-blue-800/30">
+      </div>
+      <div
+        class="absolute bottom-0 -left-40 w-[500px] h-[500px] bg-orange-200 rounded-full blur-[120px] opacity-30 dark:bg-orange-700/30">
+      </div>
 
       <div class="relative max-w-7xl mx-auto px-6 py-16 lg:py-24 space-y-20">
 
@@ -27,7 +32,8 @@ const s = props.settings
         <section class="text-center space-y-6 max-w-3xl mx-auto">
           <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
             Get in
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-500 dark:from-blue-400 dark:to-orange-400">
+            <span
+              class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-500 dark:from-blue-400 dark:to-orange-400">
               Touch
             </span>
           </h1>
@@ -55,7 +61,8 @@ const s = props.settings
                      transition-all duration-500">
             <Mail class="w-8 h-8 text-orange-500 mx-auto mb-4 group-hover:scale-110 transition" />
             <h3 class="font-semibold text-gray-900 dark:text-white text-lg">Email</h3>
-            <a :href="`mailto:${s.sacco_email?.value}`" class="text-blue-600 dark:text-blue-400 text-sm mt-2 block hover:underline">
+            <a :href="`mailto:${s.sacco_email?.value}`"
+              class="text-blue-600 dark:text-blue-400 text-sm mt-2 block hover:underline">
               {{ s.sacco_email?.value }}
             </a>
           </div>
@@ -96,8 +103,7 @@ const s = props.settings
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Full Name
               </label>
-              <input type="text" placeholder="Your name" 
-                     class="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3
+              <input type="text" placeholder="Your name" class="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3
                             bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
                             focus:ring-2 focus:ring-orange-500 focus:border-orange-500
                             outline-none transition" />
@@ -107,8 +113,7 @@ const s = props.settings
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
-              <input type="email" placeholder="you@example.com" 
-                     class="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3
+              <input type="email" placeholder="you@example.com" class="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3
                             bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
                             focus:ring-2 focus:ring-orange-500 focus:border-orange-500
                             outline-none transition" />
@@ -118,16 +123,14 @@ const s = props.settings
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Message
               </label>
-              <textarea rows="5" placeholder="Write your message here..." 
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3
+              <textarea rows="5" placeholder="Write your message here..." class="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3
                                bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
                                focus:ring-2 focus:ring-orange-500 focus:border-orange-500
                                outline-none transition"></textarea>
             </div>
 
             <div class="md:col-span-2 text-center pt-4">
-              <button type="submit" 
-                      class="px-10 py-3 rounded-xl font-semibold text-white
+              <button type="submit" class="px-10 py-3 rounded-xl font-semibold text-white
                              bg-gradient-to-r from-orange-500 to-orange-600
                              dark:from-orange-600 dark:to-orange-500
                              shadow-lg hover:shadow-xl
