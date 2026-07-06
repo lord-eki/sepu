@@ -185,7 +185,7 @@ const openNotification = (n: any) => {
 dark:to-slate-950 px-4 py-5 sm:px-6lg:px-8">
       <!-- HEADER -->
       <div
-        class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0F172A] via-[#132F57] to-[#1E3A8A] p-5 sm:p-7 shadow-xl">
+        class="relative max-sm:overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0F172A] via-[#132F57] to-[#1E3A8A] p-5 sm:p-7 shadow-xl">
         <!-- glow -->
         <div
           class="absolute right-0 top-0 h-56 w-56 translate-x-1/4 -translate-y-1/4 rounded-full bg-blue-400/20 blur-3xl">
@@ -220,7 +220,7 @@ dark:to-slate-950 px-4 py-5 sm:px-6lg:px-8">
             <div class="flex flex-wrap items-center gap-3">
               <!-- TOTAL BALANCE -->
               <div
-                class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-xl">
+                class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/10 dark:bg-slate-900 px-4 py-3 backdrop-blur-xl">
                 <div>
                   <p class="text-[11px] uppercase tracking-wider text-slate-300">
                     Total Balance
@@ -245,7 +245,7 @@ dark:to-slate-950 px-4 py-5 sm:px-6lg:px-8">
 
               <!-- EYE -->
               <button @click="toggleBalances"
-                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur transition hover:bg-white/20">
+                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 dark:bg-slate-900 backdrop-blur transition hover:bg-white/20">
                 <Eye v-if="showBalances" class="h-5 w-5 text-white" />
 
                 <EyeOff v-else class="h-5 w-5 text-white" />
@@ -254,7 +254,7 @@ dark:to-slate-950 px-4 py-5 sm:px-6lg:px-8">
               <!-- NOTIFICATIONS -->
               <div class="relative">
                 <button @click="toggleNotifications"
-                  class="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur transition hover:bg-white/20">
+                  class="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 dark:bg-slate-900 backdrop-blur transition hover:bg-white/20">
                   <Bell class="h-5 w-5 text-white" />
 
                   <span
@@ -264,20 +264,19 @@ dark:to-slate-950 px-4 py-5 sm:px-6lg:px-8">
                 </button>
 
                 <!-- Notification Dropdown -->
-                <div v-if="showNotifications"
-class="fixed top-20 left-1/2 -translate-x-1/2 sm:absolute sm:left-auto sm:translate-x-0 sm:right-0 sm:top-14 z-50 w-[95vw] max-w-md rounded-2xl
-border
-bg-white
-dark:bg-slate-900
-dark:border-slate-700
-shadow-2xl
-"
->
+                <div v-if="showNotifications" class="fixed top-20 left-1/2 -translate-x-1/2 sm:absolute sm:left-auto sm:translate-x-0 sm:right-0 sm:top-14 z-50 w-[95vw] max-w-md rounded-2xl
+                  border
+                  bg-white
+                  dark:bg-slate-900`
+                  dark:border-slate-700
+                  shadow-2xl
+                  ">
                   <!-- Backdrop -->
                   <div @click="showNotifications = false"></div>
 
                   <!-- Notification Box -->
-                  <div class="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                  <div
+                    class="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-2xl">
                     <!-- Header -->
                     <div class="flex items-center justify-between border-b p-4">
                       <h3 class="font-semibold text-slate-700">
@@ -293,12 +292,12 @@ shadow-2xl
                     <!-- Notifications -->
                     <div v-if="notifications?.length" class="max-h-[70vh] overflow-y-auto">
                       <div v-for="n in notifications" :key="n.id" @click="openNotification(n)"
-                        class="cursor-pointer border-b p-4 transition hover:bg-slate-50">
+                        class="cursor-pointer border-b p-4 transition hover:bg-slate-50 dark:bg-slate-800">
                         <p class="text-sm text-slate-700">
                           {{ n.message }}
                         </p>
 
-                        <p class="mt-1 text-xs text-slate-400">
+                        <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
                           {{ fmtDate(n.created_at) }}
                         </p>
                       </div>
@@ -337,7 +336,8 @@ shadow-2xl
       icon: TrendingUp,
       color: 'from-emerald-500 to-green-500',
     },
-  ]" :key="stat.title" class="rounded-[28px] border-0 bg-white shadow-sm transition-all duration-300 hover:shadow-xl">
+  ]" :key="stat.title"
+          class="rounded-[28px] border-0bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-300 hover:shadow-xl">
           <CardContent class="p-6">
             <div class="flex items-start justify-between">
               <div>
@@ -345,7 +345,7 @@ shadow-2xl
                   {{ stat.title }}
                 </p>
 
-                <h3 class="mt-3 text-xl font-bold tracking-tight text-slate-900">
+                <h3 class="mt-3 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                   <span v-if="showBalances">
                     {{ stat.value }}
                   </span>
@@ -368,198 +368,200 @@ shadow-2xl
       <!-- TABS -->
       <section class="mt-10">
         <Tabs default-value="loans" class="w-full">
-        <div class="overflow-x-auto">
-          <TabsList class="h-auto rounded-2xl border border-slate-200 bg-white p-1">
-            <TabsTrigger value="loans"
-              class="rounded-xl px-5 py-3 data-[state=active]:bg-blue-900 data-[state=active]:text-white">
-              <Landmark class="mr-2 h-4 w-4" />
-              Loans
-            </TabsTrigger>
+          <div class="overflow-x-auto">
+            <TabsList class="h-auto rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-1">
+              <TabsTrigger value="loans"
+                class="rounded-xl px-5 py-3 data-[state=active]:bg-blue-900 data-[state=active]:text-white">
+                <Landmark class="mr-2 h-4 w-4" />
+                Loans
+              </TabsTrigger>
 
-            <TabsTrigger value="transactions"
-              class="rounded-xl px-5 py-3 data-[state=active]:bg-blue-900 data-[state=active]:text-white">
-              <Receipt class="mr-2 h-4 w-4" />
-              Transactions
-            </TabsTrigger>
-          </TabsList>
-    </div>
+              <TabsTrigger value="transactions"
+                class="rounded-xl px-5 py-3 data-[state=active]:bg-blue-900 data-[state=active]:text-white">
+                <Receipt class="mr-2 h-4 w-4" />
+                Transactions
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-    <!-- LOANS -->
-    <TabsContent value="loans" class="mt-6">
-      <div v-if="activeLoans?.length" class="grid gap-6 lg:grid-cols-2">
-        <Card v-for="loan in activeLoans" :key="loan.id"
-          class="rounded-[28px] border-0 bg-white shadow-sm transition hover:shadow-xl">
-          <CardContent class="p-6">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="text-lg font-semibold text-slate-900">
-                  {{
+          <!-- LOANS -->
+          <TabsContent value="loans" class="mt-6">
+            <div v-if="activeLoans?.length" class="grid gap-6 lg:grid-cols-2">
+              <Card v-for="loan in activeLoans" :key="loan.id"
+                class="rounded-[28px] border-0 bg-white dark:bg-slate-900 shadow-sm transition hover:shadow-xl">
+                <CardContent class="p-6">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                        {{
     loan.loanProduct?.name ||
     'Loan Facility'
   }}
-                </h3>
+                      </h3>
 
-                <p class="mt-1 text-sm capitalize text-slate-500">
-                  {{ loan.status }}
-                </p>
-              </div>
+                      <p class="mt-1 text-sm capitalize text-slate-500 dark:text-slate-400">
+                        {{ loan.status }}
+                      </p>
+                    </div>
 
-              <Badge class="rounded-full bg-orange-100 px-4 py-1 text-orange-700">
-                {{
+                    <Badge class="rounded-full bg-orange-100 px-4 py-1 text-orange-700">
+                      {{
     fmtMoney(
       loan.outstanding_balance || 0
     )
   }}
-              </Badge>
-            </div>
+                    </Badge>
+                  </div>
 
-            <div class="mt-6 space-y-3 text-sm">
-              <div class="flex justify-between">
-                <span class="text-slate-500">
-                  Next Payment
-                </span>
+                  <div class="mt-6 space-y-3 text-sm">
+                    <div class="flex justify-between">
+                      <span class="text-slate-500 dark:text-slate-400">
+                        Next Payment
+                      </span>
 
-                <span class="font-medium text-slate-800">
-                  {{
+                      <span class="font-medium text-slate-800">
+                        {{
       fmtDate(
         loan.first_repayment_date
       )
     }}
-                </span>
-              </div>
+                      </span>
+                    </div>
 
-              <div class="flex justify-between">
-                <span class="text-slate-500">
-                  Disbursed
-                </span>
+                    <div class="flex justify-between">
+                      <span class="text-slate-500 dark:text-slate-400">
+                        Disbursed
+                      </span>
 
-                <span class="font-medium text-slate-800">
-                  {{
+                      <span class="font-medium text-slate-800">
+                        {{
       fmtMoney(
         loan.disbursed_amount || 0
       )
     }}
-                </span>
-              </div>
-            </div>
+                      </span>
+                    </div>
+                  </div>
 
-            <div class="mt-6 flex gap-3">
-              <Button as-child class="rounded-xl">
-                <Link :href="route('loans.show', loan.id)
+                  <div class="mt-6 flex gap-3">
+                    <Button as-child class="rounded-xl">
+                      <Link :href="route('loans.show', loan.id)
     ">
-                View
-                </Link>
-              </Button>
+                      View
+                      </Link>
+                    </Button>
 
-              <Button as-child variant="outline" class="rounded-xl">
-                <Link :href="route(
+                    <Button as-child variant="outline" class="rounded-xl">
+                      <Link :href="route(
     'loans.repayments',
     loan.id
   )
     ">
-                Repay
+                      Repay
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <!-- empty -->
+            <div v-else
+              class="rounded-[32px] border border-dashed border-slate-300  dark:bg-slate-900 p-12 text-center">
+              <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
+                <Landmark class="h-8 w-8 text-slate-400 dark:text-slate-500" />
+              </div>
+
+              <h3 class="mt-5 text-lg font-semibold text-slate-800">
+                No Active Loans
+              </h3>
+
+              <p class="mx-auto max-sm:text-sm mt-2 max-w-md text-slate-500 dark:text-slate-400">
+                You currently don’t have any active loans.
+              </p>
+
+              <Button as-child class="mt-6 rounded-xl">
+                <Link :href="route('my-loans')">
+                Apply for Loan
                 </Link>
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </TabsContent>
 
-      <!-- empty -->
-      <div v-else class="rounded-[32px] border border-dashed border-slate-300 bg-white p-12 text-center">
-        <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
-          <Landmark class="h-8 w-8 text-slate-400" />
-        </div>
+          <!-- TRANSACTIONS -->
+          <TabsContent value="transactions" class="mt-6">
+            <div class="overflow-hidden rounded-[30px] border border-slate-200 bg-white dark:bg-slate-900 shadow-sm">
+              <div class="flex items-center justify-between border-b p-5">
+                <h3 class="font-semibold text-slate-800">
+                  Recent Transactions
+                </h3>
 
-        <h3 class="mt-5 text-lg font-semibold text-slate-800">
-          No Active Loans
-        </h3>
-
-        <p class="mx-auto max-sm:text-sm mt-2 max-w-md text-slate-500">
-          You currently don’t have any active loans.
-        </p>
-
-        <Button as-child class="mt-6 rounded-xl">
-          <Link :href="route('my-loans')">
-          Apply for Loan
-          </Link>
-        </Button>
-      </div>
-    </TabsContent>
-
-    <!-- TRANSACTIONS -->
-    <TabsContent value="transactions" class="mt-6">
-      <div class="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm">
-        <div class="flex items-center justify-between border-b p-5">
-          <h3 class="font-semibold text-slate-800">
-            Recent Transactions
-          </h3>
-
-          <Button as-child variant="outline" size="sm" class="rounded-xl">
-            <Link :href="route(
+                <Button as-child variant="outline" size="sm" class="rounded-xl">
+                  <Link :href="route(
     'members.transactions',
     member.id
   )
     ">
-            View All
-            </Link>
-          </Button>
-        </div>
+                  View All
+                  </Link>
+                </Button>
+              </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-50">
-              <tr class="text-slate-500">
-                <th class="p-4 text-left font-medium">
-                  Date
-                </th>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-slate-50 dark:bg-slate-800">
+                    <tr class="text-slate-500 dark:text-slate-400">
+                      <th class="p-4 text-left font-medium">
+                        Date
+                      </th>
 
-                <th class="p-4 text-left font-medium">
-                  Type
-                </th>
+                      <th class="p-4 text-left font-medium">
+                        Type
+                      </th>
 
-                <th class="p-4 text-left font-medium">
-                  Account
-                </th>
+                      <th class="p-4 text-left font-medium">
+                        Account
+                      </th>
 
-                <th class="p-4 text-right font-medium">
-                  Amount
-                </th>
+                      <th class="p-4 text-right font-medium">
+                        Amount
+                      </th>
 
-                <th class="p-4 text-right font-medium">
-                  Status
-                </th>
-              </tr>
-            </thead>
+                      <th class="p-4 text-right font-medium">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
 
-            <tbody>
-              <tr v-for="t in recentTx" :key="t.id" class="border-t transition hover:bg-slate-50">
-                <td class="p-4">
-                  {{ fmtDate(t.created_at) }}
-                </td>
+                  <tbody>
+                    <tr v-for="t in recentTx" :key="t.id"
+                      class="border-t transition hover:bg-slate-50 dark:bg-slate-800">
+                      <td class="p-4">
+                        {{ fmtDate(t.created_at) }}
+                      </td>
 
-                <td class="p-4 capitalize">
-                  {{
+                      <td class="p-4 capitalize">
+                        {{
     t.transaction_type.replace(
       '_',
       ' '
     )
-                  }}
-                </td>
+                        }}
+                      </td>
 
-                <td class="p-4 capitalize">
-                  {{
-                  t.account?.account_type ||
-                  '—'
-                  }}
-                </td>
+                      <td class="p-4 capitalize">
+                        {{
+                        t.account?.account_type ||
+                        '—'
+                        }}
+                      </td>
 
-                <td class="p-4 text-right font-semibold text-slate-800">
-                  {{ fmtMoney(t.amount) }}
-                </td>
+                      <td class="p-4 text-right font-semibold text-slate-800">
+                        {{ fmtMoney(t.amount) }}
+                      </td>
 
-                <td class="p-4 text-right">
-                  <Badge v-if="[
+                      <td class="p-4 text-right">
+                        <Badge v-if="[
     'deposit',
       'loan_disbursement',
       'dividend_payment',
@@ -569,27 +571,27 @@ shadow-2xl
       t.transaction_type
     )
     " class="bg-emerald-100 text-emerald-700">
-                    Credit
-                  </Badge>
+                          Credit
+                        </Badge>
 
-                  <Badge v-else class="bg-rose-100 text-rose-700">
-                    Debit
-                  </Badge>
-                </td>
-              </tr>
+                        <Badge v-else class="bg-rose-100 text-rose-700">
+                          Debit
+                        </Badge>
+                      </td>
+                    </tr>
 
-              <tr v-if="!recentTx.length">
-                <td colspan="5" class="p-8 text-center text-slate-500">
-                  No transactions found
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </TabsContent>
-    </Tabs>
-    </section>
+                    <tr v-if="!recentTx.length">
+                      <td colspan="5" class="p-8 text-center  dark:text-slate-400 ">
+                        No transactions found
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </section>
     </div>
   </AppLayout>
 </template>
