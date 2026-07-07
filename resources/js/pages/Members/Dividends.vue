@@ -26,19 +26,68 @@ const formattedTotalAmount = computed(() =>
 
       <Head title="Dividends" />
 
-      <!-- Header -->
-      <div class="bg-gradient-to-br from-[#0a2342] via-blue-900 to-orange-500 shadow-lg rounded-2xl px-6 py-5 flex items-center justify-between">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
-            Dividends
-          </h1>
-          <p class="text-sm text-gray-200 mt-1">
-            Track declared dividends, view your earnings history, and manage 
-            distributions with ease.
-          </p>
-        </div>
+<!-- Modern Header -->
+<div
+  class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-[#0B2B40] to-orange-600 shadow-xl"
+>
+  <!-- Decorative Background -->
+  <div class="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-orange-400/20 blur-3xl"></div>
+  <div class="absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl"></div>
+
+  <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between px-8 py-8">
+
+    <!-- Left -->
+    <div class="flex items-start gap-4">
+      <div
+        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur border border-white/20"
+      >
+        <!-- Money Icon -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-7 w-7 text-orange-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 8c-1.657 0-3 1.12-3 2.5S10.343 13 12 13s3 1.12 3 2.5S13.657 18 12 18m0-10V6m0 12v-2M4 7h16M4 17h16"
+          />
+        </svg>
       </div>
 
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-white">
+          Dividends
+        </h1>
+
+        <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-200">
+          View declared dividends, monitor your earnings history,
+          and stay updated on annual distributions to your account.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Badge -->
+    <div
+      class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 backdrop-blur px-5 py-3 text-white"
+    >
+      <div class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></div>
+
+      <div>
+        <p class="text-xs uppercase tracking-wider text-slate-300">
+          Status
+        </p>
+        <p class="text-sm font-semibold">
+          Dividend Centre
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
       <!-- Summary Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Total Dividends -->

@@ -39,6 +39,13 @@ const updatePassword = () => {
     },
   })
 }
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Profile settings',
+        href: '/settings/password',
+    },
+]
 </script>
 
 <template>

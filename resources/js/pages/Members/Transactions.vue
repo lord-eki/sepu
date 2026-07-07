@@ -3,7 +3,7 @@ import { Head, Link, router } from "@inertiajs/vue3"
 import { ref, computed } from "vue"
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Card, CardContent } from "@/components/ui/card"
-import { FileText, Search } from "lucide-vue-next"
+import { FileText, Search, ReceiptText } from "lucide-vue-next"
 
 const props = defineProps<{
   member: any
@@ -106,114 +106,170 @@ const formatDateTime = (date: string) =>
 
     <Head title="Transactions" />
 
-    <div class="p-6 space-y-8 bg-gradient-to-br from-white via-gray-50 to-gray-100 min-h-screen">
+<div class="min-h-screen space-y-8 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-6">
 
-    
-      <!-- ================= HEADER ================= -->
-      <div class="relative overflow-hidden rounded-2xl shadow-xl">
+  <!-- ================= MODERN HEADER ================= -->
+  <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-[#0B2B40] to-orange-600 shadow-2xl">
 
-        <!-- Background Gradient -->
-        <div class="absolute inset-0 bg-gradient-to-r from-[#0a2342] via-blue-900 to-orange-500"></div>
+    <!-- Decorative Background -->
+    <div class="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-orange-400/20 blur-3xl"></div>
+    <div class="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl"></div>
 
-        <!-- Decorative Glow -->
-        <div class="absolute -top-12 -right-12 w-52 h-52 bg-orange-400/30 blur-3xl rounded-full"></div>
-        <div class="absolute -bottom-12 -left-12 w-52 h-52 bg-blue-400/20 blur-3xl rounded-full"></div>
+    <div class="relative z-10 px-8 py-8">
 
-        <!-- Content -->
-        <div class="relative z-10 p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div class="flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
 
-          <!-- LEFT: Title Section -->
-          <div class="space-y-2">
+        <!-- Left -->
+        <div class="flex items-start gap-5">
 
-            <h1 class="text-2xl font-semibold text-white tracking-tight">
-              Transactions
-            </h1>
-
-            <p class="text-sm text-blue-100 max-w-md">
-              Track deposits, withdrawals, transfers, and generate detailed financial statements.
-            </p>
-
-           
-
+          <!-- Icon -->
+          <div
+            class="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl"
+          >
+            <ReceiptText class="h-8 w-8 text-orange-300" />
           </div>
 
-          <!-- RIGHT: Controls -->
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 w-full lg:w-auto">
-            
-            <!-- DATE PICKER GROUP -->
-            <div class="flex items-center gap-2 bg-white/10 backdrop-blur-lg px-3 py-2 rounded-xl border border-white/20 shadow-inner">
+          <div>
 
-              <input
-                type="date"
-                v-model="fromDate"
-                class="bg-transparent text-white text-sm focus:outline-none"
-              />
+            <div class="flex items-center gap-3">
 
-              <span class="text-white/60 text-sm">→</span>
+              <h1 class="text-3xl font-bold tracking-tight text-white">
+                Transactions
+              </h1>
 
-              <input
-                type="date"
-                v-model="toDate"
-                class="bg-transparent text-white text-sm focus:outline-none"
-              />
-
-            </div>
-
-            <!-- ACTION BUTTONS -->
-            <div class="flex gap-2">
-
-    
-
-              <!-- VIEW STATEMENT -->
-              <button
-                @click="viewStatement"
-                class="flex items-center gap-2 px-4 py-2 bg-white text-[#0a2342] rounded-lg shadow hover:shadow-lg hover:scale-[1.02] transition font-medium"
+              <span
+                class="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200 border border-emerald-400/30"
               >
-                <FileText class="w-4 h-4" />
-                View Statement
-              </button>
+                Live
+              </span>
 
             </div>
+
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-200">
+              View deposits, withdrawals, transfers and generate detailed
+              account statements for any selected period.
+            </p>
 
           </div>
 
         </div>
+
+        <!-- Right -->
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
+
+          <!-- Date Filters -->
+          <div
+            class="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-xl"
+          >
+
+            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-300">
+              Statement Period
+            </p>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+
+              <input
+                type="date"
+                v-model="fromDate"
+                class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-orange-400 focus:outline-none"
+              />
+
+              <input
+                type="date"
+                v-model="toDate"
+                class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-orange-400 focus:outline-none"
+              />
+
+            </div>
+
+          </div>
+
+          <!-- Button -->
+          <button
+            @click="viewStatement"
+            class="flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 font-semibold text-[#0B2B40] shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-orange-50 hover:shadow-xl"
+          >
+            <FileText class="h-5 w-5" />
+            View Statement
+          </button>
+
+        </div>
+
       </div>
 
-      <!-- ================= SUMMARY ================= -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    </div>
 
-        <Card class="rounded-2xl shadow-sm">
-          <CardContent class="p-5">
-            <p class="text-xs text-gray-500">Total Amount</p>
-            <p class="text-lg font-semibold text-[#0a2342]">
-              KES {{ formatCurrency(totalAmount) }}
-            </p>
-          </CardContent>
-        </Card>
+  </div>
 
-        <Card class="rounded-2xl shadow-sm">
-          <CardContent class="p-5">
-            <p class="text-xs text-gray-500">Transactions</p>
-            <p class="text-lg font-semibold text-[#0a2342]">
-              {{ totalTransactions }}
-            </p>
-          </CardContent>
-        </Card>
+  <!-- ================= SUMMARY ================= -->
+  <div class="grid gap-6 md:grid-cols-3">
 
-        <Card class="rounded-2xl shadow-sm">
-          <CardContent class="p-5">
-            <p class="text-xs text-gray-500">Last Activity</p>
-            <p v-if="lastTransaction" class="text-sm font-medium text-gray-700">
-              {{ lastTransaction.transaction_type }} •
-              KES {{ formatCurrency(lastTransaction.amount) }}
-            </p>
-            <p v-else class="text-sm text-gray-400">No activity</p>
-          </CardContent>
-        </Card>
+    <Card
+      class="rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900"
+    >
+      <CardContent class="p-6">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Total Amount
+        </p>
 
-      </div>
+        <p class="mt-3 text-2xl font-bold text-[#0B2B40] dark:text-white">
+          KES {{ formatCurrency(totalAmount) }}
+        </p>
 
+        <p class="mt-2 text-sm text-emerald-600">
+          Total value of displayed transactions
+        </p>
+      </CardContent>
+    </Card>
+
+    <Card
+      class="rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900"
+    >
+      <CardContent class="p-6">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Transactions
+        </p>
+
+        <p class="mt-3 text-3xl font-bold text-[#0B2B40] dark:text-white">
+          {{ totalTransactions }}
+        </p>
+
+        <p class="mt-2 text-sm text-blue-600">
+          Recorded transactions
+        </p>
+      </CardContent>
+    </Card>
+
+    <Card
+      class="rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900"
+    >
+      <CardContent class="p-6">
+
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Last Activity
+        </p>
+
+        <div v-if="lastTransaction" class="mt-3 space-y-1">
+          <p class="font-semibold text-slate-900 dark:text-white">
+            {{ lastTransaction.transaction_type }}
+          </p>
+
+          <p class="text-lg font-bold text-orange-600">
+            KES {{ formatCurrency(lastTransaction.amount) }}
+          </p>
+        </div>
+
+        <p
+          v-else
+          class="mt-3 text-sm text-slate-400"
+        >
+          No recent activity.
+        </p>
+
+      </CardContent>
+    </Card>
+
+  </div>
       <!-- ================= FILTERS ================= -->
       <div class="bg-white rounded-2xl shadow-sm border p-4 flex flex-wrap gap-4 items-end">
 

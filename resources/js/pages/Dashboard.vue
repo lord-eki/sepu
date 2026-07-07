@@ -371,7 +371,7 @@ dark:to-slate-950 px-4 py-5 sm:px-6lg:px-8">
           <div class="overflow-x-auto">
             <TabsList class="h-auto rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-1">
               <TabsTrigger value="loans"
-                class="rounded-xl px-5 py-3 data-[state=active]:bg-blue-900 data-[state=active]:text-white">
+                class="rounded-xl px-5 py-3 data-[state=active]:bg-blue-800 data-[state=active]:text-white">
                 <Landmark class="mr-2 h-4 w-4" />
                 Loans
               </TabsTrigger>
@@ -480,7 +480,7 @@ dark:to-slate-950 px-4 py-5 sm:px-6lg:px-8">
                 You currently don’t have any active loans.
               </p>
 
-              <Button as-child class="mt-6 rounded-xl">
+              <Button as-child class="bg-blue-800 mt-6 rounded-xl">
                 <Link :href="route('my-loans')">
                 Apply for Loan
                 </Link>

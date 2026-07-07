@@ -225,12 +225,12 @@ function submit() {
                 <!-- SAVED IMAGE -->
                 <img v-else-if="member.profile_photo && !imageError" :src="`/storage/${member.profile_photo}`"
                   alt="Profile" @error="imageError = true"
-                  class="h-28 w-28 rounded-3xl object-cover border-4 border-white/20 shadow-2xl" />
+                  class="h-24 w-24 rounded-3xl object-cover border-4 border-white/20 shadow-2xl" />
 
                 <!-- DEFAULT AVATAR -->
                 <div v-else
-                  class="flex h-28 w-28 items-center justify-center rounded-3xl border border-white/20 bg-gradient-to-br from-slate-200/20 to-slate-400/20 backdrop-blur-xl shadow-2xl">
-                  <User class="h-12 w-12 text-white/80" />
+                  class="flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-gradient-to-br from-slate-200/20 to-slate-400/20 backdrop-blur-xl shadow-2xl">
+                  <User class="h-10 w-10 text-white/80" />
                 </div>
 
                 <!-- Upload -->
@@ -249,11 +249,11 @@ function submit() {
                   <ShieldCheck class="h-4 w-4 text-emerald-400" />
 
                   <span class="text-xs font-medium text-white">
-                    Verified Member
+                    Verified <span class="max-sm:hidden">Member</span>
                   </span>
                 </div>
 
-                <h1 class="mt-4 text-3xl font-bold tracking-tight text-white">
+                <h1 class="mt-4 text-2xl font-bold tracking-tight text-white">
                   {{ member.first_name }} {{ member.last_name }}
                 </h1>
 
@@ -269,7 +269,7 @@ function submit() {
             <!-- ACTIONS -->
             <div class="flex flex-wrap gap-3">
               <Button v-if="!isEditing" @click="isEditing = true"
-                class="h-12 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 px-5 font-semibold shadow-xl">
+                class="h-12 rounded-2xl bg-white text-sm text-slate-900 hover:bg-slate-100 px-5 font-semibold shadow-xl">
                 <Pencil class="mr-2 h-4 w-4" />
                 Edit Profile
               </Button>
@@ -304,7 +304,7 @@ function submit() {
                 Profile Overview
               </h2>
 
-              <div class="mt-6 space-y-4">
+              <div class="mt-6 space-y-4 sm:flex sm:gap-6">
 
                 <div v-for="info in [
     { label: 'Username', value: user.username || 'N/A' },
@@ -327,11 +327,11 @@ function submit() {
             </div>
 
             <!-- QUICK STATS -->
-            <div class="rounded-[30px] bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white shadow-xl">
+            <div class="rounded-[30px] bg-gradient-to-br from-orange-400 to-orange-500 p-6 text-white shadow-xl">
               <div class="flex items-center gap-3">
                 <Briefcase class="h-6 w-6" />
 
-                <h3 class="text-lg font-bold">
+                <h3 class="text-lg font-bold ">
                   Employment
                 </h3>
               </div>

@@ -67,8 +67,8 @@ const memberNavItems: NavItem[] = [
   },
   {
     title: 'Accounts',
-    href: member ? route('members.accounts', member.id) : '#',
-    routeName: 'members.accounts',
+    href: route('my-accounts'),
+    routeName: 'my-accounts',
     icon: NotebookTabs,
   },
   {
@@ -103,14 +103,14 @@ const memberNavItems: NavItem[] = [
   },
   {
     title: 'Transactions',
-    href: member ? route('members.transactions', member.id) : '#',
-    routeName: 'members.transactions',
+    href: route('my-transactions'),
+    routeName: 'my-transactions',
     icon: ArrowRightLeft,
   },
   {
     title: 'Dividends',
-    href: member ? route('members.dividends', member.id) : '#',
-    routeName: 'members.dividends',
+    href: route('my-dividends'),
+    routeName: 'my-dividends',
     icon: HandCoins,
   },
   {
