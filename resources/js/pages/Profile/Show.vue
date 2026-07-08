@@ -74,6 +74,8 @@ interface PageProps extends InertiaPageProps {
   }
 }
 
+
+
 /* ---------------- PAGE ---------------- */
 
 const page = usePage<PageProps>()
@@ -171,6 +173,17 @@ function submit() {
     },
   })
 }
+
+watch(
+  () => form.errors.profile_photo,
+  (error) => {
+    if (error) {
+      setTimeout(() => {
+        form.clearErrors('profile_photo')
+      }, 4000)
+    }
+  }
+)
 </script>
 
 <template>
@@ -208,7 +221,7 @@ function submit() {
 
         <!-- HERO -->
         <section
-          class="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#0F172A] via-[#132F57] to-[#1E3A8A] p-6 sm:p-8 shadow-2xl">
+          class="relative rounded-[32px] bg-gradient-to-br from-[#0F172A] via-[#132F57] to-[#1E3A8A] p-6 sm:p-8 shadow-2xl">
           <div class="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-orange-400/20 blur-3xl"></div>
 
           <div class="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl"></div>
@@ -234,15 +247,50 @@ function submit() {
                 </div>
 
                 <!-- Upload -->
-                <label
-                  class="absolute -bottom-2 -right-2 flex h-10 w-10 cursor-pointer items-center justify-center rounded-2xl bg-orange-500 text-white shadow-lg transition hover:scale-105 hover:bg-orange-600">
-                  <Camera class="h-4 w-4" />
+                <div class="relative group">
+                  <label
+                    class="absolute -bottom-2 -right-2 flex h-10 w-10 cursor-pointer items-center justify-center rounded-2xl bg-orange-500 text-white shadow-lg transition hover:scale-105 hover:bg-orange-600">
+                    <Camera class="h-4 w-4" />
+                    <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
+                  </label>
 
-                  <input type="file" accept="image/*" @change="handlePhotoUpload" class="hidden" />
-                </label>
+                  <!-- Floating Error -->
+                  <transition
+                    enter-active-class="transition-all duration-300"
+                    enter-from-class="opacity-0 translate-y-2 scale-95"
+                    enter-to-class="opacity-100 translate-y-0 scale-100"
+                    leave-active-class="transition-all duration-200"
+                    leave-to-class="opacity-0 scale-95"
+                  >
+                    <div
+                        v-if="form.errors.profile_photo"
+                        class="absolute top-full left-[60%] z-50 mt-3 w-64 sm:w-72 -translate-x-0 rounded-2xl border border-rose-300/40 bg-rose-500/90 px-4 py-3 shadow-2xl backdrop-blur-xl"
+                      >
+                      <div class="flex items-start gap-3">
+                        <AlertCircle class="mt-0.5 h-5 w-5 shrink-0 text-rose-100" />
 
+                        <div class="flex-1">
+                          <p class="text-xs font-semibold uppercase tracking-wider text-rose-100">
+                            Upload Failed
+                          </p>
+
+                          <p class="mt-1 text-sm text-white">
+                            {{ form.errors.profile_photo }}
+                          </p>
+                        </div>
+
+                        <button
+                          @click="form.clearErrors('profile_photo')"
+                          class="rounded-lg p-1 transition hover:bg-white/10"
+                        >
+                          <X class="h-4 w-4 text-white" />
+                        </button>
+                      </div>
+                    </div>
+                  </transition>
+                </div>
               </div>
-
+          
               <div>
                 <div
                   class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-1.5 backdrop-blur">
