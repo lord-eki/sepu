@@ -89,16 +89,16 @@ const formatAccountLabel = (type: string) => {
 const getStatusClass = (status: string) => {
   switch (status) {
     case 'completed':
-      return 'bg-emerald-100 text-emerald-700'
+      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
 
     case 'pending':
-      return 'bg-amber-100 text-amber-700'
+      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
 
     case 'failed':
-      return 'bg-red-100 text-red-700'
+      return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
 
     default:
-      return 'bg-slate-100 text-slate-700'
+      return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
   }
 }
 </script>
@@ -107,7 +107,7 @@ const getStatusClass = (status: string) => {
   <AppLayout :breadcrumbs="[{ title: 'Accounts', href: '/my-accounts' }]">
     <Head title="Accounts" />
 
-    <div class="min-h-screen bg-slate-50">
+    <div class="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
       <div class="mx-auto max-w-7xl space-y-8 p-4 sm:p-6">
         <!-- Hero -->
         <div
@@ -202,17 +202,15 @@ const getStatusClass = (status: string) => {
 
         <!-- Stats -->
         <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
-          <Card
-            class="rounded-3xl border-0 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-          >
+          <Card class="rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
             <CardContent class="p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm text-slate-500">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">
                     Total Accounts
                   </p>
 
-                  <h3 class="mt-2 text-2xl font-bold text-slate-900">
+                  <h3 class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
                     {{ props.accounts.length }}
                   </h3>
                 </div>
@@ -226,17 +224,16 @@ const getStatusClass = (status: string) => {
             </CardContent>
           </Card>
 
-          <Card
-            class="rounded-3xl border-0 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-          >
+          <Card class="rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
+           
             <CardContent class="p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm text-slate-500">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">
                     Active Accounts
                   </p>
 
-                  <h3 class="mt-2 text-2xl font-bold text-slate-900">
+                  <h3 class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
                     {{ props.accounts.length }}
                   </h3>
                 </div>
@@ -250,17 +247,16 @@ const getStatusClass = (status: string) => {
             </CardContent>
           </Card>
 
-          <Card
-            class="rounded-3xl border-0 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-          >
+          <Card class="rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
+           
             <CardContent class="p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm text-slate-500">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">
                     Transactions
                   </p>
 
-                  <h3 class="mt-2 text-2xl font-bold text-slate-900">
+                  <h3 class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
                     {{ totalTransactions }}
                   </h3>
                 </div>
@@ -283,36 +279,36 @@ const getStatusClass = (status: string) => {
           <div
             v-for="account in props.accounts"
             :key="account.id"
-            class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl"
+            class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
           >
             <!-- Top -->
             <div
-              class="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white p-6"
+              class="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950"
             >
               <div
                 class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"
               >
                 <div class="space-y-2">
                   <div
-                    class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
+                    class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
                   >
                     {{ formatAccountLabel(account.account_type) }}
                   </div>
 
                   <div>
                     <h2
-                      class="text-lg font-semibold text-slate-900 sm:text-xl"
+                      class="text-lg font-semibold text-slate-900 dark:text-white sm:text-xl"
                     >
                       {{ account.account_number }}
                     </h2>
 
                     <div
-                      class="mt-2 flex items-center gap-3 text-sm text-slate-500"
+                      class="mt-2 flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400"
                     >
                       <span>Available Balance</span>
 
                       <span
-                        class="text-base font-semibold text-slate-900"
+                        class="text-base font-semibold text-slate-900 dark:text-white"
                       >
                         <span
                           :class="
@@ -331,7 +327,7 @@ const getStatusClass = (status: string) => {
                           balanceVisibility[account.id] =
                             !balanceVisibility[account.id]
                         "
-                        class="text-slate-400 transition hover:text-slate-700"
+                        class="text-slate-400 transition hover:text-slate-700 dark:hover:text-white dark:text-slate-300"
                       >
                         <component
                           :is="
@@ -376,7 +372,7 @@ const getStatusClass = (status: string) => {
                   >
                     <Button
                       variant="outline"
-                      class="h-11 rounded-2xl border-orange-300 bg-orange-50 px-5 text-orange-700 hover:bg-orange-100"
+                      class="h-11 rounded-2xl border-orange-300 bg-orange-50 px-5 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:bg-orange-900/20 dark:text-orange-300 dark:hover:bg-orange-900/40"
                     >
                       <Download class="mr-2 h-4 w-4" />
                       Statement
@@ -392,11 +388,11 @@ const getStatusClass = (status: string) => {
                 class="mb-4 flex items-center justify-between"
               >
                 <div>
-                  <h3 class="text-base font-semibold text-slate-900">
+                  <h3 class="text-base font-semibold text-slate-900 dark:text-white">
                     Recent Transactions
                   </h3>
 
-                  <p class="text-sm text-slate-500">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">
                     Latest activity on this account
                   </p>
                 </div>
@@ -404,45 +400,45 @@ const getStatusClass = (status: string) => {
 
               <div
                 v-if="account.transactions.length"
-                class="overflow-hidden rounded-2xl border border-slate-200"
+                class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
               >
                 <div class="overflow-x-auto">
                   <table class="min-w-full">
-                    <thead class="bg-slate-50">
+                    <thead class="bg-slate-50 dark:bg-slate-800">
                       <tr>
                         <th
-                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                         >
                           Date
                         </th>
 
                         <th
-                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                         >
                           Type
                         </th>
 
                         <th
-                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                         >
                           Amount
                         </th>
 
                         <th
-                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                          class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                         >
                           Status
                         </th>
                       </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-slate-100 bg-white">
+                    <tbody class="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
                       <tr
                         v-for="tx in account.transactions"
                         :key="tx.id"
-                        class="transition hover:bg-slate-50"
+                        class="transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
                       >
-                        <td class="px-5 py-4 text-sm text-slate-700">
+                        <td class="px-5 py-4 text-sm text-slate-700 dark:text-slate-300">
                           {{
                             new Date(
                               tx.created_at
@@ -451,13 +447,13 @@ const getStatusClass = (status: string) => {
                         </td>
 
                         <td
-                          class="px-5 py-4 text-sm capitalize text-slate-700"
+                          class="px-5 py-4 text-sm capitalize text-slate-700 dark:text-slate-300"
                         >
                           {{ tx.transaction_type }}
                         </td>
 
                         <td
-                          class="px-5 py-4 text-sm font-semibold text-slate-900"
+                          class="px-5 py-4 text-sm font-semibold text-slate-900 dark:text-white"
                         >
                           KES
                           {{ Number(tx.amount).toLocaleString() }}
@@ -481,7 +477,7 @@ const getStatusClass = (status: string) => {
                 v-else
                 class="rounded-2xl border border-dashed border-slate-300 py-10 text-center"
               >
-                <p class="text-sm text-slate-500">
+                <p class="text-sm text-slate-500 dark:text-slate-400">
                   No recent transactions found.
                 </p>
               </div>
@@ -492,19 +488,19 @@ const getStatusClass = (status: string) => {
         <!-- Empty -->
         <div
           v-else
-          class="rounded-3xl border border-dashed border-slate-300 bg-white py-20 text-center shadow-sm"
+          class="rounded-3xl border border-dashed border-slate-300 bg-white py-20 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900"
         >
           <div
-            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100"
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800"
           >
-            <Wallet class="h-8 w-8 text-slate-500" />
+            <Wallet class="h-8 w-8 text-slate-500 dark:text-slate-400" />
           </div>
 
-          <h2 class="text-xl font-semibold text-slate-900">
+          <h2 class="text-xl font-semibold text-slate-900 dark:text-white">
             No Accounts Found
           </h2>
 
-          <p class="mt-2 text-sm text-slate-500">
+          <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Open your first SACCO account to get started.
           </p>
 

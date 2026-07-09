@@ -6,32 +6,40 @@
         href: isMemberRole ? route('my-accounts') : route('accounts.index')
       },
       {
-        title: account.account_type === 'share_capital'
-          ? 'Share Capital'
-          : 'Deposit'
+        title:
+          account.account_type === 'share_capital'
+            ? 'Share Capital'
+            : 'Deposit'
       }
     ]"
   >
-
-    <!-- HEADER -->
-    <div
-      class="bg-gradient-to-r from-[#0B2B40] via-blue-900 to-orange-900 text-white rounded-b-3xl px-[5%] py-8 shadow-xl"
+    <!-- Hero -->
+    <section
+      class="relative overflow-hidden rounded-b-3xl bg-gradient-to-r from-slate-900 via-blue-900 to-orange-700 text-white"
     >
-      <div class="flex justify-between items-center flex-wrap gap-4">
+      <div class="absolute inset-0 bg-black/10"></div>
 
+      <div
+        class="relative mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 md:flex-row md:items-center md:justify-between"
+      >
         <div>
-          <h1 class="text-2xl font-bold">
-            {{ account.account_type === 'share_capital'
+          <p class="text-sm uppercase tracking-widest text-blue-200">
+            Account Details
+          </p>
+
+          <h1 class="mt-2 text-3xl font-bold">
+            {{
+              account.account_type === 'share_capital'
                 ? 'Share Capital Account'
                 : 'Deposit Account'
             }}
           </h1>
 
-          <p class="text-slate-200 mt-1">
+          <p class="mt-3 text-blue-100">
             {{ account.account_number }}
           </p>
 
-          <p class="text-slate-300">
+          <p class="text-blue-200">
             {{ account.member.first_name }}
             {{ account.member.last_name }}
           </p>
@@ -39,152 +47,145 @@
 
         <Link
           :href="isMemberRole ? route('my-accounts') : route('accounts.index')"
-          class="bg-white/10 border border-white/20 px-5 py-2 rounded-lg hover:bg-white/20"
+          class="inline-flex items-center justify-center rounded-xl bg-white/10 px-6 py-3 backdrop-blur transition hover:bg-white/20"
         >
-          Back
+          ← Back
         </Link>
-
       </div>
-    </div>
+    </section>
 
-    <div class="max-w-5xl mx-auto py-8 px-5">
+    <div
+      class="mx-auto max-w-7xl space-y-8 px-5 py-8 bg-slate-50 dark:bg-slate-950"
+    >
+      <!-- Summary Cards -->
 
-      <!-- ACCOUNT SUMMARY -->
-
-      <div class="grid md:grid-cols-4 gap-6 mb-8">
-
-        <div class="bg-white rounded-xl shadow p-5">
-          <p class="text-xs uppercase text-gray-500">
+      <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div
+          class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
+        >
+          <p
+            class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400"
+          >
             Account Type
           </p>
 
-          <h3 class="font-semibold mt-2">
+          <h3 class="mt-3 text-lg font-semibold text-slate-900 dark:text-white">
             {{ getAccountTypeLabel(account.account_type) }}
           </h3>
         </div>
 
-        <div class="bg-white rounded-xl shadow p-5">
-          <p class="text-xs uppercase text-gray-500">
+        <div
+          class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
+        >
+          <p
+            class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400"
+          >
             Current Balance
           </p>
 
-          <h3 class="text-xl font-bold text-[#0B2B40]">
+          <h3 class="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
             {{ formatCurrency(account.balance) }}
           </h3>
         </div>
 
-        <div class="bg-white rounded-xl shadow p-5">
-          <p class="text-xs uppercase text-gray-500">
+        <div
+          class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
+        >
+          <p
+            class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400"
+          >
             Available Balance
           </p>
 
-          <h3 class="text-xl font-bold text-blue-900">
+          <h3 class="mt-3 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {{ formatCurrency(account.available_balance) }}
           </h3>
         </div>
 
-        <div class="bg-white rounded-xl shadow p-5">
-          <p class="text-xs uppercase text-gray-500">
+        <div
+          class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
+        >
+          <p
+            class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400"
+          >
             Status
           </p>
 
           <span
-            class="inline-block mt-2 px-3 py-1 rounded-full text-sm"
-            :class="account.is_active
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'"
+            class="mt-4 inline-flex rounded-full px-4 py-2 text-sm font-semibold"
+            :class="
+              account.is_active
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+            "
           >
             {{ account.is_active ? 'Active' : 'Inactive' }}
           </span>
         </div>
-
       </div>
 
-      <!-- ========================= -->
-      <!-- MEMBER VIEW -->
-      <!-- ========================= -->
+      <!-- MEMBER -->
 
       <div
         v-if="isMemberRole"
-        class="bg-white rounded-2xl shadow-lg p-8"
+        class="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg dark:border-slate-800 dark:bg-slate-900"
       >
-
         <div
-          class="bg-blue-50 border border-blue-200 rounded-xl p-6"
+          class="rounded-2xl border border-blue-200 bg-blue-50 p-8 dark:border-blue-800 dark:bg-blue-950/30"
         >
-
-          <h2 class="text-xl font-semibold text-blue-900">
+          <h2 class="text-2xl font-bold text-blue-900 dark:text-blue-300">
             Deposit Information
           </h2>
 
-          <p class="mt-3 text-gray-700">
+          <p class="mt-4 text-slate-700 dark:text-slate-300">
             Deposits into this account are processed by authorized SACCO staff
             after payment verification.
           </p>
 
-          <div class="mt-6">
-
-            <h3 class="font-semibold">
+          <div class="mt-8">
+            <h3 class="font-semibold text-slate-900 dark:text-white">
               How to make a deposit
             </h3>
 
-            <ol class="list-decimal ml-5 mt-3 space-y-2 text-gray-600">
-
-              <li>
-                Visit the SACCO office or approved collection point.
-              </li>
-
-              <li>
-                Make payment using an approved payment method.
-              </li>
-
-              <li>
-                Keep your payment reference.
-              </li>
-
-              <li>
-                Your account will be updated after verification.
-              </li>
-
+            <ol
+              class="mt-4 list-decimal space-y-3 pl-5 text-slate-600 dark:text-slate-400"
+            >
+              <li>Visit the SACCO office or approved collection point.</li>
+              <li>Make payment using an approved payment method.</li>
+              <li>Keep your payment reference.</li>
+              <li>Your account will be updated after verification.</li>
             </ol>
-
           </div>
 
           <div
-            class="mt-8 bg-yellow-50 border border-yellow-300 rounded-lg p-4"
+            class="mt-8 rounded-2xl border border-yellow-300 bg-yellow-50 p-5 text-yellow-900 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300"
           >
-            <strong>Note:</strong>
+            <strong>Important:</strong>
 
             Members cannot directly credit their accounts from the portal.
-            Deposits are posted by authorized administrators after payment
-            confirmation.
+            Deposits are posted after payment confirmation by authorized staff.
           </div>
-
         </div>
-
       </div>
 
-      <!-- ========================= -->
-      <!-- ADMIN VIEW -->
-      <!-- ========================= -->
+      <!-- ADMIN -->
 
       <div
         v-else
-        class="bg-white rounded-2xl shadow-lg p-8"
+        class="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg dark:border-slate-800 dark:bg-slate-900"
       >
-
-        <h2 class="text-xl font-semibold mb-6">
+        <h2 class="mb-8 text-2xl font-bold text-slate-900 dark:text-white">
           Process Deposit
         </h2>
 
         <form
-          @submit.prevent="submit"
           class="space-y-6"
+          @submit.prevent="submit"
         >
-
           <div>
-
-            <label class="block mb-2 font-medium">
+            <label
+              class="mb-2 block font-medium text-slate-700 dark:text-slate-300"
+            >
               Amount
             </label>
 
@@ -192,86 +193,79 @@
               v-model.number="form.amount"
               type="number"
               min="100"
-              class="w-full rounded-lg border p-3"
               required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 transition focus:border-orange-500 focus:ring-4 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-orange-900"
             />
-
           </div>
 
           <div>
-
-            <label class="block mb-2 font-medium">
+            <label
+              class="mb-2 block font-medium text-slate-700 dark:text-slate-300"
+            >
               Payment Method
             </label>
 
             <select
               v-model="form.payment_method"
-              class="w-full rounded-lg border p-3"
               required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 transition focus:border-orange-500 focus:ring-4 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-orange-900"
             >
-
-              <option value="">
-                Select Method
-              </option>
+              <option value="">Select Method</option>
 
               <option
-                v-for="(label,value) in paymentMethods"
+                v-for="(label, value) in paymentMethods"
                 :key="value"
                 :value="value"
               >
                 {{ label }}
               </option>
-
             </select>
-
           </div>
 
           <div v-if="form.payment_method">
-
-            <label class="block mb-2 font-medium">
+            <label
+              class="mb-2 block font-medium text-slate-700 dark:text-slate-300"
+            >
               Payment Reference
             </label>
 
             <input
               v-model="form.payment_reference"
-              class="w-full rounded-lg border p-3"
               required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 transition focus:border-orange-500 focus:ring-4 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-orange-900"
             />
-
           </div>
 
           <div>
-
-            <label class="block mb-2 font-medium">
+            <label
+              class="mb-2 block font-medium text-slate-700 dark:text-slate-300"
+            >
               Description
             </label>
 
             <textarea
               v-model="form.description"
-              rows="3"
-              class="w-full rounded-lg border p-3"
+              rows="4"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 transition focus:border-orange-500 focus:ring-4 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-orange-900"
             />
-
           </div>
 
           <div class="flex justify-end">
-
             <button
               type="submit"
               :disabled="form.processing"
-              class="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg"
+              class="rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-8 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:from-orange-700 hover:to-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {{ form.processing ? 'Processing...' : 'Process Deposit' }}
+              {{
+                form.processing
+                  ? 'Processing...'
+                  : 'Process Deposit'
+              }}
             </button>
-
           </div>
-
         </form>
-
       </div>
-
     </div>
-
   </AppLayout>
 </template>
 
