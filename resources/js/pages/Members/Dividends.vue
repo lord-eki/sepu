@@ -55,7 +55,7 @@ const formattedTotalAmount = computed(() =>
                         <div>
 
                             <h1
-                                class="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                                class="text-3xl font-bold text-white tracking-tight">
 
                                 My Dividends
 
@@ -128,7 +128,7 @@ const formattedTotalAmount = computed(() =>
                                 </p>
 
                                 <h2
-                                    class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
+                                    class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
 
                                     {{ totalDividends }}
 
@@ -168,7 +168,7 @@ const formattedTotalAmount = computed(() =>
                                 </p>
 
                                 <h2
-                                    class="mt-2 text-3xl font-bold text-orange-600">
+                                    class="mt-2 text-2xl font-bold text-orange-600">
 
                                     KES {{ formattedTotalAmount }}
 
@@ -209,7 +209,7 @@ const formattedTotalAmount = computed(() =>
                                 </p>
 
                                 <h2
-                                    class="mt-2 text-2xl font-bold"
+                                    class="mt-2 text-xl font-bold"
                                     :class="props.dividends.length
                                         ? 'text-emerald-600'
                                         : 'text-slate-500'">

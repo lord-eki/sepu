@@ -135,13 +135,8 @@ const formatDateTime = (date: string) =>
                 <div class="flex items-center gap-3">
 
                   <h1 class="text-3xl font-bold tracking-tight text-white">
-                    Transactions
+                    My Transactions
                   </h1>
-
-                  <span
-                    class="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200 border border-emerald-400/30">
-                    Live
-                  </span>
 
                 </div>
 

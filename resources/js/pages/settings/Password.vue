@@ -55,29 +55,27 @@ const breadcrumbs: BreadcrumbItem[] = [
         <SettingsLayout>
             <div class="mx-auto max-w-5xl space-y-8">
 
-                <!-- Header -->
+               <!-- Header -->
                 <div
-                    class="overflow-hidden rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 p-8 text-white shadow-xl">
+                    class="overflow-hidden rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 p-4 text-white shadow-xl">
 
                     <div class="flex items-center gap-5">
 
                         <div
-                            class="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/20 backdrop-blur">
+                            class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-3xl bg-white/20 backdrop-blur">
 
-                            <Lock class="h-8 sm:10 w-8 sm:w-10" />
+                            <Lock class="h-6 w-6 sm:h-8 sm:w-8" />
 
                         </div>
 
                         <div>
-
-                            <h1 class="text-2xl sm:text-3xl font-bold">
+                            <h1 class="text-lg sm:text-xl md:text-2xl font-bold">
                                 Password & Security
                             </h1>
 
-                            <p class="mt-2 text-orange-100">
+                            <p class="mt-2 text-sm sm:text-orange-100">
                                 Keep your account secure by using a strong password.
                             </p>
-
                         </div>
 
                     </div>

@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import type { User } from '@/types'
-import { router } from '@inertiajs/vue3'
+import { router, Link } from '@inertiajs/vue3'
 import { LogOut, Settings } from 'lucide-vue-next'
 import { ref } from 'vue'
 
@@ -71,11 +71,11 @@ const cancelLogout = () => {
     <!-- Settings -->
     <DropdownMenuGroup>
       <DropdownMenuItem as-child>
-        <a href="/profile" class="flex items-center gap-2 w-full">
-          <Settings class="h-4 w-4" />
-          Settings
-        </a>
-      </DropdownMenuItem>
+      <Link href="/profile" class="flex items-center gap-2 w-full">
+        <Settings class="h-4 w-4" />
+        Settings
+      </Link>
+    </DropdownMenuItem>
     </DropdownMenuGroup>
 
     <DropdownMenuSeparator />

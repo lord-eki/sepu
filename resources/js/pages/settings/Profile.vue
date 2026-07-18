@@ -53,42 +53,45 @@ const submit = () => {
         <SettingsLayout>
             <div class="mx-auto max-w-5xl space-y-8">
 
-                <!-- Header -->
-                <div
-                    class="overflow-hidden rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 p-8 text-white shadow-xl">
+             <!-- Header -->
+            <div
+                class="overflow-hidden rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 p-4 text-white shadow-xl">
 
-                    <div class="flex items-center gap-5">
+                <div class="flex items-center gap-4 sm:gap-5">
 
-                        <div
-                            class="flex h-16 sm:h-20 w-16 sm:w-20 items-center justify-center rounded-3xl bg-white/20 backdrop-blur">
+                    <!-- Icon Container -->
+                    <div
+                        class="flex h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl sm:rounded-3xl bg-white/20 backdrop-blur">
 
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-8 sm:h-10 h-8 sm:w-10"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor">
 
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M5.121 17.804A9 9 0 1118.879 17.8M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5.121 17.804A9 9 0 1118.879 17.8M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
 
-                        </div>
-
-                        <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">
-                                Profile Settings
-                            </h1>
-
-                            <p class="mt-2 text-orange-100">
-                                Manage your account information and preferences.
-                            </p>
-                        </div>
+                        </svg>
 
                     </div>
+
+                    <div>
+                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold">
+                            Profile Settings
+                        </h1>
+
+                        <p class="mt-2 text-sm sm:text-orange-100">
+                            Manage your account information and preferences.
+                        </p>
+                    </div>
+
                 </div>
+            </div>
 
                 <!-- Profile Card -->
                 <div
