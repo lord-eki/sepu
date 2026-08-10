@@ -29,7 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-
+use App\Http\Controllers\LoanMigrationController;
 
 Route::get('/', fn () => Inertia::render('Welcome'))->name('home');
 
@@ -633,5 +633,30 @@ Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsR
 Route::get('/guarantor-requests/{loan}', [LoanController::class, 'guarantorRequestPage']);
 Route::get('/my-guarantees', [LoanController::class, 'myGuarantees'])->name('my-guarantees');
 
+
+Route::prefix('loan-migration')
+    ->name('loan-migration.')
+    ->group(function () {
+
+        Route::get('/', [
+            LoanMigrationController::class,
+            'index'
+        ])->name('index');
+
+        Route::get('/create', [
+            LoanMigrationController::class,
+            'create'
+        ])->name('create');
+
+        Route::post('/', [
+            LoanMigrationController::class,
+            'store'
+        ])->name('store');
+
+        Route::get('/{batch}', [
+            LoanMigrationController::class,
+            'show'
+        ])->name('show');
+    });
 
 
