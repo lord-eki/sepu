@@ -868,7 +868,7 @@ public function disburse(Request $request, $id)
         $disbursementDate = now();
         $loan->update([
             'disbursed_amount'    => $netDisbursement,
-            'status'              => 'disbursed',
+            'status'              => 'active',
             'disbursement_date'   => now(),
             'disbursed_by'        => Auth::id(),
 

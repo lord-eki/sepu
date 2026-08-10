@@ -533,7 +533,7 @@
       <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
         <h2 class="text-xl font-bold text-red-600 mb-4">Reject Loan</h2>
 
-        <textarea v-model="rejectionForm.rejection_reason" class="w-full border rounded-2xl p-3 mb-4"
+        <textarea v-model="rejectionForm.rejection_reason" required class="w-full border rounded-2xl p-3 mb-4"
           placeholder="Reason for rejection"></textarea>
 
         <div class="flex justify-end gap-3">
