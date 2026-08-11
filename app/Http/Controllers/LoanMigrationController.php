@@ -279,19 +279,20 @@ class LoanMigrationController extends Controller
     private function canAccessMigration($user): bool
     {
         return $this->hasRole($user, [
+            'admin',
             'Administrator',
             'Loans Officer',
             'Accounts Officer',
         ]);
     }
-
     /**
      * Determine whether the user can create
      * and capture migration records.
      */
-    private function canCreateBatch($user): bool
+   private function canCreateBatch($user): bool
     {
         return $this->hasRole($user, [
+            'admin',
             'Administrator',
             'Loans Officer',
         ]);

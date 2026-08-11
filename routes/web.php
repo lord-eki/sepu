@@ -634,9 +634,17 @@ Route::get('/guarantor-requests/{loan}', [LoanController::class, 'guarantorReque
 Route::get('/my-guarantees', [LoanController::class, 'myGuarantees'])->name('my-guarantees');
 
 
+
 Route::prefix('loan-migration')
     ->name('loan-migration.')
+    ->middleware(['auth'])
     ->group(function () {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Batch Management
+        |--------------------------------------------------------------------------
+        */
 
         Route::get('/', [
             LoanMigrationController::class,
@@ -657,6 +665,126 @@ Route::prefix('loan-migration')
             LoanMigrationController::class,
             'show'
         ])->name('show');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Loan Record Management
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/{batch}/records', [
+            LoanMigrationController::class,
+            'records'
+        ])->name('records.index');
+
+        Route::get('/{batch}/records/create', [
+            LoanMigrationController::class,
+            'createRecord'
+        ])->name('records.create');
+
+        Route::post('/{batch}/records', [
+            LoanMigrationController::class,
+            'storeRecord'
+        ])->name('records.store');
+
+        Route::get('/{batch}/records/{record}/edit', [
+            LoanMigrationController::class,
+            'editRecord'
+        ])->name('records.edit');
+
+        Route::put('/{batch}/records/{record}', [
+            LoanMigrationController::class,
+            'updateRecord'
+        ])->name('records.update');
+
+        Route::delete('/{batch}/records/{record}', [
+            LoanMigrationController::class,
+            'destroyRecord'
+        ])->name('records.destroy');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Import / Upload
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/{batch}/import', [
+            LoanMigrationController::class,
+            'import'
+        ])->name('import');
+
+        Route::post('/{batch}/import/preview', [
+            LoanMigrationController::class,
+            'previewImport'
+        ])->name('import.preview');
+
+        Route::post('/{batch}/import', [
+            LoanMigrationController::class,
+            'importRecords'
+        ])->name('import.store');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validation
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/{batch}/validate', [
+            LoanMigrationController::class,
+            'validateBatch'
+        ])->name('validate');
+
+        Route::get('/{batch}/validation-errors', [
+            LoanMigrationController::class,
+            'validationErrors'
+        ])->name('validation-errors');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Workflow
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/{batch}/submit', [
+            LoanMigrationController::class,
+            'submit'
+        ])->name('submit');
+
+        Route::post('/{batch}/verify-accounts', [
+            LoanMigrationController::class,
+            'verifyAccounts'
+        ])->name('verify-accounts');
+
+        Route::post('/{batch}/approve', [
+            LoanMigrationController::class,
+            'approve'
+        ])->name('approve');
+
+        Route::post('/{batch}/process', [
+            LoanMigrationController::class,
+            'process'
+        ])->name('process');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Downloads / Templates
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/template/download', [
+            LoanMigrationController::class,
+            'downloadTemplate'
+        ])->name('template.download');
+
+        Route::get('/{batch}/export', [
+            LoanMigrationController::class,
+            'export'
+        ])->name('export');
     });
 
 

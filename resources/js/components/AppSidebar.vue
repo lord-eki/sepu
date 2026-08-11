@@ -2,355 +2,717 @@
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { Link, usePage } from '@inertiajs/vue3';
+
 import {
-  BookOpen,
-  Folder,
-  LayoutGrid,
-  HandCoins,
-  ClipboardList,
-  Ticket,
-  BriefcaseConveyorBelt,
-  Users,
-  ContactRound,
-  UserCheck,
-  NotebookTabs,
-  FileText,
-  User,
-  ArrowRightLeft,
-  Calculator,
-  FileSignature,
-  Bell,
-  Settings,
-  Package,
-  UserCog,
-  Shield,
-  Banknote,
-  BookMarked,
-  Scale,
-  ReceiptText,
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
+
+import { Link, usePage } from '@inertiajs/vue3';
+
+import {
+    BookOpen,
+    Folder,
+    LayoutGrid,
+    HandCoins,
+    ClipboardList,
+    Ticket,
+    BriefcaseConveyorBelt,
+    Users,
+    ContactRound,
+    UserCheck,
+    NotebookTabs,
+    FileText,
+    User,
+    ArrowRightLeft,
+    Calculator,
+    FileSignature,
+    Bell,
+    Settings,
+    Package,
+    UserCog,
+    Shield,
+    Banknote,
+    BookMarked,
+    Scale,
+    ReceiptText,
+    DatabaseZap,
 } from 'lucide-vue-next';
+
 import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import type { AppPageProps } from '@/types';
 
-const page = usePage<AppPageProps>()
-const user = page.props?.auth?.user ?? null
-const member = page.props?.auth?.member ?? null
 
+const page = usePage<AppPageProps>();
 
+const user = page.props?.auth?.user ?? null;
+const member = page.props?.auth?.member ?? null;
 
 
 /**
- * ---- Types ----
+ * ---------------------------------------------------------
+ * Types
+ * ---------------------------------------------------------
  */
+
 export interface NavItem {
-  title: string;
-  href?: string;
-  icon?: LucideIcon;
-  isActive?: boolean;
-  children?: NavItem[];
+    title: string;
+    href?: string;
+    routeName?: string;
+    icon?: LucideIcon;
+    isActive?: boolean;
+    children?: NavItem[];
 }
 
+
 /**
- * ---- Navigation Items ----
+ * ---------------------------------------------------------
+ * Member Navigation
+ * ---------------------------------------------------------
  */
 
-// Member navigation
 const memberNavItems: NavItem[] = [
-  {
-    title: 'Dashboard',
-    href: route('dashboard'),
-    routeName: 'dashboard',
-    icon: LayoutGrid,
-  },
-  {
-    title: 'Accounts',
-    href: route('my-accounts'),
-    routeName: 'my-accounts',
-    icon: NotebookTabs,
-  },
-  {
-    title: 'Loans',
-    icon: BriefcaseConveyorBelt,
-    children: [
     {
-        title: 'My Loans',
-        href: route('my-loans'),
-        routeName: 'my-loans',
-        icon: FileText,
-      },
-      {
-        title: 'Loan Calculator',
-        href: route('loan-calculator.index'),
-        routeName: 'loan-calculator.index',
-        icon: Calculator,
-      },
-       {
-          title: 'My Guarantees',  
-          href: route('my-guarantees'),
-          routeName: 'my-guarantees',
-          icon: Shield,
-        },
-      {
-        title: 'Loan Application',
-        href: route('loans.create'),
-        routeName: 'loans.create',
-        icon: FileSignature,
-      },
-    ],
-  },
-  {
-    title: 'Transactions',
-    href: route('my-transactions'),
-    routeName: 'my-transactions',
-    icon: ArrowRightLeft,
-  },
-  {
-    title: 'Dividends',
-    href: route('my-dividends'),
-    routeName: 'my-dividends',
-    icon: HandCoins,
-  },
-  {
-    title: 'My Profile',
-    href: route('member.profile'),
-    routeName: 'member.profile',
-    icon: User,
-  },
-];
+        title: 'Dashboard',
+        href: route('dashboard'),
+        routeName: 'dashboard',
+        icon: LayoutGrid,
+    },
 
+    {
+        title: 'Accounts',
+        href: route('my-accounts'),
+        routeName: 'my-accounts',
+        icon: NotebookTabs,
+    },
 
-// Admin navigation
-const adminNavItems: NavItem[] = [
-  {
-    title: 'Dashboard',
-    href: route('dashboard'),
-    routeName: 'dashboard',
-    icon: LayoutGrid,
-  },
-  {
-    title: 'Dividends',
-    href: route('dividends.index'),
-    routeName: 'dividends.index',
-    icon: HandCoins,
-  },
-  {
-    title: 'Budgets',
-    href: route('budgets.index'),
-    routeName: 'budgets.index',
-    icon: ClipboardList,
-  },
-  {
-    title: 'Vouchers',
-    href: route('vouchers.index'),
-    routeName: 'vouchers.index',
-    icon: Ticket,
-  },
-  {
-    title: 'Loans',
-    icon: BriefcaseConveyorBelt,
-    children: [
-      {
-        title: 'Loans Overview',
-        href: route('loans.index'),
-        routeName: 'loans.index',
-        icon: FileText,
-      },
-      {
-        title: 'Loan Products',
-        href: route('loan-products.index'),
-        routeName: 'loan-products.index',
-        icon: Package,
-      },
-      {
-          title: 'Loan Guarantors',
-          href: route('loans.all-guarantors'),
-          routeName: 'loans.all-guarantors',
-          icon: Shield,
-        },
-        {
-        title: 'Loan Calculator',
-        href: route('loan-calculator.index'),
-        routeName: 'loan-calculator.index',
-        icon: Calculator,
-      },
-      {
-        title: 'Loan Application',
-        href: route('loans.create'),
-        routeName: 'loans.create',
-        icon: FileSignature,
-      },
-    ],
-  },
-  {
-    title: 'Members',
-    icon: Users,
-    children: [
-      {
-        title: 'Members Overview',
-        href: route('members.index'),
-        routeName: 'members.index',
-        icon: ContactRound,
-      },
-      {
-        title: 'Member Approval',
-        href: route('admin.pending-members'),
-        routeName: 'admin.pending-members',
-        icon: UserCheck,
-      },
-    ],
-  },
-  {
-    title: 'Accounts',
-    href: route('accounts.index'),
-    routeName: 'accounts.index',
-    icon: NotebookTabs,
-  },
-  {
-    title: 'Transactions',
-    href: route('transactions.index'),
-    routeName: 'transactions.index',
-    icon: ArrowRightLeft,
-  },
-  {
-    title: 'Finance',
-    icon: Banknote,
-    children: [
-
-      {
-        title: 'Chart of Accounts',
-        href: route('chart-of-accounts.index'),
-        routeName: 'chart-of-accounts.index',
-        icon: BookMarked,
-      },
-    ],
-  },
-  {
-    title: 'Schedule',
-    icon: ClipboardList,
-    href: route('schedule.index'),
-    routeName: 'schedule.index',
-  },
-   {
-    title: 'System Users',
-    icon: UserCog,
-    children: [
-      {
-        title: 'All Users',
-        href: route('system-users.index'),
-        routeName: 'system-users.index',
-        icon: Users,
-      },
-      {
-        title: 'Roles & Permissions',
-        href: route('system-users.roles'),
-        routeName: 'system-users.roles',
-        icon: Shield,
-      },
-    ],
-  },
-  {
-    title: 'Reports',
-    icon: FileText,
-    children: [
-
-
-      {
-        title: 'Reports Dashboard',
-        href: route('reports.index'),
-        routeName: 'reports.index',
-        icon: FileText,
-      },
-
-      {
-        title: 'Financial Reports',
-        href: route('reports.financial.index'),
-        routeName: 'reports.financial.index',
-        icon: Calculator,
-      },
-      {
-        title: 'Member Reports',
-        href: route('reports.membersReport.index'),
-        routeName: 'reports.membersReport.index',
-        icon: Users,
-      },
-      {
-        title: 'Loan Reports',
-        href: route('reports.loansReport.index'),
-        routeName: 'reports.loansReport.index',
+    {
+        title: 'Loans',
         icon: BriefcaseConveyorBelt,
-      },
-      {
-        title: 'Transaction Reports',
-        href: route('reports.transactionsReport.index'),
-        routeName: 'reports.transactionsReport.index',
-        icon: ArrowRightLeft,
-      },
-      {
-        title: 'Regulatory Reports',
-        href: route('reports.regulatoryReport.index'),
-        routeName: 'reports.regulatoryReport.index',
-        icon: Shield,
-      },
-      {
-        title: 'Custom Reports',
-        href: route('reports.custom.builder'),
-        routeName: 'reports.custom.builder',
-        icon: Folder,
-      },
-    ],
-  },
-  {
-    title: 'Notifications',
-    href: route('notifications.index'),
-    routeName: 'notifications.index',
-    icon: Bell,
-  },
-  {
-    title: 'System Settings',
-    href: route('admin.settings.index'),
-    routeName: 'admin.settings.index',
-    icon: Settings,
-  },
+        children: [
+            {
+                title: 'My Loans',
+                href: route('my-loans'),
+                routeName: 'my-loans',
+                icon: FileText,
+            },
 
+            {
+                title: 'Loan Calculator',
+                href: route('loan-calculator.index'),
+                routeName: 'loan-calculator.index',
+                icon: Calculator,
+            },
+
+            {
+                title: 'My Guarantees',
+                href: route('my-guarantees'),
+                routeName: 'my-guarantees',
+                icon: Shield,
+            },
+
+            {
+                title: 'Loan Application',
+                href: route('loans.create'),
+                routeName: 'loans.create',
+                icon: FileSignature,
+            },
+        ],
+    },
+
+    {
+        title: 'Transactions',
+        href: route('my-transactions'),
+        routeName: 'my-transactions',
+        icon: ArrowRightLeft,
+    },
+
+    {
+        title: 'Dividends',
+        href: route('my-dividends'),
+        routeName: 'my-dividends',
+        icon: HandCoins,
+    },
+
+    {
+        title: 'My Profile',
+        href: route('member.profile'),
+        routeName: 'member.profile',
+        icon: User,
+    },
 ];
+
 
 /**
- * ---- Role detection ----
+ * ---------------------------------------------------------
+ * Administrator Navigation
+ * ---------------------------------------------------------
  */
 
-const userRole = user?.role ?? null
-const isAdmin = userRole === 'admin'
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Dashboard',
+        href: route('dashboard'),
+        routeName: 'dashboard',
+        icon: LayoutGrid,
+    },
 
-const footerNavItems: NavItem[] = [
+    {
+        title: 'Dividends',
+        href: route('dividends.index'),
+        routeName: 'dividends.index',
+        icon: HandCoins,
+    },
 
+    {
+        title: 'Budgets',
+        href: route('budgets.index'),
+        routeName: 'budgets.index',
+        icon: ClipboardList,
+    },
+
+    {
+        title: 'Vouchers',
+        href: route('vouchers.index'),
+        routeName: 'vouchers.index',
+        icon: Ticket,
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Loans
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Loans',
+        icon: BriefcaseConveyorBelt,
+        children: [
+            {
+                title: 'Loans Overview',
+                href: route('loans.index'),
+                routeName: 'loans.index',
+                icon: FileText,
+            },
+
+            {
+                title: 'Loan Products',
+                href: route('loan-products.index'),
+                routeName: 'loan-products.index',
+                icon: Package,
+            },
+
+            {
+                title: 'Loan Guarantors',
+                href: route('loans.all-guarantors'),
+                routeName: 'loans.all-guarantors',
+                icon: Shield,
+            },
+
+            {
+                title: 'Loan Calculator',
+                href: route('loan-calculator.index'),
+                routeName: 'loan-calculator.index',
+                icon: Calculator,
+            },
+
+            {
+                title: 'Loan Application',
+                href: route('loans.create'),
+                routeName: 'loans.create',
+                icon: FileSignature,
+            },
+        ],
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Loan Migration
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Loan Migration',
+        icon: DatabaseZap,
+        children: [
+            {
+                title: 'Migration Dashboard',
+                href: route('loan-migration.index'),
+                routeName: 'loan-migration.index',
+                icon: LayoutGrid,
+            },
+
+            {
+                title: 'New Migration Batch',
+                href: route('loan-migration.create'),
+                routeName: 'loan-migration.create',
+                icon: FileSignature,
+            },
+        ],
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Members
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Members',
+        icon: Users,
+        children: [
+            {
+                title: 'Members Overview',
+                href: route('members.index'),
+                routeName: 'members.index',
+                icon: ContactRound,
+            },
+
+            {
+                title: 'Member Approval',
+                href: route('admin.pending-members'),
+                routeName: 'admin.pending-members',
+                icon: UserCheck,
+            },
+        ],
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Accounts
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Accounts',
+        href: route('accounts.index'),
+        routeName: 'accounts.index',
+        icon: NotebookTabs,
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Transactions
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Transactions',
+        href: route('transactions.index'),
+        routeName: 'transactions.index',
+        icon: ArrowRightLeft,
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Finance
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Finance',
+        icon: Banknote,
+        children: [
+            {
+                title: 'Chart of Accounts',
+                href: route('chart-of-accounts.index'),
+                routeName: 'chart-of-accounts.index',
+                icon: BookMarked,
+            },
+        ],
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Schedule
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Schedule',
+        icon: ClipboardList,
+        href: route('schedule.index'),
+        routeName: 'schedule.index',
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * System Users
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'System Users',
+        icon: UserCog,
+        children: [
+            {
+                title: 'All Users',
+                href: route('system-users.index'),
+                routeName: 'system-users.index',
+                icon: Users,
+            },
+
+            {
+                title: 'Roles & Permissions',
+                href: route('system-users.roles'),
+                routeName: 'system-users.roles',
+                icon: Shield,
+            },
+        ],
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Reports
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Reports',
+        icon: FileText,
+        children: [
+            {
+                title: 'Reports Dashboard',
+                href: route('reports.index'),
+                routeName: 'reports.index',
+                icon: FileText,
+            },
+
+            {
+                title: 'Financial Reports',
+                href: route('reports.financial.index'),
+                routeName: 'reports.financial.index',
+                icon: Calculator,
+            },
+
+            {
+                title: 'Member Reports',
+                href: route('reports.membersReport.index'),
+                routeName: 'reports.membersReport.index',
+                icon: Users,
+            },
+
+            {
+                title: 'Loan Reports',
+                href: route('reports.loansReport.index'),
+                routeName: 'reports.loansReport.index',
+                icon: BriefcaseConveyorBelt,
+            },
+
+            {
+                title: 'Transaction Reports',
+                href: route('reports.transactionsReport.index'),
+                routeName: 'reports.transactionsReport.index',
+                icon: ArrowRightLeft,
+            },
+
+            {
+                title: 'Regulatory Reports',
+                href: route('reports.regulatoryReport.index'),
+                routeName: 'reports.regulatoryReport.index',
+                icon: Shield,
+            },
+
+            {
+                title: 'Custom Reports',
+                href: route('reports.custom.builder'),
+                routeName: 'reports.custom.builder',
+                icon: Folder,
+            },
+        ],
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Notifications
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Notifications',
+        href: route('notifications.index'),
+        routeName: 'notifications.index',
+        icon: Bell,
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * System Settings
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'System Settings',
+        href: route('admin.settings.index'),
+        routeName: 'admin.settings.index',
+        icon: Settings,
+    },
 ];
+
+
+/**
+ * ---------------------------------------------------------
+ * Staff Navigation
+ *
+ * Used by:
+ * - Loans Officer
+ * - Accounts Officer
+ *
+ * The backend controller still performs the real
+ * authorization check.
+ * ---------------------------------------------------------
+ */
+
+const staffNavItems: NavItem[] = [
+    {
+        title: 'Dashboard',
+        href: route('dashboard'),
+        routeName: 'dashboard',
+        icon: LayoutGrid,
+    },
+
+    {
+        title: 'Loans',
+        icon: BriefcaseConveyorBelt,
+        children: [
+            {
+                title: 'Loans Overview',
+                href: route('loans.index'),
+                routeName: 'loans.index',
+                icon: FileText,
+            },
+
+            {
+                title: 'Loan Products',
+                href: route('loan-products.index'),
+                routeName: 'loan-products.index',
+                icon: Package,
+            },
+
+            {
+                title: 'Loan Guarantors',
+                href: route('loans.all-guarantors'),
+                routeName: 'loans.all-guarantors',
+                icon: Shield,
+            },
+
+            {
+                title: 'Loan Calculator',
+                href: route('loan-calculator.index'),
+                routeName: 'loan-calculator.index',
+                icon: Calculator,
+            },
+        ],
+    },
+
+
+    /**
+     * -----------------------------------------------------
+     * Loan Migration
+     *
+     * The backend controls whether the specific staff
+     * member can create or only access migration batches.
+     * -----------------------------------------------------
+     */
+
+    {
+        title: 'Loan Migration',
+        icon: DatabaseZap,
+        children: [
+            {
+                title: 'Migration Dashboard',
+                href: route('loan-migration.index'),
+                routeName: 'loan-migration.index',
+                icon: LayoutGrid,
+            },
+
+            {
+                title: 'New Migration Batch',
+                href: route('loan-migration.create'),
+                routeName: 'loan-migration.create',
+                icon: FileSignature,
+            },
+        ],
+    },
+
+
+    {
+        title: 'Accounts',
+        href: route('accounts.index'),
+        routeName: 'accounts.index',
+        icon: NotebookTabs,
+    },
+
+    {
+        title: 'Transactions',
+        href: route('transactions.index'),
+        routeName: 'transactions.index',
+        icon: ArrowRightLeft,
+    },
+
+
+    {
+        title: 'Reports',
+        icon: FileText,
+        children: [
+            {
+                title: 'Reports Dashboard',
+                href: route('reports.index'),
+                routeName: 'reports.index',
+                icon: FileText,
+            },
+
+            {
+                title: 'Loan Reports',
+                href: route('reports.loansReport.index'),
+                routeName: 'reports.loansReport.index',
+                icon: BriefcaseConveyorBelt,
+            },
+
+            {
+                title: 'Transaction Reports',
+                href: route('reports.transactionsReport.index'),
+                routeName: 'reports.transactionsReport.index',
+                icon: ArrowRightLeft,
+            },
+        ],
+    },
+
+
+    {
+        title: 'Notifications',
+        href: route('notifications.index'),
+        routeName: 'notifications.index',
+        icon: Bell,
+    },
+];
+
+
+/**
+ * ---------------------------------------------------------
+ * Role Detection
+ * ---------------------------------------------------------
+ */
+
+const userRole = user?.role ?? null;
+
+const isAdmin = userRole === 'admin';
+
+const isLoansOfficer =
+    userRole === 'Loans Officer';
+
+const isAccountsOfficer =
+    userRole === 'Accounts Officer';
+
+const isStaff =
+    isLoansOfficer ||
+    isAccountsOfficer;
+
+
+/**
+ * ---------------------------------------------------------
+ * Navigation Selection
+ * ---------------------------------------------------------
+ *
+ * Administrator:
+ *     Full administrator navigation
+ *
+ * Loans Officer:
+ *     Staff navigation
+ *
+ * Accounts Officer:
+ *     Staff navigation
+ *
+ * Member:
+ *     Member navigation
+ *
+ * Backend authorization remains authoritative.
+ * ---------------------------------------------------------
+ */
+
+const navigationItems =
+    isAdmin
+        ? adminNavItems
+        : isStaff
+            ? staffNavItems
+            : memberNavItems;
+
+
+/**
+ * ---------------------------------------------------------
+ * Footer Navigation
+ * ---------------------------------------------------------
+ */
+
+const footerNavItems: NavItem[] = [];
 </script>
 
+
 <template>
-  <Sidebar collapsible="icon" variant="inset">
-    <SidebarHeader>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton size="lg" as-child>
-            <Link :href="route('dashboard')">
-            <AppLogo />
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarHeader>
+    <Sidebar collapsible="icon" variant="inset">
 
-    <SidebarContent>
-      <NavMain :items="isAdmin ? adminNavItems : memberNavItems" />
-    </SidebarContent>
+        <!-- =================================================
+             Sidebar Header
+        ================================================== -->
 
-    <SidebarFooter>
-      <NavFooter :items="footerNavItems" />
-      <NavUser />
-    </SidebarFooter>
-  </Sidebar>
-  <slot />
+        <SidebarHeader>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        size="lg"
+                        as-child
+                    >
+                        <Link :href="route('dashboard')">
+                            <AppLogo />
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarHeader>
+
+
+        <!-- =================================================
+             Sidebar Navigation
+        ================================================== -->
+
+        <SidebarContent>
+            <NavMain :items="navigationItems" />
+        </SidebarContent>
+
+
+        <!-- =================================================
+             Sidebar Footer
+        ================================================== -->
+
+        <SidebarFooter>
+            <NavFooter :items="footerNavItems" />
+            <NavUser />
+        </SidebarFooter>
+
+    </Sidebar>
+
+
+    <!-- =====================================================
+         Main Application Content
+    ====================================================== -->
+
+    <slot />
 </template>
+
