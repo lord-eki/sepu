@@ -715,4 +715,3 @@ const footerNavItems: NavItem[] = [];
 
     <slot />
 </template>
-

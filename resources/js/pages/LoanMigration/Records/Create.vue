@@ -175,6 +175,17 @@ const selectLoanProduct = () => {
         form.interest_rate = String(product.interest_rate)
     }
 }
+
+const formatCurrency = (amount: number | string | null | undefined): string => {
+    const value = Number(amount ?? 0);
+
+    return new Intl.NumberFormat('en-KE', {
+        style: 'currency',
+        currency: 'KES',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(value);
+};
 </script>
 
 <template>

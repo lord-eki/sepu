@@ -263,9 +263,9 @@ const isProcessed = computed(() => batch.value.status === 'processed')
                     </Link>
 
                     <!-- Capture Records -->
-                    <button
+                    <Link
                         v-if="isDraft || isValidationFailed"
-                        type="button"
+                        :href="route('loan-migration.records.create', batch.id)"
                         class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
                     >
                         <svg
@@ -283,7 +283,7 @@ const isProcessed = computed(() => batch.value.status === 'processed')
                         </svg>
 
                         Capture Records
-                    </button>
+                    </Link>
                 </div>
             </div>
 
@@ -702,49 +702,39 @@ const isProcessed = computed(() => batch.value.status === 'processed')
                 </div>
             </div>
 
+           
             <!-- Current Action -->
             <div
                 v-if="isDraft || isValidationFailed"
                 class="rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-900/50 dark:bg-blue-950/20"
             >
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
                     <div class="flex gap-3">
                         <div class="shrink-0 text-blue-600 dark:text-blue-400">
-                            <svg
-                                class="h-5 w-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M12 4v16m8-8H4"
-                                />
-                            </svg>
+                            <!-- existing icon -->
                         </div>
 
                         <div>
                             <h3 class="text-sm font-bold text-blue-900 dark:text-blue-200">
-                                {{ isValidationFailed ? 'Correct Migration Records' : 'Capture Loan Records' }}
+                                {{ isValidationFailed ? 'Correct Migration Records' : 'Import Loan Records' }}
                             </h3>
 
                             <p class="mt-1 text-xs leading-5 text-blue-700 dark:text-blue-300">
                                 {{
                                     isValidationFailed
                                         ? 'Some records failed validation. Review and correct them before submitting the batch.'
-                                        : 'Add the existing loan records from paper files, loan cards, registers or migration spreadsheets.'
+                                        : 'Import the existing loan records from your approved migration template.'
                                 }}
                             </p>
                         </div>
                     </div>
 
-                    <button
-                        type="button"
+                    <Link
+                        :href="route('loan-migration.import', batch.id)"
                         class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700"
                     >
-                        {{ isValidationFailed ? 'Review Records' : 'Start Capturing' }}
+                        {{ isValidationFailed ? 'Review Records' : 'Import Records' }}
 
                         <svg
                             class="h-4 w-4"
@@ -759,7 +749,8 @@ const isProcessed = computed(() => batch.value.status === 'processed')
                                 d="M9 5l7 7-7 7"
                             />
                         </svg>
-                    </button>
+                    </Link>
+
                 </div>
             </div>
 

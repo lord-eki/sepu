@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Models\Member;
+use App\Models\LoanProduct;
+
+
 class LoanMigrationController extends Controller
 {
     /**
@@ -339,4 +343,72 @@ class LoanMigrationController extends Controller
 
         return false;
     }
+
+    public function import(LoanMigrationBatch $batch)
+{
+    $user = Auth::user();
+
+    abort_unless(
+        $user && $this->canCreateBatch($user),
+        403
+    );
+
+    return Inertia::render('LoanMigration/Import', [
+        'batch' => $batch,
+    ]);
+}
+
+public function createRecord(LoanMigrationBatch $batch)
+{
+    $user = Auth::user();
+
+    abort_unless(
+        $user && $this->canCreateBatch($user),
+        403
+    );
+
+    $members = Member::query()
+        ->select([
+            'id',
+            'membership_id',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'emergency_contact_phone',
+        ])
+        ->orderBy('membership_id')
+        ->get()
+        ->map(function ($member) {
+            return [
+                'id' => $member->id,
+
+                'member_number' => $member->membership_id,
+
+                'name' => trim(
+                    $member->first_name . ' ' .
+                    ($member->middle_name ?? '') . ' ' .
+                    $member->last_name
+                ),
+
+                'phone' => $member->emergency_contact_phone,
+            ];
+        });
+
+    $loanProducts = LoanProduct::query()
+        ->select([
+            'id',
+            'name',
+            'code',
+            'interest_rate',
+        ])
+        ->orderBy('name')
+        ->get();
+
+    return Inertia::render('LoanMigration/Records/Create', [
+        'batch' => $batch,
+        'members' => $members,
+        'loanProducts' => $loanProducts,
+    ]);
+}
+
 }
