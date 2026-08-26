@@ -540,7 +540,7 @@ class TransactionController extends Controller
 
     public function myStatement(Request $request)
     {
-        $member = auth()->user()->member;
+        $member = Auth::user()->member;
 
         $from = $request->from
             ? Carbon::parse($request->from)->startOfDay()
@@ -581,7 +581,7 @@ class TransactionController extends Controller
 
     public function myStatementPdf(Request $request)
     {
-        $member = auth()->user()->member;
+        $member = Auth::user()->member;
 
         $from = $request->from
             ? Carbon::parse($request->from)->startOfDay()
@@ -648,8 +648,12 @@ class TransactionController extends Controller
 
         // Get member's account summary
         $accounts = Account::where('member_id', $memberId)->get();
-        $totalBalance = $accounts->sum('balance');
-        $totalAvailableBalance = $accounts->sum('available_balance');
+        $depositAccounts = $accounts->where(
+            'account_type',
+            'share_deposits'
+        );
+        $totalBalance = $depositAccounts->sum('balance');
+        $totalAvailableBalance = $depositAccounts->sum('available_balance');
 
         return response()->json([
             'success' => true,

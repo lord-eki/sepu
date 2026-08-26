@@ -40,9 +40,11 @@ const totalBalanceVisible = reactive({
 const balanceVisibility = reactive<{ [key: number]: boolean }>({})
 
 const totalBalance = computed(() =>
-  props.accounts.reduce((sum, acc) => {
+  props.accounts
+    .filter((acc) => acc.account_type === 'share_deposits')
+    .reduce((sum, acc) => {
     return sum + Number(acc.balance || 0)
-  }, 0)
+    }, 0)
 )
 
 const formattedTotalBalance = computed(() =>

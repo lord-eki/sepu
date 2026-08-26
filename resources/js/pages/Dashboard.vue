@@ -132,11 +132,7 @@ const totalBalance = computed(() => {
     props.stats?.accounts?.share_deposits_balance || 0
   )
 
-  const capital = Number(
-    props.stats?.accounts?.share_capital_balance || 0
-  )
-
-  return deposits + capital
+  return deposits
 })
 
 const showBalances = ref(true)
