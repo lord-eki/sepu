@@ -193,7 +193,7 @@ const submit = () => {
 
     form.post(
         route(
-            'loan-migration.import',
+            'loan-migration.import.store',
             props.batch.id,
         ),
         {
@@ -212,7 +212,8 @@ const submit = () => {
                 href: route('loan-migration.index')
             },
             {
-                title: 'Import Records'
+                title: 'Import Records',
+                href: ''
             }
         ]"
     >

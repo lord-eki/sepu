@@ -3,20 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Enums\LoanMigrationBatchStatus;
+use App\Enums\LoanMigrationRecordValidationStatus;
 use App\Models\LoanMigrationBatch;
+use App\Models\LoanMigrationRecord;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-
 use App\Models\Member;
 use App\Models\LoanProduct;
+use App\Models\User;
+use App\Services\LoanMigrationImportService;
 
 
 class LoanMigrationController extends Controller
 {
+
+    protected $loanMigrationImportService;
+
+    public function __construct(LoanMigrationImportService $loanMigrationImportService)
+    {
+        $this->loanMigrationImportService = $loanMigrationImportService;
+    }
     /**
      * Display the Loan Migration dashboard.
      */
@@ -122,7 +132,7 @@ class LoanMigrationController extends Controller
 
             'statuses' => collect(
                 LoanMigrationBatchStatus::cases()
-            )->map(fn (LoanMigrationBatchStatus $status) => [
+            )->map(fn(LoanMigrationBatchStatus $status) => [
                 'value' => $status->value,
                 'label' => $status->label(),
             ])->values(),
@@ -280,7 +290,7 @@ class LoanMigrationController extends Controller
      *
      * Members must never access migration.
      */
-    private function canAccessMigration($user): bool
+    private function canAccessMigration(User $user): bool
     {
         return $this->hasRole($user, [
             'admin',
@@ -293,7 +303,7 @@ class LoanMigrationController extends Controller
      * Determine whether the user can create
      * and capture migration records.
      */
-   private function canCreateBatch($user): bool
+    private function canCreateBatch($user): bool
     {
         return $this->hasRole($user, [
             'admin',
@@ -344,71 +354,79 @@ class LoanMigrationController extends Controller
         return false;
     }
 
-    public function import(LoanMigrationBatch $batch)
-{
-    $user = Auth::user();
+    public function importForm(LoanMigrationBatch $batch): Response
+    {
+        $user =  Auth::user();
 
-    abort_unless(
-        $user && $this->canCreateBatch($user),
-        403
-    );
+        abort_unless($user && $this->canCreateBatch($user), 403);
+        abort_unless($batch->isEditable(), 403);
 
-    return Inertia::render('LoanMigration/Import', [
-        'batch' => $batch,
-    ]);
-}
+        return Inertia::render('LoanMigration/Import', ['batch' => $batch]);
+    }
 
-public function createRecord(LoanMigrationBatch $batch)
-{
-    $user = Auth::user();
 
-    abort_unless(
-        $user && $this->canCreateBatch($user),
-        403
-    );
 
-    $members = Member::query()
-        ->select([
-            'id',
-            'membership_id',
-            'first_name',
-            'middle_name',
-            'last_name',
-            'emergency_contact_phone',
-        ])
-        ->orderBy('membership_id')
-        ->get()
-        ->map(function ($member) {
-            return [
-                'id' => $member->id,
+    public function createRecord(LoanMigrationBatch $batch)
+    {
+        $user = Auth::user();
 
-                'member_number' => $member->membership_id,
+        abort_unless(
+            $user && $this->canCreateBatch($user),
+            403
+        );
 
-                'name' => trim(
-                    $member->first_name . ' ' .
-                    ($member->middle_name ?? '') . ' ' .
-                    $member->last_name
-                ),
+        $members = Member::query()
+            ->select([
+                'id',
+                'membership_id',
+                'first_name',
+                'middle_name',
+                'last_name',
+                'emergency_contact_phone',
+            ])
+            ->orderBy('membership_id')
+            ->get()
+            ->map(function ($member) {
+                return [
+                    'id' => $member->id,
 
-                'phone' => $member->emergency_contact_phone,
-            ];
-        });
+                    'member_number' => $member->membership_id,
 
-    $loanProducts = LoanProduct::query()
-        ->select([
-            'id',
-            'name',
-            'code',
-            'interest_rate',
-        ])
-        ->orderBy('name')
-        ->get();
+                    'name' => trim(
+                        $member->first_name . ' ' .
+                            ($member->middle_name ?? '') . ' ' .
+                            $member->last_name
+                    ),
 
-    return Inertia::render('LoanMigration/Records/Create', [
-        'batch' => $batch,
-        'members' => $members,
-        'loanProducts' => $loanProducts,
-    ]);
-}
+                    'phone' => $member->emergency_contact_phone,
+                ];
+            });
 
+        $loanProducts = LoanProduct::query()
+            ->select([
+                'id',
+                'name',
+                'code',
+                'interest_rate',
+            ])
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('LoanMigration/Records/Create', [
+            'batch' => $batch,
+            'members' => $members,
+            'loanProducts' => $loanProducts,
+        ]);
+    }
+
+
+    /// Import the migration records from excel file
+    public function import(Request $request, LoanMigrationBatch $batch): RedirectResponse
+    {
+        $user = Auth::user();
+        $canCreateBatch = $this->canCreateBatch($user);
+
+        return $this->loanMigrationImportService->import($request, $batch, $canCreateBatch);
+       
+    }
 }
