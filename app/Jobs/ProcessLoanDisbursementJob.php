@@ -14,6 +14,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\GenerateLoanRepaymentsJob;
+use App\Jobs\SendNotificationJob;
+
 
 class ProcessLoanDisbursementJob implements ShouldQueue
 {
@@ -28,12 +31,12 @@ class ProcessLoanDisbursementJob implements ShouldQueue
         $this->disbursedBy = $disbursedBy;
     }
 
-    public function handle(PaymentService $paymentService)
+    public function handle()
     {
-        DB::transaction(function () use ($paymentService) {
+        DB::transaction(function () {
             // Get member's savings account
             $account = Account::where('member_id', $this->loan->member_id)
-                ->where('account_type', 'savings')
+                ->where('account_type', 'share_deposits')
                 ->first();
 
             if (!$account) {
@@ -67,7 +70,7 @@ class ProcessLoanDisbursementJob implements ShouldQueue
 
             // Update loan status
             $this->loan->update([
-                'status' => 'disbursed',
+                'status' => 'active',
                 'disbursed_amount' => $this->loan->approved_amount,
                 'disbursement_date' => now(),
                 'disbursed_by' => $this->disbursedBy,
