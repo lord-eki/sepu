@@ -8,7 +8,7 @@ use App\Models\Loan;
 use App\Models\LoanRepayment;
 use App\Models\Member;
 use App\Models\MemberDividend;
-use App\Models\MemberFinanceConfig;   // ← new
+use App\Models\MemberFinanceConfig;
 use App\Models\ScheduleExecutionLog;
 use App\Models\Transaction;
 use Carbon\Carbon;
@@ -19,7 +19,7 @@ use Inertia\Inertia;
 
 class ScheduleController extends Controller
 {
-    
+
 
     public function index()
     {
@@ -93,8 +93,8 @@ class ScheduleController extends Controller
                 'already_deposited_this_month' => $memberIdsAlreadyDone->has($cfg->member_id),
             ];
         })
-        ->filter(fn($r) => $r !== null && $r['amount'] > 0)
-        ->values();
+            ->filter(fn($r) => $r !== null && $r['amount'] > 0)
+            ->values();
 
         $summary = [
             'total_eligible' => $rows->count(),
@@ -120,7 +120,7 @@ class ScheduleController extends Controller
             'month'               => 'required|string|date_format:Y-m',
             'entries'             => 'required|array|min:1',
             'entries.*.member_id' => 'required|exists:members,id',
-            'entries.*.account_id'=> 'required|exists:accounts,id',
+            'entries.*.account_id' => 'required|exists:accounts,id',
             'entries.*.amount'    => 'required|numeric|min:1',
         ]);
 
@@ -165,7 +165,6 @@ class ScheduleController extends Controller
 
                     $processed++;
                     $totalAmount += $entry['amount'];
-
                 } catch (\Throwable $e) {
                     $failed++;
                     $errors[] = ['member_id' => $entry['member_id'], 'error' => $e->getMessage()];
@@ -197,7 +196,7 @@ class ScheduleController extends Controller
     }
 
     //  LOAN REPAYMENTS
-    
+
     public function loanRepayment(Request $request)
     {
         $month = $request->month ?? Carbon::now()->format('Y-m');
@@ -209,7 +208,7 @@ class ScheduleController extends Controller
         $endDate   = Carbon::parse($month)->endOfMonth()->toDateString();
 
         $autoDeductMemberIds = MemberFinanceConfig::autoLoanDeduct()
-            ->pluck('loan_deduction_amount', 'member_id'); 
+            ->pluck('loan_deduction_amount', 'member_id');
 
         $repayments = LoanRepayment::with([
             'loan.member.user',
@@ -219,7 +218,7 @@ class ScheduleController extends Controller
             ->whereIn('status', ['pending', 'overdue', 'partial'])
             ->whereHas('loan', function ($q) use ($autoDeductMemberIds) {
                 $q->where('status', 'active')
-                  ->whereIn('member_id', $autoDeductMemberIds->keys());
+                    ->whereIn('member_id', $autoDeductMemberIds->keys());
             })
             ->orderBy('due_date')
             ->get();
@@ -229,8 +228,6 @@ class ScheduleController extends Controller
             $overrideAmount  = $autoDeductMemberIds->get($memberId);
 
             // Determine the amount that will actually be deducted:
-            //  – if the admin set a fixed monthly deduction, use that (capped at outstanding)
-            //  – otherwise fall back to the outstanding instalment amount
             $deductAmount = $overrideAmount
                 ? min((float) $overrideAmount, (float) $r->outstanding_amount)
                 : (float) $r->outstanding_amount;
@@ -284,7 +281,7 @@ class ScheduleController extends Controller
             'entries.*.repayment_id' => 'required|exists:loan_repayments,id',
             'entries.*.loan_id'      => 'required|exists:loans,id',
             'entries.*.member_id'    => 'required|exists:members,id',
-            'entries.*.deduct_amount'=> 'required|numeric|min:0.01',
+            'entries.*.deduct_amount' => 'required|numeric|min:0.01',
         ]);
 
         [$year, $mon] = explode('-', $request->month);
@@ -364,7 +361,6 @@ class ScheduleController extends Controller
 
                     $processed++;
                     $totalAmount += $amount;
-
                 } catch (\Throwable $e) {
                     $failed++;
                     $errors[] = ['repayment_id' => $entry['repayment_id'], 'error' => $e->getMessage()];
@@ -452,6 +448,8 @@ class ScheduleController extends Controller
             'year'       => 'required|integer',
         ]);
 
+        $loanIds = array_values(array_unique($request->input('loan_ids')));
+
         $processedBy = Auth::id();
         $now         = now();
         $processed   = 0;
@@ -461,12 +459,20 @@ class ScheduleController extends Controller
 
         DB::beginTransaction();
         try {
-            foreach ($request->loan_ids as $loanId) {
+            foreach ($loanIds as $loanId) {
                 try {
-                    $loan = Loan::with('member.accounts')->findOrFail($loanId);
+                    $loan = Loan::with('member.accounts')->whereKey($loanId)->lockForUpdate()->findOrFail();
 
                     if ($loan->status !== 'approved') {
-                        throw new \Exception("Loan {$loan->loan_number} is not in approved status.");
+                        throw new \Exception("Loan {$loan->loan_number} is not in approved status or has already been disbursed.");
+                    }
+
+                    $alreadyDisbursed =  Transaction::where('transaction_type', 'loan_disbursement')
+                        ->where('reference_number', $loan->loan_number)
+                        ->exists();
+
+                    if ($alreadyDisbursed) {
+                        throw new \Exception("Loan {$loan->loan_number} has already been disbursed.");
                     }
 
                     $netAmount = $loan->approved_amount - $loan->processing_fee - $loan->insurance_fee;
@@ -511,7 +517,6 @@ class ScheduleController extends Controller
 
                     $processed++;
                     $totalAmount += $netAmount;
-
                 } catch (\Throwable $e) {
                     $failed++;
                     $errors[] = ['loan_id' => $loanId, 'error' => $e->getMessage()];
@@ -687,7 +692,6 @@ class ScheduleController extends Controller
 
                     $processed++;
                     $totalAmount += $amount;
-
                 } catch (\Throwable $e) {
                     $failed++;
                     $errors[] = ['member_dividend_id' => $entry['member_dividend_id'], 'error' => $e->getMessage()];
@@ -696,8 +700,8 @@ class ScheduleController extends Controller
 
             $dividend = Dividend::find($request->dividend_id);
             $allPaid  = MemberDividend::where('dividend_id', $dividend->id)
-                                      ->where('status', '!=', 'paid')
-                                      ->doesntExist();
+                ->where('status', '!=', 'paid')
+                ->doesntExist();
             if ($allPaid) {
                 $dividend->update(['status' => 'distributed', 'distribution_date' => $now->toDateString()]);
             }
@@ -733,17 +737,24 @@ class ScheduleController extends Controller
     public function exportLoanDisbursement(Request $request)
     {
         $loans    = Loan::with(['member.user', 'loanProduct'])
-                        ->where('status', 'approved')
-                        ->orderBy('approval_date')
-                        ->get();
+            ->where('status', 'approved')
+            ->orderBy('approval_date')
+            ->get();
         $filename = 'loan_disbursement_schedule_' . now()->format('Y_m_d') . '.csv';
 
         return response()->stream(function () use ($loans) {
             $file = fopen('php://output', 'w');
             fputcsv($file, [
-                'Loan Number', 'Member Name', 'Membership ID', 'Loan Product',
-                'Approved Amount', 'Processing Fee', 'Insurance Fee', 'Net Disbursement',
-                'Approval Date', 'Term (Months)',
+                'Loan Number',
+                'Member Name',
+                'Membership ID',
+                'Loan Product',
+                'Approved Amount',
+                'Processing Fee',
+                'Insurance Fee',
+                'Net Disbursement',
+                'Approval Date',
+                'Term (Months)',
             ]);
             foreach ($loans as $loan) {
                 fputcsv($file, [
