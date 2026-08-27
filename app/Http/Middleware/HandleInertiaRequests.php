@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 use App\Models\Member;
+use App\Models\Notification;
+use App\Models\Transaction;
+use App\Models\PaymentVoucher;
+use Illuminate\Support\Facades\Log;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -40,11 +44,35 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+        $user = $request->user();
+        $isStaff = $user && in_array($user->role, [
+            'admin',
+            'Administrator',
+            'accountant',
+            'Accounts Officer',
+        ], true);
+
+        $notificationCounts = [
+            'unread_notifications' => $user
+                ? Notification::where('user_id', $user->id)
+                ->where('is_read', false)
+                ->count()
+                : 0,
+
+            'pending_transactions' => $isStaff
+                ? Transaction::where('status', 'pending')->count()
+                : 0,
+
+            'pending_vouchers' => $isStaff
+                ? PaymentVoucher::where('status', 'pending')->count()
+                : 0,
+        ];
 
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
+            'notificationCounts' => $notificationCounts,
             'auth' => [
                 'user' => $request->user() ? array_merge(
                     $request->user()->toArray(),
@@ -58,7 +86,8 @@ class HandleInertiaRequests extends Middleware
                     : null,
             ],
 
-            'status' => fn () => $request->session()->get('status'),
+
+            'status' => fn() => $request->session()->get('status'),
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
@@ -75,10 +104,10 @@ class HandleInertiaRequests extends Middleware
                 'view-accounts' => Gate::allows('view-accounts'),
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error'   => fn () => $request->session()->get('error'),
+                'success' => fn() => $request->session()->get('success'),
+                'error'   => fn() => $request->session()->get('error'),
             ],
-            'import_errors' => fn () => $request->session()->get('import_errors'),
+            'import_errors' => fn() => $request->session()->get('import_errors'),
         ];
     }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, router, Link, usePage } from '@inertiajs/vue3'
+import { Head, router, Link, useForm, usePage } from '@inertiajs/vue3'
 import { ref, watch, computed } from 'vue'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -73,6 +73,18 @@ interface NotificationItem {
 }
 
 const page = usePage()
+
+const notificationCounts = computed(() => {
+  return page.props.notificationCounts ?? { unread_notifications: 0  , pending_transactions: 0 ,pending_vouchers: 0 }
+});
+
+const notificationCount = computed(() => {
+  return (
+    Number(notificationCounts.value.unread_notifications) +
+    Number(notificationCounts.value.pending_transactions) +
+    Number(notificationCounts.value.pending_vouchers)
+  );
+});
 
 const flash = computed(() => page.props.flash || {})
 
@@ -255,7 +267,7 @@ dark:to-slate-950 px-4 py-5 sm:px-6lg:px-8">
 
                   <span
                     class="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] text-white">
-                    {{ notifications?.length ?? 0 }}
+                    {{ notificationCount }} 
                   </span>
                 </button>
 
