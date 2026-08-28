@@ -582,10 +582,9 @@ class ScheduleController extends Controller
             ->map(function ($md) use ($eligibleMemberIds) {
                 $config = $md->member->financeConfig;
 
-                // Determine the configured dividend destination for display and payout mode.
+                // Payouts require a dedicated dividend account; deposits are separate.
                 $dividendAccountId = $config?->dividend_account_id
-                    ?? $md->member->accounts->firstWhere('account_type', 'share_deposits')?->id
-                    ?? $md->member->accounts->first()?->id;
+                    ?? null;
 
                 return [
                     'id'                  => $md->id,
@@ -687,15 +686,20 @@ class ScheduleController extends Controller
                         ->first();
 
                     if (! $account) {
-                        $account = $member->accounts
-                            ->where('account_type', 'share_deposits')
-                            ->where('is_active', true)
-                            ->first();
+                        throw new \RuntimeException(
+                            $request->distribution_mode === 'reinvest'
+                                ? "Member {$member->membership_id} has no active reinvestment deposit account or agreement."
+                                : "Member {$member->membership_id} has no configured dividend payout account."
+                        );
                     }
 
-                    if (! $account) {
+                    $requiredAccountType = $request->distribution_mode === 'reinvest'
+                        ? 'share_deposits'
+                        : 'dividend';
+
+                    if ($account->account_type !== $requiredAccountType) {
                         throw new \RuntimeException(
-                            "No active deposit account available for member {$member->membership_id}."
+                            "The selected account for member {$member->membership_id} is not a {$requiredAccountType} account."
                         );
                     }
 

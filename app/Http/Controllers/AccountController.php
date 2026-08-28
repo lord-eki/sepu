@@ -71,6 +71,7 @@ class AccountController extends Controller
             'accountTypes' => [
                 'share_capital'   => 'Share Capital',
                 'share_deposits'  => 'Share Deposits',
+                'dividend'        => 'Dividend Payout',
                 'loan_outstanding'=> 'Loan Outstanding'
             ]
         ]);
@@ -96,6 +97,7 @@ class AccountController extends Controller
             'accountTypes' => [
                 'share_capital'   => 'Share Capital',
                 'share_deposits'  => 'Share Deposits',
+                'dividend'        => 'Dividend Payout',
                 'loan_outstanding'=> 'Loan Outstanding'
             ]
         ]);

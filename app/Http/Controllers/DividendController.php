@@ -114,7 +114,7 @@ class DividendController extends Controller
         ];
 
         $account = Account::where('member_id', $memberId)
-            ->where('account_type', 'savings')
+            ->where('account_type', 'share_deposits')
             ->where('is_active', true)
             ->first();
 

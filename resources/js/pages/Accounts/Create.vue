@@ -146,7 +146,8 @@ const selectedMember = computed(() => {
 const getAccountTypeDescription = (type) => {
   const descriptions = {
     share_capital: 'Share Capital account - Paid once on registration and when purchasing shares from exiting members. Represents your ownership stake in the SACCO.',
-    share_deposits: 'Share Deposits account - For monthly share deposits. SEPU staff contributions are automatically deducted from payroll. Non-staff members can make deposits manually using the deposit button.'
+    share_deposits: 'Share Deposits account - For monthly share deposits. SEPU staff contributions are automatically deducted from payroll. Non-staff members can make deposits manually using the deposit button.',
+    dividend: 'Dividend Payout account - A separate account used only for dividend payouts. It must not be used for share capital or deposits.'
   }
   return descriptions[type] || ''
 }

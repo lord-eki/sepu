@@ -24,7 +24,7 @@ class UpdateAccountRequest extends FormRequest
         return [
             "is_active" => "boolean",
             "account_number" => "required|string|max:255",
-            "account_type" => "required|string|in:share_capitalcurrent",
+            "account_type" => "required|string|in:share_capital,share_deposits,dividend",
             "available_balance" => "required|numeric|min:0",
         ];
     }
