@@ -68,10 +68,12 @@ const search = ref('')
 const selectedRows = ref<number[]>([])
 const showModal = ref(false)
 const processing = ref(false)
+const distributionMode = ref<'payout' | 'reinvest'>('payout')
 
 const form = useForm({
   dividend_id: props.dividend?.id ?? null,
   year: props.year,
+  distribution_mode: distributionMode.value,
   entries: [] as any[],
 })
 
@@ -140,12 +142,10 @@ const refreshPage = () => {
 
 const processPayments = () => {
   processing.value = true
+  form.distribution_mode = distributionMode.value
 
   form.entries = selectedData.value.map((row) => ({
     member_dividend_id: row.id,
-    member_id: row.member_id,
-    account_id: row.dividend_account_id,
-    dividend_amount: row.dividend_amount,
   }))
 
   form.post('/schedule/dividend-payment/run', {
@@ -581,8 +581,60 @@ const processPayments = () => {
           <p
             class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400"
           >
-            Selected dividend payments will be credited directly to member accounts.
+            Choose how the selected dividends should be posted. The system will use each member's configured account where available.
           </p>
+
+          <fieldset class="mt-6">
+            <legend class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+              Distribution destination
+            </legend>
+
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+              <label
+                class="flex cursor-pointer gap-3 rounded-2xl border p-4 transition"
+                :class="distributionMode === 'payout'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                  : 'border-slate-200 dark:border-slate-700'"
+              >
+                <input
+                  v-model="distributionMode"
+                  type="radio"
+                  value="payout"
+                  class="mt-1 text-emerald-600"
+                />
+                <span>
+                  <span class="block font-semibold text-slate-900 dark:text-white">
+                    Dividend payout
+                  </span>
+                  <span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+                    Credit the member's configured dividend account.
+                  </span>
+                </span>
+              </label>
+
+              <label
+                class="flex cursor-pointer gap-3 rounded-2xl border p-4 transition"
+                :class="distributionMode === 'reinvest'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                  : 'border-slate-200 dark:border-slate-700'"
+              >
+                <input
+                  v-model="distributionMode"
+                  type="radio"
+                  value="reinvest"
+                  class="mt-1 text-emerald-600"
+                />
+                <span>
+                  <span class="block font-semibold text-slate-900 dark:text-white">
+                    Reinvest as deposit
+                  </span>
+                  <span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+                    Credit the member's configured deposit account.
+                  </span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
 
           <div
             class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800"

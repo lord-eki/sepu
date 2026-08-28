@@ -8,6 +8,7 @@ use App\Models\Loan;
 use App\Models\LoanRepayment;
 use App\Models\Member;
 use App\Models\MemberDividend;
+use App\Models\MemberDepositCommitment;
 use App\Models\MemberFinanceConfig;
 use App\Models\ScheduleExecutionLog;
 use App\Models\Transaction;
@@ -581,9 +582,9 @@ class ScheduleController extends Controller
             ->map(function ($md) use ($eligibleMemberIds) {
                 $config = $md->member->financeConfig;
 
-                // Determine which account to credit: config's dividend account → FOSA → first account
+                // Determine the configured dividend destination for display and payout mode.
                 $dividendAccountId = $config?->dividend_account_id
-                    ?? $md->member->accounts->firstWhere('account_type', 'fosa')?->id
+                    ?? $md->member->accounts->firstWhere('account_type', 'share_deposits')?->id
                     ?? $md->member->accounts->first()?->id;
 
                 return [
@@ -636,11 +637,9 @@ class ScheduleController extends Controller
         $request->validate([
             'dividend_id'                      => 'required|exists:dividends,id',
             'year'                             => 'required|integer',
+            'distribution_mode'               => 'required|in:payout,reinvest',
             'entries'                          => 'required|array|min:1',
             'entries.*.member_dividend_id'     => 'required|exists:member_dividends,id',
-            'entries.*.member_id'              => 'required|exists:members,id',
-            'entries.*.account_id'             => 'required|exists:accounts,id',
-            'entries.*.dividend_amount'        => 'required|numeric|min:0.01',
         ]);
 
         if (ScheduleExecutionLog::alreadyRun('dividend_payments', (int) $request->year)) {
@@ -662,19 +661,62 @@ class ScheduleController extends Controller
 
                     if ($memberDividend->status === 'paid') continue;
 
-                    $account = Account::findOrFail($entry['account_id']);
-                    $amount  = (float) $entry['dividend_amount'];
+                    $member = Member::with(['financeConfig', 'accounts'])
+                        ->findOrFail($memberDividend->member_id);
+
+                    $commitment = MemberDepositCommitment::query()
+                        ->where('member_id', $member->id)
+                        ->where('type', 'dividend')
+                        ->where('dividend_mode', 'reinvest')
+                        ->where('is_active', true)
+                        ->where('effective_from', '<=', now()->toDateString())
+                        ->where(function ($query) {
+                            $query->whereNull('effective_to')
+                                ->orWhere('effective_to', '>=', now()->toDateString());
+                        })
+                        ->latest('id')
+                        ->first();
+
+                    $accountId = $request->distribution_mode === 'reinvest'
+                        ? $commitment?->account_id
+                        : $member->financeConfig?->dividend_account_id;
+
+                    $account = $member->accounts
+                        ->where('id', $accountId)
+                        ->where('is_active', true)
+                        ->first();
+
+                    if (! $account) {
+                        $account = $member->accounts
+                            ->where('account_type', 'share_deposits')
+                            ->where('is_active', true)
+                            ->first();
+                    }
+
+                    if (! $account) {
+                        throw new \RuntimeException(
+                            "No active deposit account available for member {$member->membership_id}."
+                        );
+                    }
+
+                    $amount = (float) $memberDividend->dividend_amount;
+                    $description = $request->distribution_mode === 'reinvest'
+                        ? "Schedule: Dividend reinvestment deposit – {$request->year}"
+                        : "Schedule: Dividend payout – {$request->year}";
 
                     $tx = Transaction::create([
                         'transaction_id'   => 'DIV-SCH-' . strtoupper(uniqid()),
                         'account_id'       => $account->id,
-                        'member_id'        => $entry['member_id'],
-                        'transaction_type' => 'dividend',
+                        'member_id'        => $member->id,
+                        'transaction_type' => $request->distribution_mode === 'reinvest'
+                            ? 'deposit'
+                            : 'dividend_payment',
                         'amount'           => $amount,
                         'balance_before'   => $account->balance,
                         'balance_after'    => $account->balance + $amount,
-                        'description'      => "Schedule: Dividend payment – {$request->year}",
+                        'description'      => $description,
                         'payment_method'   => 'system_transfer',
+                        'metadata'         => ['distribution_mode' => $request->distribution_mode],
                         'status'           => 'completed',
                         'processed_by'     => $processedBy,
                         'processed_at'     => $now,
