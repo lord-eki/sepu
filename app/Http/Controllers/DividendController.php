@@ -780,7 +780,7 @@ class DividendController extends Controller
 
         $depositTransactions = Transaction::with('account')
             ->where('member_id', $member->id)
-            ->whereHas('account', fn ($q) => $q->where('account_type', 'savings'))
+            ->whereHas('account', fn ($q) => $q->where('account_type', 'share_deposits'))
             ->whereYear('created_at', $dividend->dividend_year)
             ->orderBy('created_at')
             ->get();
