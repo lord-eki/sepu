@@ -420,6 +420,70 @@ class LoanMigrationController extends Controller
     }
 
 
+    /**
+     * Store a single, manually-entered migration record
+     * inside a batch (the counterpart to createRecord(),
+     * which only renders the form).
+     */
+    public function storeRecord(Request $request, LoanMigrationBatch $batch): RedirectResponse
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user && $this->canCreateBatch($user),
+            403
+        );
+
+        abort_unless($batch->isEditable(), 403);
+
+        $validated = $request->validate([
+            'member_id' => ['required', 'exists:members,id'],
+            'loan_product_id' => ['required', 'exists:loan_products,id'],
+
+            'original_amount' => ['required', 'numeric', 'min:0'],
+            'amount_paid' => ['required', 'numeric', 'min:0'],
+            'outstanding_balance' => ['required', 'numeric', 'min:0'],
+
+            'interest_rate' => ['nullable', 'numeric', 'min:0'],
+            'disbursement_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        DB::transaction(function () use ($validated, $batch) {
+
+            LoanMigrationRecord::create([
+                'batch_id' => $batch->id,
+
+                'member_id' => $validated['member_id'],
+                'loan_product_id' => $validated['loan_product_id'],
+
+                'original_amount' => $validated['original_amount'],
+                'amount_paid' => $validated['amount_paid'],
+                'outstanding_balance' => $validated['outstanding_balance'],
+
+                'interest_rate' => $validated['interest_rate'] ?? null,
+                'disbursement_date' => $validated['disbursement_date'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+
+                'validation_status' => LoanMigrationRecordValidationStatus::PENDING->value,
+            ]);
+
+            /*
+             * Keep the batch's running totals in sync so the
+             * dashboard statistics stay correct without a
+             * separate recalculation job.
+             */
+            $batch->increment('total_records');
+            $batch->increment('total_original_amount', $validated['original_amount']);
+            $batch->increment('total_amount_paid', $validated['amount_paid']);
+            $batch->increment('total_outstanding_balance', $validated['outstanding_balance']);
+        });
+
+        return redirect()
+            ->route('loan-migration.show', $batch)
+            ->with('success', 'Migration record added successfully.');
+    }
+
     /// Import the migration records from excel file
     public function import(Request $request, LoanMigrationBatch $batch): RedirectResponse
     {

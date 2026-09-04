@@ -1217,7 +1217,7 @@ class DividendController extends Controller
 
     protected function canApprove(Dividend $dividend): bool
     {
-        return $dividend->status === 'calculated' && auth()->user()->role === 'admin';
+        return $dividend->status === 'calculated' && Auth::user()->role === 'admin';
     }
 
     private function canDistribute(Dividend $dividend): bool
