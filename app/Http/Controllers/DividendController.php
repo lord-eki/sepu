@@ -43,12 +43,10 @@ class DividendController extends Controller
         ];
     }
 
-    // -------------------------------------------------------------------------
-    // CORE DIVIDEND MATH
-    // -------------------------------------------------------------------------
+
 
     /**
-     * Step 1 – Get a member's Share Capital balance as at 31 Dec of $year.
+     * Get a member's Share Capital balance as at 31 Dec of $year.
      */
     private function getShareCapitalAsAtDec31(int $memberId, int $year): float
     {
@@ -71,7 +69,7 @@ class DividendController extends Controller
     }
 
     /**
-     * Step 2 – Calculate Share Dividend.
+     * Calculate Share Dividend.
      *
      *   Dividend = Share Capital (by Dec 31) × share_dividend_rate
      */
@@ -85,7 +83,7 @@ class DividendController extends Controller
     }
 
     /**
-     * Steps 3 & 4 – Calculate monthly deposit interest and sum it.
+     *  Calculate monthly deposit interest and sum it.
      *
      * For each month Jan–Dec:
      *   Qualifying Deposit = (Days In Month / 365) × Monthly Balance
@@ -137,7 +135,7 @@ class DividendController extends Controller
                 ->whereDate('created_at', '<=', $lastDay)
                 ->sum('amount');
 
-            // VALIDATION: no negative balances
+            //  no negative balances
             $balance = max(0, $balance);
 
             if (!$account || $balance <= 0) {
@@ -175,7 +173,7 @@ class DividendController extends Controller
     }
 
     /**
-     * Steps 5–7 – Combine and apply tax + deductions.
+     * Combine and apply tax + deductions.
      *
      *   Gross        = Share Dividend + Deposit Interest
      *   Tax          = Gross × tax_rate
@@ -193,7 +191,7 @@ class DividendController extends Controller
 
         $tax = $gross * ($taxRate / 100);
 
-        $net = $gross - $tax - $processingFee - $exciseDuty;
+        $net =  max(0,$gross - $tax - $processingFee - $exciseDuty);
 
         return [
             'share_dividend' => round($shareDividend, 2),
@@ -291,9 +289,7 @@ class DividendController extends Controller
         try {
             DB::beginTransaction();
 
-            // ------------------------------------------------------------------
-            // Calculate aggregate figures across all active members
-            // ------------------------------------------------------------------
+    
             $memberResults        = $this->computeAllMemberDividends($year, $settings);
             $totalShareDividends  = collect($memberResults)->sum('share_dividend');
             $totalDepositInterest = collect($memberResults)->sum('deposit_interest');
@@ -568,7 +564,7 @@ class DividendController extends Controller
     /**
      * Distribute dividends – credit net payable to each member's FOSA account.
      *
-     * Step 8: Credit Net to FOSA account.
+     * Credit Net to FOSA account.
      */
     public function distribute(Request $request, Dividend $dividend)
     {
@@ -977,29 +973,32 @@ class DividendController extends Controller
     {
         $members = Member::where('membership_status', 'active')
             ->get();
-
+ 
         $results = [];
-
+ 
         foreach ($members as $member) {
-            // --- Step 1: Share Capital as at Dec 31 ---
+            // Share Capital as at Dec 31 
             $shareCapital = $this->getShareCapitalAsAtDec31($member->id, $year);
-
-            // --- Step 2: Share Dividend (0 if no share capital) ---
-            $shareDividend = $this->calcShareDividend(
-                $shareCapital,
-                $settings['share_dividend_rate']
-            );
-
-            // --- Steps 3 & 4: Deposit Interest ---
+ 
+            // Deposit Interest
             $interestData = $this->calcDepositInterest(
                 $member->id,
                 $year,
                 $settings['deposit_interest_rate']
             );
-
-          
-
-            // --- Steps 5–7: Gross → Tax → Net ---
+ 
+       
+            if ($shareCapital <= 0 && $interestData['total_qualifying_deposits'] <= 0) {
+                continue;
+            }
+ 
+            //Share Dividend (0 if no share capital) 
+            $shareDividend = $this->calcShareDividend(
+                $shareCapital,
+                $settings['share_dividend_rate']
+            );
+ 
+            //  Gross → Tax → Net 
             $calc = $this->calcNetPayable(
                 $shareDividend,
                 $interestData['total_interest'],
@@ -1007,7 +1006,7 @@ class DividendController extends Controller
                 $settings['processing_fee'],
                 $settings['excise_duty']
             );
-
+ 
             $results[] = array_merge([
                 'member_id'                  => $member->id,
                 'member_name'                => $member->first_name . ' ' . $member->last_name,
@@ -1017,7 +1016,7 @@ class DividendController extends Controller
                 'monthly_breakdown'          => $interestData['monthly_breakdown'],
             ], $calc);
         }
-
+ 
         return $results;
     }
 
@@ -1040,7 +1039,6 @@ class DividendController extends Controller
                     'total_qualifying_deposits' => $result['total_qualifying_deposits'],
                     'deposit_interest'          => $result['deposit_interest'],
                     'gross'                     => $result['gross'],
-                    'tax'                       => $result['tax'],
                     'processing_fee'            => $result['processing_fee'],
                     'excise_duty'               => $result['excise_duty'],
                     'net_payable'               => $result['net_payable'],
