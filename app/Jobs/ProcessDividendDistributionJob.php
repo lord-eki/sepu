@@ -36,7 +36,7 @@ class ProcessDividendDistributionJob implements ShouldQueue
 
             foreach ($memberDividends as $memberDividend) {
                 $savingsAccount = $memberDividend->member->accounts
-                    ->where('account_type', 'savings')
+                    ->where('account_type', 'share_deposits')
                     ->first();
 
                 if ($savingsAccount) {

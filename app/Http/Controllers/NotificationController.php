@@ -392,7 +392,7 @@ class NotificationController extends Controller
             
             case 'savings_members':
                 return User::whereHas('member.accounts', function ($query) {
-                    $query->where('account_type', 'savings')
+                    $query->where('account_type', 'share_deposits')
                           ->where('balance', '>', 0);
                 })->get();
             

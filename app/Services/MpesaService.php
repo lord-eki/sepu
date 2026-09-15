@@ -260,7 +260,7 @@ class MpesaService
                 // Find or create savings account
                 $account = Account::firstOrCreate([
                     'member_id' => $member->id,
-                    'account_type' => 'savings'
+                    'account_type' => 'share_deposits'
                 ], [
                     'account_number' => $this->generateAccountNumber(),
                     'balance' => 0,

@@ -56,8 +56,8 @@ class GenerateReportsJob implements ShouldQueue
 
     private function generateFinancialSummary()
     {
-        $totalSavings = Account::where('account_type', 'savings')->sum('balance');
-        $totalShares = Account::where('account_type', 'shares')->sum('balance');
+        $totalSavings = Account::where('account_type', 'share_deposits')->sum('balance');
+        $totalShares = Account::where('account_type', 'share_capital')->sum('balance');
         $totalDeposits = Account::where('account_type', 'deposits')->sum('balance');
         $totalLoansOutstanding = Loan::whereIn('status', ['disbursed', 'partial_repayment'])->sum('outstanding_balance');
         $totalLoansDisbursed = Loan::where('status', 'disbursed')->sum('disbursed_amount');

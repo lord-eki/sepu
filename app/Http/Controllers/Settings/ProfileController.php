@@ -75,8 +75,8 @@ class ProfileController extends Controller
     }
 
     $hasRegFee = $member->transactions()->where('type', 'registration_fee')->sum('amount') >= 2500;
-    $hasShareCapital = $member->accounts()->where('account_type', 'shares')->sum('balance') >= 5000;
-    $hasShareDeposits = $member->accounts()->where('account_type', 'savings')->sum('balance') >= 5000;
+    $hasShareCapital = $member->accounts()->where('account_type', 'share_capital')->sum('balance') >= 5000;
+    $hasShareDeposits = $member->accounts()->where('account_type', 'share_deposits')->sum('balance') >= 5000;
 
     if ($hasRegFee && $hasShareCapital && $hasShareDeposits) {
         return response()->json(['eligible' => true]);

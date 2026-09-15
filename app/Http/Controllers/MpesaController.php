@@ -55,7 +55,7 @@ class MpesaController extends Controller
             // Store pending transaction
             $transaction = Transaction::create([
                 'member_id' => $member->id,
-                'account_id' => $member->accounts()->where('account_type', 'savings')->first()->id ?? null,
+                'account_id' => $member->accounts()->where('account_type', 'share_deposits')->first()->id ?? null,
                 'transaction_type' => 'deposit',
                 'amount' => $request->amount,
                 'payment_method' => 'mpesa',

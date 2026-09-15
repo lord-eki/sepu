@@ -299,10 +299,10 @@ class ReportController extends Controller
     public function memberShares(Request $request)
     {
         $members = Member::with(['accounts' => function($query) {
-            $query->where('account_type', 'shares');
+            $query->where('account_type', 'share_capital');
         }])
         ->whereHas('accounts', function($query) {
-            $query->where('account_type', 'shares');
+            $query->where('account_type', 'share_capital');
         })
         ->select(['id', 'membership_id', 'first_name', 'last_name', 'membership_date'])
         ->get()
@@ -334,10 +334,10 @@ class ReportController extends Controller
     public function memberSavings(Request $request)
     {
         $members = Member::with(['accounts' => function($query) {
-            $query->where('account_type', 'savings');
+            $query->where('account_type', 'share_deposits');
         }])
         ->whereHas('accounts', function($query) {
-            $query->where('account_type', 'savings');
+            $query->where('account_type', 'share_deposits');
         })
         ->select(['id', 'membership_id', 'first_name', 'last_name', 'membership_date'])
         ->get()
@@ -780,14 +780,14 @@ class ReportController extends Controller
             'this_year_amount' => Transaction::where('created_at', '>=', $thisYear)->sum('amount'),
         ],
         'savings' => [
-            'total_balance' => Account::where('account_type', 'savings')->sum('balance'),
-            'total_accounts' => Account::where('account_type', 'savings')->count(),
-            'average_balance' => Account::where('account_type', 'savings')->avg('balance'),
+            'total_balance' => Account::where('account_type', 'share_deposits')->sum('balance'),
+            'total_accounts' => Account::where('account_type', 'share_deposits')->count(),
+            'average_balance' => Account::where('account_type', 'share_deposits')->avg('balance'),
         ],
         'shares' => [
-            'total_balance' => Account::where('account_type', 'shares')->sum('balance'),
-            'total_accounts' => Account::where('account_type', 'shares')->count(),
-            'average_balance' => Account::where('account_type', 'shares')->avg('balance'),
+            'total_balance' => Account::where('account_type', 'share_capital')->sum('balance'),
+            'total_accounts' => Account::where('account_type', 'share_capital')->count(),
+            'average_balance' => Account::where('account_type', 'share_capital')->avg('balance'),
         ],
     ]);
 }
@@ -1069,7 +1069,7 @@ private function getInvestments($asOf)
 
 private function getMemberDeposits($asOf)
 {
-    return Account::whereIn('account_type', ['savings', 'shares'])
+    return Account::whereIn('account_type', ['share_deposits'])
         ->where('created_at', '<=', $asOf)
         ->sum('balance');
 }
@@ -1099,7 +1099,7 @@ private function getLongTermDebt($asOf)
 
 private function getShareCapital($asOf)
 {
-    return Account::where('account_type', 'shares')
+    return Account::where('account_type', 'share_capital')
         ->where('created_at', '<=', $asOf)
         ->sum('balance');
 }
