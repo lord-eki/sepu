@@ -199,3 +199,25 @@
         @apply bg-background text-foreground;
     }
 }
+
+/*
+ * Many pages (Loans, Members, Budgets, Accounts, etc.) use hardcoded
+ * text-black / text-gray-900 / text-slate-900 utility classes with no
+ * dark: variant, so that text renders near-black on the dark background
+ * and becomes unreadable. Rather than touching every page individually,
+ * override those specific classes when .dark is active.
+ */
+.dark .text-black,
+.dark .text-gray-900,
+.dark .text-slate-900 {
+    color: hsl(210 40% 98%);
+}
+
+.dark .bg-white {
+    background-color: var(--card);
+}
+
+.dark .border-gray-200,
+.dark .border-gray-300 {
+    border-color: var(--border);
+}
