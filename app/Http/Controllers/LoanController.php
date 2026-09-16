@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\GuarantorRequestNotification;
 use App\Services\NotificationService;
@@ -285,7 +286,7 @@ class LoanController extends Controller
                 foreach ($request->file('documents') as $index => $file) {
 
                    
-                    $filename = \Str::uuid().'.'.$file->getClientOriginalExtension();
+                    $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
                     $path = $file->storeAs('loan-documents', $filename, 'public');
 
                     $documents[] = [
@@ -618,7 +619,7 @@ public function approve(Request $request, $id)
         $principal   = $request->approved_amount;
         $termMonths  = $loan->term_months;
 
-        // Rates (DO NOT divide by 12 — already monthly)
+        // Rates
         $monthlyRate     = $loanProduct->interest_rate / 100;
         $processingRate  = $loanProduct->processing_fee_rate / 100;
         $insuranceRate   = $loanProduct->insurance_rate / 100;
@@ -631,13 +632,13 @@ public function approve(Request $request, $id)
         // Principal split
         $principalPerMonth = $principal / $termMonths;
 
-        // SAME interest formula as calculator
+        //  interest formula as calculator
         $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
 
-        // Monthly interest (fixed)
+        // Monthly interest 
         $mInterest = $totalInterest / $termMonths;
 
-        // Monthly repayment (constant)
+        // Monthly repayment 
         $monthlyRepayment = $principalPerMonth + $mInterest;
 
         // Totals
@@ -646,9 +647,7 @@ public function approve(Request $request, $id)
         // Net disbursement
         $netDisbursement = $principal - $totalFees;
 
-        // -------------------------------
-        // STEP 3: Update financial fields
-        // -------------------------------
+        // Update financial fields
         $loan->update([
             'approved_amount' => $request->approved_amount,
             'status'          => 'approved',
@@ -662,9 +661,8 @@ public function approve(Request $request, $id)
             'net_disbursement'    => round($netDisbursement, 2),
         ]);
 
-        // -------------------------------
-        // STEP 4: Audit Log
-        // -------------------------------
+        // Audit Log
+        
         AuditLog::create([
             'user_id'    => Auth::id(),
             'action'     => 'loan_approved',
@@ -803,9 +801,7 @@ public function disburse(Request $request, $id)
         $oldValues = $loan->toArray();
         $member    = $loan->member;
 
-        // -----------------------------------
         // USE VALUES FROM APPROVAL
-        // -----------------------------------
         $grossAmount     = $loan->approved_amount;
         $principal = $loan->approved_amount;
 
@@ -818,9 +814,7 @@ public function disburse(Request $request, $id)
             throw new \Exception('Net disbursement cannot be zero or negative.');
         }
 
-        // -----------------------------------
-        // Member account (reference only)
-        // -----------------------------------
+        // Member account 
         $loanAccount = Account::firstOrCreate(
             [
                 'member_id'   => $member->id,
@@ -834,9 +828,7 @@ public function disburse(Request $request, $id)
                 'status'           => 'active',
             ]
         );
-        // -----------------------------------
         // Create transaction
-        // -----------------------------------
         $transaction = Transaction::create([
             'transaction_id' => $this->generateTransactionId(),
             'account_id' => $loanAccount->id,
@@ -862,18 +854,12 @@ public function disburse(Request $request, $id)
             ],
         ]);
 
-        // -----------------------------------
         // Update loan 
-        // -----------------------------------
         $disbursementDate = now();
         $loan->update([
             'disbursed_amount'    => $netDisbursement,
             'status'              => 'active',
-            'disbursement_date'   => now(),
             'disbursed_by'        => Auth::id(),
-
-            // Dates
-
             'first_repayment_date'=> $disbursementDate->copy()->addMonthsNoOverflow(1),
             'maturity_date'       => $disbursementDate->copy()->addMonthsNoOverflow($loan->term_months),
             'disbursement_date'   => $disbursementDate,
@@ -890,9 +876,7 @@ public function disburse(Request $request, $id)
             $loan->approved_amount
         );
 
-       // -----------------------------------
-        // Generate + STORE repayment schedule
-        // -----------------------------------
+        // Generate + store repayment schedule
         LoanRepayment::where('loan_id', $loan->id)->delete(); // safety reset
 
         $schedule = $this->generateRepaymentSchedule(
@@ -923,15 +907,13 @@ public function disburse(Request $request, $id)
             ]);
         }
 
-        // -----------------------------------
         // Payment voucher
-        // -----------------------------------
         PaymentVoucher::create([
             'voucher_number' => $this->generateVoucherNumber(),
             'voucher_type'   => 'loan_disbursement',
             'payee_name'     => $member->first_name.' '.$member->last_name,
             'payee_phone'    => $member->user->phone,
-            'amount'         => $netDisbursement, // FIXED (not gross)
+            'amount'         => $netDisbursement, 
             'purpose'        => 'Loan disbursement',
             'description'    => "Disbursement for loan {$loan->loan_number}",
             'loan_id'        => $loan->id,
@@ -943,9 +925,7 @@ public function disburse(Request $request, $id)
             'payment_date'   => now(),
         ]);
 
-        // -----------------------------------
         // Audit log
-        // -----------------------------------
         AuditLog::create([
             'user_id'    => Auth::id(),
             'action'     => 'loan_disbursed',
@@ -1102,7 +1082,6 @@ public function schedule($id)
                 $data = [
                     'payment_number'   => $i + 1,
 
-                    // FIX: ensure consistent date fallback logic
                     'payment_date'     => $r->payment_date
                         ?? $r->due_date
                         ?? null,
@@ -1123,31 +1102,8 @@ public function schedule($id)
 
     } else {
 
-        // IMPORTANT: align with calculator logic (includes grace + correct date rule)
-        $loanProduct = $loan->loanProduct;
-
-        $principal   = (float) $loan->approved_amount;
-        $termMonths  = (int) $loan->term_months;
-        $monthlyRate = (float) $loan->interest_rate / 100;
-        $graceDays   = $loanProduct->grace_period_days ?? 0;
-
-        $principalPerMonth = $principal / $termMonths;
-
-        $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
-        $mInterest     = $totalInterest / $termMonths;
-
-        $actualInstallment = $principalPerMonth + $mInterest;
-
         $repayments = collect(
-            $this->generateSchedule(
-                $principal,
-                $principalPerMonth,
-                $monthlyRate,
-                $mInterest,
-                $actualInstallment,
-                $termMonths,
-                $graceDays
-            )
+            $this->generateRepaymentSchedule($loan)
         );
     }
 
@@ -1168,13 +1124,12 @@ public function schedule($id)
     ]);
 }
 
-private function generateRepaymentSchedule(Loan $loan, $baseDate = null): array
+public function generateRepaymentSchedule(Loan $loan, $baseDate = null): array
 {
     $principal   = (float) $loan->approved_amount;
     $termMonths  = (int) $loan->term_months;
     $monthlyRate = (float) $loan->interest_rate / 100;
 
-    // MATCH CALCULATOR LOGIC
     $principalPerMonth = round($principal / $termMonths, 2);
 
     $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
@@ -1186,7 +1141,6 @@ private function generateRepaymentSchedule(Loan $loan, $baseDate = null): array
     $schedule = [];
 
     /**
-     * FIX DATE:
      * Always start next month + force 1st of month logic
      */
     $graceDays = $loan->loanProduct->grace_period_days ?? 0;
@@ -1231,7 +1185,6 @@ private function generateRepaymentSchedule(Loan $loan, $baseDate = null): array
             'closing_balance'      => round(max(0, $closingBalance), 2),
         ];
 
-        // fix rounding difference on last row
         if ($i === $termMonths) {
             $difference = round($principal - $cumulPrincipal, 2);
             $schedule[$i - 1]['principal_amount'] += $difference;
@@ -1245,14 +1198,9 @@ private function generateRepaymentSchedule(Loan $loan, $baseDate = null): array
     return $schedule;
 }
 
-public function isFullyGuaranteed()
-{
-    return $this->guarantors()->where('status', '!=', 'approved')->count() === 0;
-}
-
 public function myGuarantees()
 {
-    $member = auth()->user()->member;
+    $member = Auth::user()->member;
 
     $guarantees = LoanGuarantor::with('loan.member', 'loan.loanProduct')
         ->where('guarantor_member_id', $member->id)
@@ -1266,7 +1214,7 @@ public function myGuarantees()
 
 public function guarantorRequestPage(Loan $loan)
 {
-    $user = auth()->user();
+    $user = Auth::user();
 
     $loan->load(['member', 'guarantors.guarantorMember']);
 
@@ -1301,7 +1249,7 @@ public function allGuarantees(Request $request)
         $query->where('status', $request->status);
     }
 
-    // Search (improved: search borrower + loan number)
+    // Search 
     if ($request->filled('search')) {
         $search = $request->search;
 
@@ -1367,7 +1315,7 @@ public function rejectGuarantee(Loan $loan)
         'response_date' => now(),
     ]);
 
-    // Optional: reject whole loan immediately
+    // reject whole loan immediately
     $loan->update([
         'status' => 'guarantor_rejected'
     ]);

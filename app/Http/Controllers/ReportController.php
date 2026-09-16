@@ -299,10 +299,10 @@ class ReportController extends Controller
     public function memberShares(Request $request)
     {
         $members = Member::with(['accounts' => function($query) {
-            $query->where('account_type', 'share_capital');
+            $query->where('account_type', 'shares');
         }])
         ->whereHas('accounts', function($query) {
-            $query->where('account_type', 'share_capital');
+            $query->where('account_type', 'shares');
         })
         ->select(['id', 'membership_id', 'first_name', 'last_name', 'membership_date'])
         ->get()
@@ -1069,7 +1069,7 @@ private function getInvestments($asOf)
 
 private function getMemberDeposits($asOf)
 {
-    return Account::whereIn('account_type', ['share_deposits'])
+    return Account::whereIn('account_type', ['share_deposits', 'share_capital'])
         ->where('created_at', '<=', $asOf)
         ->sum('balance');
 }
@@ -1099,7 +1099,7 @@ private function getLongTermDebt($asOf)
 
 private function getShareCapital($asOf)
 {
-    return Account::where('account_type', 'share_capital')
+    return Account::where('account_type', 'shares')
         ->where('created_at', '<=', $asOf)
         ->sum('balance');
 }
@@ -1249,7 +1249,7 @@ private function getInvestmentFlow($start, $end)
 {
     return Transaction::where('transaction_type', 'investment')
         ->whereBetween('created_at', [$start, $end])
-        ->sum('amount') * -1; // Negative for cash outflow
+        ->sum('amount') * -1; 
 }
 
 private function getShareCapitalFlow($start, $end)
@@ -1539,5 +1539,4 @@ private function buildReportData($reportType, $start, $end, $asOf)
 
 
 }
-
 
