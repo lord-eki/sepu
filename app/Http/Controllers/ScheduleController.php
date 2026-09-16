@@ -516,6 +516,35 @@ class ScheduleController extends Controller
                         'principal_balance'   => $loan->approved_amount,
                     ]);
 
+                    // Generate + store the repayment schedule, matching the
+                    // single-loan disburse() path — previously this batch
+                    // path left loans with status = active but zero
+                    // LoanRepayment rows, so they never surfaced correctly
+                    // as active/collectable loans.
+                    LoanRepayment::where('loan_id', $loan->id)->delete();
+
+                    $repaymentSchedule = app(LoanController::class)
+                        ->generateRepaymentSchedule($loan, $now->copy());
+
+                    foreach ($repaymentSchedule as $row) {
+                        $expected = round($row['payment_amount'], 2);
+
+                        LoanRepayment::create([
+                            'loan_id'            => $loan->id,
+                            'transaction_id'     => null,
+                            'due_date'           => $row['payment_date'],
+                            'expected_amount'    => $expected,
+                            'principal_amount'   => round($row['principal_amount'], 2),
+                            'interest_amount'    => round($row['interest_amount'], 2),
+                            'penalty_amount'     => 0,
+                            'paid_amount'        => 0,
+                            'outstanding_amount' => $expected,
+                            'status'             => 'pending',
+                            'payment_date'       => null,
+                            'days_late'          => 0,
+                        ]);
+                    }
+
                     $processed++;
                     $totalAmount += $netAmount;
                 } catch (\Throwable $e) {

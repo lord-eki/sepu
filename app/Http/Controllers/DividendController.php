@@ -576,7 +576,7 @@ class DividendController extends Controller
         try {
             DB::beginTransaction();
 
-            $memberDividends  = MemberDividend::with('member')
+            $memberDividends  = MemberDividend::with('member.financeConfig')
                 ->where('dividend_id', $dividend->id)
                 ->where('status', 'pending')
                 ->get();
@@ -586,14 +586,21 @@ class DividendController extends Controller
 
             foreach ($memberDividends as $memberDividend) {
                 try {
-                    // Credit to the member's FOSA account
-                    $fosaAccount = Account::where('member_id', $memberDividend->member_id)
-                        ->where('account_type', 'fosa')
-                        ->where('is_active', true)
-                        ->first();
+                    // Credit to the member's configured dividend payout
+                    // account (member_finance_configs.dividend_account_id) —
+                    // deliberately separate from share_deposits/share_capital.
+                    // Members who want dividends reinvested as deposits
+                    // instead should go through the dividend payment
+                    // schedule (Admin > Schedule > Dividend Payment), which
+                    // honours their MemberDepositCommitment reinvest election.
+                    $accountId = $memberDividend->member->financeConfig?->dividend_account_id;
 
-                    if (! $fosaAccount) {
-                        Log::warning("No FOSA account for member {$memberDividend->member_id}");
+                    $dividendAccount = $accountId
+                        ? Account::where('id', $accountId)->where('is_active', true)->first()
+                        : null;
+
+                    if (! $dividendAccount) {
+                        Log::warning("No configured dividend account for member {$memberDividend->member_id}");
                         $failedCount++;
                         continue;
                     }
@@ -602,12 +609,12 @@ class DividendController extends Controller
 
                     $transaction = Transaction::create([
                         'transaction_id'   => $this->generateTransactionId(),
-                        'account_id'       => $fosaAccount->id,
+                        'account_id'       => $dividendAccount->id,
                         'member_id'        => $memberDividend->member_id,
                         'transaction_type' => 'dividend_payment',
                         'amount'           => $netAmount,
-                        'balance_before'   => $fosaAccount->balance,
-                        'balance_after'    => $fosaAccount->balance + $netAmount,
+                        'balance_before'   => $dividendAccount->balance,
+                        'balance_after'    => $dividendAccount->balance + $netAmount,
                         'description'      => "Dividend net credit for year {$dividend->dividend_year}",
                         'reference_number' => "DIV-{$dividend->dividend_year}-{$memberDividend->member->membership_id}",
                         'payment_method'   => 'system_transfer',
@@ -616,9 +623,9 @@ class DividendController extends Controller
                         'processed_at'     => now(),
                     ]);
 
-                    $fosaAccount->update([
-                        'balance'              => $fosaAccount->balance + $netAmount,
-                        'available_balance'    => $fosaAccount->available_balance + $netAmount,
+                    $dividendAccount->update([
+                        'balance'              => $dividendAccount->balance + $netAmount,
+                        'available_balance'    => $dividendAccount->available_balance + $netAmount,
                         'last_transaction_at'  => now(),
                     ]);
 
@@ -813,25 +820,27 @@ class DividendController extends Controller
         try {
             DB::beginTransaction();
 
-            $fosaAccount = Account::where('member_id', $member->id)
-                ->where('account_type', 'fosa')
-                ->where('is_active', true)
-                ->first();
+            $accountId = $member->financeConfig?->dividend_account_id;
 
-            if (! $fosaAccount) {
-                return back()->with('error', 'Member does not have an active FOSA account.');
+            $dividendAccount = $accountId
+                ? Account::where('id', $accountId)->where('is_active', true)->first()
+                : null;
+
+            if (! $dividendAccount) {
+                DB::rollBack();
+                return back()->with('error', 'Member does not have a configured dividend payout account.');
             }
 
             $netAmount = $memberDividend->dividend_amount;
 
             $transaction = Transaction::create([
                 'transaction_id'   => $this->generateTransactionId(),
-                'account_id'       => $fosaAccount->id,
+                'account_id'       => $dividendAccount->id,
                 'member_id'        => $member->id,
                 'transaction_type' => 'dividend_payment',
                 'amount'           => $netAmount,
-                'balance_before'   => $fosaAccount->balance,
-                'balance_after'    => $fosaAccount->balance + $netAmount,
+                'balance_before'   => $dividendAccount->balance,
+                'balance_after'    => $dividendAccount->balance + $netAmount,
                 'description'      => "Dividend net credit for year {$dividend->dividend_year}",
                 'reference_number' => "DIV-{$dividend->dividend_year}-{$member->membership_id}",
                 'payment_method'   => 'system_transfer',
@@ -840,9 +849,9 @@ class DividendController extends Controller
                 'processed_at'     => now(),
             ]);
 
-            $fosaAccount->update([
-                'balance'             => $fosaAccount->balance + $netAmount,
-                'available_balance'   => $fosaAccount->available_balance + $netAmount,
+            $dividendAccount->update([
+                'balance'             => $dividendAccount->balance + $netAmount,
+                'available_balance'   => $dividendAccount->available_balance + $netAmount,
                 'last_transaction_at' => now(),
             ]);
 
@@ -854,7 +863,7 @@ class DividendController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Member dividend paid successfully to FOSA account.');
+            return back()->with('success', 'Member dividend paid successfully to their dividend account.');
 
         } catch (\Exception $e) {
             DB::rollback();

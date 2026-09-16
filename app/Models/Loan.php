@@ -56,6 +56,12 @@ class Loan extends Model
         return $this->hasMany(LoanGuarantor::class);
     }
 
+    public function isFullyGuaranteed(): bool
+    {
+        return $this->guarantors()->where('status', '!=', 'approved')->count() === 0;
+    }
+
+
     public function repayments()
     {
         return $this->hasMany(LoanRepayment::class);

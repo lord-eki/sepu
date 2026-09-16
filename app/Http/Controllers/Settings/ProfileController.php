@@ -13,7 +13,7 @@ use Inertia\Response;
 use App\Models\Member;
 use App\Models\Account;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -220,8 +220,8 @@ class ProfileController extends Controller
         ]);
 
         // Delete old photo if it exists
-        if ($member->profile_photo && \Storage::disk('public')->exists($member->profile_photo)) {
-            \Storage::disk('public')->delete($member->profile_photo);
+        if ($member->profile_photo && Storage::disk('public')->exists($member->profile_photo)) {
+            Storage::disk('public')->delete($member->profile_photo);
         }
 
         // Store new photo
@@ -297,7 +297,7 @@ class ProfileController extends Controller
 
             return back()->with('success', 'Profile updated successfully.');
         } catch (\Throwable $e) {
-            \Log::error('Profile update failed', [
+            Log::error('Profile update failed', [
                 'user_id' => $user->id,
                 'error'   => $e->getMessage(),
             ]);
@@ -307,5 +307,4 @@ class ProfileController extends Controller
     }
 
 }
-
 
