@@ -9,10 +9,21 @@ import {
 import { type NavItem } from '@/types'
 import { Link, usePage } from '@inertiajs/vue3'
 import { ChevronDown, ChevronRight } from 'lucide-vue-next'
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 
 const props = defineProps<{ items: NavItem[] }>()
 const page = usePage()
+
+// Unread notification count, shared globally via HandleInertiaRequests
+// (page.props.notificationCounts.unread_notifications). Reactive, so it
+// updates as Inertia props change without needing a manual poll.
+const unreadNotificationCount = computed(() => {
+  const count = (page.props as any)?.notificationCounts?.unread_notifications
+  return typeof count === 'number' ? count : 0
+})
+
+const badgeCountFor = (routeName?: string) =>
+  routeName === 'notifications.index' ? unreadNotificationCount.value : 0
 
 // Track open dropdowns by title
 const openMenus = ref<Record<string, boolean>>({})
@@ -58,6 +69,12 @@ onMounted(setActiveParents)
               <div class="flex items-center gap-2">
                 <component :is="item.icon" class="h-4 w-4" />
                 <span>{{ item.title }}</span>
+                <span
+                  v-if="badgeCountFor(item.routeName) > 0"
+                  class="ml-1 inline-flex items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white dark:bg-orange-500"
+                >
+                  {{ badgeCountFor(item.routeName) > 99 ? '99+' : badgeCountFor(item.routeName) }}
+                </span>
               </div>
               <component :is="openMenus[item.title] ? ChevronDown : ChevronRight"
                 class="h-4 w-4 transition-transform" />
@@ -93,6 +110,12 @@ onMounted(setActiveParents)
             <Link :href="item.href" preserve-scroll preserve-state class="flex items-center gap-2">
             <component :is="item.icon" class="h-4 w-4" />
             <span>{{ item.title }}</span>
+            <span
+              v-if="badgeCountFor(item.routeName) > 0"
+              class="ml-1 inline-flex items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white dark:bg-orange-500"
+            >
+              {{ badgeCountFor(item.routeName) > 99 ? '99+' : badgeCountFor(item.routeName) }}
+            </span>
             </Link>
           </SidebarMenuButton>
         </template>
