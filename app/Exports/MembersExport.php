@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use App\Models\Member;
-use Maatwebsite\Excel\Excel;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
