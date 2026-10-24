@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureMemberAccess;
 use App\Http\Middleware\ForcePasswordChange;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'force.password.change' => ForcePasswordChange::class,
+            'member.owner' => EnsureMemberAccess::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

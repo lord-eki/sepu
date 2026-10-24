@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Loan;
+use App\Policies\LoanPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Define Gates based on user roles
+        Gate::policy(Loan::class,LoanPolicy::class);
+        
         Gate::define('view-dashboard', function ($user) {
             return in_array($user->role, ['admin', 'management', 'accountant', 'loan_officer', 'member']);
         });

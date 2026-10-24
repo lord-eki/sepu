@@ -40,15 +40,11 @@ require __DIR__ . '/auth.php';
 Route::get('/email/verify', function (Request $request) {
     return Inertia::render('auth/VerifyEmail', ['status' => session('status')]);
 })->middleware('auth')->name('verification.notice');
-
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
     return redirect('/dashboard');
 })->middleware(['auth', 'signed'])->name('verification.verify');
-
-Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-    ->middleware(['auth', 'throttle:6,1'])
-    ->name('verification.send');
+Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // Loan Calculator 
 Route::get('/loan-calculator', [LoanCalculatorController::class, 'index'])->name('loan-calculator.index');
@@ -73,96 +69,83 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
 
     Route::prefix('members')->name('members.')->group(function () {
 
-        // List / Create
-        Route::get('/',       [MemberController::class, 'index'])->name('index');
-        Route::get('/create', [MemberController::class, 'create'])->name('create');
-        Route::post('/',      [MemberController::class, 'store'])->name('store');
+        //  Staff-only lists and bulk tools
+        Route::middleware('role:admin,management,accountant,loan_officer')->group(function () {
+            Route::get('/',       [MemberController::class, 'index'])->name('index');
+            Route::get('/export', [MemberController::class, 'exportMembers'])->name('export');
+        });
 
-
-        // Import / Export
-        Route::get('/import',                   [MemberController::class, 'showImportForm'])->name('import.form');
-        Route::post('/import',                  [MemberController::class, 'bulkImport'])->name('import');
-        Route::get('/import/template',          [MemberController::class, 'downloadTemplate'])->name('import.template');
-        Route::get('/export',                   [MemberController::class, 'exportMembers'])->name('export');
-
-        // Deposits bulk import
-        Route::get('/deposits/import',          [MemberController::class, 'showDepositsImportForm'])->name('deposits.import.form');
-        Route::post('/deposits/import',         [MemberController::class, 'importDeposits'])->name('deposits.import');
-        Route::get('/deposits/import/template', [MemberController::class, 'downloadDepositsTemplate'])->name('deposits.import.template');
-
-        // Non-member-bound POST actions 
-        Route::post('/confirm-payment',  [MemberController::class, 'confirmPayment'])->name('confirm-payment');
-        Route::post('/check-activation', [MemberController::class, 'checkActivation'])->name('check-activation');
-
-
-        // CRUD
-        Route::get('/{member}',      [MemberController::class, 'show'])->name('show');
-        Route::get('/{member}/edit', [MemberController::class, 'edit'])->name('edit');
-        Route::put('/{member}',      [MemberController::class, 'update'])->name('update');
-        Route::delete('/{member}',   [MemberController::class, 'destroy'])->middleware('role:admin')->name('destroy');
-
-        // Status actions
         Route::middleware('role:admin,management')->group(function () {
+            Route::get('/create', [MemberController::class, 'create'])->name('create');
+            Route::post('/',      [MemberController::class, 'store'])->name('store');
+            Route::get('/import',          [MemberController::class, 'showImportForm'])->name('import.form');
+            Route::post('/import',         [MemberController::class, 'bulkImport'])->name('import');
+            Route::get('/import/template', [MemberController::class, 'downloadTemplate'])->name('import.template');
+            Route::post('/confirm-payment',  [MemberController::class, 'confirmPayment'])->name('confirm-payment');
+            Route::post('/check-activation', [MemberController::class, 'checkActivation'])->name('check-activation');
+        });
+
+        Route::middleware('role:admin,management,accountant')->group(function () {
+            Route::get('/deposits/import',          [MemberController::class, 'showDepositsImportForm'])->name('deposits.import.form');
+            Route::post('/deposits/import',         [MemberController::class, 'importDeposits'])->name('deposits.import');
+            Route::get('/deposits/import/template', [MemberController::class, 'downloadDepositsTemplate'])->name('deposits.import.template');
+        });
+
+
+        Route::middleware('member.owner')->group(function () {
+            Route::get('/{member}',              [MemberController::class, 'show'])->name('show');
+            Route::get('/{member}/accounts',     [MemberController::class, 'accounts'])->name('accounts');
+            Route::get('/{member}/transactions', [MemberController::class, 'transactions'])->name('transactions');
+            Route::get('/{member}/loans',        [MemberController::class, 'loans'])->name('loans');
+            Route::get('/{member}/dividends',    [MemberController::class, 'dividends'])->name('dividends');
+            Route::get('/{member}/guarantees',   [MemberController::class, 'guarantees'])->name('guarantees');
+        });
+
+        //  Staff-only edits and status actions
+        Route::middleware('role:admin,management')->group(function () {
+            Route::get('/{member}/edit', [MemberController::class, 'edit'])->name('edit');
+            Route::put('/{member}',      [MemberController::class, 'update'])->name('update');
             Route::post('/{member}/activate',   [MemberController::class, 'activate'])->name('activate');
             Route::post('/{member}/deactivate', [MemberController::class, 'deactivate'])->name('deactivate');
             Route::post('/{member}/approve',    [MemberController::class, 'approve'])->name('approve');
             Route::post('/{member}/reject',     [MemberController::class, 'reject'])->name('reject');
             Route::post('/{member}/suspend',    [MemberController::class, 'suspend'])->name('suspend');
         });
+        Route::delete('/{member}', [MemberController::class, 'destroy'])->middleware('role:admin')->name('destroy');
 
-        // Related data
-        Route::get('/{member}/accounts',     [MemberController::class, 'accounts'])->name('accounts');
-        Route::get('/{member}/transactions', [MemberController::class, 'transactions'])->name('transactions');
-        Route::get('/{member}/loans',        [MemberController::class, 'loans'])->name('loans');
-        Route::get('/{member}/dividends',    [MemberController::class, 'dividends'])->name('dividends');
-        Route::get('/{member}/guarantees',   [MemberController::class, 'guarantees'])->name('guarantees');
+        //  Next of kin and documents
+        Route::middleware('member.owner:admin,management')->group(function () {
+            Route::get('/{member}/next-of-kin',                [MemberController::class, 'nextOfKin'])->name('next-of-kin');
+            Route::post('/{member}/next-of-kin',               [MemberController::class, 'storeNextOfKin'])->name('store-next-of-kin');
+            Route::put('/{member}/next-of-kin/{nextOfKin}',    [MemberController::class, 'updateNextOfKin'])->name('update-next-of-kin');
+            Route::delete('/{member}/next-of-kin/{nextOfKin}', [MemberController::class, 'destroyNextOfKin'])->name('destroy-next-of-kin');
 
-        // Next of kin
-        Route::get('/{member}/next-of-kin',                [MemberController::class, 'nextOfKin'])->name('next-of-kin');
-        Route::post('/{member}/next-of-kin',               [MemberController::class, 'storeNextOfKin'])->name('store-next-of-kin');
-        Route::put('/{member}/next-of-kin/{nextOfKin}',    [MemberController::class, 'updateNextOfKin'])->name('update-next-of-kin');
-        Route::delete('/{member}/next-of-kin/{nextOfKin}', [MemberController::class, 'destroyNextOfKin'])->name('destroy-next-of-kin');
+            Route::post('/{member}/documents',              [MemberController::class, 'uploadDocuments'])->name('upload-documents');
+            Route::delete('/{member}/documents/{document}', [MemberController::class, 'deleteDocument'])->name('delete-document');
+        });
 
-        // Documents
-        Route::post('/{member}/documents',              [MemberController::class, 'uploadDocuments'])->name('upload-documents');
-        Route::delete('/{member}/documents/{document}', [MemberController::class, 'deleteDocument'])->name('delete-document');
+        //  Deposit commitments and finance config
+        Route::middleware('member.owner:admin,management,accountant')->group(function () {
+            Route::get('/{member}/deposit-commitments', [MemberDepositCommitmentController::class, 'index'])->name('deposit-commitments.index');
+            Route::post('/{member}/deposit-commitments', [MemberDepositCommitmentController::class, 'store'])->name('deposit-commitments.store');
+            Route::put('/{member}/deposit-commitments/{commitment}', [MemberDepositCommitmentController::class, 'update'])->name('deposit-commitments.update');
+            Route::delete('/{member}/deposit-commitments/{commitment}', [MemberDepositCommitmentController::class, 'destroy'])->name('deposit-commitments.destroy');
+            Route::patch('/{member}/deposit-commitments/{commitment}/toggle', [MemberDepositCommitmentController::class, 'toggle'])->name('deposit-commitments.toggle');
+        });
 
-        // Deposit commitments 
-        Route::get(
-            '/{member}/deposit-commitments',
-            [MemberDepositCommitmentController::class, 'index']
-        )->name('deposit-commitments.index');
-        Route::post(
-            '/{member}/deposit-commitments',
-            [MemberDepositCommitmentController::class, 'store']
-        )->name('deposit-commitments.store');
-        Route::put(
-            '/{member}/deposit-commitments/{commitment}',
-            [MemberDepositCommitmentController::class, 'update']
-        )->name('deposit-commitments.update');
-        Route::delete(
-            '/{member}/deposit-commitments/{commitment}',
-            [MemberDepositCommitmentController::class, 'destroy']
-        )->name('deposit-commitments.destroy');
-        Route::patch(
-            '/{member}/deposit-commitments/{commitment}/toggle',
-            [MemberDepositCommitmentController::class, 'toggle']
-        )->name('deposit-commitments.toggle');
-
-
-        Route::post(
-            '/{member}/finance-config',
-            [MemberFinanceConfigController::class, 'save']
-        )->name('finance-config.save');
+        Route::post('/{member}/finance-config', [MemberFinanceConfigController::class, 'save'])
+            ->middleware('role:admin,management,accountant')
+            ->name('finance-config.save');
     });
 
     // Loan eligibility
     Route::post('members/loans/check-eligibility', [LoanController::class, 'checkEligibility'])
         ->name('members.loans.check-eligibility');
     Route::get('/members/{member}/loan-eligibility', [MemberController::class, 'loanEligibility'])
+        ->middleware('member.owner')
         ->name('members.loan-eligibility');
 
-    // ── System Users
+    //  System Users
     Route::middleware('role:admin')->prefix('system-users')->name('system-users.')->group(function () {
         Route::get('/',                               [SystemUserController::class, 'index'])->name('index');
         Route::get('/create',                         [SystemUserController::class, 'create'])->name('create');
@@ -177,7 +160,7 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::post('/bulk-action',                   [SystemUserController::class, 'bulkAction'])->name('bulk-action');
     });
 
-    // ── Accounts & Shares 
+    //  Accounts & Shares 
     Route::prefix('accounts')->name('accounts.')->group(function () {
 
         Route::middleware('role:accountant,admin,management')->group(function () {
@@ -188,17 +171,14 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
             Route::get('/{account}/edit', [AccountController::class, 'edit'])->name('edit');
             Route::put('/{account}',      [AccountController::class, 'update'])->name('update');
             Route::delete('/{account}',   [AccountController::class, 'destroy'])->middleware('role:admin')->name('destroy');
-
             Route::post('/{account}/activate',    [AccountController::class, 'activate'])->name('activate');
             Route::post('/{account}/deactivate',  [AccountController::class, 'deactivate'])->name('deactivate');
             Route::get('/{account}/transactions', [AccountController::class, 'transactions'])->name('transactions');
             Route::get('/{account}/statement',    [AccountController::class, 'statement'])->name('statement');
-
             Route::get('/{account}/deposit',         [AccountController::class, 'showDeposit'])->name('deposit.show');
             Route::post('/{account}/deposit',        [AccountController::class, 'deposit'])->name('deposit');
             Route::get('/{account}/withdrawal',      [AccountController::class, 'showWithdrawal'])->name('withdrawal.show');
             Route::post('/{account}/withdrawal',     [AccountController::class, 'withdrawal'])->name('withdrawal');
-
             Route::get('/{account}/share-transfer',  [AccountController::class, 'showShareTransfer'])->name('share-transfer.show');
             Route::post('/{account}/share-transfer', [AccountController::class, 'shareTransfer'])->name('share-transfer');
         });
@@ -210,7 +190,7 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         });
     });
 
-    // ── Loan Products 
+    //  Loan Products 
     Route::prefix('loan-products')->name('loan-products.')->middleware('role:admin,management')->group(function () {
         Route::get('/',                             [LoanProductController::class, 'index'])->name('index');
         Route::get('/create',                       [LoanProductController::class, 'create'])->name('create');
@@ -222,38 +202,32 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::post('/{loanProduct}/toggle-status', [LoanProductController::class, 'toggleStatus'])->name('toggle-status');
     });
 
-    // ── Loans
+    //  Loans
     Route::prefix('loans')->name('loans.')->group(function () {
-        Route::get('/guarantors', [LoanController::class, 'allGuarantees'])
-            ->name('all-guarantors');
+        Route::get('/guarantors', [LoanController::class, 'allGuarantees'])->middleware('role:admin,management,accountant,loan_officer')->name('all-guarantors');
         Route::get('/',            [LoanController::class, 'index'])->name('index');
-        Route::get('/create',      [LoanController::class, 'create'])->name('create');
-        Route::post('/',           [LoanController::class, 'store'])->name('store');
+        Route::get('/create', [LoanController::class, 'create'])->middleware('role:member,admin,loan_officer')->name('create');
+        Route::post('/',      [LoanController::class, 'store'])->middleware('role:member,admin,loan_officer')->name('store');
         Route::get('/{loan}',      [LoanController::class, 'show'])->name('show');
         Route::get('/{loan}/edit', [LoanController::class, 'edit'])->name('edit');
         Route::put('/{loan}',      [LoanController::class, 'update'])->name('update');
         Route::delete('/{loan}',   [LoanController::class, 'destroy'])->name('destroy');
-
         Route::post('/{loan}/submit',   [LoanController::class, 'submit'])->name('submit');
         Route::post('/{loan}/review',   [LoanController::class, 'review'])->name('review');
         Route::post('/{loan}/approve',  [LoanController::class, 'approve'])->middleware('can:approve-loans')->name('approve');
         Route::post('/{loan}/reject',   [LoanController::class, 'reject'])->middleware('can:approve-loans')->name('reject');
         Route::post('/{loan}/disburse', [LoanController::class, 'disburse'])->middleware('can:process-transactions')->name('disburse');
-
         Route::get('/{loan}/schedule',   [LoanController::class, 'schedule'])->name('schedule');
         Route::get('/{loan}/repayments', [LoanController::class, 'repayments'])->name('repayments');
         Route::post('/{loan}/repayment', [LoanController::class, 'recordRepayment'])->name('record-repayment');
         Route::get('/{loan}/statement',  [LoanController::class, 'statement'])->name('statement');
-
         Route::get('/{loan}/guarantors',                     [LoanController::class, 'guarantors'])->name('guarantors');
         Route::post('/{loan}/guarantors',                    [LoanController::class, 'addGuarantor'])->name('add-guarantor');
         Route::delete('/{loan}/guarantors/{guarantor}',      [LoanController::class, 'removeGuarantor'])->name('remove-guarantor');
         Route::post('/{loan}/guarantors/{guarantor}/accept', [LoanController::class, 'acceptGuarantee'])->name('accept-guarantee');
         Route::post('/{loan}/guarantors/{guarantor}/reject', [LoanController::class, 'rejectGuarantee'])->name('reject-guarantee');
-
         Route::post('/{loan}/restructure', [LoanController::class, 'restructure'])->name('restructure');
         Route::post('/{loan}/write-off',   [LoanController::class, 'writeOff'])->name('write-off');
-
         Route::get('/products',                [LoanController::class, 'products'])->name('products');
         Route::get('/products/create',         [LoanController::class, 'createProduct'])->name('products.create');
         Route::post('/products',               [LoanController::class, 'storeProduct'])->name('products.store');
@@ -261,13 +235,12 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::get('/products/{product}/edit', [LoanController::class, 'editProduct'])->name('products.edit');
         Route::put('/products/{product}',      [LoanController::class, 'updateProduct'])->name('products.update');
         Route::delete('/products/{product}',   [LoanController::class, 'destroyProduct'])->name('products.destroy');
-
         Route::get('/analytics/portfolio',   [LoanController::class, 'portfolio'])->name('analytics.portfolio');
         Route::get('/analytics/arrears',     [LoanController::class, 'arrears'])->name('analytics.arrears');
         Route::get('/analytics/performance', [LoanController::class, 'performance'])->name('analytics.performance');
     });
 
-    // ── Dividends 
+    //  Dividends 
     Route::prefix('dividends')->name('dividends.')->group(function () {
         Route::get('/',            [DividendController::class, 'index'])->name('index');
         Route::get('/create',      [DividendController::class, 'create'])->name('create');
@@ -276,23 +249,20 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::get('/{dividend}/edit', [DividendController::class, 'edit'])->name('edit');
         Route::put('/{dividend}',      [DividendController::class, 'update'])->name('update');
         Route::delete('/{dividend}',   [DividendController::class, 'destroy'])->name('destroy');
-
         Route::post('/preview', [DividendController::class, 'preview'])->name('preview');
         Route::post('/calculate/{year}',           [DividendController::class, 'calculate'])->name('calculate');
         Route::post('/{dividend}/approve',          [DividendController::class, 'approve'])->name('approve');
         Route::post('/{dividend}/distribute',       [DividendController::class, 'distribute'])->name('distribute');
         Route::post('/{dividend}/reverse',          [DividendController::class, 'reverse'])->name('reverse');
-
         Route::get('/{dividend}/members',               [DividendController::class, 'members'])->name('members');
         Route::get('/{dividend}/members/{member}',      [DividendController::class, 'memberDetails'])->name('member-details');
         Route::post('/{dividend}/members/{member}/pay', [DividendController::class, 'payMemberDividend'])->name('pay-member');
-
         Route::get('/{dividend}/report',     [DividendController::class, 'report'])->name('report');
         Route::get('/analytics/history',     [DividendController::class, 'history'])->name('analytics.history');
         Route::get('/analytics/projections', [DividendController::class, 'projections'])->name('analytics.projections');
     });
 
-    // ── Budgets 
+    //  Budgets 
     Route::prefix('budgets')->name('budgets.')->group(function () {
         Route::get('/',            [BudgetController::class, 'index'])->name('index');
         Route::get('/create',      [BudgetController::class, 'create'])->name('create');
@@ -301,43 +271,29 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::get('/{budget}/edit', [BudgetController::class, 'edit'])->name('edit');
         Route::put('/{budget}',      [BudgetController::class, 'update'])->name('update');
         Route::delete('/{budget}',   [BudgetController::class, 'destroy'])->name('destroy');
-
         Route::post('/{budget}/submit',   [BudgetController::class, 'submit'])->name('submit');
         Route::post('/{budget}/approve',  [BudgetController::class, 'approve'])->name('approve');
         Route::post('/{budget}/activate', [BudgetController::class, 'activate'])->name('activate');
         Route::post('/{budget}/close',    [BudgetController::class, 'close'])->name('close');
-
         Route::get('/{budget}/items',           [BudgetController::class, 'items'])->name('items');
         Route::post('/{budget}/items',          [BudgetController::class, 'storeItem'])->name('store-item');
         Route::put('/{budget}/items/{item}',    [BudgetController::class, 'updateItem'])->name('update-item');
         Route::delete('/{budget}/items/{item}', [BudgetController::class, 'destroyItem'])->name('destroy-item');
-
         Route::get('/{budget}/variance',    [BudgetController::class, 'variance'])->name('variance');
         Route::get('/{budget}/utilization', [BudgetController::class, 'utilization'])->name('utilization');
     });
 
-    // ── Chart of Accounts 
+    //  Chart of Accounts 
     Route::prefix('chart-of-accounts')->name('chart-of-accounts.')->group(function () {
-
         Route::get('/',       [ChartOfAccountController::class, 'index'])->name('index');
         Route::get('/create', [ChartOfAccountController::class, 'create'])->name('create');
         Route::post('/',      [ChartOfAccountController::class, 'store'])->name('store');
-
         Route::get('/{chartOfAccount}',      [ChartOfAccountController::class, 'show'])->name('show');
         Route::get('/{chartOfAccount}/edit', [ChartOfAccountController::class, 'edit'])->name('edit');
         Route::put('/{chartOfAccount}',      [ChartOfAccountController::class, 'update'])->name('update');
         Route::delete('/{chartOfAccount}',   [ChartOfAccountController::class, 'destroy'])->name('destroy');
-
-        Route::post(
-            '/{chartOfAccount}/toggle-active',
-            [ChartOfAccountController::class, 'toggleActive']
-        )->name('toggle-active');
-
-        Route::get(
-            '/api/postable',
-            [ChartOfAccountController::class, 'postableAccounts']
-        )->name('api.postable');
-
+        Route::post('/{chartOfAccount}/toggle-active', [ChartOfAccountController::class, 'toggleActive'])->name('toggle-active');
+        Route::get('/api/postable', [ChartOfAccountController::class, 'postableAccounts'])->name('api.postable');
         Route::get('/api/budget-lines',  [ChartOfAccountController::class, 'budgetLineAccounts'])->name('api.budget-lines');
         Route::get('/api/tree',          [ChartOfAccountController::class, 'accountTree'])->name('api.tree');
         Route::get('/api/next-code',     [ChartOfAccountController::class, 'nextCode'])->name('api.next-code');
@@ -354,17 +310,11 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
             'update'  => 'coa.update',
             'destroy' => 'coa.destroy',
         ]);
-        Route::post(
-            'chart-of-accounts/{chartOfAccount}/toggle-active',
-            [ChartOfAccountController::class, 'toggleActive']
-        )->name('coa.toggle-active');
-        Route::get(
-            'api/postable-accounts',
-            [ChartOfAccountController::class, 'postableAccounts']
-        )->name('coa.postable-accounts');
+        Route::post('chart-of-accounts/{chartOfAccount}/toggle-active', [ChartOfAccountController::class, 'toggleActive'])->name('coa.toggle-active');
+        Route::get('api/postable-accounts', [ChartOfAccountController::class, 'postableAccounts'])->name('coa.postable-accounts');
     });
 
-    // ── Payment Vouchers
+    //  Payment Vouchers
     Route::prefix('vouchers')->name('vouchers.')->group(function () {
         Route::get('/',            [PaymentVoucherController::class, 'index'])->name('index');
         Route::get('/create',      [PaymentVoucherController::class, 'create'])->name('create');
@@ -373,7 +323,6 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::get('/{voucher}/edit', [PaymentVoucherController::class, 'edit'])->name('edit');
         Route::put('/{voucher}',      [PaymentVoucherController::class, 'update'])->name('update');
         Route::delete('/{voucher}',   [PaymentVoucherController::class, 'destroy'])->name('destroy');
-
         Route::post('/{voucher}/submit',    [PaymentVoucherController::class, 'submit'])->name('submit');
         Route::post('/{voucher}/approve',   [PaymentVoucherController::class, 'approve'])->name('approve');
         Route::post('/{voucher}/reject',    [PaymentVoucherController::class, 'reject'])->name('reject');
@@ -381,42 +330,35 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::post('/{voucher}/cancel',    [PaymentVoucherController::class, 'cancel'])->name('cancel');
         Route::post('/{voucher}/duplicate', [PaymentVoucherController::class, 'duplicate'])->name('duplicate');
         Route::get('/{voucher}/pdf',        [PaymentVoucherController::class, 'downloadPdf'])->name('pdf');
-
         Route::post('/{voucher}/documents',              [PaymentVoucherController::class, 'uploadDocuments'])->name('upload-documents');
         Route::delete('/{voucher}/documents/{document}', [PaymentVoucherController::class, 'deleteDocument'])->name('delete-document');
-
         Route::get('/reports/pending',  [PaymentVoucherController::class, 'pendingReport'])->name('reports.pending');
         Route::get('/reports/approved', [PaymentVoucherController::class, 'approvedReport'])->name('reports.approved');
         Route::get('/reports/paid',     [PaymentVoucherController::class, 'paidReport'])->name('reports.paid');
     });
 
-    // ── Reports 
-    Route::prefix('reports')->name('reports.')->group(function () {
+    //  Reports 
+    Route::prefix('reports')->name('reports.')->middleware('can:generate-reports')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
-
         Route::get('/financial',                  [ReportController::class, 'financialIndex'])->name('financial.index');
         Route::get('/financial/balance-sheet',    [ReportController::class, 'balanceSheet'])->name('financial.balance-sheet');
         Route::get('/financial/income-statement', [ReportController::class, 'incomeStatement'])->name('financial.income-statement');
         Route::get('/financial/cash-flow',        [ReportController::class, 'cashFlow'])->name('financial.cash-flow');
         Route::get('/financial/trial-balance',    [ReportController::class, 'trialBalance'])->name('financial.trial-balance');
-
         Route::get('/members/report',   [ReportController::class, 'memberIndex'])->name('membersReport.index');
         Route::get('/members/register', [ReportController::class, 'memberRegister'])->name('members.register');
         Route::get('/members/shares',   [ReportController::class, 'memberShares'])->name('members.shares');
         Route::get('/members/savings',  [ReportController::class, 'memberSavings'])->name('members.savings');
         Route::get('/members/loans',    [ReportController::class, 'memberLoans'])->name('members.loans');
-
         Route::get('/loans/report',       [ReportController::class, 'loanIndex'])->name('loansReport.index');
         Route::get('/loans/portfolio',    [ReportController::class, 'loanPortfolio'])->name('loans.portfolio');
         Route::get('/loans/arrears',      [ReportController::class, 'loanArrears'])->name('loans.arrears');
         Route::get('/loans/disbursement', [ReportController::class, 'loanDisbursement'])->name('loans.disbursement');
         Route::get('/loans/collection',   [ReportController::class, 'loanCollection'])->name('loans.collection');
-
         Route::get('/transactions/report',   [ReportController::class, 'transactionIndex'])->name('transactionsReport.index');
         Route::get('/transactions/daily',    [ReportController::class, 'dailyTransactions'])->name('transactions.daily');
         Route::get('/transactions/monthly',  [ReportController::class, 'monthlyTransactions'])->name('transactions.monthly');
         Route::get('/transactions/annual',   [ReportController::class, 'annualTransactions'])->name('transactions.annual');
-
         Route::get('/regulatory/report',     [ReportController::class, 'RegulatoryIndex'])->name('regulatoryReport.index');
         Route::get('/regulatory/statutory',  [ReportController::class, 'statutoryReports'])->name('regulatory.statutory');
         Route::get('/regulatory/compliance', [ReportController::class, 'complianceReports'])->name('regulatory.compliance');
@@ -426,22 +368,20 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::get('/export',           [ReportController::class, 'exportReport'])->name('export');
     });
 
-    // ── Notifications 
+    // Notifications 
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/',                     [NotificationController::class, 'index'])->name('index');
         Route::get('/{notification}',       [NotificationController::class, 'show'])->name('show');
         Route::post('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
         Route::post('/mark-all-read',       [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
         Route::delete('/{notification}',    [NotificationController::class, 'destroy'])->name('destroy');
-
         Route::get('/settings',  [NotificationController::class, 'settings'])->name('settings');
         Route::post('/settings', [NotificationController::class, 'updateSettings'])->name('update-settings');
-
         Route::get('/bulk/create', [NotificationController::class, 'createBulk'])->name('bulk.create');
         Route::post('/bulk/send',  [NotificationController::class, 'sendBulk'])->name('bulk.send');
     });
 
-    // ── Admin System Settings 
+    //  Admin System Settings 
     Route::prefix('admin/settings')->name('admin.settings.')->middleware('role:admin')->group(function () {
         Route::get('/',              [SettingsController::class, 'index'])->name('index');
         Route::get('/general',       [SettingsController::class, 'general'])->name('general');
@@ -459,24 +399,20 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::post('/backup/restore', [SettingsController::class, 'restoreBackup'])->name('restore-backup');
     });
 
-    // ── Internal API 
-    Route::prefix('api')->name('api.')->group(function () {
+    //  Internal API 
+    Route::prefix('api')->name('api.')->middleware('role:admin,management,accountant,loan_officer')->group(function () {
         Route::get('/search/members',  [MemberController::class, 'searchMembers'])->name('search.members');
         Route::get('/search/accounts', [AccountController::class, 'searchAccounts'])->name('search.accounts');
         Route::get('/search/loans',    [LoanController::class, 'searchLoans'])->name('search.loans');
-
         Route::get('/stats/dashboard',    [ReportController::class, 'dashboardStats'])->name('stats.dashboard');
         Route::get('/stats/members',      [MemberController::class, 'memberStats'])->name('stats.members');
         Route::get('/stats/loans',        [LoanController::class, 'loanStats'])->name('stats.loans');
         Route::get('/stats/transactions', [TransactionController::class, 'transactionStats'])->name('stats.transactions');
-
         Route::post('/validate/member-id',        [MemberController::class, 'validateMemberId'])->name('validate.member-id');
         Route::post('/validate/account-number',   [AccountController::class, 'validateAccountNumber'])->name('validate.account-number');
         Route::post('/validate/loan-eligibility', [LoanController::class, 'validateLoanEligibility'])->name('validate.loan-eligibility');
-
         Route::post('/calculate/loan-schedule',       [LoanController::class, 'calculateLoanSchedule'])->name('calculate.loan-schedule');
         Route::post('/calculate/dividend-projection', [DividendController::class, 'calculateDividendProjection'])->name('calculate.dividend-projection');
-
         Route::get('/export/members',              [MemberController::class, 'exportMembers'])->name('export.members');
         Route::get('/export/transactions',         [TransactionController::class, 'exportTransactions'])->name('export.transactions');
         Route::get('/export/loans',                [LoanController::class, 'exportLoans'])->name('export.loans');
@@ -491,27 +427,18 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     // ── Schedules 
     Route::prefix('schedule')->name('schedule.')->middleware('role:admin,accountant')->group(function () {
         Route::get('/', [ScheduleController::class, 'index'])->name('index');
-
-        // Monthly Deposits
         Route::get('/monthly-deposit',          [ScheduleController::class, 'monthlyDeposit'])->name('monthly-deposit');
         Route::post('/monthly-deposit/preview', [ScheduleController::class, 'previewMonthlyDeposits'])->name('monthly-deposit.preview');
         Route::post('/monthly-deposit/run',     [ScheduleController::class, 'runMonthlyDeposits'])->name('monthly-deposit.run');
-
-        //  Loan Repayments
         Route::get('/loan-repayment',       [ScheduleController::class, 'loanRepayment'])->name('loan-repayment');
         Route::post('/loan-repayment/run',  [ScheduleController::class, 'runLoanRepayments'])->name('loan-repayment.run');
-
-        //  Loan Disbursements
         Route::get('/loan-disbursement',         [ScheduleController::class, 'loanDisbursement'])->name('loan-disbursement');
         Route::post('/loan-disbursement/run',    [ScheduleController::class, 'runLoanDisbursements'])->name('loan-disbursement.run');
         Route::get('/loan-disbursement/export',  [ScheduleController::class, 'exportLoanDisbursement'])->name('loan-disbursement.export');
-
-        //  Dividend Payments
         Route::get('/dividend-payment',       [ScheduleController::class, 'dividendPayment'])->name('dividend-payment');
         Route::post('/dividend-payment/run',  [ScheduleController::class, 'runDividendPayments'])->name('dividend-payment.run');
     });
 
-    //Admin quick pages 
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::get('pending-members',      [DashboardController::class, 'pendingMembersPage'])->name('admin.pending-members');
         Route::get('pending-members/list', [DashboardController::class, 'pendingMembers']);
@@ -532,49 +459,28 @@ Route::middleware('role:member')->group(function () {
     Route::get('/my-loans', function () {
         return redirect()->route('members.loans', Auth::user()->member);
     })->name('my-loans');
-
     Route::get('/my-accounts', function () {
         return redirect()->route('members.accounts', Auth::user()->member);
     })->name('my-accounts');
-
     Route::get('/my-dividends', function () {
         return redirect()->route('members.dividends', Auth::user()->member);
     })->name('my-dividends');
-
     Route::get('/my-transactions', function () {
         return redirect()->route('members.transactions', Auth::user()->member);
     })->name('my-transactions');
-    Route::get(
-        '/my-transactions/statement',
-        [TransactionController::class, 'myStatement']
-    )->name('my-transactions.statement');
-
-    Route::get(
-        '/my-transactions/statement/pdf',
-        [TransactionController::class, 'myStatementPdf']
-    )->name('my-transactions.statement.pdf');
+    Route::get('/my-transactions/statement', [TransactionController::class, 'myStatement'])->name('my-transactions.statement');
+    Route::get('/my-transactions/statement/pdf', [TransactionController::class, 'myStatementPdf'])->name('my-transactions.statement.pdf');
 });
 
-Route::middleware(['auth', 'role:member'])->group(function () {
-    Route::get('/{member}/my-accounts/{account}/statement', [AccountController::class, 'myStatement'])
-        ->name('my-accounts.statement');
+Route::middleware(['auth', 'force.password.change', 'role:member', 'member.owner'])->group(function () {
+    Route::get('/{member}/my-accounts/{account}/statement', [AccountController::class, 'myStatement'])->name('my-accounts.statement');
+    Route::get('/members/{member}/accounts/{account}/deposit',  [MemberController::class, 'showDeposit'])->name('members.accounts.deposit.show');
+    Route::post('/members/{member}/accounts/{account}/deposit', [MemberController::class, 'deposit'])->name('members.accounts.deposit');
+    Route::get('/members/{member}/accounts/{account}/withdrawal',  [MemberController::class, 'showWithdrawal'])->name('members.accounts.withdrawal.show');
+    Route::post('/members/{member}/accounts/{account}/withdrawal', [MemberController::class, 'withdrawal'])->name('members.accounts.withdrawal');
 });
 
-Route::get('/my-accounts/{account}/statement/pdf', [AccountController::class, 'statementPdf'])
-    ->middleware(['auth', 'role:member'])
-    ->name('my-accounts.statement.pdf');
-
-Route::middleware('role:member')->prefix('members')->name('members.')->group(function () {
-    Route::get('/{member}/accounts/{account}/deposit',  [MemberController::class, 'showDeposit'])->name('accounts.deposit.show');
-    Route::post('/{member}/accounts/{account}/deposit', [MemberController::class, 'deposit'])->name('accounts.deposit');
-});
-
-Route::middleware(['auth', 'role:member'])->group(function () {
-    Route::get('/members/{member}/accounts/{account}/withdrawal',  [MemberController::class, 'showWithdrawal'])
-        ->name('members.accounts.withdrawal.show');
-    Route::post('/members/{member}/accounts/{account}/withdrawal', [MemberController::class, 'withdrawal'])
-        ->name('members.accounts.withdrawal');
-});
+Route::get('/my-accounts/{account}/statement/pdf', [AccountController::class, 'statementPdf'])->middleware(['auth', 'force.password.change', 'role:member'])->name('my-accounts.statement.pdf');
 
 
 
@@ -592,14 +498,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     Route::post('/member/profile/photo', [ProfileController::class, 'updatePhoto'])->name('member.updatePhoto');
 });
 
 Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {
     Route::middleware('can:process-transactions')->group(function () {
-        Route::resource('transactions', TransactionController::class)
-            ->only(['create', 'store', 'edit', 'update', 'destroy']);
+        Route::resource('transactions', TransactionController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
         Route::post('/transactions/{id}/approve', [TransactionController::class, 'approve'])->name('transactions.approve');
         Route::post('/transactions/{id}/reject',  [TransactionController::class, 'reject'])->name('transactions.reject');
         Route::post('/transactions/{id}/reverse', [TransactionController::class, 'reverse'])->name('transactions.reverse');
@@ -618,9 +522,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::post('/members/assign-usernames', [MemberController::class, 'assignUsernames'])
-    ->middleware(['auth', 'role:admin'])
-    ->name('members.assignUsernames');
+Route::post('/members/assign-usernames', [MemberController::class, 'assignUsernames'])->middleware(['auth', 'role:admin'])->name('members.assignUsernames');
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/members/bulk-delete', [MemberController::class, 'bulkDelete'])->name('members.bulkDelete');
@@ -630,7 +532,7 @@ Route::redirect('/settings', '/settings/profile');
 
 
 
-Route::prefix('members/{member}/finance-setup')->name('members.finance-setup.')->middleware(['auth','role:admin,management,accountant'])->group(function () {
+Route::prefix('members/{member}/finance-setup')->name('members.finance-setup.')->middleware(['auth', 'role:admin,management,accountant'])->group(function () {
     Route::get('/',                       [MemberDepositCommitmentController::class, 'index'])->name('index');
     Route::post('/',                      [MemberDepositCommitmentController::class, 'store'])->name('store');
     Route::put('/{commitment}',           [MemberDepositCommitmentController::class, 'update'])->name('update');
@@ -640,18 +542,12 @@ Route::prefix('members/{member}/finance-setup')->name('members.finance-setup.')-
 
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
-
-Route::post('/members/{member}/reset-password', [MemberController::class, 'resetPassword'])
-    ->middleware(['auth','role:admin'])->name('members.reset-password');
-
-Route::post('/members/{member}/update-username', [MemberController::class, 'updateUsername'])
-    ->middleware(['auth','role:admin'])->name('members.update-username');
+Route::post('/members/{member}/reset-password', [MemberController::class, 'resetPassword'])->middleware(['auth', 'role:admin'])->name('members.reset-password');
+Route::post('/members/{member}/update-username', [MemberController::class, 'updateUsername'])->middleware(['auth', 'role:admin'])->name('members.update-username');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/change-password', [AuthenticatedSessionController::class, 'showChangePassword'])
-        ->name('password.change.form');
-    Route::post('/change-password', [AuthenticatedSessionController::class, 'updatePassword'])
-        ->name('password.change.update');
+    Route::get('/change-password', [AuthenticatedSessionController::class, 'showChangePassword'])->name('password.change.form');
+    Route::post('/change-password', [AuthenticatedSessionController::class, 'updatePassword'])->name('password.change.update');
 });
 
 
@@ -661,159 +557,37 @@ Route::middleware('auth')->group(function () {
     Route::get('/change-password', function () {
         return Inertia::render('auth/ChangePassword');
     })->name('password.change.form');
-
-    Route::post('/change-password', [AuthenticatedSessionController::class, 'updatePassword'])
-        ->name('password.change.update');
+    Route::post('/change-password', [AuthenticatedSessionController::class, 'updatePassword'])->name('password.change.update');
 });
 
 
 
-Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+Route::prefix('loan-migration')->name('loan-migration.')->middleware(['auth', 'verified', 'force.password.change', 'role:admin,loan_officer,accountant'])->group(function () {
 
-Route::get('/guarantor-requests/{loan}', [LoanController::class, 'guarantorRequestPage']);
-Route::get('/my-guarantees', [LoanController::class, 'myGuarantees'])->name('my-guarantees');
+    Route::get('/', [LoanMigrationController::class, 'index'])->name('index');
+    Route::get('/create', [LoanMigrationController::class, 'create'])->name('create');
+    Route::post('/', [LoanMigrationController::class, 'store'])->name('store');
+    Route::get('/{batch}', [LoanMigrationController::class, 'show'])->name('show');
+    Route::get('/{batch}/records', [LoanMigrationController::class, 'records'])->name('records.index');
+    Route::get('/{batch}/records/create', [LoanMigrationController::class, 'createRecord'])->name('records.create');
+    Route::post('/{batch}/records', [LoanMigrationController::class, 'storeRecord'])->name('records.store');
+    Route::get('/{batch}/records/{record}/edit', [LoanMigrationController::class, 'editRecord'])->name('records.edit');
+    Route::put('/{batch}/records/{record}', [LoanMigrationController::class, 'updateRecord'])->name('records.update');
+    Route::delete('/{batch}/records/{record}', [LoanMigrationController::class, 'destroyRecord'])->name('records.destroy');
+    Route::get('/{batch}/import', [LoanMigrationController::class, 'importForm'])->name('import');
+    Route::post('/{batch}/import/preview', [LoanMigrationController::class, 'previewImport'])->name('import.preview');
+    Route::post('/{batch}/import', [LoanMigrationController::class, 'import'])->name('import.store');
+    Route::post('/{batch}/validate', [LoanMigrationController::class, 'validateBatch'])->name('validate');
+    Route::get('/{batch}/validation-errors', [LoanMigrationController::class, 'validationErrors'])->name('validation-errors');
+    Route::post('/{batch}/submit', [LoanMigrationController::class, 'submit'])->name('submit');
+    Route::post('/{batch}/verify-accounts', [LoanMigrationController::class, 'verifyAccounts'])->name('verify-accounts');
+    Route::post('/{batch}/approve', [LoanMigrationController::class, 'approve'])->name('approve');
+    Route::post('/{batch}/process', [LoanMigrationController::class, 'process'])->name('process');
+    Route::get('/template/download', [LoanMigrationController::class, 'downloadTemplate'])->name('template.download');
+    Route::get('/{batch}/export', [LoanMigrationController::class, 'export'])->name('export');
+});
 
-
-
-Route::prefix('loan-migration')
-    ->name('loan-migration.')
-    ->middleware(['auth'])
-    ->group(function () {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Batch Management
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get('/', [
-            LoanMigrationController::class,
-            'index'
-        ])->name('index');
-
-        Route::get('/create', [
-            LoanMigrationController::class,
-            'create'
-        ])->name('create');
-
-        Route::post('/', [
-            LoanMigrationController::class,
-            'store'
-        ])->name('store');
-
-        Route::get('/{batch}', [
-            LoanMigrationController::class,
-            'show'
-        ])->name('show');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Loan Record Management
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get('/{batch}/records', [
-            LoanMigrationController::class,
-            'records'
-        ])->name('records.index');
-
-        Route::get('/{batch}/records/create', [
-            LoanMigrationController::class,
-            'createRecord'
-        ])->name('records.create');
-
-        Route::post('/{batch}/records', [
-            LoanMigrationController::class,
-            'storeRecord'
-        ])->name('records.store');
-
-        Route::get('/{batch}/records/{record}/edit', [
-            LoanMigrationController::class,
-            'editRecord'
-        ])->name('records.edit');
-
-        Route::put('/{batch}/records/{record}', [
-            LoanMigrationController::class,
-            'updateRecord'
-        ])->name('records.update');
-
-        Route::delete('/{batch}/records/{record}', [
-            LoanMigrationController::class,
-            'destroyRecord'
-        ])->name('records.destroy');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Import / Upload
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get('/{batch}/import', [LoanMigrationController::class, 'importForm'])->name('import');
-
-        Route::post('/{batch}/import/preview', [LoanMigrationController::class, 'previewImport'])->name('import.preview');
-
-        Route::post('/{batch}/import', [LoanMigrationController::class, 'import'])->name('import.store');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validation
-        |--------------------------------------------------------------------------
-        */
-
-        Route::post('/{batch}/validate', [
-            LoanMigrationController::class,
-            'validateBatch'
-        ])->name('validate');
-
-        Route::get('/{batch}/validation-errors', [
-            LoanMigrationController::class,
-            'validationErrors'
-        ])->name('validation-errors');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Workflow
-        |--------------------------------------------------------------------------
-        */
-
-        Route::post('/{batch}/submit', [
-            LoanMigrationController::class,
-            'submit'
-        ])->name('submit');
-
-        Route::post('/{batch}/verify-accounts', [
-            LoanMigrationController::class,
-            'verifyAccounts'
-        ])->name('verify-accounts');
-
-        Route::post('/{batch}/approve', [
-            LoanMigrationController::class,
-            'approve'
-        ])->name('approve');
-
-        Route::post('/{batch}/process', [
-            LoanMigrationController::class,
-            'process'
-        ])->name('process');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Downloads / Templates
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get('/template/download', [
-            LoanMigrationController::class,
-            'downloadTemplate'
-        ])->name('template.download');
-
-        Route::get('/{batch}/export', [
-            LoanMigrationController::class,
-            'export'
-        ])->name('export');
-    });
+Route::middleware(['auth', 'verified', 'force.password.change', 'role:member'])->group(function () {
+    Route::get('/guarantor-requests/{loan}', [LoanController::class, 'guarantorRequestPage']);
+    Route::get('/my-guarantees', [LoanController::class, 'myGuarantees'])->name('my-guarantees');
+});
