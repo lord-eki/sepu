@@ -612,7 +612,7 @@ class ReportController extends Controller
     /**
      * Transaction Reports
      */
-    public function TransactionIndex()
+    public function transactionIndex()
     {
         return Inertia::render('Reports/Transactions/Index');
     }
