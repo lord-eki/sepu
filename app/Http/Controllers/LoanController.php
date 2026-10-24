@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class LoanController extends Controller
@@ -31,22 +32,18 @@ class LoanController extends Controller
         $query = Loan::with(['member', 'loanProduct', 'approvedBy', 'disbursedBy'])
             ->when($scopeMemberId, fn($q) => $q->where('member_id', $scopeMemberId));
 
-        // Filter by status
         if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->status);
         }
 
-        // Filter by member
         if ($request->has('member_id') && $request->member_id !== '') {
             $query->where('member_id', $request->member_id);
         }
 
-        // Filter by loan product
         if ($request->has('loan_product_id') && $request->loan_product_id !== '') {
             $query->where('loan_product_id', $request->loan_product_id);
         }
 
-        // Filter by date range
         if ($request->has('date_from') && $request->date_from !== '') {
             $query->whereDate('application_date', '>=', $request->date_from);
         }
@@ -55,7 +52,7 @@ class LoanController extends Controller
             $query->whereDate('application_date', '<=', $request->date_to);
         }
 
-        // Search by loan number or member name
+   
         if ($request->has('search') && $request->search !== '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -157,8 +154,8 @@ class LoanController extends Controller
             'guarantors' => 'required|array|min:1',
             'guarantors.*.member_id' => 'required|exists:members,id',
             'guarantors.*.guaranteed_amount' => 'required|numeric|min:1',
-
-            'documents' => 'sometimes|array',
+            'documents'   => 'sometimes|array|max:10',
+            'documents.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
         if ($validator->fails()) {
@@ -190,9 +187,6 @@ class LoanController extends Controller
                 ], 422);
             }
 
-            /**
-             * Validate loan amount
-             */
             if (
                 $request->applied_amount < $loanProduct->min_amount ||
                 $request->applied_amount > $loanProduct->max_amount
@@ -203,9 +197,6 @@ class LoanController extends Controller
                 ], 422);
             }
 
-            /**
-             * Validate term
-             */
             if (
                 $request->term_months < $loanProduct->min_term_months ||
                 $request->term_months > $loanProduct->max_term_months
@@ -216,9 +207,6 @@ class LoanController extends Controller
                 ], 422);
             }
 
-            /**
-             * Check existing active loans
-             */
             $existingLoans = Loan::where('member_id', $request->member_id)
                 ->whereIn('status', [
                     'pending_guarantor_approval',
@@ -234,10 +222,6 @@ class LoanController extends Controller
                     'message' => 'Member has existing active loan applications.',
                 ], 422);
             }
-
-            /**
-             * GUARANTOR VALIDATIONS
-             */
 
             $totalGuaranteed = collect($request->guarantors)
                 ->sum('guaranteed_amount');
@@ -291,25 +275,19 @@ class LoanController extends Controller
             $documents = [];
 
             if ($request->hasFile('documents')) {
-
                 foreach ($request->file('documents') as $index => $file) {
-
-
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $path = $file->storeAs('loan-documents', $filename, 'public');
+                    $filename = Str::uuid() . '.' . $file->extension();
+                    $path = $file->storeAs('loan-documents', $filename, 'local');
 
                     $documents[] = [
                         'type' => $request->document_types[$index] ?? 'Document',
                         'name' => $file->getClientOriginalName(),
                         'path' => $path,
-                        'url'  => asset('storage/' . $path),
+                        'disk' => 'local',
                     ];
                 }
             }
 
-            /**
-             * CREATE LOAN
-             */
             $loan = Loan::create([
                 'loan_number' => $this->generateLoanNumber(),
                 'member_id' => $request->member_id,
@@ -322,13 +300,9 @@ class LoanController extends Controller
                 'processing_fee' => $processingFee,
                 'insurance_fee' => $insuranceFee,
                 'purpose' => $request->purpose,
-
-                // IMPORTANT
                 'status' => 'pending_guarantor_approval',
-
                 'application_date' => now(),
                 'documents' => $documents,
-
                 'outstanding_balance' => 0,
                 'principal_balance' => 0,
                 'interest_balance' => 0,
@@ -336,9 +310,6 @@ class LoanController extends Controller
                 'days_in_arrears' => 0,
             ]);
 
-            /**
-             * SAVE GUARANTORS
-             */
 
             $notifications = [];
 
@@ -353,7 +324,6 @@ class LoanController extends Controller
                     'status' => 'pending',
                 ]);
 
-                // notify EACH guarantor individually
                 if ($guarantorMember->user) {
 
                     app(NotificationService::class)->create(
@@ -421,7 +391,7 @@ class LoanController extends Controller
             'disbursedBy',
         ])->findOrFail($id);
 
-        Gate::authorize('view',$loan);
+        Gate::authorize('view', $loan);
 
         return Inertia::render('Shared/Loans/Show', [
             'loan' => $loan,
@@ -435,7 +405,7 @@ class LoanController extends Controller
     {
         $loan = Loan::with(['member.user', 'loanProduct'])->findOrFail($id);
 
-        Gate::authorize('view',$loan);
+        Gate::authorize('view', $loan);
 
         $repayments = collect($this->generateRepaymentSchedule($loan));
 
@@ -452,7 +422,7 @@ class LoanController extends Controller
     {
         $loan = Loan::with(['member', 'loanProduct', 'guarantors.guarantorMember'])->findOrFail($id);
 
-        Gate::authorize('view',$loan);
+        Gate::authorize('view', $loan);
 
         if ($loan->status !== 'pending') {
             return redirect()->route('loans.show', $loan->id)
@@ -487,7 +457,6 @@ class LoanController extends Controller
             'applied_amount' => 'sometimes|numeric|min:1',
             'term_months' => 'sometimes|integer|min:1',
             'purpose' => 'sometimes|string|max:500',
-            'documents' => 'sometimes|array',
         ]);
 
         if ($validator->fails()) {
@@ -503,9 +472,7 @@ class LoanController extends Controller
 
             $oldValues = $loan->toArray();
 
-            // -----------------------------------
-            // SAFE SOURCE VALUES
-            // -----------------------------------
+
             $principal  = $request->applied_amount ?? $loan->applied_amount;
             $termMonths = $request->term_months ?? $loan->term_months;
 
@@ -513,38 +480,20 @@ class LoanController extends Controller
                 'applied_amount' => $principal,
                 'term_months' => $termMonths,
                 'purpose' => $request->purpose,
-                'documents' => $request->documents,
             ]);
-
-            // -----------------------------------
-            // RELOAD RELATION
-            // -----------------------------------
             $loan->load('loanProduct');
-
-            // -----------------------------------
-            // PRODUCT DATA
-            // -----------------------------------
             $loanProduct = $loan->loanProduct;
 
             $processingFee = ($principal * $loanProduct->processing_fee_rate) / 100;
             $insuranceFee  = ($principal * $loanProduct->insurance_fee_rate) / 100;
-
-            $monthlyRate = $loanProduct->interest_rate / 100; // MONTHLY RATE (NO /12)
-
-            // -----------------------------------
-            // INTEREST + REPAYMENT
-            // -----------------------------------
+            $monthlyRate = $loanProduct->interest_rate / 100;
             $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
-
             $principalPerMonth = $principal / $termMonths;
             $monthlyInterest = $totalInterest / $termMonths;
 
             $monthlyRepayment = $principalPerMonth + $monthlyInterest;
             $totalRepayable   = $monthlyRepayment * $termMonths;
 
-            // -----------------------------------
-            // UPDATE LOAN FINANCIALS
-            // -----------------------------------
             $loan->update([
                 'monthly_repayment'   => round($monthlyRepayment, 2),
                 'total_repayable'     => round($totalRepayable, 2),
@@ -556,9 +505,6 @@ class LoanController extends Controller
                 'interest_balance'    => round($totalInterest, 2),
             ]);
 
-            // -----------------------------------
-            // AUDIT LOG
-            // -----------------------------------
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'loan_updated',
@@ -618,48 +564,24 @@ class LoanController extends Controller
             DB::beginTransaction();
 
             $oldValues = $loan->toArray();
-
-            // -------------------------------
-            // STEP 1: Update approval details
-            // -------------------------------
-
-            // -------------------------------
-            // STEP 2: Recalculate using SAME logic as calculator
-            // -------------------------------
             $loanProduct = $loan->loanProduct;
-
             $principal   = $request->approved_amount;
             $termMonths  = $loan->term_months;
 
-            // Rates
             $monthlyRate     = $loanProduct->interest_rate / 100;
             $processingRate  = $loanProduct->processing_fee_rate / 100;
             $insuranceRate   = $loanProduct->insurance_rate / 100;
 
-            // Fees
             $processingFee = $principal * $processingRate;
             $insuranceFee  = $principal * $insuranceRate;
             $totalFees     = $processingFee + $insuranceFee;
-
-            // Principal split
             $principalPerMonth = $principal / $termMonths;
-
-            //  interest formula as calculator
             $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
-
-            // Monthly interest 
             $mInterest = $totalInterest / $termMonths;
-
-            // Monthly repayment 
             $monthlyRepayment = $principalPerMonth + $mInterest;
-
-            // Totals
             $totalRepayable = $monthlyRepayment * $termMonths;
-
-            // Net disbursement
             $netDisbursement = $principal - $totalFees;
 
-            // Update financial fields
             $loan->update([
                 'approved_amount' => $request->approved_amount,
                 'status'          => 'approved',
@@ -672,8 +594,6 @@ class LoanController extends Controller
                 'insurance_fee'       => round($insuranceFee, 2),
                 'net_disbursement'    => round($netDisbursement, 2),
             ]);
-
-            // Audit Log
 
             AuditLog::create([
                 'user_id'    => Auth::id(),
@@ -741,7 +661,6 @@ class LoanController extends Controller
                 'approval_date' => now(),
             ]);
 
-            // Log the activity
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'loan_rejected',
@@ -811,7 +730,6 @@ class LoanController extends Controller
             $oldValues = $loan->toArray();
             $member    = $loan->member;
 
-            // USE VALUES FROM APPROVAL
             $grossAmount     = $loan->approved_amount;
             $principal = $loan->approved_amount;
 
@@ -824,7 +742,6 @@ class LoanController extends Controller
                 throw new \Exception('Net disbursement cannot be zero or negative.');
             }
 
-            // Member account 
             $loanAccount = Account::firstOrCreate(
                 [
                     'member_id'   => $member->id,
@@ -838,7 +755,6 @@ class LoanController extends Controller
                     'status'           => 'active',
                 ]
             );
-            // Create transaction
             $transaction = Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $loanAccount->id,
@@ -864,7 +780,6 @@ class LoanController extends Controller
                 ],
             ]);
 
-            // Update loan 
             $disbursementDate = now();
             $loan->update([
                 'disbursed_amount'    => $netDisbursement,
@@ -886,8 +801,7 @@ class LoanController extends Controller
                 $loan->approved_amount
             );
 
-            // Generate + store repayment schedule
-            LoanRepayment::where('loan_id', $loan->id)->delete(); // safety reset
+            LoanRepayment::where('loan_id', $loan->id)->delete();
 
             $schedule = $this->generateRepaymentSchedule(
                 $loan,
@@ -899,14 +813,13 @@ class LoanController extends Controller
 
                 LoanRepayment::create([
                     'loan_id'             => $loan->id,
-                    'transaction_id'      => null, // not paid yet
+                    'transaction_id'      => null, 
                     'due_date'            => $row['payment_date'],
 
                     'expected_amount'     => $expected,
                     'principal_amount'    => round($row['principal_amount'], 2),
                     'interest_amount'     => round($row['interest_amount'], 2),
 
-                    // DEFAULTS FOR NEW LOAN
                     'penalty_amount'      => 0,
                     'paid_amount'         => 0,
                     'outstanding_amount'  => $expected,
@@ -917,7 +830,6 @@ class LoanController extends Controller
                 ]);
             }
 
-            // Payment voucher
             PaymentVoucher::create([
                 'voucher_number' => $this->generateVoucherNumber(),
                 'voucher_type'   => 'loan_disbursement',
@@ -935,7 +847,6 @@ class LoanController extends Controller
                 'payment_date'   => now(),
             ]);
 
-            // Audit log
             AuditLog::create([
                 'user_id'    => Auth::id(),
                 'action'     => 'loan_disbursed',
@@ -1114,7 +1025,6 @@ class LoanController extends Controller
             );
         }
 
-        // totals for BOTH cases
         $totals = [
             'principal' => round($repayments->sum('principal_amount'), 2),
             'interest'  => round($repayments->sum('interest_amount'), 2),
@@ -1251,12 +1161,10 @@ class LoanController extends Controller
             'guarantorMember'
         ]);
 
-        // Status filter
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Search 
         if ($request->filled('search')) {
             $search = $request->search;
 
@@ -1295,7 +1203,6 @@ class LoanController extends Controller
             'response_date' => now(),
         ]);
 
-        // If all guarantors approved
         $pending = LoanGuarantor::where('loan_id', $loan->id)
             ->where('status', 'pending')
             ->count();
@@ -1322,11 +1229,31 @@ class LoanController extends Controller
             'response_date' => now(),
         ]);
 
-        // reject whole loan immediately
         $loan->update([
             'status' => 'guarantor_rejected'
         ]);
 
         return redirect()->back()->with('error', 'You rejected this guarantor request.');
+    }
+
+    public function document(Request $request, Loan $loan, int $index)
+    {
+        Gate::authorize('view', $loan);
+
+        $doc = $loan->documents[$index] ?? null;
+        abort_unless($doc && !empty($doc['path']), 404);
+
+        $path = $doc['path'];
+
+        abort_if(!str_starts_with($path, 'loan-documents/') || str_contains($path, '..'), 404);
+
+        $disk = Storage::disk('local')->exists($path) ? 'local' : 'public';
+        abort_unless(Storage::disk($disk)->exists($path), 404);
+
+        $name = $doc['name'] ?? basename($path);
+
+        return $request->boolean('download')
+            ? Storage::disk($disk)->download($path, $name)
+            : Storage::disk($disk)->response($path, $name);
     }
 }

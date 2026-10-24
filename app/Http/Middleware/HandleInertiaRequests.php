@@ -47,9 +47,8 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $isStaff = $user && in_array($user->role, [
             'admin',
-            'Administrator',
+            'management',
             'accountant',
-            'Accounts Officer',
         ], true);
 
         $notificationCounts = [

@@ -207,10 +207,10 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::get('/guarantors', [LoanController::class, 'allGuarantees'])->middleware('role:admin,management,accountant,loan_officer')->name('all-guarantors');
         Route::get('/',            [LoanController::class, 'index'])->name('index');
         Route::get('/create', [LoanController::class, 'create'])->middleware('role:member,admin,loan_officer')->name('create');
-        Route::post('/',      [LoanController::class, 'store'])->middleware('role:member,admin,loan_officer')->name('store');
-        Route::get('/{loan}',      [LoanController::class, 'show'])->name('show');
+        Route::post('/',[LoanController::class, 'store'])->middleware('role:member,admin,loan_officer')->name('store');
+        Route::get('/{loan}', [LoanController::class, 'show'])->name('show');
         Route::get('/{loan}/edit', [LoanController::class, 'edit'])->name('edit');
-        Route::put('/{loan}',      [LoanController::class, 'update'])->name('update');
+        Route::put('/{loan}', [LoanController::class, 'update'])->name('update');
         Route::delete('/{loan}',   [LoanController::class, 'destroy'])->name('destroy');
         Route::post('/{loan}/submit',   [LoanController::class, 'submit'])->name('submit');
         Route::post('/{loan}/review',   [LoanController::class, 'review'])->name('review');
@@ -221,19 +221,20 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::get('/{loan}/repayments', [LoanController::class, 'repayments'])->name('repayments');
         Route::post('/{loan}/repayment', [LoanController::class, 'recordRepayment'])->name('record-repayment');
         Route::get('/{loan}/statement',  [LoanController::class, 'statement'])->name('statement');
-        Route::get('/{loan}/guarantors',                     [LoanController::class, 'guarantors'])->name('guarantors');
-        Route::post('/{loan}/guarantors',                    [LoanController::class, 'addGuarantor'])->name('add-guarantor');
-        Route::delete('/{loan}/guarantors/{guarantor}',      [LoanController::class, 'removeGuarantor'])->name('remove-guarantor');
+        Route::get('/{loan}/documents/{index}', [LoanController::class, 'document'])->whereNumber('index')->name('documents.show');
+        Route::get('/{loan}/guarantors', [LoanController::class, 'guarantors'])->name('guarantors');
+        Route::post('/{loan}/guarantors',[LoanController::class, 'addGuarantor'])->name('add-guarantor');
+        Route::delete('/{loan}/guarantors/{guarantor}',[LoanController::class, 'removeGuarantor'])->name('remove-guarantor');
         Route::post('/{loan}/guarantors/{guarantor}/accept', [LoanController::class, 'acceptGuarantee'])->name('accept-guarantee');
         Route::post('/{loan}/guarantors/{guarantor}/reject', [LoanController::class, 'rejectGuarantee'])->name('reject-guarantee');
         Route::post('/{loan}/restructure', [LoanController::class, 'restructure'])->name('restructure');
         Route::post('/{loan}/write-off',   [LoanController::class, 'writeOff'])->name('write-off');
-        Route::get('/products',                [LoanController::class, 'products'])->name('products');
-        Route::get('/products/create',         [LoanController::class, 'createProduct'])->name('products.create');
-        Route::post('/products',               [LoanController::class, 'storeProduct'])->name('products.store');
-        Route::get('/products/{product}',      [LoanController::class, 'showProduct'])->name('products.show');
+        Route::get('/products',  [LoanController::class, 'products'])->name('products');
+        Route::get('/products/create',  [LoanController::class, 'createProduct'])->name('products.create');
+        Route::post('/products',  [LoanController::class, 'storeProduct'])->name('products.store');
+        Route::get('/products/{product}',  [LoanController::class, 'showProduct'])->name('products.show');
         Route::get('/products/{product}/edit', [LoanController::class, 'editProduct'])->name('products.edit');
-        Route::put('/products/{product}',      [LoanController::class, 'updateProduct'])->name('products.update');
+        Route::put('/products/{product}', [LoanController::class, 'updateProduct'])->name('products.update');
         Route::delete('/products/{product}',   [LoanController::class, 'destroyProduct'])->name('products.destroy');
         Route::get('/analytics/portfolio',   [LoanController::class, 'portfolio'])->name('analytics.portfolio');
         Route::get('/analytics/arrears',     [LoanController::class, 'arrears'])->name('analytics.arrears');
@@ -241,21 +242,21 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     });
 
     //  Dividends 
-    Route::prefix('dividends')->name('dividends.')->group(function () {
-        Route::get('/',            [DividendController::class, 'index'])->name('index');
-        Route::get('/create',      [DividendController::class, 'create'])->name('create');
-        Route::post('/',           [DividendController::class, 'store'])->name('store');
-        Route::get('/{dividend}',      [DividendController::class, 'show'])->name('show');
+    Route::prefix('dividends')->name('dividends.')->middleware('role:admin,management,accountant')->group(function () {
+        Route::get('/',   [DividendController::class, 'index'])->name('index');
+        Route::get('/create', [DividendController::class, 'create'])->name('create');
+        Route::post('/', [DividendController::class, 'store'])->name('store');
+        Route::get('/{dividend}',[DividendController::class, 'show'])->name('show');
         Route::get('/{dividend}/edit', [DividendController::class, 'edit'])->name('edit');
         Route::put('/{dividend}',      [DividendController::class, 'update'])->name('update');
         Route::delete('/{dividend}',   [DividendController::class, 'destroy'])->name('destroy');
         Route::post('/preview', [DividendController::class, 'preview'])->name('preview');
-        Route::post('/calculate/{year}',           [DividendController::class, 'calculate'])->name('calculate');
-        Route::post('/{dividend}/approve',          [DividendController::class, 'approve'])->name('approve');
-        Route::post('/{dividend}/distribute',       [DividendController::class, 'distribute'])->name('distribute');
-        Route::post('/{dividend}/reverse',          [DividendController::class, 'reverse'])->name('reverse');
-        Route::get('/{dividend}/members',               [DividendController::class, 'members'])->name('members');
-        Route::get('/{dividend}/members/{member}',      [DividendController::class, 'memberDetails'])->name('member-details');
+        Route::post('/calculate/{year}',  [DividendController::class, 'calculate'])->name('calculate');
+        Route::post('/{dividend}/approve',   [DividendController::class, 'approve'])->name('approve');
+        Route::post('/{dividend}/distribute',[DividendController::class, 'distribute'])->name('distribute');
+        Route::post('/{dividend}/reverse',[DividendController::class, 'reverse'])->name('reverse');
+        Route::get('/{dividend}/members', [DividendController::class, 'members'])->name('members');
+        Route::get('/{dividend}/members/{member}',   [DividendController::class, 'memberDetails'])->name('member-details');
         Route::post('/{dividend}/members/{member}/pay', [DividendController::class, 'payMemberDividend'])->name('pay-member');
         Route::get('/{dividend}/report',     [DividendController::class, 'report'])->name('report');
         Route::get('/analytics/history',     [DividendController::class, 'history'])->name('analytics.history');
@@ -263,7 +264,7 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     });
 
     //  Budgets 
-    Route::prefix('budgets')->name('budgets.')->group(function () {
+    Route::prefix('budgets')->name('budgets.')->middleware('role:admin,management,accountant')->group(function () {
         Route::get('/',            [BudgetController::class, 'index'])->name('index');
         Route::get('/create',      [BudgetController::class, 'create'])->name('create');
         Route::post('/',           [BudgetController::class, 'store'])->name('store');
@@ -272,9 +273,9 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::put('/{budget}',      [BudgetController::class, 'update'])->name('update');
         Route::delete('/{budget}',   [BudgetController::class, 'destroy'])->name('destroy');
         Route::post('/{budget}/submit',   [BudgetController::class, 'submit'])->name('submit');
-        Route::post('/{budget}/approve',  [BudgetController::class, 'approve'])->name('approve');
-        Route::post('/{budget}/activate', [BudgetController::class, 'activate'])->name('activate');
-        Route::post('/{budget}/close',    [BudgetController::class, 'close'])->name('close');
+        Route::post('/{budget}/approve',  [BudgetController::class, 'approve'])->middleware('can:approve-budgets')->name('approve');
+        Route::post('/{budget}/activate', [BudgetController::class, 'activate'])->middleware('can:approve-budgets')->name('activate');
+        Route::post('/{budget}/close',    [BudgetController::class, 'close'])->middleware('can:approve-budgets')->name('close');
         Route::get('/{budget}/items',           [BudgetController::class, 'items'])->name('items');
         Route::post('/{budget}/items',          [BudgetController::class, 'storeItem'])->name('store-item');
         Route::put('/{budget}/items/{item}',    [BudgetController::class, 'updateItem'])->name('update-item');
@@ -284,14 +285,14 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     });
 
     //  Chart of Accounts 
-    Route::prefix('chart-of-accounts')->name('chart-of-accounts.')->group(function () {
+    Route::prefix('chart-of-accounts')->name('chart-of-accounts.')->middleware('role:admin,management,accountant')->group(function () {
         Route::get('/',       [ChartOfAccountController::class, 'index'])->name('index');
         Route::get('/create', [ChartOfAccountController::class, 'create'])->name('create');
         Route::post('/',      [ChartOfAccountController::class, 'store'])->name('store');
         Route::get('/{chartOfAccount}',      [ChartOfAccountController::class, 'show'])->name('show');
         Route::get('/{chartOfAccount}/edit', [ChartOfAccountController::class, 'edit'])->name('edit');
         Route::put('/{chartOfAccount}',      [ChartOfAccountController::class, 'update'])->name('update');
-        Route::delete('/{chartOfAccount}',   [ChartOfAccountController::class, 'destroy'])->name('destroy');
+        Route::delete('/{chartOfAccount}', [ChartOfAccountController::class, 'destroy'])->middleware('role:admin')->name('destroy');
         Route::post('/{chartOfAccount}/toggle-active', [ChartOfAccountController::class, 'toggleActive'])->name('toggle-active');
         Route::get('/api/postable', [ChartOfAccountController::class, 'postableAccounts'])->name('api.postable');
         Route::get('/api/budget-lines',  [ChartOfAccountController::class, 'budgetLineAccounts'])->name('api.budget-lines');
@@ -300,7 +301,7 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::post('/api/categories',   [ChartOfAccountController::class, 'storeCategory'])->name('api.categories.store');
     });
 
-    Route::prefix('finance')->name('finance.')->group(function () {
+    Route::prefix('finance')->name('finance.')->middleware('role:admin,management,accountant')->group(function () {
         Route::resource('chart-of-accounts', ChartOfAccountController::class)->names([
             'index'   => 'coa.index',
             'create'  => 'coa.create',
@@ -315,7 +316,7 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     });
 
     //  Payment Vouchers
-    Route::prefix('vouchers')->name('vouchers.')->group(function () {
+    Route::prefix('vouchers')->name('vouchers.')->middleware('can:view-vouchers')->group(function () {
         Route::get('/',            [PaymentVoucherController::class, 'index'])->name('index');
         Route::get('/create',      [PaymentVoucherController::class, 'create'])->name('create');
         Route::post('/',           [PaymentVoucherController::class, 'store'])->name('store');
@@ -324,9 +325,9 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::put('/{voucher}',      [PaymentVoucherController::class, 'update'])->name('update');
         Route::delete('/{voucher}',   [PaymentVoucherController::class, 'destroy'])->name('destroy');
         Route::post('/{voucher}/submit',    [PaymentVoucherController::class, 'submit'])->name('submit');
-        Route::post('/{voucher}/approve',   [PaymentVoucherController::class, 'approve'])->name('approve');
-        Route::post('/{voucher}/reject',    [PaymentVoucherController::class, 'reject'])->name('reject');
-        Route::post('/{voucher}/pay',       [PaymentVoucherController::class, 'pay'])->name('pay');
+        Route::post('/{voucher}/approve', [PaymentVoucherController::class, 'approve'])->middleware('can:approve-vouchers')->name('approve');
+        Route::post('/{voucher}/reject',  [PaymentVoucherController::class, 'reject'])->middleware('can:approve-vouchers')->name('reject');
+        Route::post('/{voucher}/pay',     [PaymentVoucherController::class, 'pay'])->middleware('can:process-transactions')->name('pay');
         Route::post('/{voucher}/cancel',    [PaymentVoucherController::class, 'cancel'])->name('cancel');
         Route::post('/{voucher}/duplicate', [PaymentVoucherController::class, 'duplicate'])->name('duplicate');
         Route::get('/{voucher}/pdf',        [PaymentVoucherController::class, 'downloadPdf'])->name('pdf');
@@ -338,13 +339,8 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     });
 
     //  Reports 
-    Route::prefix('reports')->name('reports.')->middleware('can:generate-reports')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware('role:admin,management,accountant,loan_officer')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
-        Route::get('/financial',                  [ReportController::class, 'financialIndex'])->name('financial.index');
-        Route::get('/financial/balance-sheet',    [ReportController::class, 'balanceSheet'])->name('financial.balance-sheet');
-        Route::get('/financial/income-statement', [ReportController::class, 'incomeStatement'])->name('financial.income-statement');
-        Route::get('/financial/cash-flow',        [ReportController::class, 'cashFlow'])->name('financial.cash-flow');
-        Route::get('/financial/trial-balance',    [ReportController::class, 'trialBalance'])->name('financial.trial-balance');
         Route::get('/members/report',   [ReportController::class, 'memberIndex'])->name('membersReport.index');
         Route::get('/members/register', [ReportController::class, 'memberRegister'])->name('members.register');
         Route::get('/members/shares',   [ReportController::class, 'memberShares'])->name('members.shares');
@@ -355,30 +351,41 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::get('/loans/arrears',      [ReportController::class, 'loanArrears'])->name('loans.arrears');
         Route::get('/loans/disbursement', [ReportController::class, 'loanDisbursement'])->name('loans.disbursement');
         Route::get('/loans/collection',   [ReportController::class, 'loanCollection'])->name('loans.collection');
-        Route::get('/transactions/report',   [ReportController::class, 'transactionIndex'])->name('transactionsReport.index');
-        Route::get('/transactions/daily',    [ReportController::class, 'dailyTransactions'])->name('transactions.daily');
-        Route::get('/transactions/monthly',  [ReportController::class, 'monthlyTransactions'])->name('transactions.monthly');
-        Route::get('/transactions/annual',   [ReportController::class, 'annualTransactions'])->name('transactions.annual');
-        Route::get('/regulatory/report',     [ReportController::class, 'RegulatoryIndex'])->name('regulatoryReport.index');
-        Route::get('/regulatory/statutory',  [ReportController::class, 'statutoryReports'])->name('regulatory.statutory');
-        Route::get('/regulatory/compliance', [ReportController::class, 'complianceReports'])->name('regulatory.compliance');
+        Route::get('/transactions/report',  [ReportController::class, 'transactionIndex'])->name('transactionsReport.index');
+        Route::get('/transactions/daily',   [ReportController::class, 'dailyTransactions'])->name('transactions.daily');
+        Route::get('/transactions/monthly', [ReportController::class, 'monthlyTransactions'])->name('transactions.monthly');
+        Route::get('/transactions/annual',  [ReportController::class, 'annualTransactions'])->name('transactions.annual');
 
-        Route::get('/custom/builder',   [ReportController::class, 'customBuilder'])->name('custom.builder');
-        Route::post('/custom/generate', [ReportController::class, 'generateCustom'])->name('custom.generate');
-        Route::get('/export',           [ReportController::class, 'exportReport'])->name('export');
+        Route::middleware('can:generate-reports')->group(function () {
+            Route::get('/financial',                  [ReportController::class, 'financialIndex'])->name('financial.index');
+            Route::get('/financial/balance-sheet',    [ReportController::class, 'balanceSheet'])->name('financial.balance-sheet');
+            Route::get('/financial/income-statement', [ReportController::class, 'incomeStatement'])->name('financial.income-statement');
+            Route::get('/financial/cash-flow',        [ReportController::class, 'cashFlow'])->name('financial.cash-flow');
+            Route::get('/financial/trial-balance',    [ReportController::class, 'trialBalance'])->name('financial.trial-balance');
+            Route::get('/regulatory/report',     [ReportController::class, 'RegulatoryIndex'])->name('regulatoryReport.index');
+            Route::get('/regulatory/statutory',  [ReportController::class, 'statutoryReports'])->name('regulatory.statutory');
+            Route::get('/regulatory/compliance', [ReportController::class, 'complianceReports'])->name('regulatory.compliance');
+            Route::get('/custom/builder',   [ReportController::class, 'customBuilder'])->name('custom.builder');
+            Route::post('/custom/generate', [ReportController::class, 'generateCustom'])->name('custom.generate');
+            Route::get('/export',           [ReportController::class, 'exportReport'])->name('export');
+        });
     });
 
     // Notifications 
     Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/',                     [NotificationController::class, 'index'])->name('index');
-        Route::get('/{notification}',       [NotificationController::class, 'show'])->name('show');
-        Route::post('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
-        Route::post('/mark-all-read',       [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
-        Route::delete('/{notification}',    [NotificationController::class, 'destroy'])->name('destroy');
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
         Route::get('/settings',  [NotificationController::class, 'settings'])->name('settings');
         Route::post('/settings', [NotificationController::class, 'updateSettings'])->name('update-settings');
-        Route::get('/bulk/create', [NotificationController::class, 'createBulk'])->name('bulk.create');
-        Route::post('/bulk/send',  [NotificationController::class, 'sendBulk'])->name('bulk.send');
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+
+        Route::middleware('role:admin,management')->group(function () {
+            Route::get('/bulk/create', [NotificationController::class, 'createBulk'])->name('bulk.create');
+            Route::post('/bulk/send',  [NotificationController::class, 'sendBulk'])->name('bulk.send');
+        });
+
+        Route::get('/{notification}',       [NotificationController::class, 'show'])->name('show');
+        Route::post('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::delete('/{notification}',    [NotificationController::class, 'destroy'])->name('destroy');
     });
 
     //  Admin System Settings 
@@ -509,10 +516,10 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::post('/transactions/{id}/reverse', [TransactionController::class, 'reverse'])->name('transactions.reverse');
     });
 
-    Route::resource('transactions', TransactionController::class)->only(['index', 'show']);
-    Route::get('/members/{id}/transactions',  [TransactionController::class, 'memberTransactions'])->name('members.transactions');
-    Route::get('/accounts/{id}/transactions', [TransactionController::class, 'accountTransactions'])->name('accounts.transactions');
-    Route::get('/stats/transactions',         [TransactionController::class, 'statistics'])->name('stats.transactions');
+    Route::middleware('role:admin,management,accountant,loan_officer')->group(function () {
+        Route::resource('transactions', TransactionController::class)->only(['index', 'show']);
+        Route::get('/stats/transactions', [TransactionController::class, 'statistics'])->name('stats.transactions');
+    });
 });
 
 
