@@ -288,7 +288,6 @@ class AccountController extends Controller
     {
         try {
 
-            // Allow deposits for share_deposits and share_capital only
             if (!in_array($account->account_type, ['share_deposits', 'share_capital'])) {
                 return back()->withErrors([
                     'error' => 'Deposits are only allowed for Share Deposits or Share Capital accounts'
@@ -297,18 +296,15 @@ class AccountController extends Controller
 
             DB::beginTransaction();
 
-            // Determine transaction type
             $transactionType = $account->account_type === 'share_capital'
                 ? 'share_capital_contribution'
                 : 'deposit';
 
-            // Default description
             $description = $request->description ??
                 ($account->account_type === 'share_capital'
                     ? 'Share capital contribution'
                     : 'Monthly share deposit');
 
-            // Create pending transaction
             $transaction = Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $account->id,
@@ -323,6 +319,7 @@ class AccountController extends Controller
                 'status' => 'pending',
                 'processed_by' => null,
                 'processed_at' => null,
+                'created_by' => auth()->id()
             ]);
 
             DB::commit();
