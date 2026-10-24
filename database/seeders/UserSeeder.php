@@ -2,38 +2,38 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use App\Models\Account;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $users = [
-            [
-                'name' => 'System Administrator',
-                'email' => 'admin@sepusacco.co.ke',
-                'password' => Hash::make('admin123'),
-                'phone' => '+254700000001',
-                'role' => 'admin',
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ],
-            
-        ];
+        $email = config('sepu.admin_email');
 
-        foreach ($users as $userData) {
-            User::updateOrCreate(
-                ['email' => $userData['email']],
-                $userData
-            );
+        if (User::where('email', $email)->exists()) {
+            $this->command?->info("Admin {$email} already exists. Nothing changed.");
+            return;
+        }
+
+        $password = config('sepu.admin_password') ?: Str::password(16);
+
+        (new User())->forceFill([
+            'name'                 => 'System Administrator',
+            'email'                => $email,
+            'password'             => Hash::make($password),
+            'phone'                => '+254700000001',
+            'role'                 => 'admin',
+            'is_active'            => true,
+            'email_verified_at'    => now(),
+            'must_change_password' => true, 
+        ])->save();
+
+        if (!config('sepu.admin_password')) {
+            $this->command?->warn("Admin created: {$email}  password: {$password}");
+            $this->command?->warn('This is shown once. Log in and change it immediately.');
         }
     }
-    
 }

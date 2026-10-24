@@ -126,7 +126,7 @@ class DashboardController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error fetching members: ' . $e->getMessage());
+            \Log::error('Error fetching members: ' . \App\Support\ErrorMessage::from($e));
             return response()->json(['error' => 'Error fetching members'], 500);
         }
     }

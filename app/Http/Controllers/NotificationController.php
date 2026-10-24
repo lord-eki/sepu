@@ -344,7 +344,7 @@ class NotificationController extends Controller
                     }
                 } catch (\Exception $e) {
                     $failedCount++;
-                    Log::error('Failed to send bulk notification to user ' . $recipient->id . ': ' . $e->getMessage());
+                    Log::error('Failed to send bulk notification to user ' . $recipient->id . ': ' . \App\Support\ErrorMessage::from($e));
                 }
             }
 
@@ -357,11 +357,11 @@ class NotificationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Bulk notification failed: ' . $e->getMessage());
+            Log::error('Bulk notification failed: ' . \App\Support\ErrorMessage::from($e));
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send bulk notification: ' . $e->getMessage(),
+                'message' => 'Failed to send bulk notification: ' . \App\Support\ErrorMessage::from($e),
             ], 500);
         }
     }
@@ -526,11 +526,11 @@ class NotificationController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Test notification failed: ' . $e->getMessage());
+            Log::error('Test notification failed: ' . \App\Support\ErrorMessage::from($e));
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send test notification: ' . $e->getMessage(),
+                'message' => 'Failed to send test notification: ' . \App\Support\ErrorMessage::from($e),
             ], 500);
         }
     }

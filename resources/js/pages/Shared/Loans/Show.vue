@@ -6,7 +6,6 @@
 
     <Head title="Loan Details" />
 
-    <!-- ================= TOAST ================= -->
     <transition enter-active-class="transition duration-300 ease-out"
       enter-from-class="opacity-0 -translate-y-3 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100"
       leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 translate-y-0"
@@ -15,10 +14,10 @@
         rounded-2xl border border-white/60 bg-white/90 backdrop-blur-xl
         shadow-2xl px-5 py-4 flex items-start gap-3">
         <div class="h-9 w-9 rounded-xl flex items-center justify-center text-white font-bold shadow" :class="type === 'success'
-    ? 'bg-emerald-500'
-    : type === 'error'
-      ? 'bg-rose-500'
-      : 'bg-slate-500'">
+          ? 'bg-emerald-500'
+          : type === 'error'
+            ? 'bg-rose-500'
+            : 'bg-slate-500'">
           {{ type === 'success' ? '✓' : '!' }}
         </div>
 
@@ -94,7 +93,7 @@
               <div class="flex-shrink-0">
                 <Link :href="isMemberRole ? route('my-loans') : route('loans.index')" class="px-3 sm:px-4 py-2 rounded-xl sm:rounded-2xl bg-white border border-slate-200
                       text-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-50">
-                Back
+                  Back
                 </Link>
               </div>
 
@@ -160,12 +159,12 @@
 
             <Link v-if="canViewSchedule" :href="route('loans.schedule', loan.id)"
               class="px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
-            Schedule
+              Schedule
             </Link>
 
             <Link v-if="canViewRepayments" :href="route('loans.repayments', loan.id)"
               class="px-4 py-2.5 rounded-2xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600">
-            Repayments
+              Repayments
             </Link>
 
           </div>
@@ -293,11 +292,8 @@
           <div class="space-y-3">
 
             <!-- PREVIEW (first 3) -->
-            <div
-              v-for="(doc, index) in loan.documents.slice(0, 3)"
-              :key="index"
-              class="flex items-center justify-between p-4 border border-slate-200 rounded-2xl hover:bg-slate-50 transition"
-            >
+            <div v-for="(doc, index) in loan.documents.slice(0, 3)" :key="index"
+              class="flex items-center justify-between p-4 border border-slate-200 rounded-2xl hover:bg-slate-50 transition">
               <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
                   📄
@@ -326,10 +322,8 @@
 
             <!-- VIEW ALL BUTTON -->
             <div v-if="loan.documents.length > 3" class="flex justify-center pt-2">
-              <button
-                @click="showDocsModal = true"
-                class="px-5 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800"
-              >
+              <button @click="showDocsModal = true"
+                class="px-5 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800">
                 View All Documents ({{ loan.documents.length }})
               </button>
             </div>
@@ -345,10 +339,7 @@
           <div class="bg-white w-full max-w-2xl rounded-2xl shadow-lg p-6 relative">
 
             <!-- CLOSE -->
-            <button
-              @click="showDocsModal = false"
-              class="absolute top-3 right-3 text-slate-500 hover:text-slate-800"
-            >
+            <button @click="showDocsModal = false" class="absolute top-3 right-3 text-slate-500 hover:text-slate-800">
               ✕
             </button>
 
@@ -359,11 +350,8 @@
             <!-- LIST -->
             <div class="space-y-3 max-h-[70vh] overflow-y-auto">
 
-              <div
-                v-for="(doc, index) in loan.documents"
-                :key="index"
-                class="flex items-center justify-between p-4 border rounded-2xl hover:bg-slate-50 transition"
-              >
+              <div v-for="(doc, index) in loan.documents" :key="index"
+                class="flex items-center justify-between p-4 border rounded-2xl hover:bg-slate-50 transition">
                 <div class="flex items-center gap-3">
                   <div class="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
                     📄
@@ -378,12 +366,12 @@
                 </div>
 
                 <div class="flex gap-2">
-                  <a :href="doc.url || doc" target="_blank"
+                  <a :href="route('loans.documents.show', [loan.id, index])" target="_blank"
                     class="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm hover:bg-blue-700">
                     View
                   </a>
 
-                  <a :href="doc.url || doc" download
+                  <a :href="route('loans.documents.show', [loan.id, index]) + '?download=1'"
                     class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm hover:bg-slate-100">
                     Download
                   </a>
@@ -573,11 +561,11 @@
           <p class="text-sm text-emerald-600">Net Disbursement</p>
           <p class="text-2xl font-bold text-emerald-700">
             KES {{
-    formatCurrency(loan.approved_amount - (
-      (loan.approved_amount * (loan.loan_product?.processing_fee_rate || 0) / 100) +
-      (loan.approved_amount * (loan.loan_product?.insurance_rate || 0) / 100)
-    ))
-  }}
+              formatCurrency(loan.approved_amount - (
+                (loan.approved_amount * (loan.loan_product?.processing_fee_rate || 0) / 100) +
+                (loan.approved_amount * (loan.loan_product?.insurance_rate || 0) / 100)
+            ))
+            }}
           </p>
         </div>
 

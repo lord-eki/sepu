@@ -106,7 +106,7 @@ class BudgetController extends Controller
 
             $itemsTotal = collect($request->budget_items)->sum('budgeted_amount');
             if (abs($itemsTotal - $request->total_budget) > 0.01) {
-                throw new \Exception('Budget items total must equal the total budget amount.');
+                throw new \DomainException('Budget items total must equal the total budget amount.');
             }
 
             $budget = Budget::create([
@@ -143,8 +143,8 @@ class BudgetController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget creation failed: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Failed to create budget: ' . $e->getMessage()])->withInput();
+            Log::error('Budget creation failed: ' . \App\Support\ErrorMessage::from($e));
+            return back()->withErrors(['error' => 'Failed to create budget: ' . \App\Support\ErrorMessage::from($e)])->withInput();
         }
     }
 
@@ -234,7 +234,7 @@ class BudgetController extends Controller
 
             $itemsTotal = collect($request->budget_items)->sum('budgeted_amount');
             if (abs($itemsTotal - $request->total_budget) > 0.01) {
-                throw new \Exception('Budget items total must equal the total budget amount.');
+                throw new \DomainException('Budget items total must equal the total budget amount.');
             }
 
             $budget->update([
@@ -270,8 +270,8 @@ class BudgetController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget update failed: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Failed to update budget: ' . $e->getMessage()])->withInput();
+            Log::error('Budget update failed: ' . \App\Support\ErrorMessage::from($e));
+            return back()->withErrors(['error' => 'Failed to update budget: ' . \App\Support\ErrorMessage::from($e)])->withInput();
         }
     }
 
@@ -297,8 +297,8 @@ class BudgetController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget deletion failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to delete budget: ' . $e->getMessage());
+            Log::error('Budget deletion failed: ' . \App\Support\ErrorMessage::from($e));
+            return back()->with('error', 'Failed to delete budget: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 
@@ -329,8 +329,8 @@ class BudgetController extends Controller
                 ->with('success', 'Budget submitted for approval successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Budget submission failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to submit budget: ' . $e->getMessage());
+            Log::error('Budget submission failed: ' . \App\Support\ErrorMessage::from($e));
+            return back()->with('error', 'Failed to submit budget: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 
@@ -357,8 +357,8 @@ class BudgetController extends Controller
                 ->with('success', 'Budget approved successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Budget approval failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to approve budget: ' . $e->getMessage());
+            Log::error('Budget approval failed: ' . \App\Support\ErrorMessage::from($e));
+            return back()->with('error', 'Failed to approve budget: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 
@@ -390,8 +390,8 @@ class BudgetController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget activation failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to activate budget: ' . $e->getMessage());
+            Log::error('Budget activation failed: ' . \App\Support\ErrorMessage::from($e));
+            return back()->with('error', 'Failed to activate budget: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 
@@ -414,8 +414,8 @@ class BudgetController extends Controller
                 ->with('success', 'Budget closed successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Budget closure failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to close budget: ' . $e->getMessage());
+            Log::error('Budget closure failed: ' . \App\Support\ErrorMessage::from($e));
+            return back()->with('error', 'Failed to close budget: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 
@@ -477,8 +477,8 @@ class BudgetController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget item creation failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to add budget item: ' . $e->getMessage()], 500);
+            Log::error('Budget item creation failed: ' . \App\Support\ErrorMessage::from($e));
+            return response()->json(['error' => 'Failed to add budget item: ' . \App\Support\ErrorMessage::from($e)], 500);
         }
     }
 
@@ -526,8 +526,8 @@ class BudgetController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget item update failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to update budget item: ' . $e->getMessage()], 500);
+            Log::error('Budget item update failed: ' . \App\Support\ErrorMessage::from($e));
+            return response()->json(['error' => 'Failed to update budget item: ' . \App\Support\ErrorMessage::from($e)], 500);
         }
     }
 
@@ -555,8 +555,8 @@ class BudgetController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget item deletion failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to delete budget item: ' . $e->getMessage()], 500);
+            Log::error('Budget item deletion failed: ' . \App\Support\ErrorMessage::from($e));
+            return response()->json(['error' => 'Failed to delete budget item: ' . \App\Support\ErrorMessage::from($e)], 500);
         }
     }
 

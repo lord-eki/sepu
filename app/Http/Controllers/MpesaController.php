@@ -79,12 +79,12 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('M-Pesa STK Push Error: ' . $e->getMessage());
+            Log::error('M-Pesa STK Push Error: ' . \App\Support\ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to initiate payment',
-                'error' => $e->getMessage()
+                'error' => \App\Support\ErrorMessage::from($e)
             ], 500);
         }
     }
@@ -182,12 +182,12 @@ class MpesaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('M-Pesa B2C Error: ' . $e->getMessage());
+            Log::error('M-Pesa B2C Error: ' . \App\Support\ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to initiate withdrawal',
-                'error' => $e->getMessage()
+                'error' => \App\Support\ErrorMessage::from($e)
             ], 500);
         }
     }
@@ -269,7 +269,7 @@ class MpesaController extends Controller
                         'member_name' => $member->first_name . ' ' . $member->last_name,
                         'amount' => $memberDividend->amount,
                         'status' => 'failed',
-                        'message' => $e->getMessage()
+                        'message' => \App\Support\ErrorMessage::from($e)
                     ];
                 }
             }
@@ -285,12 +285,12 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Dividend Distribution Error: ' . $e->getMessage());
+            Log::error('Dividend Distribution Error: ' . \App\Support\ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to distribute dividends',
-                'error' => $e->getMessage()
+                'error' => \App\Support\ErrorMessage::from($e)
             ], 500);
         }
     }
@@ -311,7 +311,7 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('STK Callback Error: ' . $e->getMessage());
+            Log::error('STK Callback Error: ' . \App\Support\ErrorMessage::from($e));
             
             return response()->json([
                 'ResultCode' => 1,
@@ -336,7 +336,7 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('B2C Callback Error: ' . $e->getMessage());
+            Log::error('B2C Callback Error: ' . \App\Support\ErrorMessage::from($e));
             
             return response()->json([
                 'ResultCode' => 1,
@@ -387,12 +387,12 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Transaction Status Check Error: ' . $e->getMessage());
+            Log::error('Transaction Status Check Error: ' . \App\Support\ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to check transaction status',
-                'error' => $e->getMessage()
+                'error' => \App\Support\ErrorMessage::from($e)
             ], 500);
         }
     }
@@ -411,12 +411,12 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Account Balance Check Error: ' . $e->getMessage());
+            Log::error('Account Balance Check Error: ' . \App\Support\ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to check account balance',
-                'error' => $e->getMessage()
+                'error' => \App\Support\ErrorMessage::from($e)
             ], 500);
         }
     }

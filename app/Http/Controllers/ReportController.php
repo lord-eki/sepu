@@ -612,7 +612,7 @@ class ReportController extends Controller
     /**
      * Transaction Reports
      */
-    public function TransactionIndex()
+    public function transactionIndex()
     {
         return Inertia::render('Reports/Transactions/Index');
     }
@@ -1002,7 +1002,7 @@ public function generateCustom(Request $request)
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'error' => 'Error generating custom report: ' . $e->getMessage(),
+            'error' => 'Error generating custom report: ' . \App\Support\ErrorMessage::from($e),
         ], 500);
     }
 }

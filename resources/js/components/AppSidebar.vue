@@ -16,31 +16,12 @@ import {
 import { Link, usePage } from '@inertiajs/vue3';
 
 import {
-    BookOpen,
-    Folder,
-    LayoutGrid,
-    HandCoins,
-    ClipboardList,
-    Ticket,
-    BriefcaseConveyorBelt,
-    Users,
-    ContactRound,
-    UserCheck,
-    NotebookTabs,
-    FileText,
-    User,
-    ArrowRightLeft,
-    Calculator,
-    FileSignature,
-    Bell,
-    Settings,
-    Package,
-    UserCog,
-    Shield,
-    Banknote,
-    BookMarked,
-    Scale,
-    ReceiptText,
+   Folder,LayoutGrid,HandCoins,
+    ClipboardList,Ticket,BriefcaseConveyorBelt, Users,
+    ContactRound, UserCheck,
+    NotebookTabs, FileText, User, ArrowRightLeft, Calculator,
+    FileSignature,  Bell, Settings,  Package,
+    UserCog,Shield, Banknote,BookMarked,
     DatabaseZap,
 } from 'lucide-vue-next';
 
@@ -55,11 +36,9 @@ const user = page.props?.auth?.user ?? null;
 const member = page.props?.auth?.member ?? null;
 
 
-/**
- * ---------------------------------------------------------
- * Types
- * ---------------------------------------------------------
- */
+
+ // Types
+ 
 
 export interface NavItem {
     title: string;
@@ -71,11 +50,7 @@ export interface NavItem {
 }
 
 
-/**
- * ---------------------------------------------------------
- * Member Navigation
- * ---------------------------------------------------------
- */
+ // Member Navigation
 
 const memberNavItems: NavItem[] = [
     {
@@ -149,11 +124,6 @@ const memberNavItems: NavItem[] = [
 ];
 
 
-/**
- * ---------------------------------------------------------
- * Administrator Navigation
- * ---------------------------------------------------------
- */
 
 const adminNavItems: NavItem[] = [
     {
@@ -184,12 +154,6 @@ const adminNavItems: NavItem[] = [
         icon: Ticket,
     },
 
-
-    /**
-     * -----------------------------------------------------
-     * Loans
-     * -----------------------------------------------------
-     */
 
     {
         title: 'Loans',
@@ -233,12 +197,6 @@ const adminNavItems: NavItem[] = [
     },
 
 
-    /**
-     * -----------------------------------------------------
-     * Loan Migration
-     * -----------------------------------------------------
-     */
-
     {
         title: 'Loan Migration',
         icon: DatabaseZap,
@@ -260,12 +218,6 @@ const adminNavItems: NavItem[] = [
     },
 
 
-    /**
-     * -----------------------------------------------------
-     * Members
-     * -----------------------------------------------------
-     */
-
     {
         title: 'Members',
         icon: Users,
@@ -286,13 +238,6 @@ const adminNavItems: NavItem[] = [
         ],
     },
 
-
-    /**
-     * -----------------------------------------------------
-     * Accounts
-     * -----------------------------------------------------
-     */
-
     {
         title: 'Accounts',
         href: route('accounts.index'),
@@ -301,12 +246,6 @@ const adminNavItems: NavItem[] = [
     },
 
 
-    /**
-     * -----------------------------------------------------
-     * Transactions
-     * -----------------------------------------------------
-     */
-
     {
         title: 'Transactions',
         href: route('transactions.index'),
@@ -314,12 +253,6 @@ const adminNavItems: NavItem[] = [
         icon: ArrowRightLeft,
     },
 
-
-    /**
-     * -----------------------------------------------------
-     * Finance
-     * -----------------------------------------------------
-     */
 
     {
         title: 'Finance',
@@ -335,11 +268,6 @@ const adminNavItems: NavItem[] = [
     },
 
 
-    /**
-     * -----------------------------------------------------
-     * Schedule
-     * -----------------------------------------------------
-     */
 
     {
         title: 'Schedule',
@@ -348,12 +276,6 @@ const adminNavItems: NavItem[] = [
         routeName: 'schedule.index',
     },
 
-
-    /**
-     * -----------------------------------------------------
-     * System Users
-     * -----------------------------------------------------
-     */
 
     {
         title: 'System Users',
@@ -375,12 +297,6 @@ const adminNavItems: NavItem[] = [
         ],
     },
 
-
-    /**
-     * -----------------------------------------------------
-     * Reports
-     * -----------------------------------------------------
-     */
 
     {
         title: 'Reports',
@@ -438,25 +354,12 @@ const adminNavItems: NavItem[] = [
     },
 
 
-    /**
-     * -----------------------------------------------------
-     * Notifications
-     * -----------------------------------------------------
-     */
-
     {
         title: 'Notifications',
         href: route('notifications.index'),
         routeName: 'notifications.index',
         icon: Bell,
     },
-
-
-    /**
-     * -----------------------------------------------------
-     * System Settings
-     * -----------------------------------------------------
-     */
 
     {
         title: 'System Settings',
@@ -466,19 +369,6 @@ const adminNavItems: NavItem[] = [
     },
 ];
 
-
-/**
- * ---------------------------------------------------------
- * Staff Navigation
- *
- * Used by:
- * - Loans Officer
- * - Accounts Officer
- *
- * The backend controller still performs the real
- * authorization check.
- * ---------------------------------------------------------
- */
 
 const staffNavItems: NavItem[] = [
     {
@@ -521,16 +411,6 @@ const staffNavItems: NavItem[] = [
             },
         ],
     },
-
-
-    /**
-     * -----------------------------------------------------
-     * Loan Migration
-     *
-     * The backend controls whether the specific staff
-     * member can create or only access migration batches.
-     * -----------------------------------------------------
-     */
 
     {
         title: 'Loan Migration',
@@ -605,72 +485,19 @@ const staffNavItems: NavItem[] = [
 ];
 
 
-/**
- * ---------------------------------------------------------
- * Role Detection
- * ---------------------------------------------------------
- */
-
 const userRole = user?.role ?? null;
 
-const isAdmin = userRole === 'admin';
+const useAdminNav = userRole === 'admin' || userRole === 'management';
+const useStaffNav = userRole === 'loan_officer' || userRole === 'accountant';
 
-const isLoansOfficer =
-    userRole === 'Loans Officer';
-
-const isAccountsOfficer =
-    userRole === 'Accounts Officer';
-
-const isStaff =
-    isLoansOfficer ||
-    isAccountsOfficer;
-
-
-/**
- * ---------------------------------------------------------
- * Navigation Selection
- * ---------------------------------------------------------
- *
- * Administrator:
- *     Full administrator navigation
- *
- * Loans Officer:
- *     Staff navigation
- *
- * Accounts Officer:
- *     Staff navigation
- *
- * Member:
- *     Member navigation
- *
- * Backend authorization remains authoritative.
- * ---------------------------------------------------------
- */
-
-const navigationItems =
-    isAdmin
-        ? adminNavItems
-        : isStaff
-            ? staffNavItems
-            : memberNavItems;
-
-
-/**
- * ---------------------------------------------------------
- * Footer Navigation
- * ---------------------------------------------------------
- */
+const navigationItems = useAdminNav ? adminNavItems: useStaffNav ? staffNavItems : memberNavItems;
 
 const footerNavItems: NavItem[] = [];
 </script>
 
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
-
-        <!-- =================================================
-             Sidebar Header
-        ================================================== -->
+    <Sidebar collapsible="icon" variant="inset">      
 
         <SidebarHeader>
             <SidebarMenu>
@@ -686,32 +513,15 @@ const footerNavItems: NavItem[] = [];
                 </SidebarMenuItem>
             </SidebarMenu>
         </SidebarHeader>
-
-
-        <!-- =================================================
-             Sidebar Navigation
-        ================================================== -->
-
         <SidebarContent>
             <NavMain :items="navigationItems" />
         </SidebarContent>
-
-
-        <!-- =================================================
-             Sidebar Footer
-        ================================================== -->
-
         <SidebarFooter>
             <NavFooter :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
 
     </Sidebar>
-
-
-    <!-- =====================================================
-         Main Application Content
-    ====================================================== -->
 
     <slot />
 </template>
