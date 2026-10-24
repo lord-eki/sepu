@@ -176,9 +176,9 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
             Route::get('/{account}/transactions', [AccountController::class, 'transactions'])->name('transactions');
             Route::get('/{account}/statement',    [AccountController::class, 'statement'])->name('statement');
             Route::get('/{account}/deposit',         [AccountController::class, 'showDeposit'])->name('deposit.show');
-            Route::post('/{account}/deposit',        [AccountController::class, 'deposit'])->name('deposit');
+            Route::post('/{account}/deposit',        [AccountController::class, 'deposit'])->name('deposit')->middleware('throttle:money');
             Route::get('/{account}/withdrawal',      [AccountController::class, 'showWithdrawal'])->name('withdrawal.show');
-            Route::post('/{account}/withdrawal',     [AccountController::class, 'withdrawal'])->name('withdrawal');
+            Route::post('/{account}/withdrawal',     [AccountController::class, 'withdrawal'])->name('withdrawal')->middleware('throttle:money');
             Route::get('/{account}/share-transfer',  [AccountController::class, 'showShareTransfer'])->name('share-transfer.show');
             Route::post('/{account}/share-transfer', [AccountController::class, 'shareTransfer'])->name('share-transfer');
         });
@@ -214,9 +214,9 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::delete('/{loan}',   [LoanController::class, 'destroy'])->name('destroy');
         Route::post('/{loan}/submit',   [LoanController::class, 'submit'])->name('submit');
         Route::post('/{loan}/review',   [LoanController::class, 'review'])->name('review');
-        Route::post('/{loan}/approve',  [LoanController::class, 'approve'])->middleware('can:approve-loans')->name('approve');
-        Route::post('/{loan}/reject',   [LoanController::class, 'reject'])->middleware('can:approve-loans')->name('reject');
-        Route::post('/{loan}/disburse', [LoanController::class, 'disburse'])->middleware('can:process-transactions')->name('disburse');
+        Route::post('/{loan}/approve',  [LoanController::class, 'approve'])->middleware(['can:approve-loans','throttle:money'])->name('approve');
+        Route::post('/{loan}/reject',   [LoanController::class, 'reject'])->middleware(['can:approve-loans','throttle:money'])->name('reject');
+        Route::post('/{loan}/disburse', [LoanController::class, 'disburse'])->middleware(['can:process-transactions','throttle:money'])->name('disburse');
         Route::get('/{loan}/schedule',   [LoanController::class, 'schedule'])->name('schedule');
         Route::get('/{loan}/repayments', [LoanController::class, 'repayments'])->name('repayments');
         Route::post('/{loan}/repayment', [LoanController::class, 'recordRepayment'])->name('record-repayment');
@@ -253,11 +253,11 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::post('/preview', [DividendController::class, 'preview'])->name('preview');
         Route::post('/calculate/{year}',  [DividendController::class, 'calculate'])->name('calculate');
         Route::post('/{dividend}/approve',   [DividendController::class, 'approve'])->name('approve');
-        Route::post('/{dividend}/distribute',[DividendController::class, 'distribute'])->name('distribute');
+        Route::post('/{dividend}/distribute',[DividendController::class, 'distribute'])->name('distribute')->middleware(['role:admin,accountant', 'throttle:money']);
         Route::post('/{dividend}/reverse',[DividendController::class, 'reverse'])->name('reverse');
         Route::get('/{dividend}/members', [DividendController::class, 'members'])->name('members');
         Route::get('/{dividend}/members/{member}',   [DividendController::class, 'memberDetails'])->name('member-details');
-        Route::post('/{dividend}/members/{member}/pay', [DividendController::class, 'payMemberDividend'])->name('pay-member');
+        Route::post('/{dividend}/members/{member}/pay', [DividendController::class, 'payMemberDividend'])->name('pay-member')->middleware(['role:admin,accountant', 'throttle:money']);
         Route::get('/{dividend}/report',     [DividendController::class, 'report'])->name('report');
         Route::get('/analytics/history',     [DividendController::class, 'history'])->name('analytics.history');
         Route::get('/analytics/projections', [DividendController::class, 'projections'])->name('analytics.projections');
@@ -432,7 +432,7 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     });
 
     // ── Schedules 
-    Route::prefix('schedule')->name('schedule.')->middleware('role:admin,accountant')->group(function () {
+    Route::prefix('schedule')->name('schedule.')->middleware(['role:admin,accountant','throttle:money'])->group(function () {
         Route::get('/', [ScheduleController::class, 'index'])->name('index');
         Route::get('/monthly-deposit',          [ScheduleController::class, 'monthlyDeposit'])->name('monthly-deposit');
         Route::post('/monthly-deposit/preview', [ScheduleController::class, 'previewMonthlyDeposits'])->name('monthly-deposit.preview');
@@ -479,7 +479,7 @@ Route::middleware('role:member')->group(function () {
     Route::get('/my-transactions/statement/pdf', [TransactionController::class, 'myStatementPdf'])->name('my-transactions.statement.pdf');
 });
 
-Route::middleware(['auth', 'force.password.change', 'role:member', 'member.owner'])->group(function () {
+Route::middleware(['auth', 'force.password.change', 'role:member', 'member.owner','throttle:money'])->group(function () {
     Route::get('/{member}/my-accounts/{account}/statement', [AccountController::class, 'myStatement'])->name('my-accounts.statement');
     Route::get('/members/{member}/accounts/{account}/deposit',  [MemberController::class, 'showDeposit'])->name('members.accounts.deposit.show');
     Route::post('/members/{member}/accounts/{account}/deposit', [MemberController::class, 'deposit'])->name('members.accounts.deposit');
@@ -509,7 +509,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {
-    Route::middleware('can:process-transactions')->group(function () {
+    Route::middleware(['can:process-transactions','throttle:money'])->group(function () {
         Route::resource('transactions', TransactionController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
         Route::post('/transactions/{id}/approve', [TransactionController::class, 'approve'])->name('transactions.approve');
         Route::post('/transactions/{id}/reject',  [TransactionController::class, 'reject'])->name('transactions.reject');
