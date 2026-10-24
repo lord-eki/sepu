@@ -158,7 +158,7 @@ class PaymentVoucherController extends Controller
             if ($request->budget_item_id) {
                 $budgetItem = BudgetItem::find($request->budget_item_id);
                 if ($budgetItem && $budgetItem->remaining_amount < $request->amount) {
-                    throw new \Exception('Insufficient budget allocation. Available: ' . number_format($budgetItem->remaining_amount, 2));
+                    throw new \DomainException('Insufficient budget allocation. Available: ' . number_format($budgetItem->remaining_amount, 2));
                 }
             }
 
@@ -204,7 +204,7 @@ class PaymentVoucherController extends Controller
                 }
             }
 
-            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)])->withInput();
         }
     }
 
@@ -295,7 +295,7 @@ class PaymentVoucherController extends Controller
             if ($request->budget_item_id && $request->budget_item_id != $voucher->budget_item_id) {
                 $budgetItem = BudgetItem::find($request->budget_item_id);
                 if ($budgetItem && $budgetItem->remaining_amount < $request->amount) {
-                    throw new \Exception('Insufficient budget allocation. Available: ' . number_format($budgetItem->remaining_amount, 2));
+                    throw new \DomainException('Insufficient budget allocation. Available: ' . number_format($budgetItem->remaining_amount, 2));
                 }
             }
 
@@ -318,7 +318,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)])->withInput();
         }
     }
 
@@ -350,7 +350,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -413,7 +413,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -454,7 +454,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -512,7 +512,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -552,7 +552,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -598,7 +598,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -642,7 +642,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -831,7 +831,7 @@ class PaymentVoucherController extends Controller
 
         $accountId = $request->account_id;
         if (!$accountId) {
-            throw new \Exception("Payment account is required for this transaction.");
+            throw new \DomainException("Payment account is required for this transaction.");
         }
             // This would create a transaction record
         // Implementation depends on your specific transaction structure
@@ -1113,7 +1113,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -1169,7 +1169,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
         }
     }
 

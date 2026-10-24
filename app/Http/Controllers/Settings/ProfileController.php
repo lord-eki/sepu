@@ -204,7 +204,7 @@ class ProfileController extends Controller
                     ->with('success', 'Profile completed successfully! Please wait for approval.');
             } catch (\Throwable $e) {
                 DB::rollBack();
-                Log::error('Profile completion failed', ['error' => $e->getMessage()]);
+                Log::error('Profile completion failed', ['error' => \App\Support\ErrorMessage::from($e)]);
                 return back()->withInput()->with('error', 'Something went wrong while completing your profile. Please try again later.');
             }
         }
@@ -299,10 +299,10 @@ class ProfileController extends Controller
         } catch (\Throwable $e) {
             Log::error('Profile update failed', [
                 'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+                'error'   => \App\Support\ErrorMessage::from($e),
             ]);
 
-            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return back()->with('error', 'Something went wrong: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 

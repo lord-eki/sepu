@@ -372,7 +372,7 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error in creating loan application: ' . $e->getMessage(),
+                'message' => 'Error in creating loan application: ' . \App\Support\ErrorMessage::from($e),
             ], 500);
         }
     }
@@ -528,7 +528,7 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating loan: ' . $e->getMessage(),
+                'message' => 'Error updating loan: ' . \App\Support\ErrorMessage::from($e),
             ], 500);
         }
     }
@@ -618,7 +618,7 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error approving loan: ' . $e->getMessage(),
+                'message' => 'Error approving loan: ' . \App\Support\ErrorMessage::from($e),
             ], 500);
         }
     }
@@ -684,7 +684,7 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error rejecting loan: ' . $e->getMessage(),
+                'message' => 'Error rejecting loan: ' . \App\Support\ErrorMessage::from($e),
             ], 500);
         }
     }
@@ -739,7 +739,7 @@ class LoanController extends Controller
             $netDisbursement = $principal - ($processingFee + $insuranceFee);
 
             if ($netDisbursement <= 0) {
-                throw new \Exception('Net disbursement cannot be zero or negative.');
+                throw new \DomainException('Net disbursement cannot be zero or negative.');
             }
 
             $loanAccount = Account::firstOrCreate(
@@ -874,7 +874,7 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error disbursing loan: ' . $e->getMessage(),
+                'message' => 'Error disbursing loan: ' . \App\Support\ErrorMessage::from($e),
             ], 500);
         }
     }

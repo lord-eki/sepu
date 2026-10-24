@@ -326,9 +326,9 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend creation failed: ' . $e->getMessage());
+            Log::error('Dividend creation failed: ' . \App\Support\ErrorMessage::from($e));
 
-            return back()->withErrors(['error' => 'Failed: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Failed: ' . \App\Support\ErrorMessage::from($e)])->withInput();
         }
     }
 
@@ -445,7 +445,7 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend update failed: ' . $e->getMessage());
+            Log::error('Dividend update failed: ' . \App\Support\ErrorMessage::from($e));
 
             return back()->withErrors(['error' => 'Failed to update dividend. Please try again.'])->withInput();
         }
@@ -472,7 +472,7 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend deletion failed: ' . $e->getMessage());
+            Log::error('Dividend deletion failed: ' . \App\Support\ErrorMessage::from($e));
 
             return redirect()->route('dividends.index')
                 ->with('error', 'Failed to delete dividend. Please try again.');
@@ -523,9 +523,9 @@ class DividendController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Dividend preview failed: ' . $e->getMessage());
+            Log::error('Dividend preview failed: ' . \App\Support\ErrorMessage::from($e));
 
-            return response()->json(['error' => 'Preview failed: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Preview failed: ' . \App\Support\ErrorMessage::from($e)], 500);
         }
     }
 
@@ -555,7 +555,7 @@ class DividendController extends Controller
                 ->with('success', 'Dividend approved successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Dividend approval failed: ' . $e->getMessage());
+            Log::error('Dividend approval failed: ' . \App\Support\ErrorMessage::from($e));
 
             return back()->with('error', 'Failed to approve dividend. Please try again.');
         }
@@ -638,7 +638,7 @@ class DividendController extends Controller
                     $distributedCount++;
 
                 } catch (\Exception $e) {
-                    Log::error("Failed to distribute dividend to member {$memberDividend->member_id}: " . $e->getMessage());
+                    Log::error("Failed to distribute dividend to member {$memberDividend->member_id}: " . \App\Support\ErrorMessage::from($e));
                     $failedCount++;
                 }
             }
@@ -661,7 +661,7 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend distribution failed: ' . $e->getMessage());
+            Log::error('Dividend distribution failed: ' . \App\Support\ErrorMessage::from($e));
 
             return back()->with('error', 'Failed to distribute dividends. Please try again.');
         }
@@ -729,7 +729,7 @@ class DividendController extends Controller
                         $reversedCount++;
                     }
                 } catch (\Exception $e) {
-                    Log::error("Failed to reverse dividend for member {$memberDividend->member_id}: " . $e->getMessage());
+                    Log::error("Failed to reverse dividend for member {$memberDividend->member_id}: " . \App\Support\ErrorMessage::from($e));
                     $failedCount++;
                 }
             }
@@ -753,7 +753,7 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Dividend reversal failed: ' . $e->getMessage());
+            Log::error('Dividend reversal failed: ' . \App\Support\ErrorMessage::from($e));
 
             return back()->with('error', 'Failed to reverse dividends. Please try again.');
         }
@@ -867,7 +867,7 @@ class DividendController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Member dividend payment failed: ' . $e->getMessage());
+            Log::error('Member dividend payment failed: ' . \App\Support\ErrorMessage::from($e));
 
             return back()->with('error', 'Failed to pay member dividend. Please try again.');
         }
@@ -963,7 +963,7 @@ class DividendController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Dividend projection calculation failed: ' . $e->getMessage());
+            Log::error('Dividend projection calculation failed: ' . \App\Support\ErrorMessage::from($e));
 
             return response()->json(['error' => 'Failed to calculate projection. Please try again.'], 500);
         }

@@ -151,13 +151,13 @@ class TransactionController extends Controller
             $member = $account->member;
 
             // Validate account and member are active
-            if (!$account->is_active) throw new \Exception('Account is not active');
-            if ($member->membership_status !== 'active') throw new \Exception('Member account is not active');
+            if (!$account->is_active) throw new \DomainException('Account is not active');
+            if ($member->membership_status !== 'active') throw new \DomainException('Member account is not active');
 
             // For withdrawals, check sufficient balance
             if ($request->transaction_type === 'withdrawal') {
                 if ($account->available_balance < $request->amount) {
-                    throw new \Exception('Insufficient account balance');
+                    throw new \DomainException('Insufficient account balance');
                 }
             }
 
@@ -196,7 +196,7 @@ class TransactionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->withErrors(['general' => 'Transaction failed: ' . $e->getMessage()]);
+            return back()->withErrors(['general' => 'Transaction failed: ' . \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -309,7 +309,7 @@ class TransactionController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction update failed: ' . $e->getMessage()
+                'message' => 'Transaction update failed: ' . \App\Support\ErrorMessage::from($e)
             ], 400);
         }
     }
@@ -346,7 +346,7 @@ class TransactionController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction deletion failed: ' . $e->getMessage()
+                'message' => 'Transaction deletion failed: ' . \App\Support\ErrorMessage::from($e)
             ], 400);
         }
     }
@@ -416,7 +416,7 @@ class TransactionController extends Controller
     
         } catch (\Exception $e) {
             return back()->withErrors([
-                'general' => 'Transaction approval failed: ' . $e->getMessage()
+                'general' => 'Transaction approval failed: ' . \App\Support\ErrorMessage::from($e)
             ]);
         }
     }
@@ -456,7 +456,7 @@ class TransactionController extends Controller
 
         } catch (\Exception $e) {
             return back()->withErrors([
-                'general' => 'Transaction rejection failed: ' . $e->getMessage()
+                'general' => 'Transaction rejection failed: ' . \App\Support\ErrorMessage::from($e)
             ]);
         }
     }
@@ -531,7 +531,7 @@ class TransactionController extends Controller
 
         } catch (\Exception $e) {
             return back()->withErrors([
-                'general' => 'Transaction reversal failed: ' . $e->getMessage()
+                'general' => 'Transaction reversal failed: ' . \App\Support\ErrorMessage::from($e)
             ]);
         }
     }

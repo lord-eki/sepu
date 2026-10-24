@@ -455,11 +455,11 @@ class SettingsController extends Controller
             return redirect()->back()->with('success', 'Backup created successfully.');
         } catch (\Exception $e) {
             Log::error('Backup creation failed', [
-                'error' => $e->getMessage(),
+                'error' => \App\Support\ErrorMessage::from($e),
                 'user_id' => Auth::id()
             ]);
 
-            return redirect()->back()->with('error', 'Backup creation failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Backup creation failed: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 
@@ -486,12 +486,12 @@ class SettingsController extends Controller
             return redirect()->back()->with('success', 'System restored successfully.');
         } catch (\Exception $e) {
             Log::error('Backup restoration failed', [
-                'error' => $e->getMessage(),
+                'error' => \App\Support\ErrorMessage::from($e),
                 'backup_file' => $validated['backup_file'],
                 'user_id' => Auth::id()
             ]);
 
-            return redirect()->back()->with('error', 'Backup restoration failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Backup restoration failed: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 

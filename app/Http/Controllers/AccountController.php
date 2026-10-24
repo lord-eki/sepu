@@ -151,7 +151,7 @@ class AccountController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to create account: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create account: ' . \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -214,7 +214,7 @@ class AccountController extends Controller
                 ->with('success', 'Account updated successfully');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update account: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update account: ' . \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -261,7 +261,7 @@ class AccountController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to close account: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to close account: ' . \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -336,7 +336,7 @@ class AccountController extends Controller
             DB::rollBack();
 
             return back()->withErrors([
-                'error' => 'Failed to submit deposit: ' . $e->getMessage()
+                'error' => 'Failed to submit deposit: ' . \App\Support\ErrorMessage::from($e)
             ]);
         }
     }
@@ -412,7 +412,7 @@ class AccountController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to process withdrawal: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to process withdrawal: ' . \App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -534,7 +534,7 @@ class AccountController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to process share transfer: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to process share transfer: ' . \App\Support\ErrorMessage::from($e)]);
         }
     }
 

@@ -246,7 +246,7 @@ class MemberController extends Controller
             DB::rollBack();
 
             return back()->withErrors([
-                'error' => 'Failed to create member: ' . $e->getMessage()
+                'error' => 'Failed to create member: ' . \App\Support\ErrorMessage::from($e)
             ]);
         }
     }
@@ -384,9 +384,8 @@ class MemberController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            dd($e->getMessage(), $e->getTraceAsString());
 
-            return back()->withErrors(['error' => 'Failed to update member: '.$e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update member: '.\App\Support\ErrorMessage::from($e)]);
         }
     }
 
@@ -434,7 +433,7 @@ class MemberController extends Controller
             DB::rollBack();
 
             return redirect()->route('members.show', $member->id)
-                ->with('error', 'Failed to delete member: ' . $e->getMessage());
+                ->with('error', 'Failed to delete member: ' . \App\Support\ErrorMessage::from($e));
         }
     }
 
@@ -526,7 +525,7 @@ class MemberController extends Controller
     
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Bulk delete failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Bulk delete failed: ' . \App\Support\ErrorMessage::from($e));
         }
     }
     
@@ -1296,13 +1295,13 @@ class MemberController extends Controller
 
                             // Required fields
                             if (empty($preparedData['first_name'])) {
-                                throw new \Exception('First name is required');
+                                throw new \DomainException('First name is required');
                             }
                             if (empty($preparedData['last_name'])) {
-                                throw new \Exception('Last name is required');
+                                throw new \DomainException('Last name is required');
                             }
                             if (empty($preparedData['id_type'])) {
-                                throw new \Exception('ID type is required');
+                                throw new \DomainException('ID type is required');
                             }
 
                             // Generate missing fields
@@ -1405,16 +1404,16 @@ class MemberController extends Controller
                             $errors[] = [
                                 'row' => $rowNumber,
                                 'name' => $preparedData['first_name'] ?? 'Unknown Member',
-                                'errors' => [$e->getMessage()],
+                                'errors' => [\App\Support\ErrorMessage::from($e)],
                             ];
-                            \Log::error("Import failed at row {$rowNumber}: ".$e->getMessage());
+                            \Log::error("Import failed at row {$rowNumber}: ".\App\Support\ErrorMessage::from($e));
                         }
                     }
 
                     DB::commit();
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    \Log::error('Import chunk failed: '.$e->getMessage());
+                    \Log::error('Import chunk failed: '.\App\Support\ErrorMessage::from($e));
                 }
             }
 
@@ -1428,7 +1427,7 @@ class MemberController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->route('members.import.form')
-                ->with('error', 'Import failed: '.$e->getMessage())
+                ->with('error', 'Import failed: '.\App\Support\ErrorMessage::from($e))
                 ->with('import_errors', $errors);
         }
     }
@@ -1907,7 +1906,7 @@ public function importDeposits(Request $request): RedirectResponse
                         $errors[] = [
                             'row' => $rowNumber,
                             'name' => $memberName ?? 'Unknown',
-                            'errors' => [$e->getMessage()],
+                            'errors' => [\App\Support\ErrorMessage::from($e)],
                         ];
                     }
                 }
@@ -1928,7 +1927,7 @@ public function importDeposits(Request $request): RedirectResponse
             ->with('import_errors', $errors);
 
     } catch (\Exception $e) {
-        return back()->withErrors(['error' => 'Failed to process deposit import: '.$e->getMessage()]);
+        return back()->withErrors(['error' => 'Failed to process deposit import: '.\App\Support\ErrorMessage::from($e)]);
     }
 }
 

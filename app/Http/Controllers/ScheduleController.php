@@ -168,7 +168,7 @@ class ScheduleController extends Controller
                     $totalAmount += $entry['amount'];
                 } catch (\Throwable $e) {
                     $failed++;
-                    $errors[] = ['member_id' => $entry['member_id'], 'error' => $e->getMessage()];
+                    $errors[] = ['member_id' => $entry['member_id'], 'error' => \App\Support\ErrorMessage::from($e)];
                 }
             }
 
@@ -188,7 +188,7 @@ class ScheduleController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run schedule: ' . $e->getMessage()]);
+            return back()->withErrors(['schedule' => 'Failed to run schedule: ' . \App\Support\ErrorMessage::from($e)]);
         }
 
         return redirect()->route('schedule.monthly-deposit')
@@ -364,7 +364,7 @@ class ScheduleController extends Controller
                     $totalAmount += $amount;
                 } catch (\Throwable $e) {
                     $failed++;
-                    $errors[] = ['repayment_id' => $entry['repayment_id'], 'error' => $e->getMessage()];
+                    $errors[] = ['repayment_id' => $entry['repayment_id'], 'error' => \App\Support\ErrorMessage::from($e)];
                 }
             }
 
@@ -384,7 +384,7 @@ class ScheduleController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run schedule: ' . $e->getMessage()]);
+            return back()->withErrors(['schedule' => 'Failed to run schedule: ' . \App\Support\ErrorMessage::from($e)]);
         }
 
         return redirect()->route('schedule.loan-repayment')
@@ -465,7 +465,7 @@ class ScheduleController extends Controller
                     $loan = Loan::with('member.accounts')->whereKey($loanId)->lockForUpdate()->findOrFail();
 
                     if ($loan->status !== 'approved') {
-                        throw new \Exception("Loan {$loan->loan_number} is not in approved status or has already been disbursed.");
+                        throw new \DomainException("Loan {$loan->loan_number} is not in approved status or has already been disbursed.");
                     }
 
                     $alreadyDisbursed =  Transaction::where('transaction_type', 'loan_disbursement')
@@ -473,7 +473,7 @@ class ScheduleController extends Controller
                         ->exists();
 
                     if ($alreadyDisbursed) {
-                        throw new \Exception("Loan {$loan->loan_number} has already been disbursed.");
+                        throw new \DomainException("Loan {$loan->loan_number} has already been disbursed.");
                     }
 
                     $netAmount = $loan->approved_amount - $loan->processing_fee - $loan->insurance_fee;
@@ -484,7 +484,7 @@ class ScheduleController extends Controller
                         ->first();
 
                     if (! $account) {
-                        throw new \Exception("No active share_deposits account for member {$loan->member->membership_id}.");
+                        throw new \DomainException("No active share_deposits account for member {$loan->member->membership_id}.");
                     }
 
                     Transaction::create([
@@ -549,7 +549,7 @@ class ScheduleController extends Controller
                     $totalAmount += $netAmount;
                 } catch (\Throwable $e) {
                     $failed++;
-                    $errors[] = ['loan_id' => $loanId, 'error' => $e->getMessage()];
+                    $errors[] = ['loan_id' => $loanId, 'error' => \App\Support\ErrorMessage::from($e)];
                 }
             }
 
@@ -569,7 +569,7 @@ class ScheduleController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run disbursements: ' . $e->getMessage()]);
+            return back()->withErrors(['schedule' => 'Failed to run disbursements: ' . \App\Support\ErrorMessage::from($e)]);
         }
 
         return redirect()->route('schedule.loan-disbursement')
@@ -769,7 +769,7 @@ class ScheduleController extends Controller
                     $totalAmount += $amount;
                 } catch (\Throwable $e) {
                     $failed++;
-                    $errors[] = ['member_dividend_id' => $entry['member_dividend_id'], 'error' => $e->getMessage()];
+                    $errors[] = ['member_dividend_id' => $entry['member_dividend_id'], 'error' => \App\Support\ErrorMessage::from($e)];
                 }
             }
 
@@ -797,7 +797,7 @@ class ScheduleController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run dividend payments: ' . $e->getMessage()]);
+            return back()->withErrors(['schedule' => 'Failed to run dividend payments: ' . \App\Support\ErrorMessage::from($e)]);
         }
 
         return redirect()->route('schedule.dividend-payment')
