@@ -13,7 +13,9 @@ class Transaction extends Model
         'transaction_id', 'account_id', 'member_id', 'transaction_type',
         'amount', 'balance_before', 'balance_after', 'description',
         'reference_number', 'payment_method', 'payment_reference',
-        'status', 'processed_by', 'processed_at', 'metadata'
+        'status', 'processed_by', 'processed_at', 'metadata',
+        'created_by','approved_by','approved_at',
+        'idempotency_key','reversal_of_id','journal_entry_id'
     ];
 
     protected $casts = [
@@ -21,6 +23,7 @@ class Transaction extends Model
         'balance_before' => 'decimal:2',
         'balance_after' => 'decimal:2',
         'processed_at' => 'datetime',
+        'approved_at' => 'datetime',
         'metadata' => 'array',
     ];
 

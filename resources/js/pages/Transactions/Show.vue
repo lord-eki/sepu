@@ -2,7 +2,6 @@
     <AppLayout :breadcrumbs="[{ title: 'Transactions', href: '/transactions' }, { title: transaction.transaction_id ?? 'Transaction' }]">
         <Head :title="transaction.transaction_id ?? 'Transaction'" />
 
-        <!-- FLASH -->
         <div ref="flashBox" class="mx-auto mt-4 max-w-4xl px-4">
             <transition
                 enter-active-class="transition duration-300"
@@ -91,20 +90,16 @@
             </div>
         </div>
 
-        <!-- ✅ UPDATED MODAL -->
         <div v-if="modals.approve || modals.reject || modals.reverse" class="fixed inset-0 flex items-center justify-center bg-black/40">
             <div class="w-full max-w-md rounded-xl bg-white p-6">
                 <h3 class="mb-4 font-semibold">
                     {{ modals.approve ? 'Approve Transaction' : modals.reject ? 'Reject Transaction' : 'Reverse Transaction' }}
                 </h3>
 
-                <!-- APPROVE -->
                 <p v-if="modals.approve" class="mb-4 text-sm text-gray-600">Are you sure you want to approve this transaction?</p>
 
-                <!-- REJECT -->
                 <textarea v-if="modals.reject" v-model="payload.reason" class="mb-4 w-full rounded border p-2" placeholder="Enter rejection reason" />
 
-                <!-- REVERSE (REQUIRED) -->
                 <div v-if="modals.reverse">
                     <textarea v-model="payload.reason" class="mb-2 w-full rounded border p-2" placeholder="Enter reversal reason" />
                     <p v-if="!payload.reason.trim()" class="text-xs text-red-500">Reason is required</p>
@@ -126,7 +121,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
@@ -139,7 +134,6 @@ const loading = ref(false);
 const flashMessage = ref(null);
 const flashType = ref('success');
 
-// ✅ UPDATED MODALS
 const modals = reactive({ approve: false, reject: false, reverse: false });
 const payload = reactive({ reason: '' });
 
@@ -168,7 +162,6 @@ function goBack() {
     router.visit('/transactions');
 }
 
-// OPEN MODALS
 function openApprove() {
     modals.approve = true;
 }
@@ -184,14 +177,12 @@ function closeModals() {
     modals.approve = modals.reject = modals.reverse = false;
 }
 
-// HANDLE ACTION
 function handleAction() {
     if (modals.approve) approve();
     else if (modals.reject) reject();
     else reverse();
 }
 
-// ACTIONS
 function approve() {
     loading.value = true;
 

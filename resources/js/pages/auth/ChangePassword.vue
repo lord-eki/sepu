@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { router, useForm } from '@inertiajs/vue3';
 import { Eye, EyeOff, LockKeyhole, ShieldCheck } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
