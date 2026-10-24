@@ -1,3 +1,1 @@
-<template>
-    Transaction Modal
-</template>
+<template>Transaction Modal</template>

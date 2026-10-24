@@ -1,138 +1,135 @@
 <script setup lang="ts">
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar'
-import { type NavItem } from '@/types'
-import { Link, usePage } from '@inertiajs/vue3'
-import { ChevronDown, ChevronRight } from 'lucide-vue-next'
-import { ref, watch, onMounted, computed } from 'vue'
+import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/vue3';
+import { ChevronDown, ChevronRight } from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
 
-const props = defineProps<{ items: NavItem[] }>()
-const page = usePage()
+const props = defineProps<{ items: NavItem[] }>();
+const page = usePage();
 
 // Unread notification count, shared globally via HandleInertiaRequests
 // (page.props.notificationCounts.unread_notifications). Reactive, so it
 // updates as Inertia props change without needing a manual poll.
 const unreadNotificationCount = computed(() => {
-  const count = (page.props as any)?.notificationCounts?.unread_notifications
-  return typeof count === 'number' ? count : 0
-})
+    const count = (page.props as any)?.notificationCounts?.unread_notifications;
+    return typeof count === 'number' ? count : 0;
+});
 
-const badgeCountFor = (routeName?: string) =>
-  routeName === 'notifications.index' ? unreadNotificationCount.value : 0
+const badgeCountFor = (routeName?: string) => (routeName === 'notifications.index' ? unreadNotificationCount.value : 0);
 
 // Track open dropdowns by title
-const openMenus = ref<Record<string, boolean>>({})
+const openMenus = ref<Record<string, boolean>>({});
 
 // Toggle parent menu
 const toggleMenu = (title: string) => {
-  openMenus.value[title] = !openMenus.value[title]
-}
+    openMenus.value[title] = !openMenus.value[title];
+};
 
 // Keep parent menu open when child link is active
 const setActiveParents = () => {
-  const currentUrl = page.url
-  for (const item of props.items) {
-    if (item.children?.length) {
-      const hasActiveChild = item.children.some(
-        (child) => route().current(child.routeName) || currentUrl.startsWith(child.href || '')
-      )
-      if (hasActiveChild) {
-        openMenus.value[item.title] = true
-      }
+    const currentUrl = page.url;
+    for (const item of props.items) {
+        if (item.children?.length) {
+            const hasActiveChild = item.children.some((child) => route().current(child.routeName) || currentUrl.startsWith(child.href || ''));
+            if (hasActiveChild) {
+                openMenus.value[item.title] = true;
+            }
+        }
     }
-  }
-}
+};
 
 // Watch page URL for changes
-watch(() => page.url, setActiveParents, { immediate: true })
-onMounted(setActiveParents)
+watch(() => page.url, setActiveParents, { immediate: true });
+onMounted(setActiveParents);
 </script>
 
 <template>
-  <SidebarGroup class="px-2 py-0">
-    <SidebarGroupLabel class="text-gray-700 dark:text-gray-300">
-      SS Platform
-    </SidebarGroupLabel>
+    <SidebarGroup class="px-2 py-0">
+        <SidebarGroupLabel class="text-gray-700 dark:text-gray-300"> SS Platform </SidebarGroupLabel>
 
-    <SidebarMenu>
-      <SidebarMenuItem v-for="item in props.items" :key="item.title">
-        <!-- Parent with children -->
-        <template v-if="item.children && item.children.length">
-          <SidebarMenuButton as-child :tooltip="item.title" @click.stop="toggleMenu(item.title)" class="w-full">
-            <div
-              class="flex items-center justify-between w-full cursor-pointer select-none text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400">
-              <div class="flex items-center gap-2">
-                <component :is="item.icon" class="h-4 w-4" />
-                <span>{{ item.title }}</span>
-                <span
-                  v-if="badgeCountFor(item.routeName) > 0"
-                  class="ml-1 inline-flex items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white dark:bg-orange-500"
-                >
-                  {{ badgeCountFor(item.routeName) > 99 ? '99+' : badgeCountFor(item.routeName) }}
-                </span>
-              </div>
-              <component :is="openMenus[item.title] ? ChevronDown : ChevronRight"
-                class="h-4 w-4 transition-transform" />
-            </div>
-          </SidebarMenuButton>
+        <SidebarMenu>
+            <SidebarMenuItem v-for="item in props.items" :key="item.title">
+                <!-- Parent with children -->
+                <template v-if="item.children && item.children.length">
+                    <SidebarMenuButton as-child :tooltip="item.title" @click.stop="toggleMenu(item.title)" class="w-full">
+                        <div
+                            class="flex w-full cursor-pointer items-center justify-between text-gray-700 select-none hover:text-orange-600 dark:text-gray-300 dark:hover:text-orange-400"
+                        >
+                            <div class="flex items-center gap-2">
+                                <component :is="item.icon" class="h-4 w-4" />
+                                <span>{{ item.title }}</span>
+                                <span
+                                    v-if="badgeCountFor(item.routeName) > 0"
+                                    class="ml-1 inline-flex items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] leading-none font-semibold text-white dark:bg-orange-500"
+                                >
+                                    {{ badgeCountFor(item.routeName) > 99 ? '99+' : badgeCountFor(item.routeName) }}
+                                </span>
+                            </div>
+                            <component :is="openMenus[item.title] ? ChevronDown : ChevronRight" class="h-4 w-4 transition-transform" />
+                        </div>
+                    </SidebarMenuButton>
 
-          <!-- Children -->
-          <transition name="fade">
-            <div v-show="openMenus[item.title]" class="ml-6 mt-1 space-y-1">
-              <SidebarMenuItem v-for="child in item.children" :key="child.title">
-                <SidebarMenuButton as-child :tooltip="child.title" :class="[
-        route().current(child.routeName)
-          ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 font-semibold rounded-md'
-          : 'hover:bg-orange-50 dark:hover:bg-gray-800/60 text-gray-700 dark:text-gray-300 rounded-md',
-      ]">
-                  <Link :href="child.href || '#'" preserve-scroll preserve-state class="flex items-center gap-2">
-                  <component :is="child.icon" class="h-4 w-4" />
-                  <span>{{ child.title }}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </div>
-          </transition>
-        </template>
+                    <!-- Children -->
+                    <transition name="fade">
+                        <div v-show="openMenus[item.title]" class="mt-1 ml-6 space-y-1">
+                            <SidebarMenuItem v-for="child in item.children" :key="child.title">
+                                <SidebarMenuButton
+                                    as-child
+                                    :tooltip="child.title"
+                                    :class="[
+                                        route().current(child.routeName)
+                                            ? 'rounded-md bg-orange-100 font-semibold text-orange-600 dark:bg-orange-900/40 dark:text-orange-400'
+                                            : 'rounded-md text-gray-700 hover:bg-orange-50 dark:text-gray-300 dark:hover:bg-gray-800/60',
+                                    ]"
+                                >
+                                    <Link :href="child.href || '#'" preserve-scroll preserve-state class="flex items-center gap-2">
+                                        <component :is="child.icon" class="h-4 w-4" />
+                                        <span>{{ child.title }}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </div>
+                    </transition>
+                </template>
 
-        <!-- Single link -->
-        <template v-else>
-          <SidebarMenuButton as-child :tooltip="item.title" :class="[
-        route().current(item.routeName)
-          ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 font-semibold rounded-md'
-          : 'hover:bg-orange-50 dark:hover:bg-gray-800/60 text-gray-700 dark:text-gray-300 rounded-md',
-      ]">
-            <Link :href="item.href" preserve-scroll preserve-state class="flex items-center gap-2">
-            <component :is="item.icon" class="h-4 w-4" />
-            <span>{{ item.title }}</span>
-            <span
-              v-if="badgeCountFor(item.routeName) > 0"
-              class="ml-1 inline-flex items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white dark:bg-orange-500"
-            >
-              {{ badgeCountFor(item.routeName) > 99 ? '99+' : badgeCountFor(item.routeName) }}
-            </span>
-            </Link>
-          </SidebarMenuButton>
-        </template>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  </SidebarGroup>
+                <!-- Single link -->
+                <template v-else>
+                    <SidebarMenuButton
+                        as-child
+                        :tooltip="item.title"
+                        :class="[
+                            route().current(item.routeName)
+                                ? 'rounded-md bg-orange-100 font-semibold text-orange-600 dark:bg-orange-900/40 dark:text-orange-400'
+                                : 'rounded-md text-gray-700 hover:bg-orange-50 dark:text-gray-300 dark:hover:bg-gray-800/60',
+                        ]"
+                    >
+                        <Link :href="item.href" preserve-scroll preserve-state class="flex items-center gap-2">
+                            <component :is="item.icon" class="h-4 w-4" />
+                            <span>{{ item.title }}</span>
+                            <span
+                                v-if="badgeCountFor(item.routeName) > 0"
+                                class="ml-1 inline-flex items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] leading-none font-semibold text-white dark:bg-orange-500"
+                            >
+                                {{ badgeCountFor(item.routeName) > 99 ? '99+' : badgeCountFor(item.routeName) }}
+                            </span>
+                        </Link>
+                    </SidebarMenuButton>
+                </template>
+            </SidebarMenuItem>
+        </SidebarMenu>
+    </SidebarGroup>
 </template>
 
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: all 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
-  opacity: 0;
-  transform: translateY(-3px);
+    opacity: 0;
+    transform: translateY(-3px);
 }
 </style>

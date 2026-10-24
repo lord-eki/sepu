@@ -56,7 +56,6 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
-    
 }
 :root {
     --label-color: #1e3a8a; /* blue-900 for light mode */
@@ -65,7 +64,7 @@
 .dark {
     --label-color: #93c5fd; /* blue-300 for dark mode */
 }
-  
+
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
@@ -101,11 +100,11 @@
     --popover-foreground: hsl(222.2 47.4% 11.2%);
 
     /* Primary deep blue */
-    --primary: hsl(221 83% 23%);          /* blue-900 */
+    --primary: hsl(221 83% 23%); /* blue-900 */
     --primary-foreground: hsl(0 0% 100%);
 
     /* Secondary lighter shade */
-    --secondary: hsl(221 83% 30%);        /* near blue-100 */
+    --secondary: hsl(221 83% 30%); /* near blue-100 */
     --secondary-foreground: hsl(221 83% 43%);
 
     /* Muted */
@@ -135,7 +134,7 @@
     /* Sidebar */
     --sidebar-background: hsl(221 40% 98%);
     --sidebar-foreground: hsl(221 40% 20%);
-    --sidebar-primary: hsl(221 83% 43%);       /* blue-700 */
+    --sidebar-primary: hsl(221 83% 43%); /* blue-700 */
     --sidebar-primary-foreground: hsl(0 0% 100%);
     --sidebar-accent: hsl(221 83% 96%);
     --sidebar-accent-foreground: hsl(221 40% 20%);
@@ -152,7 +151,7 @@
     --popover-foreground: hsl(210 40% 98%);
 
     /* Primary strong blue in dark mode */
-    --primary: hsl(221 83% 55%);           /* blue-600 */
+    --primary: hsl(221 83% 55%); /* blue-600 */
     --primary-foreground: hsl(0 0% 100%);
 
     /* Secondary */
@@ -183,7 +182,7 @@
 
     --sidebar-background: hsl(222.2 47.4% 11.2%);
     --sidebar-foreground: hsl(210 40% 98%);
-    --sidebar-primary: hsl(221 83% 55%);       /* blue-600 */
+    --sidebar-primary: hsl(221 83% 55%); /* blue-600 */
     --sidebar-primary-foreground: hsl(0 0% 100%);
     --sidebar-accent: hsl(221 33% 25%);
     --sidebar-accent-foreground: hsl(210 40% 98%);

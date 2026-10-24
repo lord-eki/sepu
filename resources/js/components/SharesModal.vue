@@ -1,3 +1,1 @@
-<template>
-    Shares Modal
-</template>
+<template>Shares Modal</template>

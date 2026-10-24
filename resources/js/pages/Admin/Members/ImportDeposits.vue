@@ -1,200 +1,227 @@
 <template>
-  <!-- Loader Overlay -->
-  <div v-if="form.processing"
-    class="fixed inset-0 bg-gray-800/50 flex flex-col items-center justify-center z-50 cursor-wait">
-    <svg class="animate-spin h-10 w-10 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none"
-      viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-    </svg>
-    <p class="text-white mt-3 text-sm font-medium">Processing import...</p>
-  </div>
-
-  <AppLayout :breadcrumbs="[
-    { title: 'Members', href: route('members.index') },
-    { title: 'Import Deposits' }
-  ]">
-    <Head title="Import Member Deposits" />
-
-    <div class="pb-10 max-sm:px-4">
-      <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-
-        <!-- Header -->
-        <div class="flex items-center bg-darkBlue text-white p-4 rounded-md shadow mb-4">
-          <Link :href="route('members.index')" class="mr-4 text-orange-400 hover:text-orange-500">
-            <ArrowLeft class="w-5 h-5" />
-          </Link>
-          <h2 class="font-semibold text-lg sm:text-xl">Import Monthly Deposits</h2>
-        </div>
-
-        <!-- Flash Messages -->
-        <div ref="flashBox" class="mt-4">
-          <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2"
-            enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200"
-            leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
-            <div v-if="flashMessage" class="flex gap-3"
-              :class="[flashType === 'success'
-                ? 'bg-green-50 border border-green-200 text-green-700'
-                : 'bg-red-50 border border-red-200 text-red-700',
-                'mb-4 rounded-md p-4 shadow flex items-center']">
-              <component :is="flashType === 'success' ? CheckCircle : AlertCircle" class="h-5 w-5"
-                :class="flashType === 'success' ? 'text-green-600' : 'text-red-600'" />
-              <p class="ml-3 text-sm">{{ flashMessage }}</p>
-              <button type="button" class="ml-auto text-gray-500 hover:text-gray-700" @click="flashMessage = null">
-                ✕
-              </button>
-            </div>
-          </transition>
-
-          <!-- Import Errors -->
-          <div v-if="importErrors && importErrors.length > 0" class="bg-yellow-50 border-l-4 border-yellow-400 rounded-md p-4 mb-4 shadow-sm">
-            <div class="flex items-start">
-              <AlertCircle class="h-6 w-6 text-yellow-600 mt-0.5 flex-shrink-0" />
-              <div class="ml-3 flex-1">
-                <h3 class="text-base font-bold text-yellow-900">Import Errors - {{ importErrors.length }} row(s) failed</h3>
-                <p class="mt-1 text-sm text-yellow-700">Please review and fix the following errors, then re-import the file.</p>
-                <div class="mt-3">
-                  <button 
-                    @click="showErrors = !showErrors" 
-                    class="inline-flex items-center px-3 py-1.5 border border-yellow-300 rounded-md text-sm font-medium text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                    {{ showErrors ? 'Hide' : 'Show' }} error details
-                  </button>
-                </div>
-                <div v-if="showErrors" class="mt-4 max-h-96 overflow-y-auto">
-                  <div class="space-y-3">
-                    <div v-for="(error, index) in importErrors" :key="index" 
-                      class="bg-white p-4 rounded-md border-l-4 border-red-400 shadow-sm">
-                      <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                          <p class="text-sm font-bold text-gray-900">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mr-2">
-                              Row {{ error.row }}
-                            </span>
-                            {{ error.name || 'Unknown Member' }}
-                          </p>
-                          <div class="mt-2 space-y-1">
-                            <div v-for="(msg, idx) in error.errors" :key="idx" 
-                              class="flex items-start text-sm text-red-700">
-                              <span class="text-red-500 mr-2">•</span>
-                              <span>{{ msg }}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Instructions -->
-        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-md">
-          <div class="flex">
-            <Info class="h-5 w-5 text-blue-400 mt-0.5" />
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-blue-800">Import Instructions</h3>
-              <div class="mt-2 text-sm text-blue-700">
-                <ol class="list-decimal list-inside space-y-1">
-                  <li>Download the template file</li>
-                  <li>Fill in member names exactly as in the system</li>
-                  <li>Enter monthly deposit amounts</li>
-                  <li>Leave empty cells if no deposit for a month</li>
-                  <li>Select the year</li>
-                  <li>Upload the completed file</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Download Template -->
-        <div class="bg-white border-l-4 border-darkBlue shadow px-4 py-5 sm:rounded-lg sm:p-6 mb-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-lg font-bold text-darkBlue">Step 1: Download Template</h3>
-              <p class="mt-1 text-sm text-gray-500">Get the Excel template with sample data</p>
-            </div>
-            <a :href="route('members.deposits.import.template')" 
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-darkBlue hover:bg-blue-900">
-              <Download class="w-5 h-5 mr-2" /> Download Template
-            </a>
-          </div>
-        </div>
-
-        <!-- Upload File -->
-        <div class="bg-white border-l-4 border-orange-500 shadow px-4 py-5 sm:rounded-lg sm:p-6">
-          <div class="flex flex-col space-y-4">
-            <form @submit.prevent="submitImport" class="space-y-4">
-
-              <!-- Year -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Year <span class="text-red-500">*</span></label>
-                <select v-model="form.year"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
-                        required>
-                  <option value="">Select Year</option>
-                  <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-                </select>
-              </div>
-
-              <!-- File Input -->
-              <div>
-                <input type="file" ref="fileInput" accept=".csv,.xlsx,.xls" class="hidden" @change="handleFileSelect" />
-                <div v-if="!selectedFile"
-                  @click="$refs.fileInput.click()"
-                  class="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-12 text-center hover:border-orange-500 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
-                  <FileSpreadsheet class="mx-auto h-12 w-12 text-gray-400" />
-                  <div class="flex flex-col items-center mt-2">
-                    <span class="block text-sm font-medium text-darkBlue">Click to upload Excel/CSV file</span>
-                    <span class="block text-xs text-gray-500 mt-1">XLS, XLSX, or CSV up to 5MB</span>
-                  </div>
-                </div>
-
-                <div v-else class="border-2 border-green-300 rounded-lg p-4 bg-green-50">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                      <FileSpreadsheet class="h-8 w-8 text-green-600" />
-                      <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">{{ selectedFile.name }}</p>
-                        <p class="text-xs text-gray-500">{{ formatFileSize(selectedFile.size) }}</p>
-                      </div>
-                    </div>
-                    <button type="button" @click="removeFile" class="text-red-600 hover:text-red-800 focus:outline-none">
-                      <X class="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Submit Buttons -->
-              <div class="flex justify-end space-x-3">
-                <button type="button" @click="removeFile"
-                  class="bg-gray-200 py-2 px-4 rounded-md shadow-sm text-sm font-medium text-darkBlue hover:bg-gray-300">
-                  Cancel
-                </button>
-                <button type="submit" :disabled="!selectedFile || form.processing"
-                  class="inline-flex items-center justify-center py-2 px-6 rounded-md text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <Upload class="w-5 h-5 mr-2" />
-                  <span v-if="form.processing">Importing...</span>
-                  <span v-else>Import Deposits</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-      </div>
+    <!-- Loader Overlay -->
+    <div v-if="form.processing" class="fixed inset-0 z-50 flex cursor-wait flex-col items-center justify-center bg-gray-800/50">
+        <svg class="h-10 w-10 animate-spin text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <p class="mt-3 text-sm font-medium text-white">Processing import...</p>
     </div>
-  </AppLayout>
+
+    <AppLayout :breadcrumbs="[{ title: 'Members', href: route('members.index') }, { title: 'Import Deposits' }]">
+        <Head title="Import Member Deposits" />
+
+        <div class="pb-10 max-sm:px-4">
+            <div class="mx-auto max-w-4xl sm:px-6 lg:px-8">
+                <!-- Header -->
+                <div class="bg-darkBlue mb-4 flex items-center rounded-md p-4 text-white shadow">
+                    <Link :href="route('members.index')" class="mr-4 text-orange-400 hover:text-orange-500">
+                        <ArrowLeft class="h-5 w-5" />
+                    </Link>
+                    <h2 class="text-lg font-semibold sm:text-xl">Import Monthly Deposits</h2>
+                </div>
+
+                <!-- Flash Messages -->
+                <div ref="flashBox" class="mt-4">
+                    <transition
+                        enter-active-class="transition ease-out duration-300"
+                        enter-from-class="opacity-0 -translate-y-2"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition ease-in duration-200"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-2"
+                    >
+                        <div
+                            v-if="flashMessage"
+                            class="flex gap-3"
+                            :class="[
+                                flashType === 'success'
+                                    ? 'border border-green-200 bg-green-50 text-green-700'
+                                    : 'border border-red-200 bg-red-50 text-red-700',
+                                'mb-4 flex items-center rounded-md p-4 shadow',
+                            ]"
+                        >
+                            <component
+                                :is="flashType === 'success' ? CheckCircle : AlertCircle"
+                                class="h-5 w-5"
+                                :class="flashType === 'success' ? 'text-green-600' : 'text-red-600'"
+                            />
+                            <p class="ml-3 text-sm">{{ flashMessage }}</p>
+                            <button type="button" class="ml-auto text-gray-500 hover:text-gray-700" @click="flashMessage = null">✕</button>
+                        </div>
+                    </transition>
+
+                    <!-- Import Errors -->
+                    <div
+                        v-if="importErrors && importErrors.length > 0"
+                        class="mb-4 rounded-md border-l-4 border-yellow-400 bg-yellow-50 p-4 shadow-sm"
+                    >
+                        <div class="flex items-start">
+                            <AlertCircle class="mt-0.5 h-6 w-6 flex-shrink-0 text-yellow-600" />
+                            <div class="ml-3 flex-1">
+                                <h3 class="text-base font-bold text-yellow-900">Import Errors - {{ importErrors.length }} row(s) failed</h3>
+                                <p class="mt-1 text-sm text-yellow-700">Please review and fix the following errors, then re-import the file.</p>
+                                <div class="mt-3">
+                                    <button
+                                        @click="showErrors = !showErrors"
+                                        class="inline-flex items-center rounded-md border border-yellow-300 bg-yellow-100 px-3 py-1.5 text-sm font-medium text-yellow-800 hover:bg-yellow-200 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                                    >
+                                        {{ showErrors ? 'Hide' : 'Show' }} error details
+                                    </button>
+                                </div>
+                                <div v-if="showErrors" class="mt-4 max-h-96 overflow-y-auto">
+                                    <div class="space-y-3">
+                                        <div
+                                            v-for="(error, index) in importErrors"
+                                            :key="index"
+                                            class="rounded-md border-l-4 border-red-400 bg-white p-4 shadow-sm"
+                                        >
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex-1">
+                                                    <p class="text-sm font-bold text-gray-900">
+                                                        <span
+                                                            class="mr-2 inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800"
+                                                        >
+                                                            Row {{ error.row }}
+                                                        </span>
+                                                        {{ error.name || 'Unknown Member' }}
+                                                    </p>
+                                                    <div class="mt-2 space-y-1">
+                                                        <div
+                                                            v-for="(msg, idx) in error.errors"
+                                                            :key="idx"
+                                                            class="flex items-start text-sm text-red-700"
+                                                        >
+                                                            <span class="mr-2 text-red-500">•</span>
+                                                            <span>{{ msg }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="mb-6 rounded-md border-l-4 border-blue-400 bg-blue-50 p-4">
+                    <div class="flex">
+                        <Info class="mt-0.5 h-5 w-5 text-blue-400" />
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Import Instructions</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <ol class="list-inside list-decimal space-y-1">
+                                    <li>Download the template file</li>
+                                    <li>Fill in member names exactly as in the system</li>
+                                    <li>Enter monthly deposit amounts</li>
+                                    <li>Leave empty cells if no deposit for a month</li>
+                                    <li>Select the year</li>
+                                    <li>Upload the completed file</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Template -->
+                <div class="border-darkBlue mb-6 border-l-4 bg-white px-4 py-5 shadow sm:rounded-lg sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-darkBlue text-lg font-bold">Step 1: Download Template</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get the Excel template with sample data</p>
+                        </div>
+                        <a
+                            :href="route('members.deposits.import.template')"
+                            class="bg-darkBlue inline-flex items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-900"
+                        >
+                            <Download class="mr-2 h-5 w-5" /> Download Template
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Upload File -->
+                <div class="border-l-4 border-orange-500 bg-white px-4 py-5 shadow sm:rounded-lg sm:p-6">
+                    <div class="flex flex-col space-y-4">
+                        <form @submit.prevent="submitImport" class="space-y-4">
+                            <!-- Year -->
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-gray-700">Year <span class="text-red-500">*</span></label>
+                                <select
+                                    v-model="form.year"
+                                    class="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    required
+                                >
+                                    <option value="">Select Year</option>
+                                    <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                                </select>
+                            </div>
+
+                            <!-- File Input -->
+                            <div>
+                                <input type="file" ref="fileInput" accept=".csv,.xlsx,.xls" class="hidden" @change="handleFileSelect" />
+                                <div
+                                    v-if="!selectedFile"
+                                    @click="$refs.fileInput.click()"
+                                    class="relative block w-full cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
+                                >
+                                    <FileSpreadsheet class="mx-auto h-12 w-12 text-gray-400" />
+                                    <div class="mt-2 flex flex-col items-center">
+                                        <span class="text-darkBlue block text-sm font-medium">Click to upload Excel/CSV file</span>
+                                        <span class="mt-1 block text-xs text-gray-500">XLS, XLSX, or CSV up to 5MB</span>
+                                    </div>
+                                </div>
+
+                                <div v-else class="rounded-lg border-2 border-green-300 bg-green-50 p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <FileSpreadsheet class="h-8 w-8 text-green-600" />
+                                            <div class="ml-3">
+                                                <p class="text-sm font-medium text-gray-900">{{ selectedFile.name }}</p>
+                                                <p class="text-xs text-gray-500">{{ formatFileSize(selectedFile.size) }}</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" @click="removeFile" class="text-red-600 hover:text-red-800 focus:outline-none">
+                                            <X class="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="flex justify-end space-x-3">
+                                <button
+                                    type="button"
+                                    @click="removeFile"
+                                    class="text-darkBlue rounded-md bg-gray-200 px-4 py-2 text-sm font-medium shadow-sm hover:bg-gray-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    :disabled="!selectedFile || form.processing"
+                                    class="inline-flex items-center justify-center rounded-md bg-orange-500 px-6 py-2 text-sm font-medium text-white hover:bg-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <Upload class="mr-2 h-5 w-5" />
+                                    <span v-if="form.processing">Importing...</span>
+                                    <span v-else>Import Deposits</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </AppLayout>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { ArrowLeft, CheckCircle, AlertCircle, FileSpreadsheet, X, Download, Upload, Info } from 'lucide-vue-next';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { AlertCircle, ArrowLeft, CheckCircle, Download, FileSpreadsheet, Info, Upload, X } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({ currentYear: Number, years: Array });
 
@@ -206,57 +233,69 @@ const flashType = ref('success');
 const flashBox = ref(null);
 const showErrors = ref(false);
 
-watch(flash, (val) => {
-  if (val.success) {
-    flashMessage.value = val.success;
-    flashType.value = 'success';
-  } else if (val.error) {
-    flashMessage.value = val.error;
-    flashType.value = 'error';
-  }
+watch(
+    flash,
+    (val) => {
+        if (val.success) {
+            flashMessage.value = val.success;
+            flashType.value = 'success';
+        } else if (val.error) {
+            flashMessage.value = val.error;
+            flashType.value = 'error';
+        }
 
-  if (flashMessage.value) {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    flashBox.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(() => (flashMessage.value = null), 8000);
-  }
-}, { immediate: true, deep: true });
+        if (flashMessage.value) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            flashBox.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => (flashMessage.value = null), 8000);
+        }
+    },
+    { immediate: true, deep: true },
+);
 
 const form = useForm({ file: null, year: props.currentYear });
 const selectedFile = ref(null);
 const fileInput = ref(null);
 
 const handleFileSelect = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    selectedFile.value = file;
-    form.file = file;
-  }
+    const file = event.target.files[0];
+    if (file) {
+        selectedFile.value = file;
+        form.file = file;
+    }
 };
 
 const removeFile = () => {
-  selectedFile.value = null;
-  form.file = null;
-  if (fileInput.value) fileInput.value.value = '';
+    selectedFile.value = null;
+    form.file = null;
+    if (fileInput.value) fileInput.value.value = '';
 };
 
 const submitImport = () => {
-  form.post(route('members.deposits.import'), {
-    forceFormData: true,
-    onSuccess: () => { selectedFile.value = null; form.reset(); if (fileInput.value) fileInput.value.value = ''; },
-  });
+    form.post(route('members.deposits.import'), {
+        forceFormData: true,
+        onSuccess: () => {
+            selectedFile.value = null;
+            form.reset();
+            if (fileInput.value) fileInput.value.value = '';
+        },
+    });
 };
 
 const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 };
 </script>
 
 <style scoped>
-.bg-darkBlue { background-color: #0a2342; }
-.text-darkBlue { color: #0a2342; }
+.bg-darkBlue {
+    background-color: #0a2342;
+}
+.text-darkBlue {
+    color: #0a2342;
+}
 </style>

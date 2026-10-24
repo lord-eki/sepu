@@ -1,3 +1,1 @@
-<template>
-    Deposit Modal
-</template>
+<template>Deposit Modal</template>

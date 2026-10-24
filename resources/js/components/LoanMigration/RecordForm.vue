@@ -113,7 +113,7 @@ const formatCurrency = (value: number) => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     }).format(value)
-})
+}
 
 const clearError = (field: string) => {
     delete errors[field]
@@ -239,32 +239,19 @@ const selectedProduct = computed(() =>
 </script>
 
 <template>
-    <form
-        class="space-y-6"
-        @submit.prevent="submit"
-    >
+    <form class="space-y-6" @submit.prevent="submit">
         <!-- Member & Loan Information -->
-        <section
-            class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6"
-        >
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-5">
-                <h2 class="text-sm font-bold text-slate-900 dark:text-white">
-                    Loan Identification
-                </h2>
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white">Loan Identification</h2>
 
-                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-                    Identify the member and legacy loan being migrated.
-                </p>
+                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Identify the member and legacy loan being migrated.</p>
             </div>
 
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-
                 <!-- Member -->
                 <div>
-                    <label
-                        for="member_id"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="member_id" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Member
                         <span class="text-red-500">*</span>
                     </label>
@@ -273,36 +260,24 @@ const selectedProduct = computed(() =>
                         id="member_id"
                         v-model="form.member_id"
                         :disabled="readonly || processing"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                         @change="clearError('member_id')"
                     >
-                        <option :value="null">
-                            Select member
-                        </option>
+                        <option :value="null">Select member</option>
 
-                        <option
-                            v-for="member in members"
-                            :key="member.id"
-                            :value="member.id"
-                        >
+                        <option v-for="member in members" :key="member.id" :value="member.id">
                             {{ member.member_number ? `${member.member_number} — ` : '' }}{{ member.name }}
                         </option>
                     </select>
 
-                    <p
-                        v-if="errors.member_id"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.member_id" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.member_id }}
                     </p>
                 </div>
 
                 <!-- Loan Product -->
                 <div>
-                    <label
-                        for="loan_product_id"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="loan_product_id" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Loan Product
                         <span class="text-red-500">*</span>
                     </label>
@@ -311,36 +286,24 @@ const selectedProduct = computed(() =>
                         id="loan_product_id"
                         v-model="form.loan_product_id"
                         :disabled="readonly || processing"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                         @change="clearError('loan_product_id')"
                     >
-                        <option :value="null">
-                            Select loan product
-                        </option>
+                        <option :value="null">Select loan product</option>
 
-                        <option
-                            v-for="product in loanProducts"
-                            :key="product.id"
-                            :value="product.id"
-                        >
+                        <option v-for="product in loanProducts" :key="product.id" :value="product.id">
                             {{ product.code ? `${product.code} — ` : '' }}{{ product.name }}
                         </option>
                     </select>
 
-                    <p
-                        v-if="errors.loan_product_id"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.loan_product_id" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.loan_product_id }}
                     </p>
                 </div>
 
                 <!-- Legacy Loan Number -->
                 <div>
-                    <label
-                        for="legacy_loan_number"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="legacy_loan_number" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Legacy Loan Number
                         <span class="text-red-500">*</span>
                     </label>
@@ -351,24 +314,18 @@ const selectedProduct = computed(() =>
                         type="text"
                         :disabled="readonly || processing"
                         placeholder="e.g. LN/2019/00125"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:disabled:bg-slate-900"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:disabled:bg-slate-900"
                         @input="clearError('legacy_loan_number')"
                     />
 
-                    <p
-                        v-if="errors.legacy_loan_number"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.legacy_loan_number" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.legacy_loan_number }}
                     </p>
                 </div>
 
                 <!-- Loan Date -->
                 <div>
-                    <label
-                        for="loan_date"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="loan_date" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Original Loan Date
                         <span class="text-red-500">*</span>
                     </label>
@@ -378,60 +335,38 @@ const selectedProduct = computed(() =>
                         v-model="form.loan_date"
                         type="date"
                         :disabled="readonly || processing"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                         @change="clearError('loan_date')"
                     />
 
-                    <p
-                        v-if="errors.loan_date"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.loan_date" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.loan_date }}
                     </p>
                 </div>
             </div>
 
             <!-- Selection Preview -->
-            <div
-                v-if="selectedMember || selectedProduct"
-                class="mt-5 grid gap-3 sm:grid-cols-2"
-            >
-                <div
-                    v-if="selectedMember"
-                    class="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50"
-                >
-                    <p class="text-[9px] font-semibold uppercase tracking-wider text-slate-400">
-                        Selected Member
-                    </p>
+            <div v-if="selectedMember || selectedProduct" class="mt-5 grid gap-3 sm:grid-cols-2">
+                <div v-if="selectedMember" class="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
+                    <p class="text-[9px] font-semibold tracking-wider text-slate-400 uppercase">Selected Member</p>
 
                     <p class="mt-1 text-xs font-semibold text-slate-800 dark:text-slate-200">
                         {{ selectedMember.name }}
                     </p>
 
-                    <p
-                        v-if="selectedMember.member_number"
-                        class="mt-0.5 text-[9px] text-slate-400"
-                    >
+                    <p v-if="selectedMember.member_number" class="mt-0.5 text-[9px] text-slate-400">
                         {{ selectedMember.member_number }}
                     </p>
                 </div>
 
-                <div
-                    v-if="selectedProduct"
-                    class="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50"
-                >
-                    <p class="text-[9px] font-semibold uppercase tracking-wider text-slate-400">
-                        Loan Product
-                    </p>
+                <div v-if="selectedProduct" class="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
+                    <p class="text-[9px] font-semibold tracking-wider text-slate-400 uppercase">Loan Product</p>
 
                     <p class="mt-1 text-xs font-semibold text-slate-800 dark:text-slate-200">
                         {{ selectedProduct.name }}
                     </p>
 
-                    <p
-                        v-if="selectedProduct.code"
-                        class="mt-0.5 text-[9px] text-slate-400"
-                    >
+                    <p v-if="selectedProduct.code" class="mt-0.5 text-[9px] text-slate-400">
                         {{ selectedProduct.code }}
                     </p>
                 </div>
@@ -439,37 +374,23 @@ const selectedProduct = computed(() =>
         </section>
 
         <!-- Financial Information -->
-        <section
-            class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6"
-        >
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-5">
-                <h2 class="text-sm font-bold text-slate-900 dark:text-white">
-                    Financial Information
-                </h2>
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white">Financial Information</h2>
 
-                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-                    Enter the financial figures recorded in the legacy documents.
-                </p>
+                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Enter the financial figures recorded in the legacy documents.</p>
             </div>
 
             <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
-
                 <!-- Original Amount -->
                 <div>
-                    <label
-                        for="original_amount"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="original_amount" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Original Loan Amount
                         <span class="text-red-500">*</span>
                     </label>
 
                     <div class="relative">
-                        <span
-                            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-slate-400"
-                        >
-                            KES
-                        </span>
+                        <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[10px] font-medium text-slate-400"> KES </span>
 
                         <input
                             id="original_amount"
@@ -479,35 +400,25 @@ const selectedProduct = computed(() =>
                             step="0.01"
                             :disabled="readonly || processing"
                             placeholder="0.00"
-                            class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-12 pr-3 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                            class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-3 pl-12 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                             @input="clearError('original_amount')"
                         />
                     </div>
 
-                    <p
-                        v-if="errors.original_amount"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.original_amount" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.original_amount }}
                     </p>
                 </div>
 
                 <!-- Amount Paid -->
                 <div>
-                    <label
-                        for="amount_paid"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="amount_paid" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Amount Paid
                         <span class="text-red-500">*</span>
                     </label>
 
                     <div class="relative">
-                        <span
-                            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-slate-400"
-                        >
-                            KES
-                        </span>
+                        <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[10px] font-medium text-slate-400"> KES </span>
 
                         <input
                             id="amount_paid"
@@ -517,35 +428,25 @@ const selectedProduct = computed(() =>
                             step="0.01"
                             :disabled="readonly || processing"
                             placeholder="0.00"
-                            class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-12 pr-3 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                            class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-3 pl-12 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                             @input="clearError('amount_paid')"
                         />
                     </div>
 
-                    <p
-                        v-if="errors.amount_paid"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.amount_paid" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.amount_paid }}
                     </p>
                 </div>
 
                 <!-- Outstanding Balance -->
                 <div>
-                    <label
-                        for="outstanding_balance"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="outstanding_balance" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Outstanding Balance
                         <span class="text-red-500">*</span>
                     </label>
 
                     <div class="relative">
-                        <span
-                            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-slate-400"
-                        >
-                            KES
-                        </span>
+                        <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[10px] font-medium text-slate-400"> KES </span>
 
                         <input
                             id="outstanding_balance"
@@ -555,7 +456,7 @@ const selectedProduct = computed(() =>
                             step="0.01"
                             :disabled="readonly || processing"
                             placeholder="0.00"
-                            class="w-full rounded-xl border py-2.5 pl-12 pr-3 text-xs outline-none transition focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900"
+                            class="w-full rounded-xl border py-2.5 pr-3 pl-12 text-xs transition outline-none focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900"
                             :class="
                                 balanceMatches
                                     ? 'border-slate-200 bg-white text-slate-700 focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
@@ -565,17 +466,11 @@ const selectedProduct = computed(() =>
                         />
                     </div>
 
-                    <p
-                        v-if="errors.outstanding_balance"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.outstanding_balance" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.outstanding_balance }}
                     </p>
 
-                    <p
-                        v-else
-                        class="mt-1.5 text-[9px] text-slate-400"
-                    >
+                    <p v-else class="mt-1.5 text-[9px] text-slate-400">
                         Expected:
                         {{ formatCurrency(calculatedBalance) }}
                     </p>
@@ -583,18 +478,12 @@ const selectedProduct = computed(() =>
             </div>
 
             <!-- Balance Calculation -->
-            <div
-                class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/40"
-            >
+            <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p class="text-[10px] font-semibold text-slate-700 dark:text-slate-200">
-                            Balance Reconciliation
-                        </p>
+                        <p class="text-[10px] font-semibold text-slate-700 dark:text-slate-200">Balance Reconciliation</p>
 
-                        <p class="mt-1 text-[9px] text-slate-400">
-                            Original amount − amount paid = outstanding balance
-                        </p>
+                        <p class="mt-1 text-[9px] text-slate-400">Original amount − amount paid = outstanding balance</p>
                     </div>
 
                     <div class="text-left sm:text-right">
@@ -604,17 +493,9 @@ const selectedProduct = computed(() =>
 
                         <p
                             class="mt-0.5 text-[9px]"
-                            :class="
-                                balanceMatches
-                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                    : 'text-red-600 dark:text-red-400'
-                            "
+                            :class="balanceMatches ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
                         >
-                            {{
-                                balanceMatches
-                                    ? 'Balance reconciles'
-                                    : 'Balance does not reconcile'
-                            }}
+                            {{ balanceMatches ? 'Balance reconciles' : 'Balance does not reconcile' }}
                         </p>
                     </div>
                 </div>
@@ -622,27 +503,17 @@ const selectedProduct = computed(() =>
         </section>
 
         <!-- Repayment Information -->
-        <section
-            class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6"
-        >
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-5">
-                <h2 class="text-sm font-bold text-slate-900 dark:text-white">
-                    Repayment Information
-                </h2>
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white">Repayment Information</h2>
 
-                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-                    Capture the repayment terms from the legacy loan records.
-                </p>
+                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Capture the repayment terms from the legacy loan records.</p>
             </div>
 
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-
                 <!-- Interest Rate -->
                 <div>
-                    <label
-                        for="interest_rate"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="interest_rate" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Interest Rate
                     </label>
 
@@ -655,29 +526,21 @@ const selectedProduct = computed(() =>
                             step="0.01"
                             :disabled="readonly || processing"
                             placeholder="0.00"
-                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 pr-8 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 pr-8 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                             @input="clearError('interest_rate')"
                         />
 
-                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
-                            %
-                        </span>
+                        <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-slate-400"> % </span>
                     </div>
 
-                    <p
-                        v-if="errors.interest_rate"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.interest_rate" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.interest_rate }}
                     </p>
                 </div>
 
                 <!-- Repayment Period -->
                 <div>
-                    <label
-                        for="repayment_period"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="repayment_period" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Repayment Period
                     </label>
 
@@ -689,24 +552,18 @@ const selectedProduct = computed(() =>
                         step="1"
                         :disabled="readonly || processing"
                         placeholder="e.g. 12"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                         @input="clearError('repayment_period')"
                     />
 
-                    <p
-                        v-if="errors.repayment_period"
-                        class="mt-1.5 text-[10px] text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="errors.repayment_period" class="mt-1.5 text-[10px] text-red-600 dark:text-red-400">
                         {{ errors.repayment_period }}
                     </p>
                 </div>
 
                 <!-- Frequency -->
                 <div>
-                    <label
-                        for="repayment_frequency"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="repayment_frequency" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Repayment Frequency
                     </label>
 
@@ -714,36 +571,23 @@ const selectedProduct = computed(() =>
                         id="repayment_frequency"
                         v-model="form.repayment_frequency"
                         :disabled="readonly || processing"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                     >
-                        <option value="">
-                            Select frequency
-                        </option>
+                        <option value="">Select frequency</option>
 
-                        <option value="daily">
-                            Daily
-                        </option>
+                        <option value="daily">Daily</option>
 
-                        <option value="weekly">
-                            Weekly
-                        </option>
+                        <option value="weekly">Weekly</option>
 
-                        <option value="monthly">
-                            Monthly
-                        </option>
+                        <option value="monthly">Monthly</option>
 
-                        <option value="quarterly">
-                            Quarterly
-                        </option>
+                        <option value="quarterly">Quarterly</option>
                     </select>
                 </div>
 
                 <!-- Maturity Date -->
                 <div>
-                    <label
-                        for="maturity_date"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
+                    <label for="maturity_date" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         Maturity Date
                     </label>
 
@@ -752,73 +596,46 @@ const selectedProduct = computed(() =>
                         v-model="form.maturity_date"
                         type="date"
                         :disabled="readonly || processing"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                     />
                 </div>
             </div>
         </section>
 
         <!-- Status & Remarks -->
-        <section
-            class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6"
-        >
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-5">
-                <h2 class="text-sm font-bold text-slate-900 dark:text-white">
-                    Record Details
-                </h2>
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white">Record Details</h2>
 
-                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-                    Set the current legacy loan status and add supporting remarks.
-                </p>
+                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Set the current legacy loan status and add supporting remarks.</p>
             </div>
 
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-
                 <!-- Status -->
                 <div>
-                    <label
-                        for="status"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
-                        Loan Status
-                    </label>
+                    <label for="status" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"> Loan Status </label>
 
                     <select
                         id="status"
                         v-model="form.status"
                         :disabled="readonly || processing"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:disabled:bg-slate-900"
                     >
-                        <option value="active">
-                            Active
-                        </option>
+                        <option value="active">Active</option>
 
-                        <option value="cleared">
-                            Cleared
-                        </option>
+                        <option value="cleared">Cleared</option>
 
-                        <option value="defaulted">
-                            Defaulted
-                        </option>
+                        <option value="defaulted">Defaulted</option>
 
-                        <option value="written_off">
-                            Written Off
-                        </option>
+                        <option value="written_off">Written Off</option>
 
-                        <option value="restructured">
-                            Restructured
-                        </option>
+                        <option value="restructured">Restructured</option>
                     </select>
                 </div>
 
                 <!-- Remarks -->
                 <div>
-                    <label
-                        for="remarks"
-                        class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"
-                    >
-                        Remarks
-                    </label>
+                    <label for="remarks" class="mb-1.5 block text-[10px] font-semibold text-slate-600 dark:text-slate-300"> Remarks </label>
 
                     <textarea
                         id="remarks"
@@ -826,17 +643,14 @@ const selectedProduct = computed(() =>
                         rows="4"
                         :disabled="readonly || processing"
                         placeholder="Enter any relevant notes from the legacy records..."
-                        class="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:disabled:bg-slate-900"
+                        class="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:disabled:bg-slate-900"
                     />
                 </div>
             </div>
         </section>
 
         <!-- Actions -->
-        <div
-            v-if="!readonly"
-            class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"
-        >
+        <div v-if="!readonly" class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
                 type="button"
                 :disabled="processing"
@@ -851,26 +665,10 @@ const selectedProduct = computed(() =>
                 :disabled="processing"
                 class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-                <svg
-                    v-if="processing"
-                    class="h-4 w-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                >
-                    <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                    />
+                <svg v-if="processing" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
 
-                    <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                    />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
 
                 {{ processing ? 'Saving...' : 'Save Record' }}

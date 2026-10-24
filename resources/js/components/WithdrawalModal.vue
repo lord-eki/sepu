@@ -1,3 +1,1 @@
-<template>
-    Withdrawal Modal
-</template>
+<template>Withdrawal Modal</template>

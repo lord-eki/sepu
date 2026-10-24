@@ -10,7 +10,7 @@ defineProps<{
 }>();
 
 const form = useForm({});
-console.log("status Message", status)
+console.log('status Message', status);
 const submit = () => {
     form.post(route('verification.send'));
 };

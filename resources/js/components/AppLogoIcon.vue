@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue';
 
@@ -13,12 +12,6 @@ interface Props {
 defineProps<Props>();
 </script>
 
-
-
 <template>
-  <img
-    src="/apple-touch-icon1.png"
-    :class="className"
-    alt="SEPU"
-  />
+    <img src="/apple-touch-icon1.png" :class="className" alt="SEPU" />
 </template>

@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, watch } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue';
 
 interface Props {
-    show?: boolean
-    title?: string
-    message?: string
-    confirmText?: string
-    cancelText?: string
-    variant?: 'primary' | 'danger' | 'warning' | 'success'
-    processing?: boolean
-    closeOnBackdrop?: boolean
+    show?: boolean;
+    title?: string;
+    message?: string;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: 'primary' | 'danger' | 'warning' | 'success';
+    processing?: boolean;
+    closeOnBackdrop?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -21,15 +21,15 @@ const props = withDefaults(defineProps<Props>(), {
     variant: 'primary',
     processing: false,
     closeOnBackdrop: true,
-})
+});
 
 const emit = defineEmits<{
-    confirm: []
-    cancel: []
-    close: []
-}>()
+    confirm: [];
+    cancel: [];
+    close: [];
+}>();
 
-const visible = computed(() => props.show)
+const visible = computed(() => props.show);
 
 const variantClasses = computed(() => {
     const classes = {
@@ -49,62 +49,62 @@ const variantClasses = computed(() => {
             icon: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
             button: 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500/30',
         },
-    }
+    };
 
-    return classes[props.variant]
-})
+    return classes[props.variant];
+});
 
 const close = () => {
     if (props.processing) {
-        return
+        return;
     }
 
-    emit('close')
-    emit('cancel')
-}
+    emit('close');
+    emit('cancel');
+};
 
 const confirm = () => {
     if (props.processing) {
-        return
+        return;
     }
 
-    emit('confirm')
-}
+    emit('confirm');
+};
 
 const handleBackdrop = () => {
     if (props.closeOnBackdrop) {
-        close()
+        close();
     }
-}
+};
 
 const handleKeydown = (event: KeyboardEvent) => {
     if (!props.show) {
-        return
+        return;
     }
 
     if (event.key === 'Escape') {
-        close()
+        close();
     }
-}
+};
 
 watch(
     () => props.show,
     (show) => {
         if (show) {
-            document.addEventListener('keydown', handleKeydown)
-            document.body.style.overflow = 'hidden'
+            document.addEventListener('keydown', handleKeydown);
+            document.body.style.overflow = 'hidden';
         } else {
-            document.removeEventListener('keydown', handleKeydown)
-            document.body.style.overflow = ''
+            document.removeEventListener('keydown', handleKeydown);
+            document.body.style.overflow = '';
         }
     },
     { immediate: true },
-)
+);
 
 onBeforeUnmount(() => {
-    document.removeEventListener('keydown', handleKeydown)
-    document.body.style.overflow = ''
-})
+    document.removeEventListener('keydown', handleKeydown);
+    document.body.style.overflow = '';
+});
 </script>
 
 <template>
@@ -126,9 +126,7 @@ onBeforeUnmount(() => {
                 @mousedown.self="handleBackdrop"
             >
                 <!-- Backdrop -->
-                <div
-                    class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
-                />
+                <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
 
                 <!-- Modal -->
                 <Transition
@@ -148,22 +146,12 @@ onBeforeUnmount(() => {
                         <button
                             v-if="!processing"
                             type="button"
-                            class="absolute right-4 top-4 z-10 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            class="absolute top-4 right-4 z-10 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                             aria-label="Close"
                             @click="close"
                         >
-                            <svg
-                                class="h-4 w-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
 
@@ -171,18 +159,9 @@ onBeforeUnmount(() => {
                         <div class="p-5 sm:p-6">
                             <div class="flex items-start gap-4">
                                 <!-- Icon -->
-                                <div
-                                    :class="variantClasses.icon"
-                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                                >
+                                <div :class="variantClasses.icon" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
                                     <!-- Danger -->
-                                    <svg
-                                        v-if="variant === 'danger'"
-                                        class="h-5 w-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
+                                    <svg v-if="variant === 'danger'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -192,13 +171,7 @@ onBeforeUnmount(() => {
                                     </svg>
 
                                     <!-- Warning -->
-                                    <svg
-                                        v-else-if="variant === 'warning'"
-                                        class="h-5 w-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
+                                    <svg v-else-if="variant === 'warning'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -208,29 +181,12 @@ onBeforeUnmount(() => {
                                     </svg>
 
                                     <!-- Success -->
-                                    <svg
-                                        v-else-if="variant === 'success'"
-                                        class="h-5 w-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M5 13l4 4L19 7"
-                                        />
+                                    <svg v-else-if="variant === 'success'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                     </svg>
 
                                     <!-- Primary -->
-                                    <svg
-                                        v-else
-                                        class="h-5 w-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
+                                    <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -242,24 +198,16 @@ onBeforeUnmount(() => {
 
                                 <!-- Text -->
                                 <div class="min-w-0 flex-1 pr-5">
-                                    <h2
-                                        id="confirmation-modal-title"
-                                        class="text-sm font-bold text-slate-900 dark:text-white"
-                                    >
+                                    <h2 id="confirmation-modal-title" class="text-sm font-bold text-slate-900 dark:text-white">
                                         {{ title }}
                                     </h2>
 
-                                    <p
-                                        class="mt-2 text-[11px] leading-5 text-slate-500 dark:text-slate-400"
-                                    >
+                                    <p class="mt-2 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
                                         {{ message }}
                                     </p>
 
                                     <!-- Optional custom content -->
-                                    <div
-                                        v-if="$slots.default"
-                                        class="mt-4"
-                                    >
+                                    <div v-if="$slots.default" class="mt-4">
                                         <slot />
                                     </div>
                                 </div>
@@ -268,12 +216,12 @@ onBeforeUnmount(() => {
 
                         <!-- Actions -->
                         <div
-                            class="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/30 sm:flex-row sm:justify-end"
+                            class="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:flex-row sm:justify-end dark:border-slate-800 dark:bg-slate-800/30"
                         >
                             <button
                                 type="button"
                                 :disabled="processing"
-                                class="inline-flex min-h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                class="inline-flex min-h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-400/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                                 @click="close"
                             >
                                 {{ cancelText }}
@@ -283,36 +231,16 @@ onBeforeUnmount(() => {
                                 type="button"
                                 :disabled="processing"
                                 :class="variantClasses.button"
-                                class="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[10px] font-semibold text-white shadow-sm transition focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60"
+                                class="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[10px] font-semibold text-white shadow-sm transition focus:ring-4 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                                 @click="confirm"
                             >
-                                <svg
-                                    v-if="processing"
-                                    class="h-3.5 w-3.5 animate-spin"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <circle
-                                        class="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        stroke-width="4"
-                                    />
+                                <svg v-if="processing" class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
 
-                                    <path
-                                        class="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                                    />
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                                 </svg>
 
-                                {{
-                                    processing
-                                        ? 'Processing...'
-                                        : confirmText
-                                }}
+                                {{ processing ? 'Processing...' : confirmText }}
                             </button>
                         </div>
                     </div>

@@ -3,42 +3,45 @@ import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
 import { Link, usePage } from '@inertiajs/vue3';
 
 import {
-   Folder,LayoutGrid,HandCoins,
-    ClipboardList,Ticket,BriefcaseConveyorBelt, Users,
-    ContactRound, UserCheck,
-    NotebookTabs, FileText, User, ArrowRightLeft, Calculator,
-    FileSignature,  Bell, Settings,  Package,
-    UserCog,Shield, Banknote,BookMarked,
+    ArrowRightLeft,
+    Banknote,
+    Bell,
+    BookMarked,
+    BriefcaseConveyorBelt,
+    Calculator,
+    ClipboardList,
+    ContactRound,
     DatabaseZap,
+    FileSignature,
+    FileText,
+    Folder,
+    HandCoins,
+    LayoutGrid,
+    NotebookTabs,
+    Package,
+    Settings,
+    Shield,
+    Ticket,
+    User,
+    UserCheck,
+    UserCog,
+    Users,
 } from 'lucide-vue-next';
 
+import type { AppPageProps } from '@/types';
 import type { LucideIcon } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
-import type { AppPageProps } from '@/types';
-
 
 const page = usePage<AppPageProps>();
 
 const user = page.props?.auth?.user ?? null;
-const member = page.props?.auth?.member ?? null;
 
-
-
- // Types
- 
+// Types
 
 export interface NavItem {
     title: string;
@@ -49,8 +52,7 @@ export interface NavItem {
     children?: NavItem[];
 }
 
-
- // Member Navigation
+// Member Navigation
 
 const memberNavItems: NavItem[] = [
     {
@@ -123,8 +125,6 @@ const memberNavItems: NavItem[] = [
     },
 ];
 
-
-
 const adminNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -153,7 +153,6 @@ const adminNavItems: NavItem[] = [
         routeName: 'vouchers.index',
         icon: Ticket,
     },
-
 
     {
         title: 'Loans',
@@ -196,7 +195,6 @@ const adminNavItems: NavItem[] = [
         ],
     },
 
-
     {
         title: 'Loan Migration',
         icon: DatabaseZap,
@@ -216,7 +214,6 @@ const adminNavItems: NavItem[] = [
             },
         ],
     },
-
 
     {
         title: 'Members',
@@ -245,14 +242,12 @@ const adminNavItems: NavItem[] = [
         icon: NotebookTabs,
     },
 
-
     {
         title: 'Transactions',
         href: route('transactions.index'),
         routeName: 'transactions.index',
         icon: ArrowRightLeft,
     },
-
 
     {
         title: 'Finance',
@@ -267,15 +262,12 @@ const adminNavItems: NavItem[] = [
         ],
     },
 
-
-
     {
         title: 'Schedule',
         icon: ClipboardList,
         href: route('schedule.index'),
         routeName: 'schedule.index',
     },
-
 
     {
         title: 'System Users',
@@ -296,7 +288,6 @@ const adminNavItems: NavItem[] = [
             },
         ],
     },
-
 
     {
         title: 'Reports',
@@ -353,7 +344,6 @@ const adminNavItems: NavItem[] = [
         ],
     },
 
-
     {
         title: 'Notifications',
         href: route('notifications.index'),
@@ -368,7 +358,6 @@ const adminNavItems: NavItem[] = [
         icon: Settings,
     },
 ];
-
 
 const staffNavItems: NavItem[] = [
     {
@@ -432,7 +421,6 @@ const staffNavItems: NavItem[] = [
         ],
     },
 
-
     {
         title: 'Accounts',
         href: route('accounts.index'),
@@ -446,7 +434,6 @@ const staffNavItems: NavItem[] = [
         routeName: 'transactions.index',
         icon: ArrowRightLeft,
     },
-
 
     {
         title: 'Reports',
@@ -475,7 +462,6 @@ const staffNavItems: NavItem[] = [
         ],
     },
 
-
     {
         title: 'Notifications',
         href: route('notifications.index'),
@@ -484,28 +470,22 @@ const staffNavItems: NavItem[] = [
     },
 ];
 
-
 const userRole = user?.role ?? null;
 
 const useAdminNav = userRole === 'admin' || userRole === 'management';
 const useStaffNav = userRole === 'loan_officer' || userRole === 'accountant';
 
-const navigationItems = useAdminNav ? adminNavItems: useStaffNav ? staffNavItems : memberNavItems;
+const navigationItems = useAdminNav ? adminNavItems : useStaffNav ? staffNavItems : memberNavItems;
 
 const footerNavItems: NavItem[] = [];
 </script>
 
-
 <template>
-    <Sidebar collapsible="icon" variant="inset">      
-
+    <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton
-                        size="lg"
-                        as-child
-                    >
+                    <SidebarMenuButton size="lg" as-child>
                         <Link :href="route('dashboard')">
                             <AppLogo />
                         </Link>
@@ -520,7 +500,6 @@ const footerNavItems: NavItem[] = [];
             <NavFooter :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
-
     </Sidebar>
 
     <slot />
