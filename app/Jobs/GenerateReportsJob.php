@@ -59,8 +59,8 @@ class GenerateReportsJob implements ShouldQueue
         $totalSavings = Account::where('account_type', 'share_deposits')->sum('balance');
         $totalShares = Account::where('account_type', 'share_capital')->sum('balance');
         $totalDeposits = Account::where('account_type', 'deposits')->sum('balance');
-        $totalLoansOutstanding = Loan::whereIn('status', ['disbursed', 'partial_repayment'])->sum('outstanding_balance');
-        $totalLoansDisbursed = Loan::where('status', 'disbursed')->sum('disbursed_amount');
+        $totalLoansOutstanding = Loan::whereIn('status', \App\Models\Loan::RUNNING_STATUSES)->sum('outstanding_balance');
+        $totalLoansDisbursed = Loan::whereNotNull('disbursement_date')->sum('disbursed_amount');
 
         return [
             'total_savings' => $totalSavings,
@@ -75,9 +75,9 @@ class GenerateReportsJob implements ShouldQueue
 
     private function generateLoanPortfolio()
     {
-        $activeLoans = Loan::whereIn('status', ['disbursed', 'partial_repayment'])->count();
+        $activeLoans = Loan::whereIn('status', \App\Models\Loan::RUNNING_STATUSES)->count();
         $overdueLoans = Loan::where('days_in_arrears', '>', 0)->count();
-        $totalDisbursed = Loan::where('status', 'disbursed')->sum('disbursed_amount');
+        $totalDisbursed = Loan::whereNotNull('disbursement_date')->sum('disbursed_amount');
         $totalRepaid = Loan::sum('disbursed_amount') - Loan::sum('outstanding_balance');
 
         return [

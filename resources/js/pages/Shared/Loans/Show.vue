@@ -349,9 +349,7 @@
                     </div>
                 </div>
 
-                <!-- RIGHT -->
                 <div class="space-y-6">
-                    <!-- BALANCE -->
                     <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
                         <h2 class="mb-5 text-lg font-bold text-slate-900">Balance Summary</h2>
 
@@ -373,7 +371,6 @@
                         </div>
                     </div>
 
-                    <!-- FEES -->
                     <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
                         <h2 class="mb-5 text-lg font-bold text-slate-900">Charges & Fees</h2>
 
@@ -393,18 +390,15 @@
             </div>
         </div>
 
-        <!-- ================= APPROVAL MODAL ================= -->
         <div v-if="showApprovalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
             <div class="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
                 <h2 class="mb-5 text-xl font-bold text-slate-900">Approve Loan</h2>
 
-                <!-- Applied Amount -->
                 <div class="mb-4 rounded-2xl bg-slate-50 p-4">
                     <p class="text-sm text-slate-500">Applied Amount</p>
                     <p class="text-2xl font-bold text-slate-900">KES {{ formatCurrency(loan.applied_amount) }}</p>
                 </div>
 
-                <!-- Amount To Approve -->
                 <div class="mb-4">
                     <label class="text-sm font-semibold text-slate-700"> Amount To Approve </label>
 
@@ -416,7 +410,6 @@
                     />
                 </div>
 
-                <!-- Preview -->
                 <div class="mb-4 rounded-2xl bg-blue-50 p-4">
                     <p class="text-sm text-blue-600">Monthly Repayment</p>
                     <p class="text-xl font-bold text-blue-800">KES {{ formatCurrency(monthlyPreview) }}</p>
@@ -475,18 +468,15 @@
             </div>
         </div>
 
-        <!-- ================= DISBURSEMENT MODAL ================= -->
         <div v-if="showDisbursementModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
             <div class="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
                 <h2 class="mb-5 text-xl font-bold text-slate-900">Disburse Loan</h2>
 
-                <!-- Approved Amount -->
                 <div class="mb-4 rounded-2xl bg-blue-50 p-4">
                     <p class="text-sm text-blue-600">Approved Amount</p>
                     <p class="text-2xl font-bold text-blue-700">KES {{ formatCurrency(loan.approved_amount) }}</p>
                 </div>
 
-                <!-- Net Disbursement -->
                 <div class="mb-6 rounded-2xl bg-emerald-50 p-4">
                     <p class="text-sm text-emerald-600">Net Disbursement</p>
                     <p class="text-2xl font-bold text-emerald-700">
@@ -501,7 +491,6 @@
                     </p>
                 </div>
 
-                <!-- Disbursement Method -->
                 <select
                     v-model="disbursementForm.disbursement_method"
                     class="mb-4 w-full rounded-2xl border p-3 outline-none focus:ring-2 focus:ring-blue-500"
@@ -512,14 +501,12 @@
                     <option value="bank_transfer">Bank Transfer</option>
                 </select>
 
-                <!-- Reference -->
                 <input
                     v-model="disbursementForm.disbursement_reference"
                     class="mb-5 w-full rounded-2xl border p-3 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Reference Number"
                 />
 
-                <!-- Actions -->
                 <div class="flex justify-end gap-3">
                     <button @click="closeDisbursementModal" class="rounded-xl border px-4 py-2 hover:bg-slate-50">Cancel</button>
 
@@ -545,8 +532,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, reactive, ref, watch } from 'vue';
+import { loanPreview } from '@/lib/loanCalc';
 
-// Props
 const props = defineProps({
     loan: Object,
     auth: Object,
@@ -555,11 +542,9 @@ const props = defineProps({
     duration: { type: Number, default: 5000 },
 });
 
-// Computed
 const loan = computed(() => props.loan);
 const isMemberRole = computed(() => props.auth.user.role === 'member');
 
-// Modal controls
 const showApprovalModal = ref(false);
 const showRejectionModal = ref(false);
 const showDisbursementModal = ref(false);
@@ -569,7 +554,6 @@ function openApprovalModal() {
 
     const applied = props.loan.applied_amount || 0;
 
-    // ✅ Approved amount should start as FULL amount
     approvalForm.approved_amount = applied;
     approvalForm.approval_notes = '';
 
@@ -597,7 +581,6 @@ function closeDisbursementModal() {
     showDisbursementModal.value = false;
 }
 
-// Forms & validation
 const approvalForm = reactive({
     approved_amount: 0,
     net_amount: 0,
@@ -621,7 +604,6 @@ function resetValidation() {
     for (const k in validationErrors) delete validationErrors[k];
 }
 
-// Computed previews for approval modal
 const totalFeeRate = computed(() => ((loan.value.loan_product.processing_fee_rate || 0) + (loan.value.loan_product.insurance_rate || 0)) / 100);
 const processingFeePreview = computed(() =>
     approvalForm.approved_amount ? (approvalForm.approved_amount * (loan.value.loan_product.processing_fee_rate ?? 0)) / 100 : 0,
@@ -632,40 +614,18 @@ const insuranceFeePreview = computed(() =>
 const netDisbursementPreview = computed(() =>
     approvalForm.approved_amount ? approvalForm.approved_amount - processingFeePreview.value - insuranceFeePreview.value : 0,
 );
-const monthlyPreview = computed(() => {
-    const P = approvalForm.approved_amount || 0;
-    const n = loan.value.term_months || 1;
-    const r = loan.value.loan_product?.interest_rate / 100 || 0; // monthly rate as decimal
+const preview = computed(() => loanPreview(
+  approvalForm.approved_amount,
+  loan.value.interest_rate ?? loan.value.loan_product?.interest_rate,
+  loan.value.term_months,
+  loan.value.loan_product?.processing_fee_rate,
+  loan.value.loan_product?.insurance_rate,
+))
 
-    if (!P || n === 0) return 0;
+const monthlyPreview = computed(() => preview.value.monthly)
+const totalInterestPreview = computed(() => preview.value.totalInterest)
+const totalRepaymentPreview = computed(() => preview.value.totalRepayable)
 
-    // ── Principal slice
-    const principalPerMonth = P / n;
-
-    // ── Total reducing-balance interest
-    const totalInterest = P * r * ((n + 1) / 2);
-
-    // ── Fixed monthly interest
-    const mInterest = totalInterest / n;
-
-    // ── Actual installment (principal + fixed monthly interest)
-    return principalPerMonth + mInterest;
-});
-
-const totalInterestPreview = computed(() => {
-    const P = approvalForm.approved_amount || 0;
-    const n = loan.value.term_months || 1;
-    const r = loan.value.loan_product?.interest_rate / 100 || 0;
-
-    return P * r * ((n + 1) / 2);
-});
-
-const totalRepaymentPreview = computed(() => {
-    const n = loan.value.term_months || 1;
-    return monthlyPreview.value * n;
-});
-
-// Permissions
 const canEdit = computed(() => props.loan.status === 'pending' && ['admin', 'loan_officer', 'management'].includes(props.auth.user.role));
 const canApprove = computed(() => props.loan.status === 'pending' && ['admin', 'management'].includes(props.auth.user.role));
 const canReject = computed(() => ['pending', 'approved'].includes(props.loan.status) && ['admin', 'management'].includes(props.auth.user.role));
@@ -674,7 +634,6 @@ const canViewSchedule = computed(() => ['disbursed', 'active', 'completed'].incl
 const canViewRepayments = computed(() => ['disbursed', 'active', 'completed'].includes(props.loan.status));
 const hasQuickActions = computed(() => canApprove.value || canReject.value || canDisburse.value || canViewSchedule.value || canViewRepayments.value);
 
-// Helpers
 const formatCurrency = (amount) => new Intl.NumberFormat('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0);
 const formatDate = (date) => {
     if (!date) return '-';
@@ -717,7 +676,6 @@ const getGuarantorStatusClass = (status) =>
         rejected: 'bg-red-100 text-red-800',
     })[status] || 'bg-slate-100 text-slate-800';
 
-// Toast
 const visible = ref(Boolean(props.message));
 const message = ref(props.message || '');
 const type = ref(props.type || 'success');
@@ -750,7 +708,6 @@ function showToast(txt = '', t = 'success', duration = props.duration) {
         }, duration);
 }
 
-// Error helper
 function firstError(err) {
     if (!err) return '';
     if (Array.isArray(err)) return err[0];
@@ -758,7 +715,7 @@ function firstError(err) {
     return String(err);
 }
 
-// Actions
+
 const approveLoan = async () => {
     resetValidation();
     if (approvalForm.approved_amount > props.loan.applied_amount) {

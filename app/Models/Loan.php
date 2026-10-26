@@ -4,19 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Loan extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
     protected $fillable = [
-        'loan_number', 'member_id', 'loan_product_id', 'applied_amount',
-        'approved_amount', 'disbursed_amount', 'interest_rate', 'term_months',
-        'monthly_repayment', 'total_repayable', 'processing_fee', 'insurance_fee',
-        'purpose', 'status', 'application_date', 'approval_date',
-        'disbursement_date', 'first_repayment_date', 'maturity_date',
-        'approved_by', 'disbursed_by', 'approval_notes', 'rejection_reason',
-        'documents', 'outstanding_balance', 'principal_balance',
-        'interest_balance', 'penalty_balance', 'days_in_arrears'
+        'loan_number',
+        'member_id',
+        'loan_product_id',
+        'applied_amount',
+        'approved_amount',
+        'disbursed_amount',
+        'interest_rate',
+        'term_months',
+        'monthly_repayment',
+        'total_repayable',
+        'processing_fee',
+        'insurance_fee',
+        'purpose',
+        'status',
+        'application_date',
+        'approval_date',
+        'disbursement_date',
+        'first_repayment_date',
+        'maturity_date',
+        'approved_by',
+        'disbursed_by',
+        'approval_notes',
+        'rejection_reason',
+        'documents',
+        'outstanding_balance',
+        'principal_balance',
+        'interest_balance',
+        'penalty_balance',
+        'days_in_arrears'
     ];
 
     protected $casts = [
@@ -39,6 +61,36 @@ class Loan extends Model
         'interest_balance' => 'decimal:2',
         'penalty_balance' => 'decimal:2',
     ];
+
+    public const PENDING_GUARANTOR = 'pending_guarantor_approval';
+
+    public const APPLICATION_STATUSES = ['pending_guarantor_approval', 'pending', 'approved'];
+
+    public const RUNNING_STATUSES = ['active', 'defaulted'];
+
+    public const OPEN_STATUSES = ['pending_guarantor_approval', 'pending', 'approved', 'active', 'defaulted'];
+
+    public const TRANSITIONS = [
+        'pending_guarantor_approval' => ['pending', 'rejected'],
+        'pending'                    => ['approved', 'rejected'],
+        'approved'                   => ['active', 'rejected'],
+        'active'                     => ['completed', 'defaulted', 'written_off'],
+        'defaulted'                  => ['active', 'completed', 'written_off'],
+    ];
+
+    public function canTransitionTo(string $to): bool
+    {
+        return in_array($to, self::TRANSITIONS[$this->status] ?? [], true);
+    }
+
+    public function transitionTo(string $to, array $attributes = []): void
+    {
+        if (!$this->canTransitionTo($to)) {
+            throw new \DomainException("A loan cannot move from '{$this->status}' to '{$to}'.");
+        }
+
+        $this->update(array_merge($attributes, ['status' => $to]));
+    }
 
     // Relationships
     public function member()

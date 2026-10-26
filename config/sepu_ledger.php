@@ -23,4 +23,6 @@ return [
         'cheque'          => 'bank',
         'system_transfer' => null,
     ],
+
+    'insurance_payable'     => '21300'
 ];

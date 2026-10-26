@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\{Account, AuditLog, Loan, LoanGuarantor, LoanProduct, LoanRepayment, Member, PaymentVoucher, Transaction};
 use App\Services\LoanEligibilityService;
+use App\Services\Loans\LoanCalculator;
+use App\Services\Loans\LoanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Services\NotificationService;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -52,7 +56,7 @@ class LoanController extends Controller
             $query->whereDate('application_date', '<=', $request->date_to);
         }
 
-   
+
         if ($request->has('search') && $request->search !== '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -208,12 +212,7 @@ class LoanController extends Controller
             }
 
             $existingLoans = Loan::where('member_id', $request->member_id)
-                ->whereIn('status', [
-                    'pending_guarantor_approval',
-                    'pending',
-                    'approved',
-                    'disbursed'
-                ])
+                ->whereIn('status', Loan::OPEN_STATUSES)
                 ->count();
 
             if ($existingLoans > 0) {
@@ -256,21 +255,19 @@ class LoanController extends Controller
                 }
             }
 
-            /**
-             * Loan calculations
-             */
-            $processingFee = ($request->applied_amount * $loanProduct->processing_fee_rate) / 100;
-            $insuranceFee = ($request->applied_amount * $loanProduct->insurance_rate) / 100;
 
-            $monthlyInterestRate = $loanProduct->interest_rate / 100 / 12;
-
-            $monthlyRepayment = $this->calculateMonthlyRepayment(
-                $request->applied_amount,
-                $monthlyInterestRate,
-                $request->term_months
+            $calc = app(LoanCalculator::class)->summary(
+                (float) $request->applied_amount,
+                (float) $loanProduct->interest_rate,
+                (int) $request->term_months,
+                (float) $loanProduct->processing_fee_rate,
+                (float) $loanProduct->insurance_rate,
             );
 
-            $totalRepayable = $monthlyRepayment * $request->term_months;
+            $processingFee    = $calc['processing_fee'];
+            $insuranceFee     = $calc['insurance_fee'];
+            $monthlyRepayment = $calc['monthly_payment'];
+            $totalRepayable   = $calc['total_repayable'];
 
             $documents = [];
 
@@ -407,7 +404,7 @@ class LoanController extends Controller
 
         Gate::authorize('view', $loan);
 
-        $repayments = collect($this->generateRepaymentSchedule($loan));
+        $repayments = $this->scheduleFor($loan);
 
         return Inertia::render('Shared/Loans/Repayment', [
             'loan' => $loan,
@@ -537,89 +534,35 @@ class LoanController extends Controller
     /**
      * Approve a loan application
      */
-    public function approve(Request $request, $id)
+    public function approve(Request $request, $id, LoanService $loans)
     {
         $validator = Validator::make($request->all(), [
-            'approved_amount' => 'required|numeric|min:1'
+            'approved_amount' => 'required|numeric|min:1',
+            'approval_notes'  => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed, check all fields',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $loan = Loan::with('loanProduct')->findOrFail($id);
-
-        if ($loan->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only pending loans can be approved',
+                'errors'  => $validator->errors(),
             ], 422);
         }
 
         try {
-            DB::beginTransaction();
-
-            $oldValues = $loan->toArray();
-            $loanProduct = $loan->loanProduct;
-            $principal   = $request->approved_amount;
-            $termMonths  = $loan->term_months;
-
-            $monthlyRate     = $loanProduct->interest_rate / 100;
-            $processingRate  = $loanProduct->processing_fee_rate / 100;
-            $insuranceRate   = $loanProduct->insurance_rate / 100;
-
-            $processingFee = $principal * $processingRate;
-            $insuranceFee  = $principal * $insuranceRate;
-            $totalFees     = $processingFee + $insuranceFee;
-            $principalPerMonth = $principal / $termMonths;
-            $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
-            $mInterest = $totalInterest / $termMonths;
-            $monthlyRepayment = $principalPerMonth + $mInterest;
-            $totalRepayable = $monthlyRepayment * $termMonths;
-            $netDisbursement = $principal - $totalFees;
-
-            $loan->update([
-                'approved_amount' => $request->approved_amount,
-                'status'          => 'approved',
-                'approval_date'   => now(),
-                'approved_by'     => Auth::id(),
-                'approval_notes'  => $request->approval_notes,
-                'monthly_repayment'   => round($monthlyRepayment, 2),
-                'total_repayable'     => round($totalRepayable, 2),
-                'processing_fee'      => round($processingFee, 2),
-                'insurance_fee'       => round($insuranceFee, 2),
-                'net_disbursement'    => round($netDisbursement, 2),
-            ]);
-
-            AuditLog::create([
-                'user_id'    => Auth::id(),
-                'action'     => 'loan_approved',
-                'model_type' => 'App\Models\Loan',
-                'model_id'   => $loan->id,
-                'old_values' => $oldValues,
-                'new_values' => $loan->fresh()->toArray(),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-
-            DB::commit();
+            $loan = $loans->approve((int) $id, (float) $request->approved_amount, Auth::user(), $request->approval_notes);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Loan approved successfully',
                 'data'    => $loan->load(['member', 'loanProduct']),
             ]);
-        } catch (\Exception $e) {
-            DB::rollback();
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            report($e);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error approving loan: ' . \App\Support\ErrorMessage::from($e),
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error approving loan. Please try again or contact support.'], 500);
         }
     }
 
@@ -693,11 +636,11 @@ class LoanController extends Controller
     /**
      * Disburse an approved loan
      */
-    public function disburse(Request $request, $id)
+    public function disburse(Request $request, $id, LoanService $loans)
     {
         $validator = Validator::make($request->all(), [
-            'disbursement_method'    => 'required|in:cash,mobile_money,bank_transfer',
-            'disbursement_reference' => 'sometimes|string|max:100',
+            'disbursement_method'    => 'required|in:cash,mobile_money,bank_transfer,account',
+            'disbursement_reference' => 'nullable|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -708,174 +651,29 @@ class LoanController extends Controller
             ], 422);
         }
 
-        $loan = Loan::with(['member.user', 'loanProduct'])->findOrFail($id);
-
-        if ($loan->status === 'disbursed') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Loan already disbursed',
-            ], 422);
-        }
-
-        if ($loan->status !== 'approved') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only approved loans can be disbursed',
-            ], 422);
-        }
-
         try {
-            DB::beginTransaction();
-
-            $oldValues = $loan->toArray();
-            $member    = $loan->member;
-
-            $grossAmount     = $loan->approved_amount;
-            $principal = $loan->approved_amount;
-
-            $processingFee = $principal * ($loan->loanProduct->processing_fee_rate / 100);
-            $insuranceFee   = $principal * ($loan->loanProduct->insurance_rate / 100);
-
-            $netDisbursement = $principal - ($processingFee + $insuranceFee);
-
-            if ($netDisbursement <= 0) {
-                throw new \DomainException('Net disbursement cannot be zero or negative.');
-            }
-
-            $loanAccount = Account::firstOrCreate(
-                [
-                    'member_id'   => $member->id,
-                    'account_type' => 'loan_outstanding',
-                ],
-                [
-                    'account_number'   => $this->generateAccountNumber(),
-                    'account_name'     => 'Loan Outstanding Account',
-                    'balance'          => 0,
-                    'available_balance' => 0,
-                    'status'           => 'active',
-                ]
+            $result = $loans->disburse(
+                (int) $id,
+                $request->disbursement_method,
+                $request->disbursement_reference,
+                Auth::user(),
             );
-            $transaction = Transaction::create([
-                'transaction_id' => $this->generateTransactionId(),
-                'account_id' => $loanAccount->id,
-                'member_id'          => $member->id,
-                'transaction_type'   => 'loan_disbursement',
-                'amount'             => $netDisbursement,
-                'balance_before' => $loanAccount->balance,
-                'balance_after'  => $loanAccount->balance + $loan->approved_amount,
-                'description'        => "Loan disbursement for loan {$loan->loan_number}",
-                'reference_number'   => $request->disbursement_reference,
-                'payment_method'     => $request->disbursement_method,
-                'payment_reference'  => $request->disbursement_reference,
-                'status'             => 'completed',
-                'processed_by'       => Auth::id(),
-                'processed_at'       => now(),
-                'metadata' => [
-                    'loan_id'        => $loan->id,
-                    'loan_number'    => $loan->loan_number,
-                    'gross_amount'   => $grossAmount,
-                    'processing_fee' => $processingFee,
-                    'insurance_fee'  => $insuranceFee,
-                    'net_amount'     => $netDisbursement,
-                ],
-            ]);
-
-            $disbursementDate = now();
-            $loan->update([
-                'disbursed_amount'    => $netDisbursement,
-                'status'              => 'active',
-                'disbursed_by'        => Auth::id(),
-                'first_repayment_date' => $disbursementDate->copy()->addMonthsNoOverflow(1),
-                'maturity_date'       => $disbursementDate->copy()->addMonthsNoOverflow($loan->term_months),
-                'disbursement_date'   => $disbursementDate,
-
-                'outstanding_balance' => $loan->total_repayable,
-                'principal_balance'   => $loan->approved_amount,
-                'interest_balance'    => $loan->interest_balance,
-            ]);
-
-            $loanAccount->increment('balance', $loan->approved_amount);
-
-            $loanAccount->increment(
-                'available_balance',
-                $loan->approved_amount
-            );
-
-            LoanRepayment::where('loan_id', $loan->id)->delete();
-
-            $schedule = $this->generateRepaymentSchedule(
-                $loan,
-                $disbursementDate
-            );
-            foreach ($schedule as $row) {
-
-                $expected = round($row['payment_amount'], 2);
-
-                LoanRepayment::create([
-                    'loan_id'             => $loan->id,
-                    'transaction_id'      => null, 
-                    'due_date'            => $row['payment_date'],
-
-                    'expected_amount'     => $expected,
-                    'principal_amount'    => round($row['principal_amount'], 2),
-                    'interest_amount'     => round($row['interest_amount'], 2),
-
-                    'penalty_amount'      => 0,
-                    'paid_amount'         => 0,
-                    'outstanding_amount'  => $expected,
-
-                    'status'              => 'pending',
-                    'payment_date'        => null,
-                    'days_late'           => 0,
-                ]);
-            }
-
-            PaymentVoucher::create([
-                'voucher_number' => $this->generateVoucherNumber(),
-                'voucher_type'   => 'loan_disbursement',
-                'payee_name'     => $member->first_name . ' ' . $member->last_name,
-                'payee_phone'    => $member->user->phone,
-                'amount'         => $netDisbursement,
-                'purpose'        => 'Loan disbursement',
-                'description'    => "Disbursement for loan {$loan->loan_number}",
-                'loan_id'        => $loan->id,
-                'status'         => 'paid',
-                'created_by'     => Auth::id(),
-                'approved_by'    => Auth::id(),
-                'paid_by'        => Auth::id(),
-                'approval_date'  => now(),
-                'payment_date'   => now(),
-            ]);
-
-            AuditLog::create([
-                'user_id'    => Auth::id(),
-                'action'     => 'loan_disbursed',
-                'model_type' => 'App\Models\Loan',
-                'model_id'   => $loan->id,
-                'old_values' => $oldValues,
-                'new_values' => $loan->fresh()->toArray(),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-
-            DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Loan disbursed successfully',
-                'data' => [
-                    'loan'             => $loan->load(['member', 'loanProduct']),
-                    'transaction'      => $transaction,
-                    'net_disbursement' => $netDisbursement,
+                'data'    => [
+                    'loan'             => $result['loan']->load(['member', 'loanProduct']),
+                    'transaction'      => $result['transaction'],
+                    'net_disbursement' => $result['net_disbursement'],
                 ],
             ]);
-        } catch (\Exception $e) {
-            DB::rollback();
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            report($e);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error disbursing loan: ' . \App\Support\ErrorMessage::from($e),
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error disbursing loan. Please try again or contact support.'], 500);
         }
     }
     /**
@@ -889,31 +687,18 @@ class LoanController extends Controller
             'total_loans'               => $loans()->count(),
             'pending_loans'             => $loans()->where('status', 'pending')->count(),
             'approved_loans'            => $loans()->where('status', 'approved')->count(),
-            'disbursed_loans'           => $loans()->where('status', 'disbursed')->count(),
+            'disbursed_loans'           => $loans()->whereIn('status', Loan::RUNNING_STATUSES)->count(),
+            'total_outstanding_balance' => $loans()->whereIn('status', Loan::RUNNING_STATUSES)->sum('outstanding_balance'),
             'completed_loans'           => $loans()->where('status', 'completed')->count(),
             'total_applied_amount'      => $loans()->sum('applied_amount'),
             'total_approved_amount'     => $loans()->whereNotNull('approved_amount')->sum('approved_amount'),
             'total_disbursed_amount'    => $loans()->whereNotNull('disbursed_amount')->sum('disbursed_amount'),
-            'total_outstanding_balance' => $loans()->whereIn('status', ['disbursed', 'active'])->sum('outstanding_balance'),
             'overdue_loans'             => $loans()->where('days_in_arrears', '>', 0)->count(),
             'this_month_applications'   => $loans()->whereMonth('application_date', now()->month)->count(),
             'this_month_disbursements'  => $loans()->whereMonth('disbursement_date', now()->month)->count(),
         ];
     }
 
-
-
-    /**
-     * Calculate monthly repayment using PMT formula
-     */
-    private function calculateMonthlyRepayment($principal, $monthlyRate, $months)
-    {
-        if ($monthlyRate == 0) {
-            return $principal / $months;
-        }
-
-        return $principal * ($monthlyRate * pow(1 + $monthlyRate, $months)) / (pow(1 + $monthlyRate, $months) - 1);
-    }
 
     /**
      * Generate unique loan number
@@ -1020,9 +805,7 @@ class LoanController extends Controller
                 });
         } else {
 
-            $repayments = collect(
-                $this->generateRepaymentSchedule($loan)
-            );
+            $repayments = $this->scheduleFor($loan);
         }
 
         $totals = [
@@ -1041,79 +824,6 @@ class LoanController extends Controller
         ]);
     }
 
-    public function generateRepaymentSchedule(Loan $loan, $baseDate = null): array
-    {
-        $principal   = (float) $loan->approved_amount;
-        $termMonths  = (int) $loan->term_months;
-        $monthlyRate = (float) $loan->interest_rate / 100;
-
-        $principalPerMonth = round($principal / $termMonths, 2);
-
-        $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
-        $mInterest     = round($totalInterest / $termMonths, 2);
-
-        $actualInstallment = round($principalPerMonth + $mInterest, 2);
-
-        $openingBalance = $principal;
-        $schedule = [];
-
-        /**
-         * Always start next month + force 1st of month logic
-         */
-        $graceDays = $loan->loanProduct->grace_period_days ?? 0;
-
-        $currentDate = ($baseDate ?? now())
-            ->copy()
-            ->addDays($graceDays)
-            ->addMonthsNoOverflow(1);
-
-        $cumulInterest = 0;
-        $cumulPrincipal = 0;
-
-        for ($i = 1; $i <= $termMonths; $i++) {
-
-            $interestThisMonth = round($openingBalance * $monthlyRate, 2);
-
-            $principalThisMonth = $principalPerMonth;
-
-            if ($i === $termMonths) {
-                $principalThisMonth = round($openingBalance, 2);
-            }
-
-            $closingBalance = $openingBalance - $principalThisMonth;
-
-            $cumulInterest += $interestThisMonth;
-            $cumulPrincipal += $principalThisMonth;
-
-            $schedule[] = [
-                'payment_number'       => $i,
-                'payment_date'         => $currentDate->format('Y-m-d'),
-
-                'opening_balance'      => round($openingBalance, 2),
-                'principal_amount'     => $principalThisMonth,
-                'interest_amount'      => $interestThisMonth,
-
-                'payment_amount'       => $actualInstallment,
-
-                'm_interest'           => $mInterest,
-                'cumulative_interest'  => round($cumulInterest, 2),
-                'cumulative_principal' => round($cumulPrincipal, 2),
-
-                'closing_balance'      => round(max(0, $closingBalance), 2),
-            ];
-
-            if ($i === $termMonths) {
-                $difference = round($principal - $cumulPrincipal, 2);
-                $schedule[$i - 1]['principal_amount'] += $difference;
-                $schedule[$i - 1]['closing_balance'] = 0;
-            }
-
-            $openingBalance = $closingBalance;
-            $currentDate->addMonth();
-        }
-
-        return $schedule;
-    }
 
     public function myGuarantees()
     {
@@ -1255,5 +965,45 @@ class LoanController extends Controller
         return $request->boolean('download')
             ? Storage::disk($disk)->download($path, $name)
             : Storage::disk($disk)->response($path, $name);
+    }
+
+    // Stored schedule once disbursed; a calculator preview before that. 
+    private function scheduleFor(Loan $loan): Collection
+    {
+        $stored = LoanRepayment::where('loan_id', $loan->id)->orderBy('due_date')->get();
+
+        if ($stored->isNotEmpty()) {
+            $opening = (float) $loan->approved_amount;
+
+            return $stored->values()->map(function ($r, $i) use (&$opening) {
+                $principal = (float) $r->principal_amount;
+
+                $row = [
+                    'payment_number'   => $i + 1,
+                    'payment_date'     => Carbon::parse($r->due_date)->toDateString(),
+                    'opening_balance'  => round($opening, 2),
+                    'principal_amount' => round($principal, 2),
+                    'interest_amount'  => round((float) $r->interest_amount, 2),
+                    'payment_amount'   => round((float) $r->expected_amount, 2),
+                    'closing_balance'  => round(max(0, $opening - $principal), 2),
+                    'expected_amount'  => $r->expected_amount,
+                    'paid_amount'      => $r->paid_amount,
+                    'status'           => $r->status,
+                ];
+
+                $opening -= $principal;
+
+                return $row;
+            });
+        }
+
+        $principal = (float) ($loan->approved_amount ?: $loan->applied_amount);
+
+        return collect(app(LoanCalculator::class)->schedule(
+            $principal,
+            (float) $loan->interest_rate,
+            (int) $loan->term_months,
+            now()->addMonthNoOverflow()->toDateString(),
+        ));
     }
 }

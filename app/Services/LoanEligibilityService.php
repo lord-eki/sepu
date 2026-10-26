@@ -6,23 +6,16 @@ use App\Models\Member;
 use App\Models\LoanProduct;
 use App\Models\Account;
 use App\Models\Loan;
+use App\Services\Loans\LoanCalculator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class LoanEligibilityService
 {
-    const MINIMUM_SHARE_CAPITAL = 5000; 
-    const MINIMUM_MEMBERSHIP_MONTHS = 6; 
-    const MAX_DEDUCTION_RATIO = 0.67; 
+    const MINIMUM_SHARE_CAPITAL = 5000;
+    const MINIMUM_MEMBERSHIP_MONTHS = 6;
+    const MAX_DEDUCTION_RATIO = 0.67;
 
-    /**
-     * Check if member is eligible for a loan
-     *
-     * @param Member $member
-     * @param LoanProduct $loanProduct
-     * @param float $requestedAmount
-     * @return array
-     */
     public function checkEligibility(Member $member, LoanProduct $loanProduct, float $requestedAmount): array
     {
         $checks = [
@@ -50,8 +43,8 @@ class LoanEligibilityService
      */
     private function isActiveMember(Member $member): bool
     {
-        return $member->membership_status === 'active' && 
-               $member->user->is_active === true;
+        return $member->membership_status === 'active' &&
+            $member->user->is_active === true;
     }
 
     /**
@@ -59,7 +52,6 @@ class LoanEligibilityService
      */
     private function hasRegularDeposits(Member $member): bool
     {
-        // Check if member has made deposits in the last 3 months
         $savingsAccount = $member->accounts()
             ->where('account_type', 'share_deposits')
             ->first();
@@ -73,7 +65,7 @@ class LoanEligibilityService
             ->where('created_at', '>=', Carbon::now()->subMonths(3))
             ->count();
 
-        return $recentDeposits >= 2; // At least 2 deposits in last 3 months
+        return $recentDeposits >= 2;
     }
 
     /**
@@ -103,7 +95,7 @@ class LoanEligibilityService
 
         $membershipMonths = Carbon::parse($member->membership_date)
             ->diffInMonths(Carbon::now());
-    
+
         return $membershipMonths >= self::MINIMUM_MEMBERSHIP_MONTHS;
     }
 
@@ -112,9 +104,9 @@ class LoanEligibilityService
      */
     private function hasIncomeSource(Member $member): bool
     {
-        return !empty($member->occupation) && 
-               !empty($member->employer) && 
-               $member->monthly_income > 0;
+        return !empty($member->occupation) &&
+            !empty($member->employer) &&
+            $member->monthly_income > 0;
     }
 
     /**
@@ -122,7 +114,6 @@ class LoanEligibilityService
      */
     private function hasGoodCreditHistory(Member $member): bool
     {
-        // Check for any loans in default or with arrears > 90 days
         $badLoans = $member->loans()
             ->whereIn('status', ['defaulted', 'written_off'])
             ->exists();
@@ -131,7 +122,6 @@ class LoanEligibilityService
             return false;
         }
 
-        // Check for loans with significant arrears
         $loansInArrears = $member->loans()
             ->where('status', 'active')
             ->where('days_in_arrears', '>', 90)
@@ -149,43 +139,21 @@ class LoanEligibilityService
             return false;
         }
 
-        // Calculate proposed monthly repayment
         $proposedRepayment = $this->calculateMonthlyRepayment(
-            $requestedAmount, 
-            $loanProduct->interest_rate, 
+            $requestedAmount,
+            $loanProduct->interest_rate,
             $loanProduct->max_term_months
         );
 
-        // Get existing active loans total monthly repayment
         $existingLoansRepayment = $member->loans()
             ->where('status', 'active')
             ->sum('monthly_repayment');
 
-        // Calculate total deductions
         $totalDeductions = $existingLoansRepayment + $proposedRepayment;
 
-        // Check if deductions exceed 2/3 of gross salary
         $maxAllowedDeduction = $member->monthly_income * self::MAX_DEDUCTION_RATIO;
 
         return $totalDeductions <= $maxAllowedDeduction;
-    }
-
-    /**
-     * Calculate monthly repayment using reducing balance method
-     */
-    private function calculateMonthlyRepayment(float $principal, float $annualRate, int $months): float
-    {
-        $monthlyRate = ($annualRate / 100) / 12;
-        
-        if ($monthlyRate == 0) {
-            return $principal / $months;
-        }
-
-        $monthlyPayment = $principal * 
-            ($monthlyRate * pow(1 + $monthlyRate, $months)) / 
-            (pow(1 + $monthlyRate, $months) - 1);
-
-        return round($monthlyPayment, 2);
     }
 
     /**
@@ -195,17 +163,14 @@ class LoanEligibilityService
     {
         $messages = [];
 
-        /* ---------------- ACTIVE STATUS ---------------- */
         if (!$checks['is_active_member']) {
             $messages[] = 'Member account is inactive. Please activate the account to proceed.';
         }
 
-        /* ---------------- DEPOSITS ---------------- */
         if (!$checks['has_regular_deposits']) {
             $messages[] = 'No consistent deposits detected. At least 2 contributions in the last 3 months are required.';
         }
 
-        /* ---------------- SHARE CAPITAL ---------------- */
         if (!$checks['meets_share_capital']) {
             $sharesAccount = $member?->accounts()
                 ->where('account_type', 'share_capital')
@@ -219,7 +184,6 @@ class LoanEligibilityService
                 . number_format(self::MINIMUM_SHARE_CAPITAL) . '.';
         }
 
-        /* ---------------- MEMBERSHIP DURATION ---------------- */
         if (!$checks['meets_membership_duration']) {
             $months = $member?->membership_date
                 ? Carbon::parse($member->membership_date)->diffInMonths(Carbon::now())
@@ -230,17 +194,14 @@ class LoanEligibilityService
                 . self::MINIMUM_MEMBERSHIP_MONTHS . ' months.';
         }
 
-        /* ---------------- INCOME ---------------- */
         if (!$checks['has_income_source']) {
             $messages[] = 'No valid income source found. Please update employment and income details.';
         }
 
-        /* ---------------- CREDIT HISTORY ---------------- */
         if (!$checks['has_good_credit_history']) {
             $messages[] = 'Member has defaulted loans or active arrears exceeding 90 days.';
         }
 
-        /* ---------------- DEDUCTION LIMIT ---------------- */
         if (!$checks['deductions_within_limit']) {
             $existingRepayment = $member?->loans()
                 ->where('status', 'active')
@@ -262,7 +223,6 @@ class LoanEligibilityService
                 . ').';
         }
 
-        /* ---------------- LOAN LIMIT ---------------- */
         if ($member && $loanProduct && $requestedAmount > 0) {
             $maxLoan = $this->getMaximumLoanAmount($member, $loanProduct);
 
@@ -274,7 +234,6 @@ class LoanEligibilityService
             }
         }
 
-        /* ---------------- SUCCESS ---------------- */
         if (empty($messages)) {
             $messages[] = 'Member meets all eligibility requirements.';
         }
@@ -292,7 +251,7 @@ class LoanEligibilityService
             ->first();
 
         $currentShareCapital = $sharesAccount ? $sharesAccount->balance : 0;
-        $membershipMonths = $member->membership_date 
+        $membershipMonths = $member->membership_date
             ? Carbon::parse($member->membership_date)->diffInMonths(Carbon::now())
             : 0;
 
@@ -324,8 +283,8 @@ class LoanEligibilityService
                 'max_allowed' => $maxAllowedDeduction,
                 'current_deductions' => $existingLoansRepayment,
                 'available' => $availableDeduction,
-                'percentage_used' => $member->monthly_income > 0 
-                    ? ($existingLoansRepayment / $member->monthly_income) * 100 
+                'percentage_used' => $member->monthly_income > 0
+                    ? ($existingLoansRepayment / $member->monthly_income) * 100
                     : 0
             ]
         ];
@@ -340,7 +299,6 @@ class LoanEligibilityService
             return 0;
         }
 
-        // Calculate available deduction capacity
         $existingLoansRepayment = $member->loans()
             ->where('status', 'active')
             ->sum('monthly_repayment');
@@ -352,28 +310,31 @@ class LoanEligibilityService
             return 0;
         }
 
-        // Calculate maximum principal based on available deduction
         $monthlyRate = ($loanProduct->interest_rate / 100) / 12;
         $months = $loanProduct->max_term_months;
 
         if ($monthlyRate == 0) {
             $maxPrincipal = $availableDeduction * $months;
         } else {
-            $maxPrincipal = $availableDeduction * 
-                (pow(1 + $monthlyRate, $months) - 1) / 
+            $maxPrincipal = $availableDeduction *
+                (pow(1 + $monthlyRate, $months) - 1) /
                 ($monthlyRate * pow(1 + $monthlyRate, $months));
         }
 
-        // Cap at product maximum
         if ($maxPrincipal > $loanProduct->max_amount) {
             $maxPrincipal = $loanProduct->max_amount;
         }
 
-        // Cap at minimum if below product minimum
         if ($maxPrincipal < $loanProduct->min_amount) {
             return 0;
         }
 
         return round($maxPrincipal, 2);
+    }
+
+    private function calculateMonthlyRepayment(float $principal, float $annualRate, int $months): float
+    {
+        return app(LoanCalculator::class)
+            ->installmentCents((int) round($principal * 100), $annualRate, $months) / 100;
     }
 }

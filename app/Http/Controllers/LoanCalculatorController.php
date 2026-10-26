@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LoanProduct;
+use App\Services\Loans\LoanCalculator;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,9 +15,19 @@ class LoanCalculatorController extends Controller
     public function index()
     {
         $loanProducts = LoanProduct::where('is_active', true)
-            ->select(['id', 'name', 'code', 'min_amount', 'max_amount', 'interest_rate',
-                     'min_term_months', 'max_term_months', 'processing_fee_rate',
-                     'insurance_rate', 'grace_period_days'])
+            ->select([
+                'id',
+                'name',
+                'code',
+                'min_amount',
+                'max_amount',
+                'interest_rate',
+                'min_term_months',
+                'max_term_months',
+                'processing_fee_rate',
+                'insurance_rate',
+                'grace_period_days'
+            ])
             ->get();
 
         return Inertia::render('LoanCalculator/Index', [
@@ -40,14 +51,12 @@ class LoanCalculatorController extends Controller
         $principalAmount = $validated['principal_amount'];
         $termMonths      = $validated['term_months'];
 
-        // Validate amount range
         if ($principalAmount < $loanProduct->min_amount || $principalAmount > $loanProduct->max_amount) {
             return response()->json([
                 'error' => "Loan amount must be between {$loanProduct->min_amount} and {$loanProduct->max_amount}"
             ], 422);
         }
 
-        // Validate term range
         if ($termMonths < $loanProduct->min_term_months || $termMonths > $loanProduct->max_term_months) {
             return response()->json([
                 'error' => "Loan term must be between {$loanProduct->min_term_months} and {$loanProduct->max_term_months} months"
@@ -62,123 +71,61 @@ class LoanCalculatorController extends Controller
         ]);
     }
 
- 
+
     private function calculateLoan(LoanProduct $loanProduct, float $principalAmount, int $termMonths): array
     {
-        $monthlyRate         = $loanProduct->interest_rate / 100;
-        $processingFeeRate   = $loanProduct->processing_fee_rate / 100;
-        $insuranceRate       = $loanProduct->insurance_rate / 100;
+        $graceDays = (int) ($loanProduct->grace_period_days ?? 0);
+        $firstDue  = now()->addDays($graceDays)->addMonthNoOverflow();
 
-        $processingFee = $principalAmount * $processingFeeRate;
-        $insuranceFee  = $principalAmount * $insuranceRate;
-        $totalFees     = $processingFee + $insuranceFee;
-        $netDisbursement = $principalAmount - $totalFees;
-
-        $principalPerMonth = $principalAmount / $termMonths;
-
-
-        $totalInterest = $principalAmount * $monthlyRate * ($termMonths + 1) / 2;
-
-        $mInterest = $totalInterest / $termMonths;
-
-        $actualInstallment = $principalPerMonth + $mInterest;
-
-        $totalRepayment = $actualInstallment * $termMonths; 
-
-        $schedule = $this->generateSchedule(
+        $c = app(LoanCalculator::class)->summary(
             $principalAmount,
-            $principalPerMonth,
-            $monthlyRate,
-            $mInterest,
-            $actualInstallment,
+            (float) $loanProduct->interest_rate,
             $termMonths,
-            $loanProduct->grace_period_days ?? 0
+            (float) $loanProduct->processing_fee_rate,
+            (float) $loanProduct->insurance_rate,
+            $firstDue,
         );
 
-        $graceDays         = $loanProduct->grace_period_days ?? 0;
-        $firstPaymentDate  = now()->addDays($graceDays)->addMonth()->format('Y-m-d');
-        $lastPaymentDate   = now()->addDays($graceDays)->addMonths($termMonths)->format('Y-m-d');
+        $schedule = array_map(fn($row) => $row + [
+            'installment' => $row['payment_amount'],
+            'm_interest'  => $row['interest_amount'],
+        ], $c['schedule']);
+
+        $first = $schedule[0];
+        $last  = $schedule[count($schedule) - 1];
 
         return [
             'loan_product' => [
                 'name'              => $loanProduct->name,
                 'code'              => $loanProduct->code,
-                'interest_rate'     => $loanProduct->interest_rate,   
+                'interest_rate'     => $loanProduct->interest_rate,
                 'grace_period_days' => $graceDays,
             ],
             'loan_details' => [
                 'principal_amount'    => round($principalAmount, 2),
                 'term_months'         => $termMonths,
-                'monthly_rate'        => round($monthlyRate * 100, 4),    
-                'annual_rate'         => round($monthlyRate * 12 * 100, 4), 
-                'principal_per_month' => round($principalPerMonth, 2),
-                'm_interest'          => round($mInterest, 2),            
-                'monthly_payment'     => round($actualInstallment, 2),    
-                'total_interest'      => round($totalInterest, 2),
-                'total_repayment'     => round($totalRepayment, 2),
-                'processing_fee'      => round($processingFee, 2),
-                'insurance_fee'       => round($insuranceFee, 2),
-                'total_fees'          => round($totalFees, 2),
-                'total_cost_of_loan'  => round($totalRepayment + $totalFees, 2),
-                'net_disbursement'    => round($netDisbursement, 2),
+                'monthly_rate'        => round($loanProduct->interest_rate / 12, 4),
+                'annual_rate'         => round((float) $loanProduct->interest_rate, 4),
+                'principal_per_month' => $first['principal_amount'],
+                'm_interest'          => $first['interest_amount'],
+                'monthly_payment'     => $c['monthly_payment'],
+                'total_interest'      => $c['total_interest'],
+                'total_repayment'     => $c['total_repayable'],
+                'processing_fee'      => $c['processing_fee'],
+                'insurance_fee'       => $c['insurance_fee'],
+                'total_fees'          => $c['total_fees'],
+                'total_cost_of_loan'  => round($c['total_repayable'] + $c['total_fees'], 2),
+                'net_disbursement'    => $c['net_disbursement'],
             ],
             'summary' => [
-                'total_payments'        => $termMonths,
-                'total_principal_paid'  => round($principalAmount, 2),
-                'total_interest_paid'   => round($totalInterest, 2),
-                'first_payment_date'    => $firstPaymentDate,
-                'last_payment_date'     => $lastPaymentDate,
+                'total_payments'       => $termMonths,
+                'total_principal_paid' => round($principalAmount, 2),
+                'total_interest_paid'  => $c['total_interest'],
+                'first_payment_date'   => $first['payment_date'],
+                'last_payment_date'    => $last['payment_date'],
             ],
             'amortization_schedule' => $schedule,
         ];
-    }
-
-    /**
-     */
-    private function generateSchedule(
-        float $principal,
-        float $principalPerMonth,
-        float $monthlyRate,
-        float $mInterest,
-        float $actualInstallment,
-        int   $termMonths,
-        int   $graceDays = 0
-    ): array {
-        $schedule         = [];
-        $openingBalance   = $principal;
-        $cumulInterest    = 0;
-        $cumulPrincipal   = 0;
-        $currentDate      = now()->addDays($graceDays)->addMonth();
-
-        for ($month = 1; $month <= $termMonths; $month++) {
-            $interestThisMonth = $openingBalance * $monthlyRate;
-
-            $reducingInstallment = $principalPerMonth + $interestThisMonth;
-
-            $closingBalance = $openingBalance - $principalPerMonth;
-
-            $cumulInterest  += $mInterest;          
-            $cumulPrincipal += $principalPerMonth;
-
-            $schedule[] = [
-                'payment_number'       => $month,
-                'payment_date'         => $currentDate->format('Y-m-d'),
-                'opening_balance'      => round($openingBalance, 2),
-                'principal_amount'     => round($principalPerMonth, 2),
-                'interest_amount'      => round($interestThisMonth, 2),
-                'installment'          => round($reducingInstallment, 2),
-                'm_interest'           => round($mInterest, 2),
-                'payment_amount'       => round($actualInstallment, 2),
-                'closing_balance'      => round(max(0, $closingBalance), 2),
-                'cumulative_interest'  => round($cumulInterest, 2),
-                'cumulative_principal' => round($cumulPrincipal, 2),
-            ];
-
-            $openingBalance = $closingBalance;
-            $currentDate    = $currentDate->addMonth();
-        }
-
-        return $schedule;
     }
 
     /**

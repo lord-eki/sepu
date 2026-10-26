@@ -13,6 +13,7 @@ use App\Models\Notification;
 use Carbon\Carbon;
 use App\Models\Budget;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -22,8 +23,8 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        
-        return match($user->role) {
+
+        return match ($user->role) {
             'admin' => $this->adminDashboard(),
             'management' => $this->managementDashboard(),
             'accountant' => $this->accountantDashboard(),
@@ -34,7 +35,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Admin Dashboard - Full system overview
+     * Admin Dashboard 
      */
     public function adminDashboard()
     {
@@ -49,7 +50,7 @@ class DashboardController extends Controller
                 'total_share_capital' => Account::where('account_type', 'share_capital')->sum('balance'),
             ],
             'loans' => [
-                'total_portfolio' => Loan::whereIn('status', ['disbursed', 'active'])->sum('outstanding_balance'),
+                'total_portfolio' => Loan::whereIn('status', Loan::RUNNING_STATUSES)->sum('outstanding_balance'),
                 'active_loans' => Loan::where('status', 'active')->count(),
                 'pending_applications' => Loan::where('status', 'pending')->count(),
                 'arrears_amount' => Loan::where('days_in_arrears', '>', 0)->sum('outstanding_balance'),
@@ -64,8 +65,8 @@ class DashboardController extends Controller
         $recentActivities = $this->getRecentActivities();
         $pendingApprovals = $this->getPendingApprovals();
         $systemHealth = $this->getSystemHealth();
-       
-       
+
+
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
@@ -80,53 +81,50 @@ class DashboardController extends Controller
     public function pendingMembers()
     {
         try {
-            // Pending members (awaiting approval)
             $pendingMembers = Member::with('user')
                 ->where('membership_status', 'pending')
                 ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'membership_date')
                 ->latest()
                 ->get();
 
-            // Approved members
             $approvedAwaitingActivation = Member::with(['user', 'accounts'])
-            ->where('membership_status', 'approved')
-            ->whereHas('accounts', function ($q) {
-                $q->where('account_type', 'share_deposits')
-                    ->where('available_balance', '>=', 7500);
-            })
-            ->whereHas('accounts', function ($q) {
-                $q->where('account_type', 'share_capital')
-                    ->where('available_balance', '>=', 5000);
-            })
-            ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
-            ->latest()
-            ->get();
-
-        $approvedButUnpaid = Member::with(['user', 'accounts'])
-            ->where('membership_status', 'approved')
-            ->where(function ($query) {
-                $query->whereDoesntHave('accounts', function ($q) {
+                ->where('membership_status', 'approved')
+                ->whereHas('accounts', function ($q) {
                     $q->where('account_type', 'share_deposits')
                         ->where('available_balance', '>=', 7500);
                 })
-                ->orWhereDoesntHave('accounts', function ($q) {
+                ->whereHas('accounts', function ($q) {
                     $q->where('account_type', 'share_capital')
                         ->where('available_balance', '>=', 5000);
-                });
-            })
-            ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
-            ->latest()
-            ->get();
+                })
+                ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
+                ->latest()
+                ->get();
+
+            $approvedButUnpaid = Member::with(['user', 'accounts'])
+                ->where('membership_status', 'approved')
+                ->where(function ($query) {
+                    $query->whereDoesntHave('accounts', function ($q) {
+                        $q->where('account_type', 'share_deposits')
+                            ->where('available_balance', '>=', 7500);
+                    })
+                        ->orWhereDoesntHave('accounts', function ($q) {
+                            $q->where('account_type', 'share_capital')
+                                ->where('available_balance', '>=', 5000);
+                        });
+                })
+                ->select('id', 'user_id', 'first_name', 'last_name', 'created_at', 'profile_photo', 'membership_id', 'updated_at')
+                ->latest()
+                ->get();
 
 
             return response()->json([
                 'pending' => $pendingMembers,
                 'approvedAwaitingActivation' => $approvedAwaitingActivation,
-                'approvedButUnpaid' => $approvedButUnpaid, 
+                'approvedButUnpaid' => $approvedButUnpaid,
             ]);
-
         } catch (\Exception $e) {
-            \Log::error('Error fetching members: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Error fetching members: ' . \App\Support\ErrorMessage::from($e));
             return response()->json(['error' => 'Error fetching members'], 500);
         }
     }
@@ -147,7 +145,7 @@ class DashboardController extends Controller
         $stats = [
             'financial_summary' => [
                 'total_assets' => Account::sum('balance'),
-                'loan_portfolio' => Loan::whereIn('status', ['disbursed', 'active'])->sum('outstanding_balance'),
+                'loan_portfolio' => Loan::whereIn('status', Loan::RUNNING_STATUSES)->sum('outstanding_balance'),
                 'monthly_income' => Transaction::where('transaction_type', 'deposit')
                     ->whereMonth('created_at', now()->month)
                     ->sum('amount'),
@@ -179,7 +177,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Accountant Dashboard - Financial operations focus
+     * Accountant Dashboard 
      */
     public function accountantDashboard()
     {
@@ -235,14 +233,15 @@ class DashboardController extends Controller
                 'active_loans' => Loan::where('status', 'active')->count(),
             ],
             'portfolio' => [
-                'total_disbursed' => Loan::whereIn('status', ['disbursed', 'active'])->sum('disbursed_amount'),
-                'outstanding_balance' => Loan::whereIn('status', ['disbursed', 'active'])->sum('outstanding_balance'),
+                'total_disbursed' => Loan::whereIn('status', Loan::RUNNING_STATUSES)->sum('disbursed_amount'),
+                'outstanding_balance' => Loan::whereIn('status', Loan::RUNNING_STATUSES)->sum('outstanding_balance'),
                 'overdue_amount' => Loan::where('days_in_arrears', '>', 0)->sum('outstanding_balance'),
             ],
             'targets' => [
                 'monthly_disbursement_target' => 500000,
-                'monthly_disbursed' => Loan::where('status', 'disbursed')
+                'monthly_disbursed' => Loan::whereNotNull('disbursement_date')
                     ->whereMonth('disbursement_date', now()->month)
+                    ->whereYear('disbursement_date', now()->year)
                     ->sum('disbursed_amount'),
             ]
         ];
@@ -260,7 +259,7 @@ class DashboardController extends Controller
             ->get();
 
         $loanPerformanceMetrics = $this->getLoanPerformanceMetrics();
-        
+
 
         return Inertia::render('Officer/Dashboard', [
             'stats' => $stats,
@@ -271,7 +270,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Member Dashboard - Personal account overview
+     * Member Dashboard=
      */
     public function memberDashboard()
     {
@@ -282,7 +281,6 @@ class DashboardController extends Controller
             return redirect()->route('profile.complete');
         }
 
-        // Check membership status
         switch ($member->membership_status) {
             case 'pending':
                 return redirect()->route('awaiting-activation');
@@ -303,7 +301,6 @@ class DashboardController extends Controller
                 return redirect()->route('login')->with('error', 'Your membership application was rejected. Please reach out to admin for clarification.');
 
             case 'active':
-                // proceed as normal
                 break;
 
             default:
@@ -326,7 +323,7 @@ class DashboardController extends Controller
                     ->where('status', 'active')
                     ->count(),
                 'total_outstanding' => Loan::where('member_id', $member->id)
-                    ->whereIn('status', ['disbursed', 'active'])
+                    ->whereIn('status', Loan::RUNNING_STATUSES)
                     ->sum('outstanding_balance'),
                 'next_payment_due' => Loan::where('member_id', $member->id)
                     ->where('status', 'active')
@@ -341,7 +338,7 @@ class DashboardController extends Controller
             ->get();
 
         $activeLoans = Loan::where('member_id', $member->id)
-            ->whereIn('status', ['active', 'disbursed'])
+            ->whereIn('status', Loan::RUNNING_STATUSES)
             ->with('loanProduct')
             ->get();
 
@@ -366,12 +363,11 @@ class DashboardController extends Controller
     private function getRecentActivities()
     {
         return collect([
-            // TRANSACTIONS
             Transaction::with(['member', 'account'])
                 ->latest()
                 ->take(5)
                 ->get()
-                ->map(fn ($t) => [
+                ->map(fn($t) => [
                     'type' => 'transaction',
                     'id' => $t->id,
                     'description' => "{$t->member->first_name} {$t->member->last_name} - {$t->transaction_type}",
@@ -383,28 +379,26 @@ class DashboardController extends Controller
                         : null,
                 ]),
 
-            // LOAN APPLICATIONS
             Loan::with('member')
                 ->where('status', 'pending')
                 ->latest()
                 ->take(3)
                 ->get()
-                ->map(fn ($l) => [
+                ->map(fn($l) => [
                     'type' => 'loan_application',
                     'id' => $l->id,
                     'description' => "{$l->member->first_name} {$l->member->last_name} - Loan Application",
                     'amount' => $l->applied_amount,
-                    'status' => $l->status, // pending
+                    'status' => $l->status,
                     'time' => $l->created_at,
                     'link' => '/loans?status=pending',
                 ]),
 
-            // MEMBER APPLICATIONS
             Member::where('membership_status', 'pending')
                 ->latest()
                 ->take(3)
                 ->get()
-                ->map(fn ($m) => [
+                ->map(fn($m) => [
                     'type' => 'member',
                     'id' => $m->id,
                     'description' => "{$m->first_name} {$m->last_name} - Membership Application",
@@ -413,10 +407,10 @@ class DashboardController extends Controller
                     'link' => '/admin/pending-members',
                 ]),
         ])
-        ->flatten(1)
-        ->sortByDesc('time')
-        ->take(10)
-        ->values();
+            ->flatten(1)
+            ->sortByDesc('time')
+            ->take(10)
+            ->values();
     }
 
 
@@ -440,10 +434,8 @@ class DashboardController extends Controller
 
             'vouchers' => PaymentVoucher::where('status', 'pending')->count(),
 
-            // combined member approvals
             'members' => $pendingMembers + $pendingActivation,
 
-            // budget approvals
             'budgets' => Budget::where('status', 'pending')->count(),
         ];
     }
@@ -460,20 +452,19 @@ class DashboardController extends Controller
 
     private function calculatePortfolioAtRisk()
     {
-        $totalPortfolio = Loan::whereIn('status', ['disbursed', 'active'])->sum('outstanding_balance');
+        $totalPortfolio = Loan::whereIn('status', Loan::RUNNING_STATUSES)->sum('outstanding_balance');
         $portfolioAtRisk = Loan::where('days_in_arrears', '>', 30)->sum('outstanding_balance');
-        
+
         return $totalPortfolio > 0 ? round(($portfolioAtRisk / $totalPortfolio) * 100, 2) : 0;
     }
 
     private function calculateRecoveryRate()
     {
-        // This is a simplified calculation - you may want to make it more sophisticated
         $currentMonth = now()->month;
         $expectedRepayments = DB::table('loan_repayments')
             ->whereMonth('due_date', $currentMonth)
             ->sum('expected_amount');
-        
+
         $actualRepayments = DB::table('loan_repayments')
             ->whereMonth('due_date', $currentMonth)
             ->whereNotNull('payment_date')
@@ -486,7 +477,7 @@ class DashboardController extends Controller
     {
         $currentMonth = Member::whereMonth('created_at', now()->month)->count();
         $lastMonth = Member::whereMonth('created_at', now()->subMonth()->month)->count();
-        
+
         return $lastMonth > 0 ? round((($currentMonth - $lastMonth) / $lastMonth) * 100, 2) : 0;
     }
 
@@ -511,7 +502,7 @@ class DashboardController extends Controller
         return DB::table('loans')
             ->join('loan_products', 'loans.loan_product_id', '=', 'loan_products.id')
             ->select('loan_products.name', DB::raw('COUNT(*) as count'), DB::raw('SUM(outstanding_balance) as total_outstanding'))
-            ->whereIn('loans.status', ['disbursed', 'active'])
+            ->whereIn('loans.status', Loan::RUNNING_STATUSES)
             ->groupBy('loan_products.name')
             ->get();
     }
@@ -527,13 +518,14 @@ class DashboardController extends Controller
     private function getLoanPerformanceMetrics()
     {
         return [
-            'disbursement_this_month' => Loan::where('status', 'disbursed')
+            'disbursement_this_month' => Loan::whereNotNull('disbursement_date')
                 ->whereMonth('disbursement_date', now()->month)
+                ->whereYear('disbursement_date', now()->year)
                 ->sum('disbursed_amount'),
             'applications_processed' => Loan::whereMonth('created_at', now()->month)
                 ->whereIn('status', ['approved', 'rejected'])
                 ->count(),
-            'average_processing_time' => 3.2, // This would need actual calculation
+            'average_processing_time' => 3.2,
             'approval_rate' => $this->calculateApprovalRate(),
         ];
     }
@@ -543,12 +535,11 @@ class DashboardController extends Controller
         $totalProcessed = Loan::whereMonth('created_at', now()->month)
             ->whereIn('status', ['approved', 'rejected'])
             ->count();
-        
+
         $approved = Loan::whereMonth('created_at', now()->month)
             ->where('status', 'approved')
             ->count();
 
         return $totalProcessed > 0 ? round(($approved / $totalProcessed) * 100, 2) : 0;
     }
-
 }

@@ -12,6 +12,8 @@ use App\Models\MemberDepositCommitment;
 use App\Models\MemberFinanceConfig;
 use App\Models\ScheduleExecutionLog;
 use App\Models\Transaction;
+use App\Services\Loans\LoanService;
+use App\Support\ErrorMessage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,7 +71,6 @@ class ScheduleController extends Controller
             ->orderBy('member_id')
             ->get();
 
-        // Which members already had a deposit posted this month?
         $memberIdsAlreadyDone = Transaction::where('transaction_type', 'deposit')
             ->where('status', 'completed')
             ->whereBetween('processed_at', [$startDate, $endDate])
@@ -228,7 +229,6 @@ class ScheduleController extends Controller
             $memberId        = $r->loan->member_id;
             $overrideAmount  = $autoDeductMemberIds->get($memberId);
 
-            // Determine the amount that will actually be deducted:
             $deductAmount = $overrideAmount
                 ? min((float) $overrideAmount, (float) $r->outstanding_amount)
                 : (float) $r->outstanding_amount;
@@ -318,7 +318,6 @@ class ScheduleController extends Controller
                     $newOutstanding = max(0, (float) $repayment->outstanding_amount - $amount);
                     $newStatus      = $newOutstanding > 0 ? 'partial' : 'paid';
 
-                    // Credit into the member's savings/share-deposits account
                     $account = $loan->member->accounts()
                         ->where('account_type', 'share_deposits')
                         ->where('is_active', true)
@@ -441,7 +440,7 @@ class ScheduleController extends Controller
         ]);
     }
 
-    public function runLoanDisbursements(Request $request)
+    public function runLoanDisbursements(Request $request, LoanService $loans)
     {
         $request->validate([
             'loan_ids'   => 'required|array|min:1',
@@ -449,128 +448,38 @@ class ScheduleController extends Controller
             'year'       => 'required|integer',
         ]);
 
-        $loanIds = array_values(array_unique($request->input('loan_ids')));
-
-        $processedBy = Auth::id();
+        $loanIds     = array_values(array_unique($request->input('loan_ids')));
+        $by          = Auth::user();
         $now         = now();
         $processed   = 0;
         $failed      = 0;
         $totalAmount = 0;
         $errors      = [];
 
-        DB::beginTransaction();
-        try {
-            foreach ($loanIds as $loanId) {
-                try {
-                    $loan = Loan::with('member.accounts')->whereKey($loanId)->lockForUpdate()->findOrFail();
+        foreach ($loanIds as $loanId) {
+            try {
+                $result = $loans->disburse((int) $loanId, 'account', null, $by);
 
-                    if ($loan->status !== 'approved') {
-                        throw new \DomainException("Loan {$loan->loan_number} is not in approved status or has already been disbursed.");
-                    }
-
-                    $alreadyDisbursed =  Transaction::where('transaction_type', 'loan_disbursement')
-                        ->where('reference_number', $loan->loan_number)
-                        ->exists();
-
-                    if ($alreadyDisbursed) {
-                        throw new \DomainException("Loan {$loan->loan_number} has already been disbursed.");
-                    }
-
-                    $netAmount = $loan->approved_amount - $loan->processing_fee - $loan->insurance_fee;
-
-                    $account = $loan->member->accounts()
-                        ->where('account_type', 'share_deposits')
-                        ->where('is_active', true)
-                        ->first();
-
-                    if (! $account) {
-                        throw new \DomainException("No active share_deposits account for member {$loan->member->membership_id}.");
-                    }
-
-                    Transaction::create([
-                        'transaction_id'   => 'DIS-SCH-' . strtoupper(uniqid()),
-                        'account_id'       => $account->id,
-                        'member_id'        => $loan->member_id,
-                        'transaction_type' => 'loan_disbursement',
-                        'amount'           => $netAmount,
-                        'balance_before'   => $account->balance,
-                        'balance_after'    => $account->balance + $netAmount,
-                        'description'      => "Schedule: Loan disbursement – {$loan->loan_number}",
-                        'reference_number' => $loan->loan_number,
-                        'payment_method'   => 'system_transfer',
-                        'status'           => 'completed',
-                        'processed_by'     => $processedBy,
-                        'processed_at'     => $now,
-                    ]);
-
-                    $account->increment('balance', $netAmount);
-                    $account->increment('available_balance', $netAmount);
-                    $account->update(['last_transaction_at' => $now]);
-
-                    $loan->update([
-                        'status'              => 'active',
-                        'disbursed_amount'    => $loan->approved_amount,
-                        'disbursement_date'   => $now->toDateString(),
-                        'disbursed_by'        => $processedBy,
-                        'outstanding_balance' => $loan->total_repayable ?? $loan->approved_amount,
-                        'principal_balance'   => $loan->approved_amount,
-                    ]);
-
-                    // Generate + store the repayment schedule, matching the
-                    // single-loan disburse() path — previously this batch
-                    // path left loans with status = active but zero
-                    // LoanRepayment rows, so they never surfaced correctly
-                    // as active/collectable loans.
-                    LoanRepayment::where('loan_id', $loan->id)->delete();
-
-                    $repaymentSchedule = app(LoanController::class)
-                        ->generateRepaymentSchedule($loan, $now->copy());
-
-                    foreach ($repaymentSchedule as $row) {
-                        $expected = round($row['payment_amount'], 2);
-
-                        LoanRepayment::create([
-                            'loan_id'            => $loan->id,
-                            'transaction_id'     => null,
-                            'due_date'           => $row['payment_date'],
-                            'expected_amount'    => $expected,
-                            'principal_amount'   => round($row['principal_amount'], 2),
-                            'interest_amount'    => round($row['interest_amount'], 2),
-                            'penalty_amount'     => 0,
-                            'paid_amount'        => 0,
-                            'outstanding_amount' => $expected,
-                            'status'             => 'pending',
-                            'payment_date'       => null,
-                            'days_late'          => 0,
-                        ]);
-                    }
-
-                    $processed++;
-                    $totalAmount += $netAmount;
-                } catch (\Throwable $e) {
-                    $failed++;
-                    $errors[] = ['loan_id' => $loanId, 'error' => \App\Support\ErrorMessage::from($e)];
-                }
+                $processed++;
+                $totalAmount += $result['net_disbursement'];
+            } catch (\Throwable $e) {
+                $failed++;
+                $errors[] = ['loan_id' => $loanId, 'error' => ErrorMessage::from($e)];
             }
-
-            ScheduleExecutionLog::create([
-                'schedule_type'           => 'loan_disbursements',
-                'processing_month'        => null,
-                'processing_year'         => (int) $request->year,
-                'executed_by'             => $processedBy,
-                'execution_date'          => $now,
-                'total_records_processed' => $processed,
-                'total_records_failed'    => $failed,
-                'total_amount_posted'     => $totalAmount,
-                'status'                  => $failed > 0 ? ($processed > 0 ? 'partial' : 'failed') : 'completed',
-                'error_log'               => $errors ?: null,
-            ]);
-
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run disbursements: ' . \App\Support\ErrorMessage::from($e)]);
         }
+
+        ScheduleExecutionLog::create([
+            'schedule_type'           => 'loan_disbursements',
+            'processing_month'        => null,
+            'processing_year'         => (int) $request->year,
+            'executed_by'             => $by->id,
+            'execution_date'          => $now,
+            'total_records_processed' => $processed,
+            'total_records_failed'    => $failed,
+            'total_amount_posted'     => $totalAmount,
+            'status'                  => $failed > 0 ? ($processed > 0 ? 'partial' : 'failed') : 'completed',
+            'error_log'               => $errors ?: null,
+        ]);
 
         return redirect()->route('schedule.loan-disbursement')
             ->with('success', "Disbursements posted: {$processed} loans, KES " .
@@ -601,7 +510,6 @@ class ScheduleController extends Controller
             ]);
         }
 
-        // Only include members who are eligible per their finance config
         $eligibleMemberIds = MemberFinanceConfig::dividendEligible()->pluck('member_id');
 
         $memberDividends = MemberDividend::with(['member.user', 'member.accounts'])
@@ -611,7 +519,6 @@ class ScheduleController extends Controller
             ->map(function ($md) use ($eligibleMemberIds) {
                 $config = $md->member->financeConfig;
 
-                // Payouts require a dedicated dividend account; deposits are separate.
                 $dividendAccountId = $config?->dividend_account_id
                     ?? null;
 
@@ -805,9 +712,7 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    // =========================================================================
     //  EXPORTS
-    // =========================================================================
 
     public function exportLoanDisbursement(Request $request)
     {

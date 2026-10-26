@@ -17,6 +17,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Models\Account;
+use App\Support\ErrorMessage;
 use Barryvdh\DomPDF\Facade\Pdf; 
 
 
@@ -30,7 +31,6 @@ class PaymentVoucherController extends Controller
         $query = PaymentVoucher::with(['creator', 'approver', 'payer', 'budgetItem', 'loan.member'])
             ->orderBy('created_at', 'desc');
 
-        // Apply filters
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -58,7 +58,6 @@ class PaymentVoucherController extends Controller
 
         $vouchers = $query->paginate(15);
 
-        // Get summary statistics
         $stats = [
             'total_vouchers' => PaymentVoucher::count(),
             'pending_vouchers' => PaymentVoucher::where('status', 'pending')->count(),
@@ -104,7 +103,7 @@ class PaymentVoucherController extends Controller
                     'first_name' => $member->first_name,
                     'last_name' => $member->last_name,
                     'membership_id' => $member->membership_id,
-                    'phone' => $member->user?->phone, // ✅ users table
+                    'phone' => $member->user?->phone, 
                 ]),
 
         ]);
@@ -136,10 +135,8 @@ class PaymentVoucherController extends Controller
         DB::beginTransaction();
 
         try {
-            // Generate voucher number
             $voucherNumber = $this->generateVoucherNumber();
 
-            // Handle document uploads
             $documents = [];
             if ($request->hasFile('supporting_documents')) {
                 foreach ($request->file('supporting_documents') as $file) {
@@ -154,7 +151,6 @@ class PaymentVoucherController extends Controller
                 }
             }
 
-            // Validate budget item availability
             if ($request->budget_item_id) {
                 $budgetItem = BudgetItem::find($request->budget_item_id);
                 if ($budgetItem && $budgetItem->remaining_amount < $request->amount) {
@@ -162,7 +158,6 @@ class PaymentVoucherController extends Controller
                 }
             }
 
-            // Create voucher
             $voucher = PaymentVoucher::create([
                 'voucher_number' => $voucherNumber,
                 'voucher_type' => $request->voucher_type,
@@ -179,7 +174,6 @@ class PaymentVoucherController extends Controller
                 'supporting_documents' => $documents,
             ]);
 
-            // Auto-approve for certain user roles and amounts
             if ($this->shouldAutoApprove($request->amount, Auth::user()->role)) {
                 $voucher->update([
                     'status' => 'approved',
@@ -197,14 +191,13 @@ class PaymentVoucherController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            // Clean up uploaded files on error
             if (!empty($documents)) {
                 foreach ($documents as $doc) {
                     Storage::disk('public')->delete($doc['path']);
                 }
             }
 
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)])->withInput();
+            return back()->withErrors(['error' => ErrorMessage::from($e)])->withInput();
         }
     }
 
@@ -291,7 +284,6 @@ class PaymentVoucherController extends Controller
         DB::beginTransaction();
 
         try {
-            // Validate budget item availability
             if ($request->budget_item_id && $request->budget_item_id != $voucher->budget_item_id) {
                 $budgetItem = BudgetItem::find($request->budget_item_id);
                 if ($budgetItem && $budgetItem->remaining_amount < $request->amount) {
@@ -318,7 +310,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)])->withInput();
+            return back()->withErrors(['error' => ErrorMessage::from($e)])->withInput();
         }
     }
 
@@ -334,7 +326,6 @@ class PaymentVoucherController extends Controller
         DB::beginTransaction();
 
         try {
-            // Delete associated documents
             if ($voucher->supporting_documents) {
                 foreach ($voucher->supporting_documents as $doc) {
                     Storage::disk('public')->delete($doc['path']);
@@ -363,13 +354,11 @@ class PaymentVoucherController extends Controller
             return redirect()->back()->withErrors(['error' => 'Only pending vouchers can be submitted.']);
         }
 
-        // Additional validation can be added here
         $voucher->update([
             'status' => 'pending',
             'updated_at' => now(),
         ]);
 
-        // Send notification to approvers
         $this->notifyApprovers($voucher);
 
         return redirect()->route('vouchers.show', $voucher)
@@ -405,7 +394,6 @@ class PaymentVoucherController extends Controller
 
             DB::commit();
 
-            // Send notification to creator
             $this->notifyVoucherStatusChange($voucher, 'approved');
 
             return redirect()->route('vouchers.show', $voucher)
@@ -413,7 +401,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => ErrorMessage::from($e)]);
         }
     }
 
@@ -446,7 +434,6 @@ class PaymentVoucherController extends Controller
 
             DB::commit();
 
-            // Send notification to creator
             $this->notifyVoucherStatusChange($voucher, 'rejected');
 
             return redirect()->route('vouchers.show', $voucher)
@@ -454,7 +441,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => ErrorMessage::from($e)]);
         }
     }
 
@@ -482,29 +469,24 @@ class PaymentVoucherController extends Controller
         DB::beginTransaction();
 
         try {
-            // Update voucher status
             $voucher->update([
                 'status' => 'paid',
                 'paid_by' => Auth::id(),
                 'payment_date' => now(),
             ]);
 
-            // Create transaction record
             $transaction = $this->createPaymentTransaction($voucher, $request);
 
-            // Update budget item spent amount
             if ($voucher->budget_item_id) {
                 $budgetItem = BudgetItem::find($voucher->budget_item_id);
                 $budgetItem->increment('spent_amount', $voucher->amount);
                 $budgetItem->decrement('remaining_amount', $voucher->amount);
             }
 
-            // Handle specific voucher types
             $this->handleVoucherTypePayment($voucher, $transaction);
 
             DB::commit();
 
-            // Send notification to creator
             $this->notifyVoucherStatusChange($voucher, 'paid');
 
             return redirect()->route('vouchers.show', $voucher)
@@ -512,7 +494,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => ErrorMessage::from($e)]);
         }
     }
 
@@ -544,7 +526,6 @@ class PaymentVoucherController extends Controller
 
             DB::commit();
 
-            // Send notification to relevant parties
             $this->notifyVoucherStatusChange($voucher, 'cancelled');
 
             return redirect()->route('vouchers.show', $voucher)
@@ -552,7 +533,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' =>  ErrorMessage::from($e)]);
         }
     }
 
@@ -598,7 +579,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => ErrorMessage::from($e)]);
         }
     }
 
@@ -624,10 +605,8 @@ class PaymentVoucherController extends Controller
         DB::beginTransaction();
 
         try {
-            // Delete file from storage
             Storage::disk('public')->delete($documents[$documentIndex]['path']);
 
-            // Remove from array
             unset($documents[$documentIndex]);
             $documents = array_values($documents);
 
@@ -642,7 +621,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => ErrorMessage::from($e)]);
         }
     }
 
@@ -758,7 +737,6 @@ class PaymentVoucherController extends Controller
 
     private function shouldAutoApprove($amount, $userRole)
     {
-        // Auto-approve logic based on amount and user role
         $thresholds = [
             'admin' => 1000000,
             'management' => 500000,
@@ -773,17 +751,14 @@ class PaymentVoucherController extends Controller
     {
         $user = Auth::user();
         
-        // Cannot approve own vouchers
         if ($voucher->created_by === $user->id) {
             return false;
         }
 
-        // Only certain roles can approve
         if (!in_array($user->role, ['admin', 'management', 'accountant'])) {
             return false;
         }
 
-        // Only pending vouchers can be approved
         return $voucher->status === 'pending';
     }
 
@@ -791,12 +766,10 @@ class PaymentVoucherController extends Controller
     {
         $user = Auth::user();
         
-        // Only certain roles can process payments
         if (!in_array($user->role, ['admin', 'management', 'accountant'])) {
             return false;
         }
 
-        // Only approved vouchers can be paid
         return $voucher->status === 'approved';
     }
 
@@ -804,12 +777,10 @@ class PaymentVoucherController extends Controller
     {
         $user = Auth::user();
         
-        // Only creator can edit, or admin/management
         if ($voucher->created_by !== $user->id && !in_array($user->role, ['admin', 'management'])) {
             return false;
         }
 
-        // Only pending vouchers can be edited
         return $voucher->status === 'pending';
     }
 
@@ -817,12 +788,10 @@ class PaymentVoucherController extends Controller
     {
         $user = Auth::user();
         
-        // Only creator can delete, or admin
         if ($voucher->created_by !== $user->id && $user->role !== 'admin') {
             return false;
         }
 
-        // Only pending vouchers can be deleted
         return $voucher->status === 'pending';
     }
 
@@ -833,8 +802,7 @@ class PaymentVoucherController extends Controller
         if (!$accountId) {
             throw new \DomainException("Payment account is required for this transaction.");
         }
-            // This would create a transaction record
-        // Implementation depends on your specific transaction structure
+         
         return Transaction::create([
             'transaction_id' => 'TXN' . time(),
             'transaction_type' => 'voucher_payment',
@@ -859,33 +827,20 @@ class PaymentVoucherController extends Controller
     {
         switch ($voucher->voucher_type) {
             case 'loan_disbursement':
-                if ($voucher->loan_id) {
-                    $loan = Loan::find($voucher->loan_id);
-                    $loan->update([
-                        'status' => 'disbursed',
-                        'disbursed_amount' => $voucher->amount,
-                        'disbursement_date' => now(),
-                        'disbursed_by' => Auth::id(),
-                    ]);
-                }
                 break;
             case 'dividend_payment':
-                // Handle dividend payment logic
                 break;
-            // Add other voucher type handlers as needed
         }
     }
 
     private function notifyApprovers(PaymentVoucher $voucher)
     {
-        // Send notifications to users who can approve
         $approvers = User::whereIn('role', ['admin', 'management', 'accountant'])
             ->where('id', '!=', $voucher->created_by)
             ->where('is_active', true)
             ->get();
 
         foreach ($approvers as $approver) {
-            // Create notification
             $approver->notifications()->create([
                 'title' => 'Payment Voucher Pending Approval',
                 'message' => "Voucher {$voucher->voucher_number} for {$voucher->payee_name} requires approval.",
@@ -901,7 +856,6 @@ class PaymentVoucherController extends Controller
 
  private function notifyVoucherStatusChange(PaymentVoucher $voucher, $status)
     {
-        // Notify creator of status change
         $creator = User::find($voucher->created_by);
         if ($creator) {
             $creator->notifications()->create([
@@ -917,7 +871,6 @@ class PaymentVoucherController extends Controller
             ]);
         }
 
-        // Also notify relevant parties based on voucher type
         if ($voucher->voucher_type === 'loan_disbursement' && $voucher->loan_id) {
             $loan = Loan::with('member.user')->find($voucher->loan_id);
             if ($loan && $loan->member && $loan->member->user) {
@@ -978,7 +931,6 @@ class PaymentVoucherController extends Controller
         $pdf = Pdf::loadView('vouchers.pdf', compact('voucher'))
             ->setPaper('a4');
 
-        // Preview in browser (not force download)
         return $pdf->stream('Voucher-'.$voucher->voucher_number.'.pdf');
     }
 
@@ -990,7 +942,6 @@ class PaymentVoucherController extends Controller
     {
         $query = PaymentVoucher::with(['creator', 'approver', 'payer', 'budgetItem', 'loan.member']);
 
-        // Apply filters
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -1009,8 +960,7 @@ class PaymentVoucherController extends Controller
 
         $vouchers = $query->orderBy('created_at', 'desc')->get();
 
-        // This would export to Excel using Laravel Excel or similar
-        // For now, returning CSV format
+       
         $filename = 'payment_vouchers_' . now()->format('Y_m_d_H_i_s') . '.csv';
         
         $headers = [
@@ -1021,7 +971,6 @@ class PaymentVoucherController extends Controller
         $callback = function() use ($vouchers) {
             $file = fopen('php://output', 'w');
             
-            // CSV headers
             fputcsv($file, [
                 'Voucher Number',
                 'Type',
@@ -1037,7 +986,6 @@ class PaymentVoucherController extends Controller
                 'Budget Item',
             ]);
 
-            // CSV data
             foreach ($vouchers as $voucher) {
                 fputcsv($file, [
                     $voucher->voucher_number,
@@ -1113,7 +1061,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => ErrorMessage::from($e)]);
         }
     }
 
@@ -1169,7 +1117,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => ErrorMessage::from($e)]);
         }
     }
 
@@ -1235,7 +1183,7 @@ class PaymentVoucherController extends Controller
     }
 
     /**
-     * Duplicate voucher (create a NEW pending voucher)
+     * Duplicate voucher 
      */
     public function duplicate(PaymentVoucher $voucher)
     {
