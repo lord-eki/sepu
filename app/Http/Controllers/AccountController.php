@@ -10,6 +10,8 @@ use App\Http\Requests\UpdateAccountRequest;
 use App\Http\Requests\ShareTransferRequest;
 use App\Http\Requests\DepositRequest;
 use App\Http\Requests\WithdrawalRequest;
+use App\Services\Accounting\AccountBalanceService;
+use App\Support\ErrorMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -111,7 +113,6 @@ class AccountController extends Controller
         try {
             DB::beginTransaction();
 
-            // Check if member already has this account type
             $existingAccount = Account::where('member_id', $request->member_id)
                 ->where('account_type', $request->account_type)
                 ->first();
@@ -129,7 +130,6 @@ class AccountController extends Controller
                 'is_active' => true,
             ]);
 
-            // Create initial transaction record
             Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $account->id,
@@ -224,19 +224,16 @@ class AccountController extends Controller
     public function destroy(Account $account): RedirectResponse
     {
         try {
-            // Check if account has balance
             if ($account->balance > 0) {
                 return back()->withErrors(['error' => 'Cannot delete account with balance']);
             }
 
-            // Check if account has pending transactions
             if ($account->transactions()->where('status', 'pending')->exists()) {
                 return back()->withErrors(['error' => 'Cannot delete account with pending transactions']);
             }
 
             DB::beginTransaction();
 
-            // Create account closure transaction
             Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $account->id,
@@ -251,7 +248,6 @@ class AccountController extends Controller
                 'processed_at' => now(),
             ]);
 
-            // Deactivate account instead of deleting
             $account->update(['is_active' => false]);
 
             DB::commit();
@@ -319,7 +315,7 @@ class AccountController extends Controller
                 'status' => 'pending',
                 'processed_by' => null,
                 'processed_at' => null,
-                'created_by' => auth()->id()
+                'created_by' => Auth::id()
             ]);
 
             DB::commit();
@@ -360,63 +356,32 @@ class AccountController extends Controller
     /**
      * Process withdrawal
      */
-    public function withdrawal(WithdrawalRequest $request, Account $account): RedirectResponse
+     public function withdrawal(WithdrawalRequest $request, Account $account, AccountBalanceService $balances): RedirectResponse
     {
         try {
-            DB::beginTransaction();
+            $type = $account->account_type === 'share_capital' ? 'share_sale' : 'withdrawal';
 
-            $amount = $request->amount;
-            $balanceBefore = $account->balance;
-
-            // Check if sufficient balance
-            if ($balanceBefore < $amount) {
-                return back()->withErrors(['amount' => 'Insufficient balance']);
-            }
-
-            $balanceAfter = $balanceBefore - $amount;
-
-            // Determine transaction type based on account type
-            $transactionType = $account->account_type === 'share_capital' ? 'share_sale' : 'withdrawal';
-
-            // Create transaction
-            $transaction = Transaction::create([
-                'transaction_id' => $this->generateTransactionId(),
-                'account_id' => $account->id,
-                'member_id' => $account->member_id,
-                'transaction_type' => $transactionType,
-                'amount' => $amount,
-                'balance_before' => $balanceBefore,
-                'balance_after' => $balanceAfter,
-                'description' => $request->description ?? "Withdrawal from {$account->account_type} account",
-                'payment_method' => $request->payment_method,
+            $balances->requestPending($account->id, $type, $request->amount, [
+                'description'       => $request->description ?? "Withdrawal from {$account->account_type} account",
+                'payment_method'    => $request->payment_method,
                 'payment_reference' => $request->payment_reference,
-                'status' => 'completed',
-                'processed_by' => Auth::id(),
-                'processed_at' => now(),
-            ]);
-
-            // Update account balance
-            $account->update([
-                'balance' => $balanceAfter,
-                'available_balance' => $balanceAfter,
-                'last_transaction_at' => now(),
-            ]);
-
-            DB::commit();
+            ], Auth::user());
 
             return redirect()->route('accounts.show', $account)
-                ->with('success', 'Withdrawal processed successfully');
+                ->with('success', 'Withdrawal submitted for approval.');
+        } catch (\DomainException $e) {
+            return back()->withErrors(['amount' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            report($e);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to process withdrawal: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => 'Failed to submit withdrawal. Please try again or contact support.']);
         }
     }
 
     /**
-     * Show share transfer form (for share capital only)
+     * Show share transfer form for share capital only
      */
-    public function showShareTransfer(Account $account): Response
+    public function showShareTransfer(Account $account)
     {
         if ($account->account_type !== 'share_capital') {
             return redirect()->route('accounts.show', $account)
@@ -440,7 +405,7 @@ class AccountController extends Controller
     }
 
     /**
-     * Process share transfer (for exiting members)
+     * Process share transfer for exiting members
      */
     public function shareTransfer(ShareTransferRequest $request, Account $account): RedirectResponse
     {
@@ -454,12 +419,10 @@ class AccountController extends Controller
             $amount = $request->amount;
             $recipientMember = Member::findOrFail($request->recipient_member_id);
 
-            // Check if sufficient balance
             if ($account->balance < $amount) {
                 return back()->withErrors(['amount' => 'Insufficient balance']);
             }
 
-            // Find or create recipient's share capital account
             $recipientAccount = Account::firstOrCreate([
                 'member_id' => $recipientMember->id,
                 'account_type' => 'share_capital',
@@ -470,7 +433,6 @@ class AccountController extends Controller
                 'is_active' => true,
             ]);
 
-            // Process sender's transaction
             $senderBalanceBefore = $account->balance;
             $senderBalanceAfter = $senderBalanceBefore - $amount;
 
@@ -490,14 +452,12 @@ class AccountController extends Controller
                 'processed_at' => now(),
             ]);
 
-            // Update sender's account
             $account->update([
                 'balance' => $senderBalanceAfter,
                 'available_balance' => $senderBalanceAfter,
                 'last_transaction_at' => now(),
             ]);
 
-            // Process recipient's transaction
             $recipientBalanceBefore = $recipientAccount->balance;
             $recipientBalanceAfter = $recipientBalanceBefore + $amount;
 
@@ -517,7 +477,6 @@ class AccountController extends Controller
                 'processed_at' => now(),
             ]);
 
-            // Update recipient's account
             $recipientAccount->update([
                 'balance' => $recipientBalanceAfter,
                 'available_balance' => $recipientBalanceAfter,
@@ -551,18 +510,15 @@ class AccountController extends Controller
     // Individual Account's statement
     public function myStatement($memberId, $accountId)
     {
-        // Get logged-in member
         $loggedInMemberId = Auth::user()->member->id ?? null;
 
         if ($loggedInMemberId != $memberId) {
             abort(403, "You cannot view other members' accounts.");
         }
 
-        // Get period from query or default to last 30 days
         $from = request()->query('from') ?? Carbon::now()->subDays(30)->toDateString();
         $to   = request()->query('to') ?? Carbon::now()->toDateString();
 
-        // Fetch account with filtered transactions
         $account = Account::where('id', $accountId)
             ->where('member_id', $memberId)
             ->with(['member', 'transactions' => function($query) use ($from, $to) {

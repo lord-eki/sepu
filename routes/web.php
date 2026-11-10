@@ -484,7 +484,7 @@ Route::middleware(['auth', 'force.password.change', 'role:member', 'member.owner
     Route::get('/members/{member}/accounts/{account}/deposit',  [MemberController::class, 'showDeposit'])->name('members.accounts.deposit.show');
     Route::post('/members/{member}/accounts/{account}/deposit', [MemberController::class, 'deposit'])->name('members.accounts.deposit');
     Route::get('/members/{member}/accounts/{account}/withdrawal',  [MemberController::class, 'showWithdrawal'])->name('members.accounts.withdrawal.show');
-    Route::post('/members/{member}/accounts/{account}/withdrawal', [MemberController::class, 'withdrawal'])->name('members.accounts.withdrawal');
+    Route::post('/members/{member}/accounts/{account}/withdrawal', [MemberController::class, 'withdraw'])->name('members.accounts.withdrawal');
 });
 
 Route::get('/my-accounts/{account}/statement/pdf', [AccountController::class, 'statementPdf'])->middleware(['auth', 'force.password.change', 'role:member'])->name('my-accounts.statement.pdf');
