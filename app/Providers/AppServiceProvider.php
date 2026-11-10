@@ -30,7 +30,6 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(20)->by($request->user()?->id ?: $request->ip());
         });
 
-        // Define Gates based on user roles
         Gate::policy(Loan::class, LoanPolicy::class);
 
         Gate::define('view-dashboard', function ($user) {
@@ -71,9 +70,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Management gates
-        Gate::define('approve-loans', function ($user) {
-            return in_array($user->role, ['admin', 'management']);
-        });
+        Gate::define('approve-loans', fn($user) => in_array($user->role, ['admin', 'loan_officer'], true));
+
 
         Gate::define('approve-budgets', function ($user) {
             return in_array($user->role, ['admin', 'management']);
@@ -93,8 +91,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Loan Officer gates
-        Gate::define('process-loan-applications', function ($user) {
-            return in_array($user->role, ['admin', 'loan_officer']);
-        });
+        Gate::define('process-loan-applications', fn($user) => in_array($user->role, ['admin', 'loan_officer'], true));
     }
 }
