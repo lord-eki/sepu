@@ -33,9 +33,13 @@ class LoanGuarantor extends Model
         return $this->belongsTo(Member::class, 'guarantor_member_id');
     }
 
-    // ADD THIS
     public function member()
     {
         return $this->belongsTo(Member::class, 'guarantor_member_id');
+    }
+
+    public function lock()
+    {
+        return $this->hasOne(GuaranteeLock::class,'loan_guarantor_id');
     }
 }

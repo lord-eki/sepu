@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\{Account, AuditLog, Loan, LoanGuarantor, LoanProduct, LoanRepayment, Member, PaymentVoucher, Transaction};
 use App\Services\LoanEligibilityService;
+use App\Services\Loans\GuaranteeService;
 use App\Services\Loans\LoanCalculator;
 use App\Services\Loans\LoanService;
 use Illuminate\Http\Request;
@@ -566,10 +567,9 @@ class LoanController extends Controller
         }
     }
 
-    /**
-     * Reject a loan application
-     */
-    public function reject(Request $request, $id)
+     // Reject a loan application
+   
+    public function reject(Request $request, $id, GuaranteeService $guarantees)
     {
         $validator = Validator::make($request->all(), [
             'rejection_reason' => 'required|string|max:1000',
@@ -579,63 +579,53 @@ class LoanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $loan = Loan::findOrFail($id);
-
-        if (! in_array($loan->status, ['pending', 'approved'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only pending or approved loans can be rejected',
+                'errors'  => $validator->errors(),
             ], 422);
         }
 
         try {
-            DB::beginTransaction();
+            $loan = DB::transaction(function () use ($request, $id, $guarantees) {
+                $loan = Loan::whereKey($id)->lockForUpdate()->firstOrFail();
+                $old  = $loan->toArray();
 
-            $oldValues = $loan->toArray();
+                $loan->transitionTo('rejected', [
+                    'rejection_reason' => $request->rejection_reason,
+                    'approved_by'      => Auth::id(),
+                    'approval_date'    => now(),
+                ]);
 
-            $loan->update([
-                'status' => 'rejected',
-                'rejection_reason' => $request->rejection_reason,
-                'approved_by' => Auth::id(),
-                'approval_date' => now(),
-            ]);
+                $guarantees->releaseForLoan($loan, 'Loan rejected');
 
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'loan_rejected',
-                'model_type' => 'App\Models\Loan',
-                'model_id' => $loan->id,
-                'old_values' => $oldValues,
-                'new_values' => $loan->toArray(),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
+                AuditLog::create([
+                    'user_id'    => Auth::id(),
+                    'action'     => 'loan_rejected',
+                    'model_type' => Loan::class,
+                    'model_id'   => $loan->id,
+                    'old_values' => $old,
+                    'new_values' => $loan->fresh()->toArray(),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
 
-            DB::commit();
+                return $loan;
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Loan rejected successfully',
-                'data' => $loan->load(['member', 'loanProduct']),
+                'data'    => $loan->load(['member', 'loanProduct']),
             ]);
-        } catch (\Exception $e) {
-            DB::rollback();
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            report($e);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error rejecting loan: ' . \App\Support\ErrorMessage::from($e),
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error rejecting loan. Please try again or contact support.'], 500);
         }
     }
 
 
-    /**
-     * Disburse an approved loan
-     */
+    // Disburse an approved loan
     public function disburse(Request $request, $id, LoanService $loans)
     {
         $validator = Validator::make($request->all(), [
@@ -676,9 +666,7 @@ class LoanController extends Controller
             return response()->json(['success' => false, 'message' => 'Error disbursing loan. Please try again or contact support.'], 500);
         }
     }
-    /**
-     * Get loan statistics and summary
-     */
+    // Get loan statistics and summary
     public function getLoansSummary(?int $memberId = null)
     {
         $loans = fn() => Loan::query()->when($memberId, fn($q) => $q->where('member_id', $memberId));
@@ -700,9 +688,7 @@ class LoanController extends Controller
     }
 
 
-    /**
-     * Generate unique loan number
-     */
+    // Generate unique loan number
     private function generateLoanNumber()
     {
         $prefix = 'LN';
@@ -723,9 +709,7 @@ class LoanController extends Controller
         return $prefix . $year . $month . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Generate unique account number
-     */
+    // Generate unique account number
     private function generateAccountNumber()
     {
         do {
@@ -735,9 +719,8 @@ class LoanController extends Controller
         return $accountNumber;
     }
 
-    /**
-     * Generate unique transaction ID
-     */
+
+    // Generate unique transaction ID
     private function generateTransactionId()
     {
         do {
@@ -747,9 +730,7 @@ class LoanController extends Controller
         return $transactionId;
     }
 
-    /**
-     * Generate unique voucher number
-     */
+    // Generate unique voucher number
     private function generateVoucherNumber()
     {
         do {
@@ -760,9 +741,7 @@ class LoanController extends Controller
     }
 
 
-    /**
-     * Loan Schedule
-     */
+    // Loan Schedule
     public function schedule($id)
     {
         $loan = Loan::with(['member', 'loanProduct', 'repayments'])->findOrFail($id);
@@ -900,50 +879,100 @@ class LoanController extends Controller
     }
 
 
-    public function acceptGuarantee(Loan $loan)
+    public function acceptGuarantee(Loan $loan, GuaranteeService $guarantees)
     {
         $member = Auth::user()->member;
+        abort_unless($member, 403);
 
-        $guarantor = LoanGuarantor::where('loan_id', $loan->id)
-            ->where('guarantor_member_id', $member->id)
-            ->firstOrFail();
+        try {
+            $g = $guarantees->accept($loan, $member);
 
-        $guarantor->update([
-            'status' => 'accepted',
-            'response_date' => now(),
-        ]);
-
-        $pending = LoanGuarantor::where('loan_id', $loan->id)
-            ->where('status', 'pending')
-            ->count();
-
-        if ($pending == 0) {
-            $loan->update([
-                'status' => 'pending'
-            ]);
+            return redirect()->back()->with(
+                'success',
+                'Guarantee accepted. KES ' . number_format($g->guaranteed_amount, 2) . ' of your deposits is now locked until the loan is cleared.'
+            );
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        return redirect()->back()->with('success', 'Loan guarantee accepted successfully.');
     }
 
-    public function rejectGuarantee(Loan $loan)
+    public function rejectGuarantee(Request $request, Loan $loan, GuaranteeService $guarantees)
     {
         $member = Auth::user()->member;
+        abort_unless($member, 403);
 
-        $guarantor = LoanGuarantor::where('loan_id', $loan->id)
-            ->where('guarantor_member_id', $member->id)
-            ->firstOrFail();
+        try {
+            $guarantees->reject($loan, $member, $request->input('comments'));
 
-        $guarantor->update([
-            'status' => 'rejected',
-            'response_date' => now(),
+            $loan->loadMissing('member.user');
+            if ($loan->member?->user) {
+                app(NotificationService::class)->create(
+                    $loan->member->user->id,
+                    'Guarantor declined',
+                    trim($member->first_name . ' ' . $member->last_name) .
+                        " declined to guarantee loan {$loan->loan_number}. Please add another guarantor.",
+                    'guarantor_rejected',
+                    'system',
+                    ['loan_id' => $loan->id]
+                );
+            }
+
+            return redirect()->back()->with('error', 'You declined this guarantor request.');
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function guarantors(Loan $loan)
+    {
+        Gate::authorize('view', $loan);
+
+        return response()->json(
+            $loan->guarantors()->with('guarantorMember:id,first_name,last_name')->get()
+        );
+    }
+
+    public function addGuarantor(Request $request, Loan $loan, GuaranteeService $guarantees)
+    {
+        Gate::authorize('manageGuarantors', $loan);
+
+        $data = $request->validate([
+            'member_id'         => 'required|exists:members,id',
+            'guaranteed_amount' => 'required|numeric|min:1',
         ]);
 
-        $loan->update([
-            'status' => 'guarantor_rejected'
-        ]);
+        try {
+            $g = $guarantees->add($loan, (int) $data['member_id'], (float) $data['guaranteed_amount']);
 
-        return redirect()->back()->with('error', 'You rejected this guarantor request.');
+            $g->loadMissing('guarantorMember.user');
+            if ($g->guarantorMember?->user) {
+                app(NotificationService::class)->create(
+                    $g->guarantorMember->user->id,
+                    'Guarantor Request',
+                    'You have been requested to guarantee a loan of KES ' . number_format($g->guaranteed_amount),
+                    'guarantor_request',
+                    'system',
+                    ['loan_id' => $loan->id, 'loan_number' => $loan->loan_number]
+                );
+            }
+
+            return back()->with('success', 'Guarantor request sent.');
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function removeGuarantor(Loan $loan, LoanGuarantor $guarantor, GuaranteeService $guarantees)
+    {
+        Gate::authorize('manageGuarantors', $loan);
+
+        try {
+            $guarantees->remove($loan, $guarantor);
+
+            return back()->with('success', 'Guarantor removed.');
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function document(Request $request, Loan $loan, int $index)
@@ -967,7 +996,7 @@ class LoanController extends Controller
             : Storage::disk($disk)->response($path, $name);
     }
 
-    // Stored schedule once disbursed; a calculator preview before that. 
+    // Stored schedule once disbursed 
     private function scheduleFor(Loan $loan): Collection
     {
         $stored = LoanRepayment::where('loan_id', $loan->id)->orderBy('due_date')->get();

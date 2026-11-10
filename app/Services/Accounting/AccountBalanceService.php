@@ -7,6 +7,7 @@ use App\Models\JournalEntry;
 use App\Models\Transaction;
 use App\Models\User;
 use DomainException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -21,6 +22,7 @@ class AccountBalanceService
         'loan_repayment'             => 'debit',
         'fee'                        => 'debit',
         'penalty'                    => 'debit',
+        'share_sale'                 => 'debit'
     ];
 
     private const LEDGER_ROLE = [
@@ -144,7 +146,7 @@ class AccountBalanceService
     {
         $cents = $this->toCents($amount);
 
-        if($cents <= 0){
+        if ($cents <= 0) {
             throw new DomainException('Amount must be greater than zero');
         }
 
@@ -173,9 +175,9 @@ class AccountBalanceService
                 'payment_method'    => $attrs['payment_method'] ?? null,
                 'payment_reference' => $attrs['payment_reference'] ?? null,
                 'status'            => 'completed',
-                'processed_by'      => $attrs['processed_by'] ?? auth()->id(),
+                'processed_by'      => $attrs['processed_by'] ?? Auth::id(),
                 'processed_at'      => now(),
-                'created_by'        => $attrs['created_by'] ?? auth()->id(),
+                'created_by'        => $attrs['created_by'] ?? Auth::id(),
                 'approved_by'       => $attrs['approved_by'] ?? null,
                 'approved_at'       => isset($attrs['approved_by']) ? now() : null,
                 'idempotency_key'   => $attrs['idempotency_key'] ?? null,
@@ -236,7 +238,7 @@ class AccountBalanceService
     {
         $role = self::LEDGER_ROLE[$account->account_type] ?? null;
 
-        if (!$role || !in_array($tx->transaction_type, ['deposit', 'share_capital_contribution', 'withdrawal'], true)) {
+        if (!$role || !in_array($tx->transaction_type, ['deposit', 'share_capital_contribution', 'withdrawal', 'share_sale'], true)) {
             Log::warning('No ledger rule for transaction; balance changed without a journal entry', [
                 'transaction_id' => $tx->transaction_id,
                 'type'           => $tx->transaction_type,
@@ -280,5 +282,92 @@ class AccountBalanceService
         } while (Transaction::where('transaction_id', $id)->exists());
 
         return $id;
+    }
+
+
+    public function hold(int $accountId, float|int|string $amount): void
+    {
+        $cents = $this->toCents($amount);
+
+        if ($cents <= 0) {
+            throw new DomainException('Amount to lock must be greater than zero.');
+        }
+
+        DB::transaction(function () use ($accountId, $cents) {
+            $account = Account::whereKey($accountId)->lockForUpdate()->firstOrFail();
+
+            if (!$account->is_active) {
+                throw new DomainException('This account is not active.');
+            }
+
+            $available = $this->toCents($account->available_balance);
+
+            if ($cents > $available) {
+                throw new DomainException(
+                    'Not enough available deposits: KES ' . number_format($available / 100, 2) .
+                        ' is available, KES ' . number_format($cents / 100, 2) . ' is needed.'
+                );
+            }
+
+            $account->available_balance = ($available - $cents) / 100;
+            $account->save();
+        });
+    }
+
+    public function releaseHold(int $accountId, float|int|string $amount): void
+    {
+        $cents = $this->toCents($amount);
+
+        DB::transaction(function () use ($accountId, $cents) {
+            $account = Account::whereKey($accountId)->lockForUpdate()->firstOrFail();
+
+            $balance   = $this->toCents($account->balance);
+            $available = $this->toCents($account->available_balance);
+
+            $account->available_balance = min($balance, $available + $cents) / 100;
+            $account->save();
+        });
+    }
+
+
+    public function requestPending(int $accountId, string $type, float|int|string $amount, array $attrs, User $by): Transaction
+    {
+        $direction = self::DIRECTION[$type] ?? null;
+        if (!$direction) {
+            throw new DomainException("Transactions of type '{$type}' cannot be requested here.");
+        }
+
+        $cents = $this->toCents($amount);
+        if ($cents <= 0) {
+            throw new DomainException('Amount must be greater than zero.');
+        }
+
+        $account = Account::findOrFail($accountId);
+
+        if (!$account->is_active) {
+            throw new DomainException('This account is not active.');
+        }
+
+        if ($direction === 'debit' && $cents > $this->toCents($account->available_balance)) {
+            throw new DomainException(
+                'Insufficient available balance. KES ' . number_format($account->available_balance, 2) .
+                    ' can be withdrawn (amounts locked as loan guarantees cannot be withdrawn).'
+            );
+        }
+
+        return Transaction::create([
+            'transaction_id'    => $this->newTransactionId(),
+            'account_id'        => $account->id,
+            'member_id'         => $account->member_id,
+            'transaction_type'  => $type,
+            'amount'            => $cents / 100,
+            'balance_before'    => $account->balance,
+            'balance_after'     => $account->balance,
+            'description'       => $attrs['description'] ?? ucfirst($type),
+            'payment_method'    => $attrs['payment_method'] ?? null,
+            'payment_reference' => $attrs['payment_reference'] ?? null,
+            'status'            => 'pending',
+            'created_by'        => $by->id,
+        ]);
     }
 }

@@ -29,4 +29,13 @@ class LoanPolicy
 
         return $this->owns($user, $loan) && $loan->status === 'pending';
     }
+
+    public function manageGuarantors(User $user, Loan $loan): bool
+    {
+        if (!in_array($loan->status, ['pending_guarantor_approval', 'pending'], true)) {
+            return false;
+        }
+
+        return in_array($user->role, ['admin', 'loan_officer'], true) || $this->owns($user, $loan);
+    }
 }

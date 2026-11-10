@@ -72,7 +72,7 @@ class Loan extends Model
 
     public const TRANSITIONS = [
         'pending_guarantor_approval' => ['pending', 'rejected'],
-        'pending'                    => ['approved', 'rejected'],
+        'pending'                    => ['approved', 'rejected','pending_guarantor_approval'],
         'approved'                   => ['active', 'rejected'],
         'active'                     => ['completed', 'defaulted', 'written_off'],
         'defaulted'                  => ['active', 'completed', 'written_off'],
@@ -92,7 +92,6 @@ class Loan extends Model
         $this->update(array_merge($attributes, ['status' => $to]));
     }
 
-    // Relationships
     public function member()
     {
         return $this->belongsTo(Member::class);
@@ -134,7 +133,6 @@ class Loan extends Model
         return $this->hasMany(PaymentVoucher::class);
     }
 
-    // Scopes
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
