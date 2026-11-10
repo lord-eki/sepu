@@ -622,14 +622,16 @@ const preview = computed(() => loanPreview(
   loan.value.loan_product?.insurance_rate,
 ))
 
+const loanStaff = ['admin','loan_officer'];
+
 const monthlyPreview = computed(() => preview.value.monthly)
 const totalInterestPreview = computed(() => preview.value.totalInterest)
 const totalRepaymentPreview = computed(() => preview.value.totalRepayable)
 
 const canEdit = computed(() => props.loan.status === 'pending' && ['admin', 'loan_officer', 'management'].includes(props.auth.user.role));
-const canApprove = computed(() => props.loan.status === 'pending' && ['admin', 'management'].includes(props.auth.user.role));
-const canReject = computed(() => ['pending', 'approved'].includes(props.loan.status) && ['admin', 'management'].includes(props.auth.user.role));
-const canDisburse = computed(() => props.loan.status === 'approved' && ['admin', 'accountant'].includes(props.auth.user.role));
+const canApprove = computed(() => props.loan.status === 'pending' && loanStaff.includes(props.auth.user.role));
+const canReject = computed(() => ['pending_guarantor_approval','pending', 'approved'].includes(props.loan.status) && loanStaff.includes(props.auth.user.role));
+const canDisburse = computed(() => props.loan.status === 'approved' && loanStaff.includes(props.auth.user.role));
 const canViewSchedule = computed(() => ['disbursed', 'active', 'completed'].includes(props.loan.status));
 const canViewRepayments = computed(() => ['disbursed', 'active', 'completed'].includes(props.loan.status));
 const hasQuickActions = computed(() => canApprove.value || canReject.value || canDisburse.value || canViewSchedule.value || canViewRepayments.value);

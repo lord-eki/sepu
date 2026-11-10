@@ -272,7 +272,7 @@
                     <div class="rounded-2xl bg-slate-50 p-4">
                         <p class="text-sm text-slate-600">Net Disbursement</p>
                         <p class="mt-1 text-xl font-bold text-slate-900">KES {{ formatCurrency(netDisbursementPreview)
-                            }}</p>
+                        }}</p>
                     </div>
                 </div>
 
@@ -369,7 +369,7 @@ const selectedLoan = ref(null);
 const memberSearch = ref('');
 const showMemberDropdown = ref(false);
 const filteredMembers = ref([]);
-const members = ref([]); 
+const members = ref([]);
 
 const filterMembers = () => {
     const search = memberSearch.value.toLowerCase().trim();
@@ -471,9 +471,12 @@ const getStatusBadgeClass = (status) =>
         cancelled: 'bg-red-50 text-red-700 ring-red-200',
     })[status] || 'bg-slate-100 text-slate-700 ring-slate-200';
 
+
+const loanStaff = ['admin', 'loan_officer'];
+
 const canEdit = (loan) => loan.status === 'pending' && ['admin', 'loan_officer', 'management'].includes(props.auth.user.role);
-const canApprove = (loan) => loan.status === 'pending' && ['admin', 'management'].includes(props.auth.user.role);
-const canReject = (loan) => ['pending', 'approved'].includes(loan.status) && ['admin', 'management'].includes(props.auth.user.role);
+const canApprove = (loan) => loan.status === 'pending' && loanStaff.includes(props.auth.user.role);
+const canReject = (loan) => ['pending_guarantor_approval','pending', 'approved'].includes(loan.status) && loanStaff.includes(props.auth.user.role);
 
 const openApprovalModal = (loan) => {
     selectedLoan.value = loan;
