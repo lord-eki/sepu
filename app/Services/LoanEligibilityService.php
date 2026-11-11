@@ -4,11 +4,8 @@ namespace App\Services;
 
 use App\Models\Member;
 use App\Models\LoanProduct;
-use App\Models\Account;
-use App\Models\Loan;
-use App\Services\Loans\LoanCalculator;
+use App\Services\Loans\LoanCalculatorService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class LoanEligibilityService
 {
@@ -334,7 +331,7 @@ class LoanEligibilityService
 
     private function calculateMonthlyRepayment(float $principal, float $annualRate, int $months): float
     {
-        return app(LoanCalculator::class)
+        return app(LoanCalculatorService::class)
             ->installmentCents((int) round($principal * 100), $annualRate, $months) / 100;
     }
 }

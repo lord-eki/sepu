@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LoanProduct;
-use App\Services\Loans\LoanCalculator;
+use App\Services\Loans\LoanCalculatorService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -77,7 +77,7 @@ class LoanCalculatorController extends Controller
         $graceDays = (int) ($loanProduct->grace_period_days ?? 0);
         $firstDue  = now()->addDays($graceDays)->addMonthNoOverflow();
 
-        $c = app(LoanCalculator::class)->summary(
+        $c = app(LoanCalculatorService::class)->summary(
             $principalAmount,
             (float) $loanProduct->interest_rate,
             $termMonths,

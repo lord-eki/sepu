@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 class LoanService
 {
     public function __construct(
-        private LoanCalculator $calculator,
+        private LoanCalculatorService $calculator,
         private AccountBalanceService $balances,
         private LedgerService $ledger,
         private LoanEligibilityService $eligibility,
@@ -141,7 +141,6 @@ class LoanService
 
             $old = $loan->toArray();
 
-            // outstanding principal goes up by the gross amount
             $loanAccount = $this->loanAccountFor($loan->member_id);
 
             $transaction = $this->balances->credit($loanAccount->id, $gross, [
@@ -165,7 +164,6 @@ class LoanService
                 ],
             ]);
 
-            // Net proceeds to the member's deposits account
             if ($method === 'account') {
                 $deposits = Account::where('member_id', $loan->member_id)
                     ->where('account_type', 'share_deposits')
@@ -188,7 +186,6 @@ class LoanService
                 ]);
             }
 
-            // Double entry: Dr loans (gross) / Cr cash-or-bank-or-member-deposits (net) / Cr fee income / Cr insurance payable
             $payoutRole = match ($method) {
                 'cash'                          => 'cash',
                 'mobile_money', 'bank_transfer' => 'bank',
@@ -210,7 +207,6 @@ class LoanService
             $entry = $this->ledger->post($lines, $desc, $loan, "loan:{$loan->id}:disbursement", $by->id, $now->toDateString());
             $transaction->update(['journal_entry_id' => $entry->id]);
 
-            // Repayment schedule 
             LoanRepayment::where('loan_id', $loan->id)->delete();
 
             foreach ($schedule as $row) {
@@ -230,7 +226,6 @@ class LoanService
                 ]);
             }
 
-            // Loan becomes active 
             $loan->transitionTo('active', [
                 'disbursed_amount'     => $net,
                 'disbursed_by'         => $by->id,
@@ -246,7 +241,6 @@ class LoanService
                 'days_in_arrears'      => 0,
             ]);
 
-            //  Payment voucher 
             $member = $loan->member;
             PaymentVoucher::create([
                 'voucher_number' => 'VOU' . date('YmdHis') . str_pad((string) random_int(1, 999), 3, '0', STR_PAD_LEFT),

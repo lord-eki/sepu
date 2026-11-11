@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\{Account, AuditLog, Loan, LoanGuarantor, LoanProduct, LoanRepayment, Member, PaymentVoucher, Transaction};
 use App\Services\LoanEligibilityService;
 use App\Services\Loans\GuaranteeService;
-use App\Services\Loans\LoanCalculator;
+use App\Services\Loans\LoanCalculatorService;
 use App\Services\Loans\LoanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -84,7 +84,7 @@ class LoanController extends Controller
      */
     public function create()
     {
-        $user = auth()->user()->load('member');
+        $user = Auth::user()->load('member');
 
         $loanProducts = LoanProduct::where('is_active', true)->get();
         $members = Member::where('membership_status', 'active')
@@ -257,7 +257,7 @@ class LoanController extends Controller
             }
 
 
-            $calc = app(LoanCalculator::class)->summary(
+            $calc = app(LoanCalculatorService::class)->summary(
                 (float) $request->applied_amount,
                 (float) $loanProduct->interest_rate,
                 (int) $request->term_months,
@@ -1028,7 +1028,7 @@ class LoanController extends Controller
 
         $principal = (float) ($loan->approved_amount ?: $loan->applied_amount);
 
-        return collect(app(LoanCalculator::class)->schedule(
+        return collect(app(LoanCalculatorService::class)->schedule(
             $principal,
             (float) $loan->interest_rate,
             (int) $loan->term_months,

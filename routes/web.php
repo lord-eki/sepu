@@ -214,8 +214,8 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::delete('/{loan}',   [LoanController::class, 'destroy'])->name('destroy');
         Route::post('/{loan}/submit',   [LoanController::class, 'submit'])->name('submit');
         Route::post('/{loan}/review',   [LoanController::class, 'review'])->name('review');
-        Route::post('/{loan}/approve',  [LoanController::class, 'approve'])->middleware(['can:process-loan-aplications','throttle:money'])->name('approve');
-        Route::post('/{loan}/reject',   [LoanController::class, 'reject'])->middleware(['can:process-loan-aplications','throttle:money'])->name('reject');
+        Route::post('/{loan}/approve',  [LoanController::class, 'approve'])->middleware(['can:process-loan-applications','throttle:money'])->name('approve');
+        Route::post('/{loan}/reject',   [LoanController::class, 'reject'])->middleware(['can:process-loan-applications','throttle:money'])->name('reject');
         Route::post('/{loan}/disburse', [LoanController::class, 'disburse'])->middleware(['can:process-loan-applications','throttle:money'])->name('disburse');
         Route::get('/{loan}/schedule',   [LoanController::class, 'schedule'])->name('schedule');
         Route::get('/{loan}/repayments', [LoanController::class, 'repayments'])->name('repayments');

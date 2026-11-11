@@ -7,7 +7,7 @@ use Carbon\CarbonInterface;
 use DomainException;
 
 
-class LoanCalculator
+class LoanCalculatorService
 {
     public function toCents(float|int|string $amount): int
     {
