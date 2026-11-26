@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RunLoanRepaymentsRequest;
+use App\Http\Requests\RunMonthlyDepositsRequest;
 use App\Models\Account;
 use App\Models\Dividend;
 use App\Models\Loan;
@@ -13,12 +15,16 @@ use App\Models\MemberFinanceConfig;
 use App\Models\ScheduleExecutionLog;
 use App\Models\Transaction;
 use App\Services\Loans\LoanService;
+use App\Services\Schedule\ScheduleRunService;
 use App\Support\ErrorMessage;
 use Carbon\Carbon;
+use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Throwable;
 
 class ScheduleController extends Controller
 {
@@ -50,344 +56,228 @@ class ScheduleController extends Controller
         ]);
     }
 
-    //monthly deposits
-    public function monthlyDeposit(Request $request)
+
+    // Shows the monthly deposit run with the members still pending for the chosen month.
+    public function monthlyDeposit(Request $request, ScheduleRunService $runner)
     {
         $month = $request->month ?? Carbon::now()->format('Y-m');
-        [$year, $mon] = explode('-', $month);
+        $doneMemberIds = $runner->depositMemberIdsDone($month);
 
-        $alreadyRun = ScheduleExecutionLog::alreadyRun('monthly_deposits', (int) $year, (int) $mon);
-
-        $startDate = Carbon::parse($month)->startOfMonth();
-        $endDate   = Carbon::parse($month)->endOfMonth();
-
-        $configs = MemberFinanceConfig::activeContributions()
-            ->with([
-                'member'              => fn($q) => $q->where('membership_status', 'active'),
-                'contributionAccount',
-            ])
-            ->whereHas('member', fn($q) => $q->where('membership_status', 'active'))
+        $rows = MemberFinanceConfig::activeContributions()
+            ->with(['member', 'contributionAccount'])
+            ->whereHas('member', fn ($query) => $query->where('membership_status', 'active'))
             ->orderBy('member_id')
-            ->get();
-
-        $memberIdsAlreadyDone = Transaction::where('transaction_type', 'deposit')
-            ->where('status', 'completed')
-            ->whereBetween('processed_at', [$startDate, $endDate])
-            ->pluck('member_id')
-            ->flip();
-
-        $rows = $configs->map(function ($cfg) use ($memberIdsAlreadyDone) {
-            if (! $cfg->member || ! $cfg->contributionAccount) {
-                return null;
-            }
-
-            return [
-                'config_id'                    => $cfg->id,
-                'member_id'                    => $cfg->member_id,
-                'account_id'                   => $cfg->contribution_account_id,
-                'membership_id'                => $cfg->member->membership_id,
-                'member_name'                  => $cfg->member->first_name . ' ' . $cfg->member->last_name,
-                'account_number'               => $cfg->contributionAccount->account_number,
-                'account_type'                 => $cfg->contributionAccount->account_type,
-                'account_balance'              => (float) $cfg->contributionAccount->balance,
-                'amount'                       => (float) $cfg->monthly_contribution,
-                'already_deposited_this_month' => $memberIdsAlreadyDone->has($cfg->member_id),
-            ];
-        })
-            ->filter(fn($r) => $r !== null && $r['amount'] > 0)
+            ->get()
+            ->filter(fn ($config) => $config->member && $config->contributionAccount && $config->monthly_contribution > 0)
+            ->map(fn ($config) => [
+                'config_id' => $config->id,
+                'member_id' => $config->member_id,
+                'account_id' => $config->contribution_account_id,
+                'membership_id' => $config->member->membership_id,
+                'member_name' => $config->member->first_name . ' ' . $config->member->last_name,
+                'account_number' => $config->contributionAccount->account_number,
+                'account_type' => $config->contributionAccount->account_type,
+                'account_balance' => (float) $config->contributionAccount->balance,
+                'amount' => (float) $config->monthly_contribution,
+                'already_deposited_this_month' => $doneMemberIds->has($config->member_id),
+            ])
             ->values();
+
+        $pending = $rows->where('already_deposited_this_month', false);
 
         $summary = [
             'total_eligible' => $rows->count(),
-            'already_done'   => $rows->where('already_deposited_this_month', true)->count(),
-            'pending'        => $rows->where('already_deposited_this_month', false)->count(),
-            'total_amount'   => round($rows->where('already_deposited_this_month', false)->sum('amount'), 2),
+            'already_done' => $rows->count() - $pending->count(),
+            'pending' => $pending->count(),
+            'total_amount' => round($pending->sum('amount'), 2),
         ];
 
         return Inertia::render('Admin/Schedule/MonthlyDeposit', [
-            'rows'       => $rows,
-            'summary'    => $summary,
-            'month'      => $month,
-            'alreadyRun' => $alreadyRun,
+            'rows' => $rows,
+            'summary' => $summary,
+            'month' => $month,
+            'alreadyRun' => $summary['total_eligible'] > 0 && $summary['pending'] === 0,
         ]);
     }
 
-    /**
-     * post the monthly deposits.
-     */
-    public function runMonthlyDeposits(Request $request)
+    // Posts the monthly deposit for each selected member who has not been run yet this month.
+    public function runMonthlyDeposits(RunMonthlyDepositsRequest $request, ScheduleRunService $runner)
     {
-        $request->validate([
-            'month'               => 'required|string|date_format:Y-m',
-            'entries'             => 'required|array|min:1',
-            'entries.*.member_id' => 'required|exists:members,id',
-            'entries.*.account_id' => 'required|exists:accounts,id',
-            'entries.*.amount'    => 'required|numeric|min:1',
-        ]);
+        $month = $request->validated('month');
+        $user = Auth::user();
 
-        [$year, $mon] = explode('-', $request->month);
+        $memberIds = collect($request->validated('entries'))
+            ->pluck('member_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->mapWithKeys(fn ($id) => [$id => $id]);
 
-        if (ScheduleExecutionLog::alreadyRun('monthly_deposits', (int) $year, (int) $mon)) {
-            return back()->withErrors(['schedule' => 'This schedule has already been run for the selected period.']);
-        }
+        $outcome = $this->runBatch($memberIds, fn ($memberId) => $runner->postMonthlyDeposit($memberId, $month, $user));
 
-        $processedBy = Auth::id();
-        $now         = now();
-        $monthLabel  = Carbon::parse($request->month)->format('F Y');
-        $processed   = 0;
-        $failed      = 0;
-        $totalAmount = 0;
-        $errors      = [];
+        $this->recordRun('monthly_deposits', $month, $outcome);
 
-        DB::beginTransaction();
-        try {
-            foreach ($request->entries as $entry) {
-                try {
-                    $account = Account::findOrFail($entry['account_id']);
-
-                    Transaction::create([
-                        'transaction_id'   => 'DEP-SCH-' . strtoupper(uniqid()),
-                        'account_id'       => $account->id,
-                        'member_id'        => $entry['member_id'],
-                        'transaction_type' => 'deposit',
-                        'amount'           => $entry['amount'],
-                        'balance_before'   => $account->balance,
-                        'balance_after'    => $account->balance + $entry['amount'],
-                        'description'      => "Schedule: Monthly deposit – {$monthLabel}",
-                        'payment_method'   => 'system_transfer',
-                        'status'           => 'completed',
-                        'processed_by'     => $processedBy,
-                        'processed_at'     => $now,
-                    ]);
-
-                    $account->increment('balance', $entry['amount']);
-                    $account->increment('available_balance', $entry['amount']);
-                    $account->update(['last_transaction_at' => $now]);
-
-                    $processed++;
-                    $totalAmount += $entry['amount'];
-                } catch (\Throwable $e) {
-                    $failed++;
-                    $errors[] = ['member_id' => $entry['member_id'], 'error' => \App\Support\ErrorMessage::from($e)];
-                }
-            }
-
-            ScheduleExecutionLog::create([
-                'schedule_type'           => 'monthly_deposits',
-                'processing_month'        => (int) $mon,
-                'processing_year'         => (int) $year,
-                'executed_by'             => $processedBy,
-                'execution_date'          => $now,
-                'total_records_processed' => $processed,
-                'total_records_failed'    => $failed,
-                'total_amount_posted'     => $totalAmount,
-                'status'                  => $failed > 0 ? ($processed > 0 ? 'partial' : 'failed') : 'completed',
-                'error_log'               => $errors ?: null,
-            ]);
-
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run schedule: ' . \App\Support\ErrorMessage::from($e)]);
-        }
-
-        return redirect()->route('schedule.monthly-deposit')
-            ->with('success', "Monthly deposits posted: {$processed} transactions, KES " .
-                number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
+        return $this->runResponse('schedule.monthly-deposit', $month, 'Monthly deposits posted', 'transactions', $outcome);
     }
 
-//Loan repayments
-    public function loanRepayment(Request $request)
+  
+
+    // Shows unpaid instalments due by month end that have not been deducted yet this month.
+    public function loanRepayment(Request $request, ScheduleRunService $runner)
     {
         $month = $request->month ?? Carbon::now()->format('Y-m');
-        [$year, $mon] = explode('-', $month);
+        $deductions = MemberFinanceConfig::autoLoanDeduct()->pluck('loan_deduction_amount', 'member_id');
 
-        $alreadyRun = ScheduleExecutionLog::alreadyRun('loan_repayments', (int) $year, (int) $mon);
-
-        $startDate = Carbon::parse($month)->startOfMonth()->toDateString();
-        $endDate   = Carbon::parse($month)->endOfMonth()->toDateString();
-
-        $autoDeductMemberIds = MemberFinanceConfig::autoLoanDeduct()
-            ->pluck('loan_deduction_amount', 'member_id');
-
-        $repayments = LoanRepayment::with([
-            'loan.member.user',
-            'loan.loanProduct',
-        ])
-            ->whereBetween('due_date', [$startDate, $endDate])
+        $due = LoanRepayment::with(['loan.member.user', 'loan.loanProduct'])
+            ->where('due_date', '<=', Carbon::parse($month)->endOfMonth()->toDateString())
             ->whereIn('status', ['pending', 'overdue', 'partial'])
-            ->whereHas('loan', function ($q) use ($autoDeductMemberIds) {
-                $q->where('status', 'active')
-                    ->whereIn('member_id', $autoDeductMemberIds->keys());
-            })
+            ->whereHas('loan', fn ($query) => $query
+                ->whereIn('status', Loan::RUNNING_STATUSES)
+                ->whereIn('member_id', $deductions->keys()))
             ->orderBy('due_date')
             ->get();
 
-        $rows = $repayments->map(function ($r) use ($autoDeductMemberIds) {
-            $memberId        = $r->loan->member_id;
-            $overrideAmount  = $autoDeductMemberIds->get($memberId);
+        $doneIds = $runner->repaymentIdsRunForMonth($due->pluck('id'), $month);
 
-            $deductAmount = $overrideAmount
-                ? min((float) $overrideAmount, (float) $r->outstanding_amount)
-                : (float) $r->outstanding_amount;
-
-            return [
-                'repayment_id'        => $r->id,
-                'due_date'            => $r->due_date->format('Y-m-d'),
-                'loan_id'             => $r->loan_id,
-                'loan_number'         => $r->loan->loan_number,
-                'member_id'           => $memberId,
-                'membership_id'       => $r->loan->member->membership_id,
-                'member_name'         => $r->loan->member->first_name . ' ' . $r->loan->member->last_name,
-                'loan_product'        => $r->loan->loanProduct->name ?? 'N/A',
-                'principal_amount'    => (float) $r->principal_amount,
-                'interest_amount'     => (float) $r->interest_amount,
-                'penalty_amount'      => (float) $r->penalty_amount,
-                'expected_amount'     => (float) $r->expected_amount,
-                'paid_amount'         => (float) $r->paid_amount,
-                'outstanding_amount'  => (float) $r->outstanding_amount,
-                'deduct_amount'       => $deductAmount,  
-                'override_set'        => $overrideAmount !== null,
-                'outstanding_balance' => (float) $r->loan->outstanding_balance,
-                'status'              => $r->status,
-                'days_late'           => $r->days_late ?? 0,
-            ];
-        })->values();
+        $rows = $due
+            ->reject(fn ($repayment) => in_array($repayment->id, $doneIds, true))
+            ->map(fn ($repayment) => $this->repaymentRow($repayment, $deductions->get($repayment->loan->member_id)))
+            ->values();
 
         $summary = [
-            'total_repayments'  => $rows->count(),
-            'total_expected'    => round($rows->sum('expected_amount'), 2),
-            'total_deductable'  => round($rows->sum('deduct_amount'), 2),
+            'total_repayments' => $rows->count(),
+            'already_done' => count($doneIds),
+            'total_expected' => round($rows->sum('expected_amount'), 2),
+            'total_deductable' => round($rows->sum('deduct_amount'), 2),
             'total_outstanding' => round($rows->sum('outstanding_amount'), 2),
-            'total_principal'   => round($rows->sum('principal_amount'), 2),
-            'total_interest'    => round($rows->sum('interest_amount'), 2),
-            'overdue_count'     => $rows->where('status', 'overdue')->count(),
+            'total_principal' => round($rows->sum('principal_amount'), 2),
+            'total_interest' => round($rows->sum('interest_amount'), 2),
+            'overdue_count' => $rows->where('status', 'overdue')->count(),
         ];
 
         return Inertia::render('Admin/Schedule/LoanRepayment', [
-            'rows'       => $rows,
-            'summary'    => $summary,
-            'month'      => $month,
-            'alreadyRun' => $alreadyRun,
+            'rows' => $rows,
+            'summary' => $summary,
+            'month' => $month,
+            'alreadyRun' => $rows->isEmpty() && count($doneIds) > 0,
         ]);
     }
 
-    public function runLoanRepayments(Request $request)
+    // Deducts each selected instalment from member deposits and posts it to the ledger.
+    public function runLoanRepayments(RunLoanRepaymentsRequest $request, ScheduleRunService $runner)
     {
-        $request->validate([
-            'month'                  => 'required|string|date_format:Y-m',
-            'entries'                => 'required|array|min:1',
-            'entries.*.repayment_id' => 'required|exists:loan_repayments,id',
-            'entries.*.loan_id'      => 'required|exists:loans,id',
-            'entries.*.member_id'    => 'required|exists:members,id',
-            'entries.*.deduct_amount' => 'required|numeric|min:0.01',
-        ]);
+        $month = $request->validated('month');
+        $user = Auth::user();
 
-        [$year, $mon] = explode('-', $request->month);
+        $amounts = collect($request->validated('entries'))
+            ->mapWithKeys(fn ($entry) => [(int) $entry['repayment_id'] => (float) $entry['deduct_amount']]);
 
-        if (ScheduleExecutionLog::alreadyRun('loan_repayments', (int) $year, (int) $mon)) {
-            return back()->withErrors(['schedule' => 'This schedule has already been run for the selected period.']);
-        }
+        $outcome = $this->runBatch($amounts, fn ($amount, $repaymentId) => $runner->postLoanRepayment($repaymentId, $amount, $month, $user));
 
-        $processedBy = Auth::id();
-        $now         = now();
-        $processed   = 0;
-        $failed      = 0;
-        $totalAmount = 0;
-        $errors      = [];
+        $this->recordRun('loan_repayments', $month, $outcome);
 
-        DB::beginTransaction();
-        try {
-            foreach ($request->entries as $entry) {
-                try {
-                    $repayment = LoanRepayment::with('loan.member.accounts')->findOrFail($entry['repayment_id']);
-                    $loan      = $repayment->loan;
-                    $amount    = (float) $entry['deduct_amount'];
+        return $this->runResponse('schedule.loan-repayment', $month, 'Loan repayments posted', 'deductions', $outcome);
+    }
 
-                    if ($amount <= 0) continue;
-                    $penaltyPaid   = min($amount, (float) $repayment->penalty_amount);
-                    $remaining     = $amount - $penaltyPaid;
-                    $interestPaid  = min($remaining, (float) $repayment->interest_amount);
-                    $remaining    -= $interestPaid;
-                    $principalPaid = min($remaining, (float) $repayment->principal_amount);
-                    $newPaid        = (float) $repayment->paid_amount + $amount;
-                    $newOutstanding = max(0, (float) $repayment->outstanding_amount - $amount);
-                    $newStatus      = $newOutstanding > 0 ? 'partial' : 'paid';
+    // Builds one row of the loan repayment page, capping the suggested deduction at the member's override.
+    private function repaymentRow(LoanRepayment $repayment, ?float $override): array
+    {
+        $outstanding = (float) $repayment->outstanding_amount;
 
-                    $account = $loan->member->accounts()
-                        ->where('account_type', 'share_deposits')
-                        ->where('is_active', true)
-                        ->first();
+        return [
+            'repayment_id' => $repayment->id,
+            'due_date' => $repayment->due_date->format('Y-m-d'),
+            'loan_id' => $repayment->loan_id,
+            'loan_number' => $repayment->loan->loan_number,
+            'member_id' => $repayment->loan->member_id,
+            'membership_id' => $repayment->loan->member->membership_id,
+            'member_name' => $repayment->loan->member->first_name . ' ' . $repayment->loan->member->last_name,
+            'loan_product' => $repayment->loan->loanProduct->name ?? 'N/A',
+            'principal_amount' => (float) $repayment->principal_amount,
+            'interest_amount' => (float) $repayment->interest_amount,
+            'penalty_amount' => (float) $repayment->penalty_amount,
+            'expected_amount' => (float) $repayment->expected_amount,
+            'paid_amount' => (float) $repayment->paid_amount,
+            'outstanding_amount' => $outstanding,
+            'deduct_amount' => $override ? min($override, $outstanding) : $outstanding,
+            'override_set' => $override !== null,
+            'outstanding_balance' => (float) $repayment->loan->outstanding_balance,
+            'status' => $repayment->status,
+            'days_late' => $repayment->days_late ?? 0,
+        ];
+    }
 
-                    $tx = Transaction::create([
-                        'transaction_id'   => 'RPY-SCH-' . strtoupper(uniqid()),
-                        'account_id'       => $account?->id ?? $loan->id,
-                        'member_id'        => $loan->member_id,
-                        'transaction_type' => 'loan_repayment',
-                        'amount'           => $amount,
-                        'balance_before'   => $account?->balance ?? 0,
-                        'balance_after'    => ($account?->balance ?? 0) - $amount,
-                        'description'      => "Schedule: Loan repayment – {$loan->loan_number}",
-                        'reference_number' => $loan->loan_number,
-                        'payment_method'   => 'system_transfer',
-                        'status'           => 'completed',
-                        'processed_by'     => $processedBy,
-                        'processed_at'     => $now,
-                    ]);
+    // Runs the action on every item and counts what was posted, skipped and failed.
+    private function runBatch(Collection $items, Closure $action): array
+    {
+        $outcome = ['processed' => 0, 'skipped' => 0, 'failed' => 0, 'completed' => 0, 'amount' => 0.0, 'errors' => []];
 
-                    $repayment->update([
-                        'paid_amount'        => $newPaid,
-                        'outstanding_amount' => $newOutstanding,
-                        'status'             => $newStatus,
-                        'payment_date'       => $now->toDateString(),
-                        'transaction_id'     => $tx->id,
-                    ]);
+        foreach ($items as $key => $item) {
+            try {
+                $result = $action($item, $key);
+            } catch (Throwable $e) {
+                $outcome['failed']++;
+                $outcome['errors'][] = "#{$key}: " . ErrorMessage::from($e);
 
-                    $loan->decrement('outstanding_balance', $amount);
-                    $loan->decrement('principal_balance',   $principalPaid);
-                    $loan->decrement('interest_balance',    $interestPaid);
-                    if ($penaltyPaid > 0) {
-                        $loan->decrement('penalty_balance', $penaltyPaid);
-                    }
-
-                    $loan->refresh();
-                    if ($loan->outstanding_balance <= 0) {
-                        $loan->update(['status' => 'completed', 'outstanding_balance' => 0]);
-                    }
-
-                    $processed++;
-                    $totalAmount += $amount;
-                } catch (\Throwable $e) {
-                    $failed++;
-                    $errors[] = ['repayment_id' => $entry['repayment_id'], 'error' => \App\Support\ErrorMessage::from($e)];
-                }
+                continue;
             }
 
-            ScheduleExecutionLog::create([
-                'schedule_type'           => 'loan_repayments',
-                'processing_month'        => (int) $mon,
-                'processing_year'         => (int) $year,
-                'executed_by'             => $processedBy,
-                'execution_date'          => $now,
-                'total_records_processed' => $processed,
-                'total_records_failed'    => $failed,
-                'total_amount_posted'     => $totalAmount,
-                'status'                  => $failed > 0 ? ($processed > 0 ? 'partial' : 'failed') : 'completed',
-                'error_log'               => $errors ?: null,
-            ]);
+            if ($result['status'] !== 'posted') {
+                $outcome['skipped']++;
 
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run schedule: ' . ErrorMessage::from($e)]);
+                continue;
+            }
+
+            $outcome['processed']++;
+            $outcome['amount'] += $result['amount'];
+            $outcome['completed'] += ($result['completed'] ?? false) ? 1 : 0;
         }
 
-        return redirect()->route('schedule.loan-repayment')
-            ->with('success', "Loan repayments posted: {$processed} transactions, KES " .
-                number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
+        return $outcome;
     }
 
-    //  loan disbursements 
+    // Writes one execution log row for a batch that posted or failed something.
+    private function recordRun(string $type, string $month, array $outcome): void
+    {
+        if ($outcome['processed'] === 0 && $outcome['failed'] === 0) {
+            return;
+        }
+
+        [$year, $monthNumber] = explode('-', $month);
+
+        ScheduleExecutionLog::create([
+            'schedule_type' => $type,
+            'processing_month' => (int) $monthNumber,
+            'processing_year' => (int) $year,
+            'executed_by' => Auth::id(),
+            'execution_date' => now(),
+            'total_records_processed' => $outcome['processed'],
+            'total_records_failed' => $outcome['failed'],
+            'total_amount_posted' => $outcome['amount'],
+            'status' => $outcome['failed'] === 0 ? 'completed' : ($outcome['processed'] > 0 ? 'partial' : 'failed'),
+            'error_log' => $outcome['errors'] ?: null,
+        ]);
+    }
+
+    // Redirects back to the run page with a summary and any per-item errors.
+    private function runResponse(string $route, string $month, string $title, string $noun, array $outcome)
+    {
+        $message = "{$title}: {$outcome['processed']} {$noun}, KES " . number_format($outcome['amount'], 2) . '.'
+            . ($outcome['completed'] ? " {$outcome['completed']} loan(s) fully repaid." : '')
+            . ($outcome['skipped'] ? " {$outcome['skipped']} already done for this month." : '')
+            . ($outcome['failed'] ? " {$outcome['failed']} failed." : '');
+
+        $redirect = redirect()->route($route, ['month' => $month]);
+
+        if ($outcome['failed'] === 0) {
+            return $redirect->with('success', $message);
+        }
+
+        return $redirect
+            ->with($outcome['processed'] === 0 ? 'error' : 'success', $message)
+            ->withErrors(['schedule' => implode(' | ', array_slice($outcome['errors'], 0, 5))]);
+    }
+
+    //  Loan disbursements  
 
     public function loanDisbursement(Request $request)
     {
@@ -482,12 +372,14 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    //  Dividends payments
+    //  DIVIDEND PAYMENTS
 
     public function dividendPayment(Request $request)
     {
         $year = (int) ($request->year ?? Carbon::now()->year);
+
         $alreadyRun = ScheduleExecutionLog::alreadyRun('dividend_payments', $year);
+
         $dividend = Dividend::with(['calculatedBy', 'approvedBy'])
             ->where('dividend_year', $year)
             ->whereIn('status', ['approved', 'distributed'])
@@ -670,7 +562,7 @@ class ScheduleController extends Controller
                     $totalAmount += $amount;
                 } catch (\Throwable $e) {
                     $failed++;
-                    $errors[] = ['member_dividend_id' => $entry['member_dividend_id'], 'error' => ErrorMessage::from($e)];
+                    $errors[] = ['member_dividend_id' => $entry['member_dividend_id'], 'error' => \App\Support\ErrorMessage::from($e)];
                 }
             }
 
@@ -698,7 +590,7 @@ class ScheduleController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run dividend payments: ' . ErrorMessage::from($e)]);
+            return back()->withErrors(['schedule' => 'Failed to run dividend payments: ' . \App\Support\ErrorMessage::from($e)]);
         }
 
         return redirect()->route('schedule.dividend-payment')
@@ -706,7 +598,7 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    //  exports
+    //  EXPORTS
 
     public function exportLoanDisbursement(Request $request)
     {

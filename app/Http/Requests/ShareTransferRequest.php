@@ -3,27 +3,25 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ShareTransferRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'amount' => ['required','min:0'],
-            'recipient_member_id' => ['required']
+            'amount' => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:99999999.99'],
+            'recipient_member_id' => [
+                'required',
+                'integer',
+                Rule::exists('members', 'id')->where('membership_status', 'active'),
+                Rule::notIn([$this->route('account')?->member_id]),
+            ],
         ];
     }
 }
