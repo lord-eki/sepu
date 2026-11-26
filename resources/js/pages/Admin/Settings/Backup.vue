@@ -2,9 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
-const breadcrumbs = [{ title: 'Settings' }, { title: 'Backup Settings' }];
 
-// Backup form state
 const form = useForm({
     auto_backup: true,
     backup_frequency: 'Daily',
@@ -15,7 +13,6 @@ const frequencies = ['Daily', 'Weekly', 'Monthly'];
 
 const createBackup = () => {
     alert('Backup started successfully (dummy action)');
-    // form.post(route('settings.backup.create'))
 };
 
 const saveSettings = () => {

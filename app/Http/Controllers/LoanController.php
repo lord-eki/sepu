@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLoanRequest;
 use App\Models\{Account, AuditLog, Loan, LoanGuarantor, LoanProduct, LoanRepayment, Member, PaymentVoucher, Transaction};
 use App\Services\LoanEligibilityService;
 use App\Services\Loans\GuaranteeService;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Services\NotificationService;
+use App\Support\ErrorMessage;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -139,7 +141,7 @@ class LoanController extends Controller
     /**
      * Store a newly created loan application
      */
-    public function store(Request $request)
+    public function store(StoreLoanRequest $request)
     {
 
         $user = Auth::user();
@@ -149,33 +151,14 @@ class LoanController extends Controller
             $request->merge(['member_id' => $user->member->id]);
         }
 
-        $validator = Validator::make($request->all(), [
-            'member_id' => 'required|exists:members,id',
-            'loan_product_id' => 'required|exists:loan_products,id',
-            'applied_amount' => 'required|numeric|min:1',
-            'term_months' => 'required|integer|min:1',
-            'purpose' => 'required|string|max:500',
+        $data = $request->validated();
 
-            'guarantors' => 'required|array|min:1',
-            'guarantors.*.member_id' => 'required|exists:members,id',
-            'guarantors.*.guaranteed_amount' => 'required|numeric|min:1',
-            'documents'   => 'sometimes|array|max:10',
-            'documents.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
 
         try {
             DB::beginTransaction();
 
-            $loanProduct = LoanProduct::findOrFail($request->loan_product_id);
-            $member = Member::findOrFail($request->member_id);
+            $loanProduct = LoanProduct::findOrFail($data->loan_product_id);
+            $member = Member::findOrFail($data->member_id);
 
             $eligibilityService = new LoanEligibilityService;
             $eligibility = $eligibilityService->checkEligibility(
@@ -193,8 +176,8 @@ class LoanController extends Controller
             }
 
             if (
-                $request->applied_amount < $loanProduct->min_amount ||
-                $request->applied_amount > $loanProduct->max_amount
+                $data->applied_amount < $loanProduct->min_amount ||
+                $data->applied_amount > $loanProduct->max_amount
             ) {
                 return response()->json([
                     'success' => false,
@@ -212,7 +195,7 @@ class LoanController extends Controller
                 ], 422);
             }
 
-            $existingLoans = Loan::where('member_id', $request->member_id)
+            $existingLoans = Loan::where('member_id', $data->member_id)
                 ->whereIn('status', Loan::OPEN_STATUSES)
                 ->count();
 
@@ -223,19 +206,19 @@ class LoanController extends Controller
                 ], 422);
             }
 
-            $totalGuaranteed = collect($request->guarantors)
+            $totalGuaranteed = collect($data->guarantors)
                 ->sum('guaranteed_amount');
 
-            if ($totalGuaranteed < $request->applied_amount) {
+            if ($totalGuaranteed < $data->applied_amount) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Total guarantor amount must equal or exceed requested loan amount.',
                 ], 422);
             }
 
-            foreach ($request->guarantors as $guarantorData) {
+            foreach ($data->guarantors as $guarantorData) {
 
-                if ($guarantorData['member_id'] == $request->member_id) {
+                if ($guarantorData['member_id'] == $data->member_id) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Applicant cannot be their own guarantor.',
@@ -258,9 +241,9 @@ class LoanController extends Controller
 
 
             $calc = app(LoanCalculatorService::class)->summary(
-                (float) $request->applied_amount,
+                (float) $data->applied_amount,
                 (float) $loanProduct->interest_rate,
-                (int) $request->term_months,
+                (int) $data->term_months,
                 (float) $loanProduct->processing_fee_rate,
                 (float) $loanProduct->insurance_rate,
             );
@@ -273,12 +256,12 @@ class LoanController extends Controller
             $documents = [];
 
             if ($request->hasFile('documents')) {
-                foreach ($request->file('documents') as $index => $file) {
+                foreach ($data->file('documents') as $index => $file) {
                     $filename = Str::uuid() . '.' . $file->extension();
                     $path = $file->storeAs('loan-documents', $filename, 'local');
 
                     $documents[] = [
-                        'type' => $request->document_types[$index] ?? 'Document',
+                        'type' => $data->document_types[$index] ?? 'Document',
                         'name' => $file->getClientOriginalName(),
                         'path' => $path,
                         'disk' => 'local',
@@ -288,16 +271,16 @@ class LoanController extends Controller
 
             $loan = Loan::create([
                 'loan_number' => $this->generateLoanNumber(),
-                'member_id' => $request->member_id,
-                'loan_product_id' => $request->loan_product_id,
-                'applied_amount' => $request->applied_amount,
+                'member_id' => $data->member_id,
+                'loan_product_id' => $data->loan_product_id,
+                'applied_amount' => $data->applied_amount,
                 'interest_rate' => $loanProduct->interest_rate,
-                'term_months' => $request->term_months,
+                'term_months' => $data->term_months,
                 'monthly_repayment' => $monthlyRepayment,
                 'total_repayable' => $totalRepayable,
                 'processing_fee' => $processingFee,
                 'insurance_fee' => $insuranceFee,
-                'purpose' => $request->purpose,
+                'purpose' => $data->purpose,
                 'status' => 'pending_guarantor_approval',
                 'application_date' => now(),
                 'documents' => $documents,
@@ -309,9 +292,8 @@ class LoanController extends Controller
             ]);
 
 
-            $notifications = [];
 
-            foreach ($request->guarantors as $guarantorData) {
+            foreach ($data->guarantors as $guarantorData) {
 
                 $guarantorMember = Member::with('user')->findOrFail($guarantorData['member_id']);
 
@@ -370,7 +352,7 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error in creating loan application: ' . \App\Support\ErrorMessage::from($e),
+                'message' => 'Error in creating loan application: ' . ErrorMessage::from($e),
             ], 500);
         }
     }
@@ -378,7 +360,7 @@ class LoanController extends Controller
     /**
      * Display the specified loan
      */
-    public function show($id)
+    public function show(int $id)
     {
         $loan = Loan::with([
             'member.user',
@@ -399,7 +381,7 @@ class LoanController extends Controller
     /**
      * Show loan repayments
      */
-    public function repayments($id)
+    public function repayments( int $id)
     {
         $loan = Loan::with(['member.user', 'loanProduct'])->findOrFail($id);
 
@@ -416,7 +398,7 @@ class LoanController extends Controller
     /**
      * Show the form for editing the specified loan
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         $loan = Loan::with(['member', 'loanProduct', 'guarantors.guarantorMember'])->findOrFail($id);
 
@@ -440,7 +422,7 @@ class LoanController extends Controller
     /**
      * Update the specified loan
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $loan = Loan::findOrFail($id);
 
@@ -481,14 +463,12 @@ class LoanController extends Controller
             ]);
             $loan->load('loanProduct');
             $loanProduct = $loan->loanProduct;
-
             $processingFee = ($principal * $loanProduct->processing_fee_rate) / 100;
             $insuranceFee  = ($principal * $loanProduct->insurance_fee_rate) / 100;
             $monthlyRate = $loanProduct->interest_rate / 100;
             $totalInterest = $principal * $monthlyRate * ($termMonths + 1) / 2;
             $principalPerMonth = $principal / $termMonths;
             $monthlyInterest = $totalInterest / $termMonths;
-
             $monthlyRepayment = $principalPerMonth + $monthlyInterest;
             $totalRepayable   = $monthlyRepayment * $termMonths;
 
@@ -497,7 +477,6 @@ class LoanController extends Controller
                 'total_repayable'     => round($totalRepayable, 2),
                 'processing_fee'      => round($processingFee, 2),
                 'insurance_fee'       => round($insuranceFee, 2),
-
                 'outstanding_balance' => round($totalRepayable, 2),
                 'principal_balance'   => round($principal, 2),
                 'interest_balance'    => round($totalInterest, 2),
@@ -526,7 +505,7 @@ class LoanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating loan: ' . \App\Support\ErrorMessage::from($e),
+                'message' => 'Error updating loan: ' . ErrorMessage::from($e),
             ], 500);
         }
     }
@@ -535,7 +514,7 @@ class LoanController extends Controller
     /**
      * Approve a loan application
      */
-    public function approve(Request $request, $id, LoanService $loans)
+    public function approve(Request $request, int $id, LoanService $loans)
     {
         $validator = Validator::make($request->all(), [
             'approved_amount' => 'required|numeric|min:1',
@@ -569,7 +548,7 @@ class LoanController extends Controller
 
      // Reject a loan application
    
-    public function reject(Request $request, $id, GuaranteeService $guarantees)
+    public function reject(Request $request, int $id, GuaranteeService $guarantees)
     {
         $validator = Validator::make($request->all(), [
             'rejection_reason' => 'required|string|max:1000',
@@ -626,7 +605,7 @@ class LoanController extends Controller
 
 
     // Disburse an approved loan
-    public function disburse(Request $request, $id, LoanService $loans)
+    public function disburse(Request $request,int $id, LoanService $loans)
     {
         $validator = Validator::make($request->all(), [
             'disbursement_method'    => 'required|in:cash,mobile_money,bank_transfer,account',
@@ -720,29 +699,9 @@ class LoanController extends Controller
     }
 
 
-    // Generate unique transaction ID
-    private function generateTransactionId()
-    {
-        do {
-            $transactionId = 'TXN' . date('YmdHis') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
-        } while (Transaction::where('transaction_id', $transactionId)->exists());
-
-        return $transactionId;
-    }
-
-    // Generate unique voucher number
-    private function generateVoucherNumber()
-    {
-        do {
-            $voucherNumber = 'VOU' . date('YmdHis') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
-        } while (PaymentVoucher::where('voucher_number', $voucherNumber)->exists());
-
-        return $voucherNumber;
-    }
-
 
     // Loan Schedule
-    public function schedule($id)
+    public function schedule(int $id)
     {
         $loan = Loan::with(['member', 'loanProduct', 'repayments'])->findOrFail($id);
 

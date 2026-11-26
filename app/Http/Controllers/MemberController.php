@@ -237,7 +237,7 @@ class MemberController extends Controller
             DB::rollBack();
 
             return back()->withErrors([
-                'error' => 'Failed to create member: ' . \App\Support\ErrorMessage::from($e)
+                'error' => 'Failed to create member: ' . ErrorMessage::from($e)
             ]);
         }
     }
@@ -368,7 +368,7 @@ class MemberController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update member: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => 'Failed to update member: ' . ErrorMessage::from($e)]);
         }
     }
 
@@ -410,7 +410,7 @@ class MemberController extends Controller
             DB::rollBack();
 
             return redirect()->route('members.show', $member->id)
-                ->with('error', 'Failed to delete member: ' . \App\Support\ErrorMessage::from($e));
+                ->with('error', 'Failed to delete member: ' . ErrorMessage::from($e));
         }
     }
 
@@ -427,7 +427,7 @@ class MemberController extends Controller
         }
 
         $currentUserId = Auth::id();
-        $currentMember = Member::where('user_id', $currentUserId)->first(); // The member record of logged-in admin
+        $currentMember = Member::where('user_id', $currentUserId)->first(); 
 
         if ($currentMember && in_array($currentMember->id, $memberIds)) {
 
@@ -486,7 +486,7 @@ class MemberController extends Controller
                 ->with('success', 'Selected members permanently deleted.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Bulk delete failed: ' . \App\Support\ErrorMessage::from($e));
+            return redirect()->back()->with('error', 'Bulk delete failed: ' . ErrorMessage::from($e));
         }
     }
 
@@ -1317,16 +1317,16 @@ public function withdraw(Request $request, Member $member, Account $account, Acc
                             $errors[] = [
                                 'row' => $rowNumber,
                                 'name' => $preparedData['first_name'] ?? 'Unknown Member',
-                                'errors' => [\App\Support\ErrorMessage::from($e)],
+                                'errors' => [ErrorMessage::from($e)],
                             ];
-                            Log::error("Import failed at row {$rowNumber}: " . \App\Support\ErrorMessage::from($e));
+                            Log::error("Import failed at row {$rowNumber}: " . ErrorMessage::from($e));
                         }
                     }
 
                     DB::commit();
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    Log::error('Import chunk failed: ' . \App\Support\ErrorMessage::from($e));
+                    Log::error('Import chunk failed: ' . ErrorMessage::from($e));
                 }
             }
 
@@ -1339,7 +1339,7 @@ public function withdraw(Request $request, Member $member, Account $account, Acc
                 ->with('import_errors', $errors);
         } catch (\Exception $e) {
             return redirect()->route('members.import.form')
-                ->with('error', 'Import failed: ' . \App\Support\ErrorMessage::from($e))
+                ->with('error', 'Import failed: ' . ErrorMessage::from($e))
                 ->with('import_errors', $errors);
         }
     }
@@ -1843,7 +1843,7 @@ public function withdraw(Request $request, Member $member, Account $account, Acc
                 ->with('success', $message)
                 ->with('import_errors', $errors);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to process deposit import: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => 'Failed to process deposit import: ' . ErrorMessage::from($e)]);
         }
     }
 

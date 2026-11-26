@@ -2,30 +2,6 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 
-const props = defineProps<{
-    members: Array<{
-        member_id: number;
-        membership_id: string;
-        name: string;
-        total_loans: number;
-        total_disbursed: number;
-        total_outstanding: number;
-        loans: Array<{
-            loan_number: string;
-            product_name: string;
-            disbursed_amount: number;
-            outstanding_balance: number;
-            status: string;
-            days_in_arrears: number;
-        }>;
-    }>;
-    summary: {
-        total_members: number;
-        total_loans: number;
-        total_disbursed: number;
-        total_outstanding: number;
-    };
-}>();
 
 const breadcrumbs = [{ title: 'Member Reports', href: route('reports.membersReport.index') }, { title: 'Member Loans' }];
 

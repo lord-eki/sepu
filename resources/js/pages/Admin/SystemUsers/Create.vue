@@ -134,7 +134,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';

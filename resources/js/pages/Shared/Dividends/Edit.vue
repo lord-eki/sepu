@@ -318,7 +318,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import InputLabel from '@/components/InputLabel.vue';
 import TextArea from '@/components/TextArea.vue';

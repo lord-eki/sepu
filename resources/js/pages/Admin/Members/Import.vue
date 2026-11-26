@@ -237,17 +237,13 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, CheckCircle, Download, FileSpreadsheet, Info, Upload, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
-// Props
-const props = defineProps({
-    sampleHeaders: Array,
-    errors: Object,
-});
+
 
 // Flash handling
 const page = usePage();

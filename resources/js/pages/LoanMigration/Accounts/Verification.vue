@@ -184,9 +184,7 @@ const getErrors = (record: MigrationRecord): string[] => {
     return Object.entries(record.validation_errors).map(([field, message]) => `${field}: ${message}`);
 };
 
-const getWarnings = (record: MigrationRecord): string[] => {
-    return record.validation_messages ?? [];
-};
+
 
 const runValidation = () => {
     router.post(

@@ -333,11 +333,13 @@ class AccountBalanceService
     public function requestPending(int $accountId, string $type, float|int|string $amount, array $attrs, User $by): Transaction
     {
         $direction = self::DIRECTION[$type] ?? null;
+
         if (!$direction) {
             throw new DomainException("Transactions of type '{$type}' cannot be requested here.");
         }
 
         $cents = $this->toCents($amount);
+        
         if ($cents <= 0) {
             throw new DomainException('Amount must be greater than zero.');
         }

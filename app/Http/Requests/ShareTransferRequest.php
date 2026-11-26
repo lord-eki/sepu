@@ -22,7 +22,8 @@ class ShareTransferRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'amount' => ['required','min:0'],
+            'recipient_member_id' => ['required']
         ];
     }
 }

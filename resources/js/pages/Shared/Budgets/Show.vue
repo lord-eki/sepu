@@ -254,7 +254,7 @@
     </transition>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { DollarSign, PieChart, TrendingDown, TrendingUp } from 'lucide-vue-next';

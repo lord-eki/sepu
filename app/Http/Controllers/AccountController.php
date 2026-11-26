@@ -26,6 +26,14 @@ use Carbon\Carbon;
 
 class AccountController extends Controller
 {
+
+  public array $paymentMethods = [
+                'cash' => 'Cash',
+                'mobile_money' => 'Mobile Money',
+                'bank_transfer' => 'Bank Transfer',
+                'cheque' => 'Cheque'
+            ];
+
     /**
      * Display a listing of accounts
      */
@@ -151,7 +159,7 @@ class AccountController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to create account: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => 'Failed to create account: ' . ErrorMessage::from($e)]);
         }
     }
 
@@ -214,7 +222,7 @@ class AccountController extends Controller
                 ->with('success', 'Account updated successfully');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update account: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => 'Failed to update account: ' . ErrorMessage::from($e)]);
         }
     }
 
@@ -257,7 +265,7 @@ class AccountController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to close account: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => 'Failed to close account: ' . ErrorMessage::from($e)]);
         }
     }
 
@@ -268,12 +276,7 @@ class AccountController extends Controller
     {
         return Inertia::render('Accounts/Deposit', [
             'account' => $account->load('member.user'),
-            'paymentMethods' => [
-                'cash' => 'Cash',
-                'mobile_money' => 'Mobile Money',
-                'bank_transfer' => 'Bank Transfer',
-                'cheque' => 'Cheque'
-            ]
+            'paymentMethods' => $this->paymentMethods
         ]);
     }
 
@@ -292,23 +295,19 @@ class AccountController extends Controller
 
             DB::beginTransaction();
 
-            $transactionType = $account->account_type === 'share_capital'
-                ? 'share_capital_contribution'
-                : 'deposit';
+            $transactionType = $account->account_type === 'share_capital' ? 'share_capital_contribution' : 'deposit';
 
             $description = $request->description ??
-                ($account->account_type === 'share_capital'
-                    ? 'Share capital contribution'
-                    : 'Monthly share deposit');
+                ($account->account_type === 'share_capital' ? 'Share capital contribution': 'Monthly share deposit');
 
-            $transaction = Transaction::create([
+           Transaction::create([
                 'transaction_id' => $this->generateTransactionId(),
                 'account_id' => $account->id,
                 'member_id' => $account->member_id,
                 'transaction_type' => $transactionType,
                 'amount' => $request->amount,
                 'balance_before' => $account->balance,
-                'balance_after' => $account->balance, // will update after approval
+                'balance_after' => $account->balance, 
                 'description' => $description,
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference,
@@ -329,7 +328,7 @@ class AccountController extends Controller
             DB::rollBack();
 
             return back()->withErrors([
-                'error' => 'Failed to submit deposit: ' . \App\Support\ErrorMessage::from($e)
+                'error' => 'Failed to submit deposit: ' . ErrorMessage::from($e)
             ]);
         }
     }
@@ -343,12 +342,7 @@ class AccountController extends Controller
     {
         return Inertia::render('Accounts/Withdrawal', [
             'account' => $account->load('member.user'),
-            'paymentMethods' => [
-                'cash' => 'Cash',
-                'mobile_money' => 'Mobile Money',
-                'bank_transfer' => 'Bank Transfer',
-                'cheque' => 'Cheque'
-            ]
+            'paymentMethods' => $this->paymentMethods
         ]);
     }
 
@@ -367,10 +361,11 @@ class AccountController extends Controller
                 'payment_reference' => $request->payment_reference,
             ], Auth::user());
 
-            return redirect()->route('accounts.show', $account)
-                ->with('success', 'Withdrawal submitted for approval.');
+            return redirect()->route('accounts.show', $account)->with('success', 'Withdrawal submitted for approval.');
+
         } catch (\DomainException $e) {
             return back()->withErrors(['amount' => $e->getMessage()]);
+
         } catch (\Throwable $e) {
             report($e);
 
@@ -415,9 +410,10 @@ class AccountController extends Controller
             }
 
             DB::beginTransaction();
-
-            $amount = $request->amount;
-            $recipientMember = Member::findOrFail($request->recipient_member_id);
+            
+            $data = $request->validated();
+            $amount = $data->amount;
+            $recipientMember = Member::findOrFail($data->recipient_member_id);
 
             if ($account->balance < $amount) {
                 return back()->withErrors(['amount' => 'Insufficient balance']);
@@ -490,12 +486,12 @@ class AccountController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to process share transfer: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => 'Failed to process share transfer: ' . ErrorMessage::from($e)]);
         }
     }
 
     // Account's statement
-    public function statement($id)
+    public function statement(int $id)
     {
         $account = Account::with(['member', 'transactions' => function($q) {
             $q->orderBy('date', 'desc');
@@ -508,7 +504,7 @@ class AccountController extends Controller
     }
 
     // Individual Account's statement
-    public function myStatement($memberId, $accountId)
+    public function myStatement(int $memberId, int $accountId)
     {
         $loggedInMemberId = Auth::user()->member->id ?? null;
 
@@ -526,8 +522,7 @@ class AccountController extends Controller
                     $from . ' 00:00:00',
                     $to . ' 23:59:59'
                 ])->orderBy('created_at', 'desc');
-            }])
-            ->firstOrFail();
+            }])->firstOrFail();
 
         return Inertia::render('Accounts/Statement', [
             'account' => $account,
@@ -542,7 +537,7 @@ class AccountController extends Controller
     /**
      * Generate PDF of the statement for the selected period
      */
-    public function statementPdf(Request $request, $accountId)
+    public function statementPdf(Request $request, int $accountId)
     {
         $request->validate([
             'from' => 'nullable|date',
@@ -559,8 +554,7 @@ class AccountController extends Controller
             ->with(['member', 'transactions' => function($q) use ($from, $to) {
                 $q->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
                   ->orderBy('created_at', 'desc');
-            }])
-            ->firstOrFail();
+            }])->firstOrFail();
 
         $pdf = Pdf::loadView('accounts.pdf.statement', [
             'account' => $account,
@@ -581,19 +575,15 @@ class AccountController extends Controller
             ->with('processedBy')
             ->when($request->transaction_type, function ($query, $type) {
                 $query->where('transaction_type', $type);
-            })
-            ->when($request->status, function ($query, $status) {
+            })->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
-            })
-            ->when($request->date_from, function ($query, $date) {
+            })->when($request->date_from, function ($query, $date) {
                 $query->whereDate('created_at', '>=', $date);
-            })
-            ->when($request->date_to, function ($query, $date) {
+            })->when($request->date_to, function ($query, $date) {
                 $query->whereDate('created_at', '<=', $date);
-            })
-            ->latest();
+            })->latest();
 
-        $transactions = $query->paginate(20)->withQueryString();
+        $transactions = $query->paginate(15)->withQueryString();
 
         return Inertia::render('Accounts/Transactions', [
             'account' => $account->load('member.user'),

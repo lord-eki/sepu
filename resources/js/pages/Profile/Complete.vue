@@ -354,7 +354,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { FileIcon, User } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
@@ -363,11 +363,7 @@ const page = usePage();
 const flash = computed(() => page.props.flash || {});
 const flashMessage = ref(null);
 const flashType = ref('success');
-const selectedPaymentMethod = ref('');
-const confirmPayment = () => {
-    showPaymentModal.value = false;
-    alert('Payment confirmation received. Admin will verify your payment.');
-};
+
 
 watch(flash, (val) => {
     if (val.success) {

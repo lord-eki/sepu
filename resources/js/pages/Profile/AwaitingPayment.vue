@@ -129,7 +129,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 

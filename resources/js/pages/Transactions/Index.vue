@@ -394,20 +394,8 @@
 import Pagination from '@/components/Pagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import axios from 'axios';
-import {
-    AlertCircle,
-    ArrowRightLeft,
-    CheckCircle2,
-    CircleDollarSign,
-    CreditCard,
-    Download,
-    Filter,
-    Plus,
-    RotateCcw,
-    Search,
-    Wallet,
-    X,
+import {AlertCircle,ArrowRightLeft, CheckCircle2,CircleDollarSign,CreditCard,
+    Download,Filter,Plus,RotateCcw,Search,Wallet,X,
 } from 'lucide-vue-next';
 import { computed, nextTick, reactive, ref, watch } from 'vue';
 
@@ -658,14 +646,7 @@ function reverseTransaction() {
     );
 }
 
-async function fetchTransactions(page = 1) {
-    try {
-        const { data } = await axios.get('/transactions', { params: { ...filters, page } });
-        transactions.value = { data: data.data, meta: data.meta };
-    } catch {
-        showMessage('Failed to reload transactions', 'error');
-    }
-}
+
 </script>
 
 <style scoped>

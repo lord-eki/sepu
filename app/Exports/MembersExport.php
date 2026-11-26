@@ -4,12 +4,14 @@ namespace App\Exports;
 
 use App\Models\Member;
 use Maatwebsite\Excel\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class MembersExport
 {
-    protected $memberIds;
+    protected array $memberIds;
 
     public function __construct(array $memberIds)
     {
@@ -25,10 +27,9 @@ class MembersExport
             ->orderBy('gender', 'asc')
             ->get();
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Headings
         $headings = [
             'First Name', 'Middle Name', 'Last Name', 'Username', 'Email', 'Phone',
             'ID Number', 'ID Type', 'Date of Birth', 'Gender', 'Marital Status',
@@ -40,7 +41,6 @@ class MembersExport
 
         $sheet->fromArray($headings, null, 'A1');
 
-        // Style header row
         $headerStyle = $sheet->getStyle('A1:Z1');
         $headerStyle->getFont()->setBold(true)->getColor()->setARGB(Color::COLOR_WHITE);
         $headerStyle->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F4E78'); // Dark blue
@@ -76,12 +76,11 @@ class MembersExport
             $row++;
         }
 
-        // Auto-size columns
         foreach (range('A', 'Z') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header("Content-Disposition: attachment; filename=\"$filename\"");

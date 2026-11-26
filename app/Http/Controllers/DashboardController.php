@@ -12,17 +12,19 @@ use App\Models\PaymentVoucher;
 use App\Models\Notification;
 use Carbon\Carbon;
 use App\Models\Budget;
+use App\Support\ErrorMessage;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
     /**
-     * Main dashboard - redirects to role-specific dashboard
+     * Main dashboard 
      */
     public function index()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         return match ($user->role) {
             'admin' => $this->adminDashboard(),
@@ -124,7 +126,7 @@ class DashboardController extends Controller
                 'approvedButUnpaid' => $approvedButUnpaid,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching members: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Error fetching members: ' . ErrorMessage::from($e));
             return response()->json(['error' => 'Error fetching members'], 500);
         }
     }
@@ -199,16 +201,10 @@ class DashboardController extends Controller
         ];
 
         $pendingTransactions = Transaction::where('status', 'pending')
-            ->with(['account.member', 'processedBy'])
-            ->latest()
-            ->take(10)
-            ->get();
+            ->with(['account.member', 'processedBy'])->latest()->take(10)->get();
 
         $pendingVouchers = PaymentVoucher::where('status', 'pending')
-            ->with('createdBy')
-            ->latest()
-            ->take(10)
-            ->get();
+            ->with('createdBy')->latest()->take(10)->get();
 
         $dailyTransactionSummary = $this->getDailyTransactionSummary();
 
@@ -221,7 +217,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Loan Officer Dashboard - Loan operations focus
+     * Loan Officer Dashboard 
      */
     public function loanOfficerDashboard()
     {
@@ -247,16 +243,10 @@ class DashboardController extends Controller
         ];
 
         $pendingApplications = Loan::where('status', 'pending')
-            ->with(['member', 'loanProduct'])
-            ->latest()
-            ->take(10)
-            ->get();
+            ->with(['member', 'loanProduct'])->latest()->take(10)->get();
 
         $overdueLoans = Loan::where('days_in_arrears', '>', 0)
-            ->with('member')
-            ->orderBy('days_in_arrears', 'desc')
-            ->take(10)
-            ->get();
+            ->with('member')->orderBy('days_in_arrears', 'desc')->take(10)->get();
 
         $loanPerformanceMetrics = $this->getLoanPerformanceMetrics();
 
@@ -274,7 +264,7 @@ class DashboardController extends Controller
      */
     public function memberDashboard()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $member = $user->member;
 
         if (!$member) {
@@ -289,29 +279,27 @@ class DashboardController extends Controller
                 return redirect()->route('awaiting-payment');
 
             case 'inactive':
-                auth()->logout();
+                Auth::logout();
                 return redirect()->route('login')->with('error', 'Your membership is inactive. Please contact support.');
 
             case 'suspended':
-                auth()->logout();
+                Auth::logout();
                 return redirect()->route('login')->with('error', 'Your membership has been suspended. Contact the SACCO administration for assistance.');
 
             case 'rejected':
-                auth()->logout();
+                Auth::logout();
                 return redirect()->route('login')->with('error', 'Your membership application was rejected. Please reach out to admin for clarification.');
 
             case 'active':
                 break;
 
             default:
-                auth()->logout();
+                Auth::logout();
                 return redirect()->route('login')->with('error', 'Your membership status is invalid. Please contact support.');
         }
 
 
-        $accounts = Account::where('member_id', $member->id)
-            ->get()
-            ->keyBy('account_type');
+        $accounts = Account::where('member_id', $member->id)->get()->keyBy('account_type');
 
         $stats = [
             'accounts' => [
@@ -332,21 +320,13 @@ class DashboardController extends Controller
         ];
 
         $recentTransactions = Transaction::where('member_id', $member->id)
-            ->with('account')
-            ->latest()
-            ->take(10)
-            ->get();
+            ->with('account')->latest()->take(10)->get();
 
         $activeLoans = Loan::where('member_id', $member->id)
-            ->whereIn('status', Loan::RUNNING_STATUSES)
-            ->with('loanProduct')
-            ->get();
+            ->whereIn('status', Loan::RUNNING_STATUSES)->with('loanProduct')->get();
 
         $notifications = Notification::where('user_id', $user->id)
-            ->where('is_read', false)
-            ->latest()
-            ->take(5)
-            ->get();
+            ->where('is_read', false)->latest()->take(5)->get();
 
         return Inertia::render('Dashboard', [
             'member' => $member,

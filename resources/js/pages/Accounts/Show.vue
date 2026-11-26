@@ -288,7 +288,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ArrowLeft } from 'lucide-vue-next';
@@ -309,7 +309,6 @@ watch(
             flashType.value = 'error';
         }
 
-        // Auto hide after 3 seconds
         if (flashMessage.value) {
             setTimeout(() => {
                 flashMessage.value = null;
@@ -319,11 +318,7 @@ watch(
     { immediate: true, deep: true },
 );
 
-const props = defineProps({
-    account: Object,
-    recentTransactions: Array,
-    stats: Object,
-});
+
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-KE', {

@@ -21,7 +21,7 @@ use App\Services\LoanMigrationImportService;
 class LoanMigrationController extends Controller
 {
 
-    protected $loanMigrationImportService;
+    protected LoanMigrationImportService $loanMigrationImportService;
 
     public function __construct(LoanMigrationImportService $loanMigrationImportService)
     {
@@ -33,11 +33,6 @@ class LoanMigrationController extends Controller
     public function index(Request $request): Response
     {
         $user = Auth::user();
-
-        /*
-         * Only authorized staff should access
-         * the migration module.
-         */
         abort_unless(
             $user && $this->canAccessMigration($user),
             403
@@ -52,16 +47,10 @@ class LoanMigrationController extends Controller
             ])
             ->latest();
 
-        /*
-         * Optional status filter.
-         */
         if ($request->filled('status')) {
             $query->where('status', $request->string('status')->toString());
         }
 
-        /*
-         * Optional search.
-         */
         if ($request->filled('search')) {
             $search = $request->string('search')->toString();
 
@@ -75,9 +64,7 @@ class LoanMigrationController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        /*
-         * Dashboard statistics.
-         */
+  
         $statistics = [
             'total_batches' => LoanMigrationBatch::count(),
 
@@ -184,8 +171,7 @@ class LoanMigrationController extends Controller
 
         /*
          * Generate the batch number inside a transaction
-         * to reduce the possibility of duplicate numbers.
-         */
+\         */
         $batch = DB::transaction(function () use ($validated, $user) {
 
             $batchNumber = $this->generateNextBatchNumber();
@@ -246,12 +232,6 @@ class LoanMigrationController extends Controller
 
     /**
      * Generate the next migration batch number.
-     *
-     * Example:
-     *
-     * MIG-2026-001
-     * MIG-2026-002
-     * MIG-2026-003
      */
     private function generateNextBatchNumber(): string
     {
@@ -285,10 +265,7 @@ class LoanMigrationController extends Controller
     }
 
     /**
-     * Determine whether the user can access
-     * the migration module.
-     *
-     * Members must never access migration.
+     * Determine whether the user can access the migration module.
      */
     private function canAccessMigration(User $user): bool
     {
@@ -299,9 +276,9 @@ class LoanMigrationController extends Controller
             'Accounts Officer',
         ]);
     }
+
     /**
-     * Determine whether the user can create
-     * and capture migration records.
+     * Determine whether the user can create and capture migration records.
      */
     private function canCreateBatch($user): bool
     {
@@ -314,22 +291,14 @@ class LoanMigrationController extends Controller
 
     /**
      * Check the application's user role.
-     *
-     * This supports the common role implementations
-     * used by Laravel applications.
      */
     private function hasRole($user, array $roles): bool
     {
-        /*
-         * Spatie Laravel Permission.
-         */
+   
         if (method_exists($user, 'hasAnyRole')) {
             return $user->hasAnyRole($roles);
         }
 
-        /*
-         * Single role attribute.
-         */
         if (isset($user->role)) {
             return in_array(
                 $user->role,
@@ -338,9 +307,6 @@ class LoanMigrationController extends Controller
             );
         }
 
-        /*
-         * Role relationship.
-         */
         if (
             method_exists($user, 'roles') &&
             $user->relationLoaded('roles')
@@ -421,9 +387,7 @@ class LoanMigrationController extends Controller
 
 
     /**
-     * Store a single, manually-entered migration record
-     * inside a batch (the counterpart to createRecord(),
-     * which only renders the form).
+     * Store a single migration record
      */
     public function storeRecord(Request $request, LoanMigrationBatch $batch): RedirectResponse
     {
@@ -467,12 +431,6 @@ class LoanMigrationController extends Controller
 
                 'validation_status' => LoanMigrationRecordValidationStatus::PENDING->value,
             ]);
-
-            /*
-             * Keep the batch's running totals in sync so the
-             * dashboard statistics stay correct without a
-             * separate recalculation job.
-             */
             $batch->increment('total_records');
             $batch->increment('total_original_amount', $validated['original_amount']);
             $batch->increment('total_amount_paid', $validated['amount_paid']);

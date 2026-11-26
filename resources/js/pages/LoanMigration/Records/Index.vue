@@ -117,21 +117,6 @@ const formatCurrency = (value: number | string | null | undefined) => {
     }).format(Number.isNaN(number) ? 0 : number);
 };
 
-const formatDate = (value: string | null | undefined) => {
-    if (!value) return '—';
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return '—';
-    }
-
-    return new Intl.DateTimeFormat('en-KE', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    }).format(date);
-};
 
 const getStatusLabel = (status: string | null | undefined) => {
     if (!status) return 'Unknown';

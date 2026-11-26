@@ -4,26 +4,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { AlertTriangle, ArrowUpRight, BarChart3, ClipboardCheck, HandCoins, TrendingUp, Wallet } from 'lucide-vue-next';
 
-const props = defineProps<{
-    stats: {
-        financial_summary: {
-            total_assets: number;
-            loan_portfolio: number;
-            monthly_income: number;
-            monthly_expenses: number;
-        };
-        performance: {
-            portfolio_at_risk: number;
-            loan_recovery_rate: number;
-            member_growth_rate: number;
-        };
-        compliance: {
-            overdue_vouchers: number;
-            pending_reviews: number;
-        };
-    };
-    loanPortfolioAnalysis: Array<{ name: string; count: number; total_outstanding: number }>;
-}>();
 
 const fmt = (v: number) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(v);
 </script>

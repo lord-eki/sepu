@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, ArrowLeft, BadgeCheck, Loader2, ShieldCheck, XCircle } from 'lucide-vue-next';

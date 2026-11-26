@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLoanProductRequest;
+use App\Http\Requests\UpdateLoanProductRequest;
 use App\Models\LoanProduct;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,33 +33,9 @@ class LoanProductController extends Controller
     /**
      * Store a newly created loan product.
      */
-    public function store(Request $request)
+    public function store(StoreLoanProductRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:loan_products,code',
-            'description' => 'required|string',
-            'min_amount' => 'required|numeric|min:0',
-            'max_amount' => 'required|numeric|gt:min_amount',
-            'interest_rate' => 'required|numeric|min:0|max:100',
-            'min_term_months' => 'required|integer|min:1',
-            'max_term_months' => 'required|integer|gt:min_term_months',
-            'processing_fee_rate' => 'required|numeric|min:0|max:100',
-            'insurance_rate' => 'required|numeric|min:0|max:100',
-            'grace_period_days' => 'required|integer|min:0',
-            'penalty_rate' => 'required|numeric|min:0|max:100',
-            'eligibility_criteria' => 'required|array',
-            'eligibility_criteria.minimum_membership_months' => 'required|integer|min:0',
-            'eligibility_criteria.minimum_shares_balance' => 'required|numeric|min:0',
-            'eligibility_criteria.maximum_loan_to_shares_ratio' => 'required|numeric|min:0',
-            'eligibility_criteria.maximum_salary_deduction_ratio' => 'required|numeric|min:0|max:1',
-            'eligibility_criteria.clean_credit_history' => 'required|boolean',
-            'eligibility_criteria.regular_deposits_required' => 'required|boolean',
-            'required_documents' => 'required|array',
-            'requires_guarantor' => 'required|boolean',
-            'min_guarantors' => 'required|integer|min:0',
-            'is_active' => 'required|boolean',
-        ]);
+        $validated = $request->validated();
 
         LoanProduct::create($validated);
 
@@ -88,27 +66,9 @@ class LoanProductController extends Controller
     /**
      * Update the specified loan product.
      */
-    public function update(Request $request, LoanProduct $loanProduct)
+    public function update(UpdateLoanProductRequest $request, LoanProduct $loanProduct)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:loan_products,code,' . $loanProduct->id,
-            'description' => 'required|string',
-            'min_amount' => 'required|numeric|min:0',
-            'max_amount' => 'required|numeric|gt:min_amount',
-            'interest_rate' => 'required|numeric|min:0|max:100',
-            'min_term_months' => 'required|integer|min:1',
-            'max_term_months' => 'required|integer|gt:min_term_months',
-            'processing_fee_rate' => 'required|numeric|min:0|max:100',
-            'insurance_rate' => 'required|numeric|min:0|max:100',
-            'grace_period_days' => 'required|integer|min:0',
-            'penalty_rate' => 'required|numeric|min:0|max:100',
-            'eligibility_criteria' => 'required|array',
-            'required_documents' => 'required|array',
-            'requires_guarantor' => 'required|boolean',
-            'min_guarantors' => 'required|integer|min:0',
-            'is_active' => 'required|boolean',
-        ]);
+        $validated = $request->validated();
 
         $loanProduct->update($validated);
 
@@ -121,7 +81,6 @@ class LoanProductController extends Controller
      */
     public function destroy(LoanProduct $loanProduct)
     {
-        // Check if product has associated loans
         if ($loanProduct->loans()->count() > 0) {
             return back()->with('error', 'Cannot delete loan product with existing loans. Consider deactivating it instead.');
         }

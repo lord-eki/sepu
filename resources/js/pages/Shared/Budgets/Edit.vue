@@ -333,19 +333,17 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
-const search = ref('');
 
 const page = usePage();
 
 const flashMessage = ref(page.props.flash?.success || page.props.flash?.error);
 const flashType = ref(page.props.flash?.success ? 'success' : 'error');
 
-const itemRefs = ref([]);
 
 const addBudgetItem = () => {
     form.budget_items.push({
@@ -391,7 +389,6 @@ const form = useForm({
 
 const processing = ref(false);
 
-// Initialize budget items from existing data
 onMounted(() => {
     form.budget_items = (props.budget.budget_items || []).map((item) => ({
         chart_of_account_id: item.chart_of_account_id,
@@ -402,7 +399,6 @@ onMounted(() => {
     calculateTotalBudget();
 });
 
-// Watch for budget year changes to update title and default dates
 watch(
     () => form.budget_year,
     (newYear) => {
@@ -417,11 +413,7 @@ watch(
 const showDeleteConfirm = ref(false);
 const deleteIndex = ref(null);
 
-const filteredItems = computed(() => {
-    return form.budget_items.filter(
-        (i) => i.item_name.toLowerCase().includes(search.value.toLowerCase()) || i.category.toLowerCase().includes(search.value.toLowerCase()),
-    );
-});
+
 
 const confirmDelete = (index) => {
     deleteIndex.value = index;

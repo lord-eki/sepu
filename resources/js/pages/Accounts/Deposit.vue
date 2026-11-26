@@ -197,7 +197,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 
 const page = usePage();
 const authUser = page.props.auth;
@@ -211,8 +211,6 @@ const isMemberRole = computed(() => authUser.user.role?.includes('member'));
 const isAdmin = computed(() => authUser.user.role?.includes('admin'));
 const depositLocked = computed(() => !isAdmin.value);
 
-const successMessage = ref(null);
-const errorMessages = ref(null);
 
 const form = useForm({
     amount: '',

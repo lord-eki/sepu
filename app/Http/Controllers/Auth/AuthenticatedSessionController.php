@@ -37,7 +37,6 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // Force password change first
         if ($user->must_change_password) {
             return redirect()->route('password.change.form');
         }

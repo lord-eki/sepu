@@ -537,22 +537,13 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, CheckCircle, CloudUpload, User } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
-// Props
-const props = defineProps({
-    membershipId: String,
-    idTypes: Object,
-    genders: Object,
-    maritalStatuses: Object,
-    errors: Object,
-});
 
-// Flash handling
 const page = usePage();
 const flash = computed(() => page.value?.props?.flash || {});
 const flashMessage = ref(null);
@@ -599,8 +590,7 @@ const form = useForm({
     employer: '',
     monthly_income: '',
 
-    // password setup options
-    password_type: 'id_number', // id_number | custom
+    password_type: 'id_number', 
     custom_password: '',
     must_change_password: true,
 
@@ -611,23 +601,19 @@ const form = useForm({
     emergency_contact_relationship: '',
 });
 
-// File upload state
 const selectedDocuments = ref([]);
 const photoPreview = ref(null);
 
-// Confirm Password Check
-const passwordsMatch = computed(() => form.password === form.password_confirmation);
 
 watch(
     () => form.id_number,
-    (value) => {
+    () => {
         if (form.password_type === 'id_number') {
             form.custom_password = '';
         }
     },
 );
 
-// Required Fields Check
 const formValid = computed(() => {
     return (
         form.first_name &&

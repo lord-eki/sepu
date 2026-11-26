@@ -2,16 +2,6 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 
-const props = defineProps<{
-    loans: Array<any>;
-    arrears_analysis: Record<string, { count: number; total_outstanding: number; percentage: number }>;
-    summary: {
-        total_loans_in_arrears: number;
-        total_amount_in_arrears: number;
-        average_days_in_arrears: number;
-        portfolio_at_risk_ratio: number;
-    };
-}>();
 
 function money(value: number) {
     return new Intl.NumberFormat('en-KE', {

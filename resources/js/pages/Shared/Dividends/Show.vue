@@ -517,7 +517,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import Pagination from '@/components/Pagination.vue';
 import TextArea from '@/components/TextArea.vue';

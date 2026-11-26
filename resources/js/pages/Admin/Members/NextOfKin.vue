@@ -93,7 +93,7 @@
 
                 <!-- Next of Kin List -->
                 <div class="space-y-6" v-if="nextOfKin.length > 0">
-                    <div v-for="(kin, index) in nextOfKin" :key="kin.id" class="overflow-hidden rounded-lg bg-white shadow">
+                    <div v-for="(kin) in nextOfKin" :key="kin.id" class="overflow-hidden rounded-lg bg-white shadow">
                         <div class="px-6 py-4">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
@@ -304,18 +304,14 @@
     </AppLayout>
 </template>
 
-<script>
+<script lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { ArrowLeftIcon, PencilIcon, PlusIcon, TrashIcon, UserIcon, UsersIcon } from '@heroicons/vue/24/outline';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import {  Link, router, usePage } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
-const page = usePage();
 
 export default {
     components: {
-        AppLayout,
-        Head,
-        Link,
         ArrowLeftIcon,
         PlusIcon,
         UserIcon,
@@ -343,13 +339,11 @@ export default {
             date_of_birth: '',
             address: '',
         });
-        // Flash handling
         const page = usePage();
         const flash = computed(() => page.props.flash || {});
         const flashMessage = ref(null);
         const flashType = ref('success');
         const flashBox = ref(null);
-        const isLoading = ref(false);
 
         watch(
             flash,

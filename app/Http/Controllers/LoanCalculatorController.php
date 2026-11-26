@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CalculateLoanRequest;
 use App\Models\LoanProduct;
 use App\Services\Loans\LoanCalculatorService;
 use Illuminate\Http\Request;
@@ -38,14 +39,9 @@ class LoanCalculatorController extends Controller
     /**
      * Calculate loan
      */
-    public function calculate(Request $request)
+    public function calculate(CalculateLoanRequest $request)
     {
-        $validated = $request->validate([
-            'loan_product_id'    => 'required|exists:loan_products,id',
-            'principal_amount'   => 'required|numeric|min:1',
-            'term_months'        => 'required|integer|min:1',
-            'member_id'          => 'nullable|exists:members,id',
-        ]);
+        $validated = $request->validated();
 
         $loanProduct     = LoanProduct::findOrFail($validated['loan_product_id']);
         $principalAmount = $validated['principal_amount'];
@@ -131,7 +127,7 @@ class LoanCalculatorController extends Controller
     /**
      * Get loan product details
      */
-    public function getLoanProduct($id)
+    public function getLoanProduct(int $id)
     {
         $loanProduct = LoanProduct::where('id', $id)
             ->where('is_active', true)

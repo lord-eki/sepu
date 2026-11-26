@@ -195,7 +195,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Pagination from '@/components/Pagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';

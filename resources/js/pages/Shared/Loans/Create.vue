@@ -463,7 +463,7 @@
                                         <strong class="mb-1 block text-sm">Uploaded Documents:</strong>
                                         <ul class="list-disc space-y-1 pl-5 text-sm">
                                             <li
-                                                v-for="(file, index) in uploadedFiles.multiple"
+                                                v-for="(file) in uploadedFiles.multiple"
                                                 :key="file.type"
                                                 class="flex items-center justify-between"
                                             >
@@ -677,7 +677,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -758,33 +758,27 @@ const filteredMembers = (index) => {
     });
 };
 
-const selectedGuarantorIds = computed(() => form.guarantors.map((g) => g.member_id).filter(Boolean));
 
 const selectedMember = ref(null);
 const selectedProduct = ref(null);
 const loanCalculation = ref(null);
 
-/* --- NEW: eligibility state and debounce timer --- */
 const eligibility = reactive({
     checking: false,
     eligible: true,
     reason: '',
 });
 let eligibilityDebounceTimer = null;
-/* -------------------------------------------------- */
 
-/* Watch relevant fields to recalculate repayment */
 watch([() => form.applied_amount, () => form.term_months, () => form.loan_product_id], () => {
     calculateRepayment();
 });
 
-/* uploaded files: single combined PDF */
 const uploadedFiles = reactive({
     combined: null,
     multiple: [],
 });
 
-/* derived */
 const isMemberRole = computed(() => props.auth.user.role === 'member');
 
 const memberInfo = computed(() => {
@@ -792,17 +786,14 @@ const memberInfo = computed(() => {
     return selectedMember.value || {};
 });
 
-/* initialize if member */
 if (isMemberRole.value && props.auth.user.member) {
     form.member_id = props.auth.user.member.id;
     selectedMember.value = props.auth.user.member;
 }
 
-/* helpers */
 const onMemberChange = () => {
     selectedMember.value = props.members.find((m) => m.id == form.member_id);
 
-    // RESET DOCUMENTS
     uploadedFiles.multiple = [];
     uploadedFiles.combined = null;
     selectedDocType.value = null;
@@ -810,7 +801,6 @@ const onMemberChange = () => {
         supportFileInput.value.value = '';
     }
 
-    // (optional but recommended)
     form.guarantors = [];
 
     triggerEligibilityCheckDebounced();
@@ -822,7 +812,6 @@ const onProductChange = () => {
     triggerEligibilityCheckDebounced();
 };
 
-/* --- NEW: watch applied_amount and term to trigger eligibility checks --- */
 watch(
     () => form.applied_amount,
     () => {
@@ -835,7 +824,6 @@ watch(
         triggerEligibilityCheckDebounced();
     },
 );
-/* --------------------------------------------------------------- */
 
 const calculateRepayment = async () => {
     if (!form.loan_product_id || !form.applied_amount || !form.term_months) {
@@ -866,13 +854,11 @@ const calculateRepayment = async () => {
     }
 };
 
-/* guarantor functions */
 const addGuarantor = () => {
     form.guarantors.push({ member_id: '', guaranteed_amount: '' });
 };
 const removeGuarantor = (index) => form.guarantors.splice(index, 1);
 
-// For dynamic support documents
 const showDocTypeSelector = ref(false);
 const selectedDocType = ref(null);
 const supportFileInput = ref(null);
@@ -889,7 +875,7 @@ const remainingDocTypes = computed(() => docTypes.filter((doc) => !uploadedFiles
 function chooseDocType(type) {
     selectedDocType.value = type;
     showDocTypeSelector.value = false;
-    supportFileInput.value.click(); // trigger file chooser
+    supportFileInput.value.click(); 
 }
 
 function handleSupportFiles(event) {
@@ -900,7 +886,6 @@ function handleSupportFiles(event) {
         return;
     }
 
-    // prevent duplicates
     if (uploadedFiles.multiple.some((f) => f.type === selectedDocType.value)) {
         alert(`${selectedDocType.value} is already attached.`);
         return;
@@ -908,7 +893,7 @@ function handleSupportFiles(event) {
 
     uploadedFiles.multiple.push({ type: selectedDocType.value, file });
     selectedDocType.value = null;
-    supportFileInput.value.value = ''; // reset input
+    supportFileInput.value.value = ''; 
 }
 
 function removeSingleFile(type) {
@@ -919,7 +904,6 @@ function removeSupportFiles() {
     uploadedFiles.multiple.splice(0);
 }
 
-/* human readable filesize */
 function humanFileSize(bytes) {
     if (!bytes) return '0 B';
     const thresh = 1024;
@@ -933,19 +917,12 @@ function humanFileSize(bytes) {
     return bytes.toFixed(1) + ' ' + units[u];
 }
 
-/* ---  Eligibility check helpers --- */
 
-/**
- * Calls the server endpoint to check eligibility.
- * Returns the server response data or throws.
- */
 async function checkEligibilityServer() {
-    // Require mandatory fields before sending request
     if (!form.member_id || !form.loan_product_id || !form.applied_amount) {
-        return { eligible: true }; // allow UI to remain usable until filled
+        return { eligible: true }; 
     }
 
-    // Ensure eligibility object always exists
     if (!eligibility) {
         eligibility = {};
     }
@@ -961,11 +938,9 @@ async function checkEligibilityServer() {
 
         const response = await axios.post(route('members.loans.check-eligibility'), payload);
 
-        // Safely handle possibly missing data
         const data = response?.data ?? {};
         const respData = data.data ?? {};
 
-        // Extract fields safely
         const eligible = !!respData?.eligible;
         const reason = respData?.messages?.length
             ? respData.messages.join('\n')
@@ -973,17 +948,14 @@ async function checkEligibilityServer() {
               respData?.message ||
               (eligible ? 'Member is eligible for this loan product' : 'Member is not eligible for this loan product');
 
-        // Assign the results safely (create missing keys if needed)
         eligibility.eligible = eligible;
         eligibility.reason = reason;
         eligibility.requirements = respData?.requirements || {};
         eligibility.maxLoanAmount = respData?.max_loan_amount || null;
 
-        // Handle frontend validation errors
         if (!eligible) {
             showMessage('error', null, { eligibility: [reason] });
         } else if (errorMessages.value && typeof errorMessages.value === 'object' && errorMessages.value?.eligibility) {
-            // Clear old eligibility errors
             const em = { ...errorMessages.value };
             delete em.eligibility;
             errorMessages.value = Object.keys(em).length ? em : null;
@@ -1000,31 +972,25 @@ async function checkEligibilityServer() {
     }
 }
 
-/**
- * Debounced trigger for real-time eligibility checks
- */
+
 function triggerEligibilityCheckDebounced() {
-    // clear previous timer
     if (eligibilityDebounceTimer) clearTimeout(eligibilityDebounceTimer);
 
-    // if not enough data, skip
     if (!form.member_id || !form.loan_product_id || !form.applied_amount) {
         eligibility.eligible = true;
         eligibility.reason = '';
         return;
     }
 
-    // small debounce to avoid spamming server
     eligibilityDebounceTimer = setTimeout(async () => {
         try {
             await checkEligibilityServer();
         } catch (e) {
-            // already handled in checkEligibilityServer (showMessage)
+            console.log(e);
         }
     }, 500);
 }
 
-/* Trigger initial check when relevant props change (members/products) */
 watch(
     () => form.member_id,
     () => {
@@ -1052,9 +1018,7 @@ const hasMandatoryPayslip = computed(() => uploadedFiles.multiple.some((f) => f.
 
 const hasGuarantor = computed(() => form.guarantors.some((g) => g.member_id));
 
-/* --------------------------------------------------------------- */
 
-/* submit controls - updated to include eligibility check */
 const canSubmit = computed(() => {
     const hasBasicInfo = !!form.member_id && !!form.loan_product_id && !!form.applied_amount && !!form.term_months && !!form.purpose;
 
@@ -1069,8 +1033,6 @@ const canSubmit = computed(() => {
 
     const hasDocuments = uploadedFiles.combined !== null || (Array.isArray(uploadedFiles.multiple) && uploadedFiles.multiple.length > 0);
 
-    // Also require that eligibility has been checked and is true.
-    // If eligibility.checking is true, we conservatively disallow submit (to avoid race).
     const eligibilityOk = eligibility.eligible === true && !eligibility.checking;
 
     return (
@@ -1078,7 +1040,6 @@ const canSubmit = computed(() => {
     );
 });
 
-/* feedback helper */
 const showMessage = (type, message, errors = null, callback = null) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (type === 'success') {
@@ -1095,7 +1056,6 @@ const showMessage = (type, message, errors = null, callback = null) => {
     }, 8000);
 };
 
-/* reset form */
 const resetForm = () => {
     form.member_id = isMemberRole.value ? props.auth.user.member?.id || '' : '';
     form.loan_product_id = '';
@@ -1110,17 +1070,13 @@ const resetForm = () => {
     disbursementMethod.value = '';
     Object.assign(disbursementDetails, { mpesaNumber: '', bankName: '', branch: '', accountNumber: '', payee: '' });
 
-    // reset eligibility
     eligibility.checking = false;
     eligibility.eligible = true;
     eligibility.reason = '';
 };
 
-/* submit flow (confirm -> send) */
 const submitApplication = () => {
-    // attempt to run a final eligibility check before showing confirm modal.
-    // If eligibility fails, show error and don't open confirm modal.
-    // If check throws network error, we block submission and show message.
+
     if (!hasGuarantor.value) {
         showMessage('error', 'Please add at least one guarantor before submitting.');
         return;
@@ -1164,15 +1120,13 @@ const submitApplication = () => {
     checkEligibilityServer()
         .then((result) => {
             if (!result.eligible) {
-                // show message and prevent opening confirm
+             
                 showMessage('error', null, { eligibility: [result.reason || 'Member not eligible for this loan'] });
             } else {
-                // open confirmation modal when eligible
                 showConfirm.value = true;
             }
         })
         .catch(() => {
-            // checkEligibilityServer already called showMessage; keep confirm closed
         })
         .finally(() => {
             processing.value = false;
@@ -1183,20 +1137,17 @@ const confirmSubmit = async () => {
     showConfirm.value = false;
     processing.value = true;
 
-    // Clean guarantors
     form.guarantors = form.guarantors.filter((g) => g.member_id && g.guaranteed_amount);
 
     try {
         const formData = new FormData();
 
-        // Basic fields
         formData.append('member_id', form.member_id);
         formData.append('loan_product_id', form.loan_product_id);
         formData.append('applied_amount', form.applied_amount);
         formData.append('term_months', form.term_months);
         formData.append('purpose', form.purpose);
 
-        // Disbursement
         formData.append('disbursement_method', disbursementMethod.value);
 
         if (disbursementMethod.value === 'mpesa') {
@@ -1213,19 +1164,16 @@ const confirmSubmit = async () => {
             formData.append('payee', disbursementDetails.payee);
         }
 
-        // Guarantors
         form.guarantors.forEach((g, index) => {
             formData.append(`guarantors[${index}][member_id]`, g.member_id);
             formData.append(`guarantors[${index}][guaranteed_amount]`, g.guaranteed_amount);
         });
 
-        // Files
         uploadedFiles.multiple.forEach((fileObj, index) => {
             formData.append(`documents[${index}]`, fileObj.file);
             formData.append(`document_types[${index}]`, fileObj.type);
         });
 
-        // Send request
         const response = await axios.post(route('loans.store'), formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
@@ -1257,18 +1205,14 @@ const confirmSubmit = async () => {
     }
 };
 
-// eligibility state
 const isEligible = ref(true);
 const ineligibleReasons = ref([]);
 
-/**
- * Checks loan eligibility
- */
+
 const checkEligibility = async () => {
-    // Assign fallback values if not provided
     const memberId = form.member_id;
-    const productId = form.loan_product_id || 1; // fallback to first product ID or 1
-    const amount = form.applied_amount || 1; // fallback to 0
+    const productId = form.loan_product_id || 1; 
+    const amount = form.applied_amount || 1; 
 
     if (!memberId) {
         console.log('No member ID available for eligibility check');
@@ -1295,7 +1239,6 @@ const checkEligibility = async () => {
     }
 };
 
-// Run automatically for member role
 onMounted(() => {
     if (isMemberRole.value && props.auth?.user?.member?.id) {
         form.member_id = props.auth.user.member.id;
@@ -1304,7 +1247,6 @@ onMounted(() => {
     }
 });
 
-// Run automatically for admin when selecting a member
 watch(
     () => form.member_id,
     (newVal) => {
@@ -1332,7 +1274,6 @@ const resetMemberSelection = () => {
 </script>
 
 <style scoped>
-/* small extras to enhance the modern feel (feel free to move into your global styles) */
 input[type='file'] {
     display: none;
 }

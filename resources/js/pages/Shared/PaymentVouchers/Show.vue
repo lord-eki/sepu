@@ -665,7 +665,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Modal from '@/components/Modal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
@@ -721,7 +721,6 @@ const actionsRoot = ref(null);
 
 // Flash handling
 const page = usePage();
-const flash = computed(() => page.props?.flash || {});
 
 const flashMessage = ref(null);
 const flashType = ref('success');
@@ -805,12 +804,7 @@ function formatStatus(s) {
     return map[s] || s || '—';
 }
 
-function formatAccount(acc) {
-    if (!acc) return '—';
-    const name = acc.account_name || acc.name || '—';
-    const number = acc.account_number || '—';
-    return `${name} (${number})`;
-}
+
 
 function formatVoucherType(t) {
     const map = {

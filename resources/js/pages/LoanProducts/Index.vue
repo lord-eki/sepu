@@ -180,7 +180,7 @@ const deleting = ref(false);
 
 const showStatusModal = ref(false);
 const statusProduct = ref<any>(null);
-const statusAction = ref(''); // 'Activate' or 'Deactivate'
+const statusAction = ref(''); 
 const statusProcessing = ref(false);
 
 const headers = ['#', 'Name', 'Code', 'Interest Rate', 'Range (Ksh)', 'Status', 'Actions'];
@@ -232,7 +232,6 @@ function deleteProduct() {
     router.delete(route('loan-products.destroy', selectedProduct.value.id), {
         onSuccess: (page) => {
             showFlashMsg(page.props.flash.success || page.props.flash.error, !!page.props.flash.error);
-            // remove deleted product from the list immediately
             const index = props.loanProducts.findIndex((p) => p.id === selectedProduct.value.id);
             if (index !== -1) props.loanProducts.splice(index, 1);
         },
@@ -264,7 +263,6 @@ function confirmStatusChange() {
                 const isError = !!page.props.flash.error;
                 showFlashMsg(message, isError);
 
-                // update UI immediately
                 statusProduct.value.is_active = !statusProduct.value.is_active;
             },
             onError: () => showFlashMsg('Error updating status.', true),

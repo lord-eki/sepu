@@ -248,7 +248,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, CheckCircle, User } from 'lucide-vue-next';

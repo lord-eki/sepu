@@ -51,12 +51,6 @@ function confirmDelete(id: number) {
     showDeleteModal.value = true;
 }
 
-function deleteAccount() {
-    if (deleteTargetId.value) {
-        router.delete(route('chart-of-accounts.destroy', deleteTargetId.value));
-        showDeleteModal.value = false;
-    }
-}
 </script>
 
 <template>

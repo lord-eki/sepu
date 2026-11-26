@@ -4,29 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { CreditCard, FileCheck, FileWarning, Landmark, Wallet } from 'lucide-vue-next';
 
-const props = defineProps<{
-    stats: {
-        accounts: {
-            total_share_deposits: number;
-            total_share_capital: number;
-        };
-        transactions: {
-            pending: number;
-            today_volume: number;
-            today_count: number;
-        };
-        vouchers: {
-            pending_approval: number;
-            approved_unpaid: number;
-            total_pending_amount: number;
-        };
-    };
-    pendingTransactions: Array<any>;
-    pendingVouchers: Array<any>;
-    dailyTransactionSummary: Array<any>;
-}>();
 
-// Safe currency formatter
 const fmt = (v: number | string | null | undefined) => {
     const num = parseFloat(v as string);
     if (isNaN(num)) return 'KES 0';

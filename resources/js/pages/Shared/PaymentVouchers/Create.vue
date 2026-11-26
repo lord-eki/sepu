@@ -374,7 +374,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowBigLeft, Cross, File } from 'lucide-vue-next';
@@ -387,9 +387,7 @@ const props = defineProps({
     members: Array,
 });
 
-// Flash handling
 const page = usePage();
-const flash = computed(() => page.props?.flash || {});
 
 const flashMessage = ref(null);
 const flashType = ref('success');
@@ -530,13 +528,11 @@ const handleFileUpload = (event) => {
     const validFiles = [];
 
     files.forEach((file) => {
-        // Validate file size (5MB max)
         if (file.size > 5 * 1024 * 1024) {
             alert(`File ${file.name} is too large. Maximum size is 5MB.`);
             return;
         }
 
-        // Validate file type
         const allowedTypes = [
             'application/pdf',
             'application/msword',
@@ -558,7 +554,6 @@ const handleFileUpload = (event) => {
         form.supporting_documents = [...(form.supporting_documents || []), ...validFiles];
     }
 
-    // Clear the input
     event.target.value = '';
 };
 
@@ -574,18 +569,12 @@ const formatFileSize = (bytes) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-KE', {
-        style: 'currency',
-        currency: 'KES',
-    }).format(amount);
-};
+
 
 const submit = () => {
     form.post(route('vouchers.store'), {
         forceFormData: true,
         onSuccess: () => {
-            // Form will redirect on success
             console.log('Voucher created successfully');
         },
         onError: (errors) => {

@@ -2,35 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreChartOfAccountRequest;
 use App\Models\AccountCategory;
 use App\Models\ChartOfAccount;
+use App\Support\AccountTypes;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class ChartOfAccountController extends Controller
 {
-    public const ACCOUNT_TYPES = [
-        'asset'        => 'Asset',
-        'liability'    => 'Liability',
-        'equity'       => 'Equity',
-        'revenue'      => 'Income / Revenue',
-        'expense'      => 'Expense',
-        'contra_asset' => 'Contra Asset',
-        'header'       => 'Header / Group',
-    ];
+
 
     public const ACCOUNT_CATEGORIES = [];
 
-    /**
-     * Returns all categories from the DB as an array of objects.
-     */
+    // all categories .
+
     private function getCategories(): array
     {
         return AccountCategory::orderBy('label')->get(['id', 'key', 'label', 'is_system'])->toArray();
     }
 
-    // ── INDEX ────────────────────────────────────────────────────────────
-
+    //Index
     public function index(Request $request)
     {
         $query = ChartOfAccount::with('parentAccount')->orderBy('account_code');
@@ -39,7 +32,7 @@ class ChartOfAccountController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('account_code',  'like', "%{$s}%")
-                  ->orWhere('account_name', 'like', "%{$s}%");
+                    ->orWhere('account_name', 'like', "%{$s}%");
             });
         }
 
@@ -66,9 +59,9 @@ class ChartOfAccountController extends Controller
             'total'    => ChartOfAccount::count(),
             'active'   => ChartOfAccount::where('is_active', true)->count(),
             'postable' => ChartOfAccount::whereNotIn('account_type', ['header'])
-                            ->whereDoesntHave('childAccounts')->count(),
+                ->whereDoesntHave('childAccounts')->count(),
             'by_type'  => ChartOfAccount::selectRaw('account_type, count(*) as count')
-                            ->groupBy('account_type')->pluck('count', 'account_type'),
+                ->groupBy('account_type')->pluck('count', 'account_type'),
         ];
 
         return Inertia::render('Finance/ChartOfAccounts/Index', [
@@ -76,35 +69,26 @@ class ChartOfAccountController extends Controller
             'tree'              => $tree,
             'stats'             => $stats,
             'filters'           => $request->only(['search', 'type', 'status']),
-            'accountTypes'      => self::ACCOUNT_TYPES,
+            'accountTypes'      => AccountTypes::ACCOUNT_TYPES,
             'accountCategories' => $this->getCategories(),
         ]);
     }
 
-    // ── CREATE ───────────────────────────────────────────────────────────
+    // create 
 
     public function create()
     {
         return Inertia::render('Finance/ChartOfAccounts/Create', [
             'parentAccounts'    => $this->getParentOptions(),
-            'accountTypes'      => self::ACCOUNT_TYPES,
+            'accountTypes'      => AccountTypes::ACCOUNT_TYPES,
             'accountCategories' => $this->getCategories(),
         ]);
     }
 
-    public function store(Request $request)
+    //Persist a chart of account
+    public function store(StoreChartOfAccountRequest $request)
     {
-        $data = $request->validate([
-            'account_code'      => 'required|string|max:20|unique:charts_of_accounts,account_code',
-            'account_name'      => 'required|string|max:255',
-            'account_type'      => 'required|in:' . implode(',', array_keys(self::ACCOUNT_TYPES)),
-            'account_category'  => 'required|string|max:60|exists:account_categories,key',
-            'normal_balance'    => 'required|in:debit,credit',
-            'parent_account_id' => 'nullable|exists:charts_of_accounts,id',
-            'description'       => 'nullable|string',
-            'opening_balance'   => 'nullable|numeric|min:0',
-            'is_active'         => 'boolean',
-        ]);
+        $data = $request->validated();
 
         $level = 1;
         if (!empty($data['parent_account_id'])) {
@@ -124,8 +108,7 @@ class ChartOfAccountController extends Controller
             ->with('success', "Account {$account->account_code} – {$account->account_name} created successfully.");
     }
 
-    // ── SHOW ─────────────────────────────────────────────────────────────
-
+    //Show chart of account
     public function show(ChartOfAccount $chartOfAccount)
     {
         $chartOfAccount->load(['parentAccount', 'childAccounts.childAccounts']);
@@ -133,18 +116,17 @@ class ChartOfAccountController extends Controller
         return Inertia::render('Finance/ChartOfAccounts/Show', [
             'account'      => $this->formatAccount($chartOfAccount),
             'children'     => $chartOfAccount->childAccounts->map(fn($c) => $this->formatAccount($c)),
-            'accountTypes' => self::ACCOUNT_TYPES,
+            'accountTypes' => AccountTypes::ACCOUNT_TYPES,
         ]);
     }
 
-    // ── EDIT / UPDATE ────────────────────────────────────────────────────
-
+    //edit chart of account
     public function edit(ChartOfAccount $chartOfAccount)
     {
         return Inertia::render('Finance/ChartOfAccounts/Edit', [
             'account'           => $this->formatAccount($chartOfAccount),
             'parentAccounts'    => $this->getParentOptions($chartOfAccount->id),
-            'accountTypes'      => self::ACCOUNT_TYPES,
+            'accountTypes'      => AccountTypes::ACCOUNT_TYPES,
             'accountCategories' => $this->getCategories(),
         ]);
     }
@@ -160,7 +142,7 @@ class ChartOfAccountController extends Controller
         if (!$chartOfAccount->is_system_account) {
             $rules = array_merge($rules, [
                 'account_code'      => "required|string|max:20|unique:charts_of_accounts,account_code,{$chartOfAccount->id}",
-                'account_type'      => 'required|in:' . implode(',', array_keys(self::ACCOUNT_TYPES)),
+                'account_type'      => 'required|in:' . implode(',', array_keys(AccountTypes::ACCOUNT_TYPES)),
                 'account_category'  => 'required|string|max:60|exists:account_categories,key',
                 'normal_balance'    => 'required|in:debit,credit',
                 'parent_account_id' => 'nullable|exists:charts_of_accounts,id',
@@ -188,8 +170,7 @@ class ChartOfAccountController extends Controller
             ->with('success', "Account {$chartOfAccount->account_code} updated successfully.");
     }
 
-    // ── DESTROY ──────────────────────────────────────────────────────────
-
+    //Delete
     public function destroy(ChartOfAccount $chartOfAccount)
     {
         if ($chartOfAccount->is_system_account) {
@@ -206,7 +187,7 @@ class ChartOfAccountController extends Controller
             ->with('success', "Account {$chartOfAccount->account_code} archived successfully.");
     }
 
-    // ── TOGGLE ACTIVE ────────────────────────────────────────────────────
+
 
     public function toggleActive(ChartOfAccount $chartOfAccount)
     {
@@ -220,26 +201,12 @@ class ChartOfAccountController extends Controller
         return back()->with('success', "Account {$chartOfAccount->account_code} {$status}.");
     }
 
-    // ── JSON API ENDPOINTS ───────────────────────────────────────────────
 
-    /**
-     * GET /api/chart-of-accounts/next-code?parent_id=5
-     *
-     * Returns the next available 5-digit account code for a given parent (or root).
-     *
-     * Observed coding scheme (all codes are 5 digits):
-     *   Level 1 – root   : step 10000  →  10000, 20000, 30000, 40000, 50000
-     *   Level 2          : step  1000  →  11000, 12000, 13000  (under 10000)
-     *   Level 3          : step   100  →  11100, 11200, 11300  (under 11000)
-     *   Level 4+         : step     1  →  11201, 11202, 11203  (under 11200)
-     *
-     *      */
     public function nextCode(Request $request)
     {
         $parentId = $request->query('parent_id');
 
         if (!$parentId) {
-            // Root level — multiples of 10000, minimum 10000
             $codes = ChartOfAccount::whereNull('parent_account_id')
                 ->pluck('account_code')
                 ->map(fn($c) => (int) preg_replace('/\D/', '', $c))
@@ -262,17 +229,12 @@ class ChartOfAccountController extends Controller
 
         $parentCode = (int) preg_replace('/\D/', '', $parent->account_code);
 
-        // Step size :
-        //   level 1 → children step by 1000  (e.g. 10000 → 11000, 12000…)
-        //   level 2 → children step by 100   (e.g. 11000 → 11100, 11200…)
-        //   level 3+ → children step by 1    (e.g. 11200 → 11201, 11202…)
         $step = match (true) {
             $parent->level === 1 => 1000,
             $parent->level === 2 => 100,
             default              => 1,
         };
 
-        // Find the highest existing child code
         $maxChild = ChartOfAccount::where('parent_account_id', $parentId)
             ->pluck('account_code')
             ->map(fn($c) => (int) preg_replace('/\D/', '', $c))
@@ -362,9 +324,8 @@ class ChartOfAccountController extends Controller
             'label' => 'required|string|max:120',
         ]);
 
-        $key = \Str::slug($data['label'], '_');
+        $key = Str::slug($data['label'], '_');
 
-        // If the key already exists just return the existing record
         $category = AccountCategory::firstOrCreate(
             ['key' => $key],
             ['label' => $data['label'], 'is_system' => false]
@@ -378,7 +339,7 @@ class ChartOfAccountController extends Controller
         ], 201);
     }
 
-    // ── PRIVATE HELPERS ──────────────────────────────────────────────────
+    //helpers
 
     private function formatAccount(ChartOfAccount $account): array
     {

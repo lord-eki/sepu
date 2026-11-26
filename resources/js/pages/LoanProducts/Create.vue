@@ -247,9 +247,8 @@ const form = useForm({
 });
 
 const showFlash = ref(!!(flash.success || flash.error));
-const rawDocs = ref(''); // textarea string; converted to array on submit;
+const rawDocs = ref(''); 
 
-// Flash auto-hide
 watch(
     () => [flash.success, flash.error],
     () => {
@@ -261,7 +260,6 @@ watch(
     { immediate: true },
 );
 
-// Numeric fields list for loop rendering
 const requiredNumericFields = [
     { key: 'min_amount', label: 'Minimum Amount', placeholder: 'e.g. 1000' },
     { key: 'max_amount', label: 'Maximum Amount', placeholder: 'e.g. 50000' },
@@ -301,22 +299,19 @@ const isFormValid = computed(() => {
     );
 });
 
-// Equivalent annual rate display
 const annualRate = computed(() => {
     const r = parseFloat(form.interest_rate as any);
     return r > 0 ? (r * 12).toFixed(1) : '0.0';
 });
 
-// Submit handler
 function submit() {
-    // Build required_documents array from the textarea string
     form.required_documents = rawDocs.value
         .split(',')
         .map((d) => d.trim())
         .filter(Boolean);
 
     form.post(route('loan-products.store'), {
-        onError: (errors) => {
+        onError: () => {
             flash.error = 'Please correct the highlighted errors and try again.';
             showFlash.value = true;
             setTimeout(() => (showFlash.value = false), 8000);

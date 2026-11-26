@@ -351,7 +351,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -388,8 +388,7 @@ watch(
         }
 
         if (flashMessage.value) {
-            // Scroll to top instantly
-            window.scrollTo({
+         window.scrollTo({
                 top: 0,
                 behavior: 'smooth',
             });
@@ -400,7 +399,6 @@ watch(
     { immediate: true, deep: true },
 );
 
-// Available budget categories (from controller)
 const availableCategories = [
     'Administrative Expenses',
     'Staff Costs',
@@ -420,7 +418,6 @@ const availableCategories = [
 const showAddForm = ref(false);
 const showEditModal = ref(false);
 const addingItem = ref(false);
-const updatingItem = ref(false);
 const editingItem = ref(null);
 
 const newItemForm = ref({
@@ -439,8 +436,6 @@ const editItemForm = ref({
 
 const showDeleteModal = ref(false);
 const deleteItemTarget = ref(null);
-const deletingItem = ref(false);
-
 const openDeleteModal = (item) => {
     if (item.spent_amount > 0) {
         alert('Cannot delete an item that has spent amount.');
@@ -450,21 +445,7 @@ const openDeleteModal = (item) => {
     showDeleteModal.value = true;
 };
 
-const closeDeleteModal = () => {
-    showDeleteModal.value = false;
-    deleteItemTarget.value = null;
-};
 
-const showFlash = (message, type = 'success') => {
-    flashMessage.value = message;
-    flashType.value = type;
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    setTimeout(() => {
-        flashMessage.value = null;
-    }, 5000);
-};
 
 const filteredCategories = computed(() => {
     const results = {};
@@ -472,7 +453,6 @@ const filteredCategories = computed(() => {
     Object.entries(localItems.value || {}).forEach(([category, items]) => {
         if (!Array.isArray(items)) return;
 
-        // Filter by selected category
         if (selectedCategory.value && selectedCategory.value !== category) return;
 
         const filteredItems = items.filter(
@@ -489,24 +469,11 @@ const filteredCategories = computed(() => {
     return results;
 });
 
-// Computed properties
 const totalItems = computed(() => {
     return Object.entries(localItems.value || {}).reduce((total, items) => total + items.length, 0);
 });
 
-const totalBudgeted = computed(() => {
-    return Object.entries(localItems.value || {}).reduce((total, items) => {
-        return total + items.reduce((categoryTotal, item) => categoryTotal + parseFloat(item.budgeted_amount), 0);
-    }, 0);
-});
 
-const totalRemaining = computed(() => {
-    return Object.entries(localItems.value || {}).reduce((total, items) => {
-        return total + items.reduce((categoryTotal, item) => categoryTotal + parseFloat(item.remaining_amount), 0);
-    }, 0);
-});
-
-// Methods
 const toggleAddForm = () => {
     showAddForm.value = !showAddForm.value;
     if (!showAddForm.value) {
@@ -532,11 +499,6 @@ const editItem = (item) => {
         budgeted_amount: item.budgeted_amount,
     };
     showEditModal.value = true;
-};
-
-const closeEditModal = () => {
-    showEditModal.value = false;
-    editingItem.value = null;
 };
 
 const addNewItem = async () => {
@@ -572,66 +534,7 @@ const addNewItem = async () => {
     }
 };
 
-const updateItem = async () => {
-    if (!editingItem.value) return;
-    updatingItem.value = true;
 
-    try {
-        const response = await axios.put(route('budgets.update-item', [props.budget.id, editingItem.value.id]), editItemForm.value);
-
-        const category = editingItem.value.category;
-        const updatedCategory = editItemForm.value.category;
-
-        if (category !== updatedCategory) {
-            localItems.value[category] = localItems.value[category].filter((i) => i.id !== editingItem.value.id);
-            if (!localItems[updatedCategory]) localItems[updatedCategory] = [];
-            localItems[updatedCategory].push({ ...editingItem.value, ...editItemForm.value });
-        } else {
-            const index = localItems.value[category].findIndex((i) => i.id === editingItem.value.id);
-            if (index !== -1) localItems.value[category][index] = { ...localItems.value[category][index], ...editItemForm.value };
-        }
-
-        closeEditModal();
-
-        flashMessage.value = response.data.message || 'Item updated successfully';
-        flashType.value = 'success';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => (flashMessage.value = null), 5000);
-    } catch (error) {
-        flashMessage.value = error.response?.data?.message || 'Failed to update item';
-        flashType.value = 'error';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => (flashMessage.value = null), 5000);
-    } finally {
-        updatingItem.value = false;
-    }
-};
-
-const confirmDelete = async () => {
-    if (!deleteItemTarget.value) return;
-    deletingItem.value = true;
-
-    try {
-        const response = await axios.delete(route('budgets.destroy-item', [props.budget.id, deleteItemTarget.value.id]));
-
-        const category = deleteItemTarget.value.category;
-        localItems.value[category] = localItems.value[category].filter((i) => i.id !== deleteItemTarget.value.id);
-
-        closeDeleteModal();
-
-        flashMessage.value = response.data.message || 'Item deleted successfully';
-        flashType.value = 'success';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => (flashMessage.value = null), 5000);
-    } catch (error) {
-        flashMessage.value = error.response?.data?.message || 'Failed to delete item';
-        flashType.value = 'error';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => (flashMessage.value = null), 5000);
-    } finally {
-        deletingItem.value = false;
-    }
-};
 
 const getCategoryTotal = (items) => {
     const budgeted = items.reduce((total, item) => total + parseFloat(item.budgeted_amount), 0);

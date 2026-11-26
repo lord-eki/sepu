@@ -20,47 +20,29 @@ const props = defineProps<{
     };
 }>();
 
-/* ================= STATE ================= */
 
-// Filters
 const filters = ref({
     type: props.filters.type || '',
     account_id: props.filters.account_id || '',
     search: props.filters.search || '',
 });
 
-const formatDate = (date: string) => {
-    if (!date) return '';
 
-    return new Date(date).toLocaleDateString('en-KE', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
-};
 
-// Statement Dates
 const today = new Date();
 const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
 const fromDate = ref(startOfMonth.toISOString().split('T')[0]);
 const toDate = ref(today.toISOString().split('T')[0]);
 
-// Modal
 const showModal = ref(false);
 const selectedTransaction = ref<any>(null);
 
-/* ================= COMPUTED ================= */
 
 const totalTransactions = computed(() => props.transactions.total);
-
 const totalAmount = computed(() => props.transactions.data.reduce((sum, t) => sum + Number(t.amount || 0), 0));
-
 const lastTransaction = computed(() => (props.transactions.data.length ? props.transactions.data[0] : null));
 
-/* ================= METHODS ================= */
 
-// Apply filters
 function applyFilters() {
     router.get(route('members.transactions', props.member.id), filters.value, {
         preserveState: true,
@@ -68,7 +50,6 @@ function applyFilters() {
     });
 }
 
-// View statement page
 function viewStatement() {
     router.get(route('my-transactions.statement'), {
         from: fromDate.value || undefined,
@@ -76,7 +57,6 @@ function viewStatement() {
     });
 }
 
-// Modal
 function openTransactionModal(transaction: any) {
     selectedTransaction.value = transaction;
     showModal.value = true;
@@ -87,7 +67,6 @@ function closeModal() {
     showModal.value = false;
 }
 
-/* ================= HELPERS ================= */
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-KE').format(amount);
 
@@ -101,9 +80,7 @@ const formatDateTime = (date: string) => new Date(date).toLocaleString('en-KE');
         <div
             class="min-h-screen space-y-8 bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
         >
-            <!-- ================= MODERN HEADER ================= -->
             <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-[#0B2B40] to-orange-600 shadow-2xl">
-                <!-- Decorative Background -->
                 <div class="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-orange-400/20 blur-3xl"></div>
                 <div class="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl"></div>
 
@@ -161,7 +138,6 @@ const formatDateTime = (date: string) => new Date(date).toLocaleString('en-KE');
                 </div>
             </div>
 
-            <!-- ================= SUMMARY ================= -->
             <div class="grid gap-6 md:grid-cols-3">
                 <Card
                     class="rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900"
@@ -207,7 +183,6 @@ const formatDateTime = (date: string) => new Date(date).toLocaleString('en-KE');
                     </CardContent>
                 </Card>
             </div>
-            <!-- ================= FILTERS ================= -->
             <div
                 class="flex flex-wrap items-end gap-4 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/70"
             >
@@ -250,7 +225,6 @@ const formatDateTime = (date: string) => new Date(date).toLocaleString('en-KE');
                 </div>
             </div>
 
-            <!-- ================= TABLE ================= -->
             <div class="overflow-x-auto rounded-2xl border bg-white shadow">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-100 text-xs uppercase">
@@ -327,7 +301,6 @@ const formatDateTime = (date: string) => new Date(date).toLocaleString('en-KE');
                 </table>
             </div>
 
-            <!-- ================= PAGINATION ================= -->
             <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
                 <p class="text-sm text-gray-600">Showing {{ props.transactions.data.length }} of {{ props.transactions.total }}</p>
 
@@ -346,7 +319,6 @@ const formatDateTime = (date: string) => new Date(date).toLocaleString('en-KE');
                 </div>
             </div>
 
-            <!-- ================= MODAL ================= -->
             <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                 <div class="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
                     <button @click="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">✕</button>

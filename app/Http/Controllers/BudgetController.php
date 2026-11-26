@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreBudgetItemRequest;
+use App\Http\Requests\StoreBudgetRequest;
+use App\Http\Requests\UpdateBudgetItemRequest;
+use App\Http\Requests\UpdateBudgetRequest;
+use App\Http\Requests\UpdateUtilizationRequest;
 use App\Models\Budget;
 use App\Models\BudgetItem;
 use App\Models\ChartOfAccount;
 use App\Models\PaymentVoucher;
+use App\Support\ErrorMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,10 +22,8 @@ use Carbon\Carbon;
 
 class BudgetController extends Controller
 {
-    // =========================================================================
-    //  INDEX
-    // =========================================================================
 
+    //Index page
     public function index(Request $request)
     {
         $query = Budget::query()->with(['creator', 'approver']);
@@ -34,8 +38,8 @@ class BudgetController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('budget_year', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('budget_year', 'like', "%{$search}%");
             });
         }
 
@@ -57,10 +61,8 @@ class BudgetController extends Controller
         ]);
     }
 
-    // =========================================================================
-    //  CREATE
-    // =========================================================================
 
+    //Show the create budget form
     public function create()
     {
         $currentYear = Carbon::now()->year;
@@ -75,58 +77,36 @@ class BudgetController extends Controller
         ]);
     }
 
-    // =========================================================================
-    //  STORE
-    // =========================================================================
-
-    public function store(Request $request)
+    //Store the new budget
+    public function store(StoreBudgetRequest $request)
     {
-        $request->validate([
-            'budget_year'  => [
-                'required', 'integer',
-                'min:' . Carbon::now()->year,
-                'max:' . (Carbon::now()->year + 5),
-                Rule::unique('budgets', 'budget_year'),
-            ],
-            'title'        => 'required|string|max:255',
-            'description'  => 'nullable|string',
-            'total_budget' => 'required|numeric|min:0',
-            'start_date'   => 'required|date',
-            'end_date'     => 'required|date|after:start_date',
-            'budget_items' => 'required|array|min:1',
-
-            // Each item  references a COA leaf account 
-            'budget_items.*.chart_of_account_id' => 'required|exists:charts_of_accounts,id',
-            'budget_items.*.description'          => 'nullable|string',
-            'budget_items.*.budgeted_amount'      => 'required|numeric|min:0',
-        ]);
+        $data = $request->validated();
 
         try {
             DB::beginTransaction();
 
-            $itemsTotal = collect($request->budget_items)->sum('budgeted_amount');
-            if (abs($itemsTotal - $request->total_budget) > 0.01) {
+            $itemsTotal = collect($data->budget_items)->sum('budgeted_amount');
+            if (abs($itemsTotal - $data->total_budget) > 0.01) {
                 throw new \DomainException('Budget items total must equal the total budget amount.');
             }
 
             $budget = Budget::create([
-                'budget_year'  => $request->budget_year,
-                'title'        => $request->title,
-                'description'  => $request->description,
-                'total_budget' => $request->total_budget,
+                'budget_year'  => $data->budget_year,
+                'title'        => $data->title,
+                'description'  => $data->description,
+                'total_budget' => $data->total_budget,
                 'status'       => 'draft',
-                'start_date'   => $request->start_date,
-                'end_date'     => $request->end_date,
+                'start_date'   => $data->start_date,
+                'end_date'     => $data->end_date,
                 'created_by'   => Auth::id(),
             ]);
 
-            foreach ($request->budget_items as $item) {
+            foreach ($data->budget_items as $item) {
                 $account = ChartOfAccount::findOrFail($item['chart_of_account_id']);
 
                 BudgetItem::create([
                     'budget_id'           => $budget->id,
                     'chart_of_account_id' => $account->id,
-                    // Derive category and item_name from the COA so legacy
                     'category'            => $account->account_category,
                     'item_name'           => $account->account_name,
                     'description'         => $item['description'] ?? null,
@@ -138,36 +118,27 @@ class BudgetController extends Controller
 
             DB::commit();
 
-            return redirect()->route('budgets.show', $budget)
-                ->with('success', 'Budget created successfully.');
-
+            return redirect()->route('budgets.show', $budget)->with('success', 'Budget created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget creation failed: ' . \App\Support\ErrorMessage::from($e));
-            return back()->withErrors(['error' => 'Failed to create budget: ' . \App\Support\ErrorMessage::from($e)])->withInput();
+            Log::error('Budget creation failed: ' . ErrorMessage::from($e));
+            return back()->withErrors(['error' => 'Failed to create budget: ' . ErrorMessage::from($e)])->withInput();
         }
     }
 
-    // =========================================================================
-    //  SHOW
-    // =========================================================================
 
+    //Show a budget
     public function show(Budget $budget)
     {
-        $budget->load([
-            'creator',
-            'approver',
-            'budgetItems.chartOfAccount',
-        ]);
-
+        $budget->load(['creator', 'approver', 'budgetItems.chartOfAccount']);
         $utilization = $this->calculateBudgetUtilization($budget);
 
         $recentVouchers = PaymentVoucher::whereHas('budgetItem', function ($query) use ($budget) {
             $query->where('budget_id', $budget->id);
         })->with(['budgetItem.chartOfAccount', 'creator'])
-          ->orderBy('created_at', 'desc')
-          ->take(10)
-          ->get();
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
 
         return Inertia::render('Shared/Budgets/Show', [
             'budget'          => $this->formatBudget($budget),
@@ -181,10 +152,8 @@ class BudgetController extends Controller
         ]);
     }
 
-    // =========================================================================
-    //  EDIT
-    // =========================================================================
 
+    //Edit a budget page
     public function edit(Budget $budget)
     {
         if ($budget->status !== 'draft') {
@@ -200,55 +169,36 @@ class BudgetController extends Controller
         ]);
     }
 
-    // =========================================================================
-    //  UPDATE
-    // =========================================================================
-
-    public function update(Request $request, Budget $budget)
+    //Persist a budget update
+    public function update(UpdateBudgetRequest $request, Budget $budget)
     {
         if ($budget->status !== 'draft') {
             return redirect()->route('budgets.show', $budget)
                 ->with('error', 'Only draft budgets can be updated.');
         }
 
-        $request->validate([
-            'budget_year'  => [
-                'required', 'integer',
-                'min:' . Carbon::now()->year,
-                'max:' . (Carbon::now()->year + 5),
-                Rule::unique('budgets', 'budget_year')->ignore($budget->id),
-            ],
-            'title'        => 'required|string|max:255',
-            'description'  => 'nullable|string',
-            'total_budget' => 'required|numeric|min:0',
-            'start_date'   => 'required|date',
-            'end_date'     => 'required|date|after:start_date',
-            'budget_items' => 'required|array|min:1',
-            'budget_items.*.chart_of_account_id' => 'required|exists:charts_of_accounts,id',
-            'budget_items.*.description'          => 'nullable|string',
-            'budget_items.*.budgeted_amount'      => 'required|numeric|min:0',
-        ]);
+        $data =  $request->validated();
 
         try {
             DB::beginTransaction();
 
-            $itemsTotal = collect($request->budget_items)->sum('budgeted_amount');
-            if (abs($itemsTotal - $request->total_budget) > 0.01) {
+            $itemsTotal = collect($data->budget_items)->sum('budgeted_amount');
+            if (abs($itemsTotal - $data->total_budget) > 0.01) {
                 throw new \DomainException('Budget items total must equal the total budget amount.');
             }
 
             $budget->update([
-                'budget_year'  => $request->budget_year,
-                'title'        => $request->title,
-                'description'  => $request->description,
-                'total_budget' => $request->total_budget,
-                'start_date'   => $request->start_date,
-                'end_date'     => $request->end_date,
+                'budget_year'  => $data->budget_year,
+                'title'        => $data->title,
+                'description'  => $data->description,
+                'total_budget' => $data->total_budget,
+                'start_date'   => $data->start_date,
+                'end_date'     => $data->end_date,
             ]);
 
             $budget->budgetItems()->delete();
 
-            foreach ($request->budget_items as $item) {
+            foreach ($data->budget_items as $item) {
                 $account = ChartOfAccount::findOrFail($item['chart_of_account_id']);
 
                 BudgetItem::create([
@@ -267,18 +217,14 @@ class BudgetController extends Controller
 
             return redirect()->route('budgets.show', $budget)
                 ->with('success', 'Budget updated successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget update failed: ' . \App\Support\ErrorMessage::from($e));
-            return back()->withErrors(['error' => 'Failed to update budget: ' . \App\Support\ErrorMessage::from($e)])->withInput();
+            Log::error('Budget update failed: ' . ErrorMessage::from($e));
+            return back()->withErrors(['error' => 'Failed to update budget: ' . ErrorMessage::from($e)])->withInput();
         }
     }
 
-    // =========================================================================
-    //  DESTROY
-    // =========================================================================
-
+    //Delete a budget
     public function destroy(Budget $budget)
     {
         if ($budget->status !== 'draft') {
@@ -294,18 +240,14 @@ class BudgetController extends Controller
 
             return redirect()->route('budgets.index')
                 ->with('success', 'Budget deleted successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget deletion failed: ' . \App\Support\ErrorMessage::from($e));
-            return back()->with('error', 'Failed to delete budget: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Budget deletion failed: ' . ErrorMessage::from($e));
+            return back()->with('error', 'Failed to delete budget: ' . ErrorMessage::from($e));
         }
     }
 
-    // =========================================================================
-    //  WORKFLOW
-    // =========================================================================
-
+    //submitting  a budget
     public function submit(Budget $budget)
     {
         if ($budget->status !== 'draft') {
@@ -327,13 +269,13 @@ class BudgetController extends Controller
 
             return redirect()->route('budgets.show', $budget)
                 ->with('success', 'Budget submitted for approval successfully.');
-
         } catch (\Exception $e) {
-            Log::error('Budget submission failed: ' . \App\Support\ErrorMessage::from($e));
-            return back()->with('error', 'Failed to submit budget: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Budget submission failed: ' . ErrorMessage::from($e));
+            return back()->with('error', 'Failed to submit budget: ' . ErrorMessage::from($e));
         }
     }
 
+    //Budget Approval
     public function approve(Budget $budget)
     {
         if ($budget->status !== 'pending') {
@@ -355,13 +297,14 @@ class BudgetController extends Controller
 
             return redirect()->route('budgets.show', $budget)
                 ->with('success', 'Budget approved successfully.');
-
         } catch (\Exception $e) {
-            Log::error('Budget approval failed: ' . \App\Support\ErrorMessage::from($e));
-            return back()->with('error', 'Failed to approve budget: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Budget approval failed: ' . ErrorMessage::from($e));
+            return back()->with('error', 'Failed to approve budget: ' . ErrorMessage::from($e));
         }
     }
 
+
+    //Activate a budget
     public function activate(Budget $budget)
     {
         if ($budget->status !== 'approved') {
@@ -378,8 +321,8 @@ class BudgetController extends Controller
             DB::beginTransaction();
 
             Budget::where('budget_year', $budget->budget_year)
-                  ->where('status', 'active')
-                  ->update(['status' => 'closed']);
+                ->where('status', 'active')
+                ->update(['status' => 'closed']);
 
             $budget->update(['status' => 'active']);
 
@@ -387,14 +330,15 @@ class BudgetController extends Controller
 
             return redirect()->route('budgets.show', $budget)
                 ->with('success', 'Budget activated successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget activation failed: ' . \App\Support\ErrorMessage::from($e));
-            return back()->with('error', 'Failed to activate budget: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Budget activation failed: ' . ErrorMessage::from($e));
+            return back()->with('error', 'Failed to activate budget: ' . ErrorMessage::from($e));
         }
     }
 
+
+    //Close a budget
     public function close(Budget $budget)
     {
         if ($budget->status !== 'active') {
@@ -412,22 +356,17 @@ class BudgetController extends Controller
 
             return redirect()->route('budgets.show', $budget)
                 ->with('success', 'Budget closed successfully.');
-
         } catch (\Exception $e) {
-            Log::error('Budget closure failed: ' . \App\Support\ErrorMessage::from($e));
-            return back()->with('error', 'Failed to close budget: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Budget closure failed: ' . ErrorMessage::from($e));
+            return back()->with('error', 'Failed to close budget: ' . ErrorMessage::from($e));
         }
     }
 
-    // =========================================================================
-    //  BUDGET ITEMS
-    // =========================================================================
 
+    //Budget items
     public function items(Budget $budget)
     {
         $budget->load(['budgetItems.chartOfAccount']);
-
-        // Group by COA account_type for a cleaner display than plain text category
         $itemsByCategory = $budget->budgetItems
             ->groupBy(fn($item) => $item->chartOfAccount?->account_type ?? $item->category);
 
@@ -438,35 +377,32 @@ class BudgetController extends Controller
         ]);
     }
 
-    public function storeItem(Request $request, Budget $budget)
+    //Store budget Item
+    public function storeItem(StoreBudgetItemRequest $request, Budget $budget)
     {
         if (!$this->canEditBudget($budget)) {
             return response()->json(['error' => 'You do not have permission to add items to this budget.'], 403);
         }
 
-        $request->validate([
-            'chart_of_account_id' => 'required|exists:charts_of_accounts,id',
-            'description'         => 'nullable|string',
-            'budgeted_amount'     => 'required|numeric|min:0',
-        ]);
+        $data = $request->validated();
 
         try {
             DB::beginTransaction();
 
-            $account = ChartOfAccount::findOrFail($request->chart_of_account_id);
+            $account = ChartOfAccount::findOrFail($data->chart_of_account_id);
 
             $item = BudgetItem::create([
                 'budget_id'           => $budget->id,
                 'chart_of_account_id' => $account->id,
                 'category'            => $account->account_category,
                 'item_name'           => $account->account_name,
-                'description'         => $request->description,
-                'budgeted_amount'     => $request->budgeted_amount,
+                'description'         => $data->description,
+                'budgeted_amount'     => $data->budgeted_amount,
                 'spent_amount'        => 0,
-                'remaining_amount'    => $request->budgeted_amount,
+                'remaining_amount'    => $data->budgeted_amount,
             ]);
 
-            $budget->increment('total_budget', $request->budgeted_amount);
+            $budget->increment('total_budget', $data->budgeted_amount);
 
             DB::commit();
 
@@ -474,15 +410,15 @@ class BudgetController extends Controller
                 'message' => 'Budget item added successfully.',
                 'item'    => $this->formatBudgetItem($item->load('chartOfAccount')),
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget item creation failed: ' . \App\Support\ErrorMessage::from($e));
-            return response()->json(['error' => 'Failed to add budget item: ' . \App\Support\ErrorMessage::from($e)], 500);
+            Log::error('Budget item creation failed: ' . ErrorMessage::from($e));
+            return response()->json(['error' => 'Failed to add budget item: ' . ErrorMessage::from($e)], 500);
         }
     }
 
-    public function updateItem(Request $request, Budget $budget, BudgetItem $item)
+    //Update budget item
+    public function updateItem(UpdateBudgetItemRequest $request, Budget $budget, BudgetItem $item)
     {
         if ($item->budget_id !== $budget->id) {
             return response()->json(['error' => 'Budget item does not belong to this budget.'], 404);
@@ -492,25 +428,21 @@ class BudgetController extends Controller
             return response()->json(['error' => 'You do not have permission to edit this budget item.'], 403);
         }
 
-        $request->validate([
-            'chart_of_account_id' => 'required|exists:charts_of_accounts,id',
-            'description'         => 'nullable|string',
-            'budgeted_amount'     => 'required|numeric|min:0',
-        ]);
+        $data = $request->validated();
 
         try {
             DB::beginTransaction();
 
-            $account    = ChartOfAccount::findOrFail($request->chart_of_account_id);
+            $account    = ChartOfAccount::findOrFail($data->chart_of_account_id);
             $oldAmount  = (float) $item->budgeted_amount;
-            $newAmount  = (float) $request->budgeted_amount;
+            $newAmount  = (float) $data->budgeted_amount;
             $difference = $newAmount - $oldAmount;
 
             $item->update([
                 'chart_of_account_id' => $account->id,
                 'category'            => $account->account_category,
                 'item_name'           => $account->account_name,
-                'description'         => $request->description,
+                'description'         => $data->description,
                 'budgeted_amount'     => $newAmount,
                 'remaining_amount'    => $newAmount - $item->spent_amount,
             ]);
@@ -523,14 +455,15 @@ class BudgetController extends Controller
                 'message' => 'Budget item updated successfully.',
                 'item'    => $this->formatBudgetItem($item->load('chartOfAccount')),
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget item update failed: ' . \App\Support\ErrorMessage::from($e));
-            return response()->json(['error' => 'Failed to update budget item: ' . \App\Support\ErrorMessage::from($e)], 500);
+            Log::error('Budget item update failed: ' . ErrorMessage::from($e));
+            return response()->json(['error' => 'Failed to update budget item: ' . ErrorMessage::from($e)], 500);
         }
     }
 
+
+    //Delete a budget item
     public function destroyItem(Budget $budget, BudgetItem $item)
     {
         if ($item->budget_id !== $budget->id) {
@@ -552,35 +485,27 @@ class BudgetController extends Controller
             DB::commit();
 
             return response()->json(['message' => 'Budget item deleted successfully.']);
-
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Budget item deletion failed: ' . \App\Support\ErrorMessage::from($e));
-            return response()->json(['error' => 'Failed to delete budget item: ' . \App\Support\ErrorMessage::from($e)], 500);
+            Log::error('Budget item deletion failed: ' . ErrorMessage::from($e));
+            return response()->json(['error' => 'Failed to delete budget item: ' . ErrorMessage::from($e)], 500);
         }
     }
 
-    public function updateUtilization(Request $request, BudgetItem $budgetItem)
+    //Update Utilization
+    public function updateUtilization(UpdateUtilizationRequest $request, BudgetItem $budgetItem)
     {
-        $validated = $request->validate([
-            'amount'      => 'required|numeric|min:0',
-            'description' => 'nullable|string|max:255',
-        ]);
+        $data = $request->validated();
 
-        $budgetItem->spent_amount     += $validated['amount'];
+        $budgetItem->spent_amount     += $data['amount'];
         $budgetItem->remaining_amount  = $budgetItem->budgeted_amount - $budgetItem->spent_amount;
         $budgetItem->save();
 
         return redirect()->back()->with('success', 'Utilization updated successfully!');
     }
 
-    // =========================================================================
-    //  REPORTS
-    // =========================================================================
 
-    /**
-     * Variance report — groups by COA account type for meaningful sections.
-     */
+    // Variance report  
     public function variance(Budget $budget)
     {
         $budget->load(['budgetItems.chartOfAccount']);
@@ -596,13 +521,11 @@ class BudgetController extends Controller
                 : 0;
 
             $varianceData[] = [
-                // COA-based fields to replace the old free-text category
                 'chart_of_account_id'   => $item->chart_of_account_id,
                 'account_code'          => $item->chartOfAccount?->account_code,
                 'account_name'          => $item->chartOfAccount?->account_name ?? $item->item_name,
                 'account_type'          => $item->chartOfAccount?->account_type,
                 'category'              => $item->chartOfAccount?->account_category ?? $item->category,
-
                 'budgeted_amount'       => (float) $item->budgeted_amount,
                 'spent_amount'          => (float) $item->spent_amount,
                 'variance'              => $variance,
@@ -626,18 +549,19 @@ class BudgetController extends Controller
                 'budgeted'           => $totalBudgeted,
                 'spent'              => $totalSpent,
                 'variance'           => $totalVariance,
-                'variance_percentage'=> round($totalVariancePercentage, 2),
+                'variance_percentage' => round($totalVariancePercentage, 2),
             ],
         ]);
     }
 
+    //Utilization report
     public function utilization(Budget $budget)
     {
         $budget->load('budgetItems.chartOfAccount');
 
         $utilization        = $this->calculateBudgetUtilization($budget);
         $spendingTrends     = $this->getSpendingTrends($budget);
-        $categoryUtilization= $this->getCategoryUtilization($budget);
+        $categoryUtilization = $this->getCategoryUtilization($budget);
 
         return Inertia::render('Shared/Budgets/Utilization', [
             'budget'               => $budget,
@@ -647,13 +571,8 @@ class BudgetController extends Controller
         ]);
     }
 
-    // =========================================================================
-    //  PRIVATE HELPERS
-    // =========================================================================
+    //Helper functions 
 
-    /**
-     * Returns postable expense/revenue COA accounts for budget line dropdowns.
-     */
     private function getBudgetLineAccounts(): array
     {
         return ChartOfAccount::active()
@@ -669,7 +588,7 @@ class BudgetController extends Controller
                 'account_type'  => $a->account_type,
                 'full_path'     => $a->full_path_name,
                 'label'         => str_repeat('　', max(0, ($a->level ?? 1) - 1))
-                                   . $a->account_code . ' – ' . $a->account_name,
+                    . $a->account_code . ' – ' . $a->account_name,
             ])
             ->toArray();
     }
@@ -726,15 +645,12 @@ class BudgetController extends Controller
         return PaymentVoucher::whereHas('budgetItem', function ($query) use ($budget) {
             $query->where('budget_id', $budget->id);
         })->where('status', 'paid')
-          ->selectRaw('DATE_FORMAT(payment_date, "%Y-%m") as month, SUM(amount) as total_spent')
-          ->groupBy('month')
-          ->orderBy('month')
-          ->get();
+            ->selectRaw('DATE_FORMAT(payment_date, "%Y-%m") as month, SUM(amount) as total_spent')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
     }
 
-    /**
-     * Category utilization — groups by COA account_type .
-     */
     private function getCategoryUtilization(Budget $budget)
     {
         return $budget->budgetItems
@@ -750,9 +666,8 @@ class BudgetController extends Controller
                     'budgeted'             => $budgeted,
                     'spent'                => $spent,
                     'remaining'            => $remaining,
-                    'utilization_percentage'=> $utilization,
+                    'utilization_percentage' => $utilization,
                     'items_count'          => $items->count(),
-                    // List the individual account names in this group
                     'accounts'             => $items->map(fn($i) => [
                         'account_code' => $i->chartOfAccount?->account_code,
                         'account_name' => $i->chartOfAccount?->account_name ?? $i->item_name,

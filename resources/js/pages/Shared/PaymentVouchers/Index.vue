@@ -196,7 +196,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Pagination from '@/components/Pagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -209,9 +209,7 @@ const props = defineProps({
     filters: Object,
 });
 
-// Flash handling
 const page = usePage();
-const flash = computed(() => page.props?.flash || {});
 
 const flashMessage = ref(null);
 const flashType = ref('success');

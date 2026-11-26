@@ -3,22 +3,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { format } from 'date-fns';
 
-const props = defineProps<{
-    members: Array<{
-        member_id: number;
-        membership_id: string;
-        name: string;
-        shares_balance: number;
-        account_number?: string;
-        membership_date: string;
-    }>;
-    summary: {
-        total_members: number;
-        total_shares: number;
-        average_shares: number;
-        highest_shares: number;
-    };
-}>();
 
 const breadcrumbs = [{ title: 'Member Reports', href: route('reports.membersReport.index') }, { title: 'Member Shares' }];
 

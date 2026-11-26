@@ -527,7 +527,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -604,7 +604,6 @@ function resetValidation() {
     for (const k in validationErrors) delete validationErrors[k];
 }
 
-const totalFeeRate = computed(() => ((loan.value.loan_product.processing_fee_rate || 0) + (loan.value.loan_product.insurance_rate || 0)) / 100);
 const processingFeePreview = computed(() =>
     approvalForm.approved_amount ? (approvalForm.approved_amount * (loan.value.loan_product.processing_fee_rate ?? 0)) / 100 : 0,
 );
@@ -626,9 +625,7 @@ const loanStaff = ['admin','loan_officer'];
 
 const monthlyPreview = computed(() => preview.value.monthly)
 const totalInterestPreview = computed(() => preview.value.totalInterest)
-const totalRepaymentPreview = computed(() => preview.value.totalRepayable)
 
-const canEdit = computed(() => props.loan.status === 'pending' && ['admin', 'loan_officer', 'management'].includes(props.auth.user.role));
 const canApprove = computed(() => props.loan.status === 'pending' && loanStaff.includes(props.auth.user.role));
 const canReject = computed(() => ['pending_guarantor_approval','pending', 'approved'].includes(props.loan.status) && loanStaff.includes(props.auth.user.role));
 const canDisburse = computed(() => props.loan.status === 'approved' && loanStaff.includes(props.auth.user.role));
@@ -671,18 +668,12 @@ const getStatusDescription = (status) =>
         cancelled: 'This loan application has been cancelled.',
     })[status] || 'Unknown status';
 
-const getGuarantorStatusClass = (status) =>
-    ({
-        pending: 'bg-yellow-100 text-yellow-800',
-        accepted: 'bg-emerald-100 text-emerald-800',
-        rejected: 'bg-red-100 text-red-800',
-    })[status] || 'bg-slate-100 text-slate-800';
+
 
 const visible = ref(Boolean(props.message));
 const message = ref(props.message || '');
 const type = ref(props.type || 'success');
 let toastTimer = null;
-const toastAppearance = computed(() => (type.value === 'success' ? 'bg-white/95 border border-slate-200' : 'bg-white/95 border border-red-200'));
 const close = () => {
     visible.value = false;
     if (toastTimer) {
@@ -708,13 +699,6 @@ function showToast(txt = '', t = 'success', duration = props.duration) {
             visible.value = false;
             toastTimer = null;
         }, duration);
-}
-
-function firstError(err) {
-    if (!err) return '';
-    if (Array.isArray(err)) return err[0];
-    if (typeof err === 'object') return Object.values(err)[0];
-    return String(err);
 }
 
 

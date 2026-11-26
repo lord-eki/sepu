@@ -4,10 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { CheckCircle2, Info, LockKeyhole, ShieldCheck, Users } from 'lucide-vue-next';
 
-const props = defineProps({
-    roles: Array,
-    stats: Object,
-});
+
 </script>
 
 <template>

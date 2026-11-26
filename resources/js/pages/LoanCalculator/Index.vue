@@ -477,7 +477,7 @@
     </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -516,7 +516,7 @@ const setupError = ref('');
 
 watch(
     () => form.value.loan_product_id,
-    (v) => onLoanProductChange(),
+    () => onLoanProductChange(),
 );
 watch(setupScope, () => resetAdminForm());
 
@@ -573,7 +573,6 @@ const formatDate = (d) => {
     });
 };
 
-// Admin Setup
 const onAdminProductChange = () => {
     const product = props.loanProducts.find((p) => p.id === adminForm.value.product_id);
     if (!product) return;
@@ -621,14 +620,7 @@ const resetAdminForm = () => {
     setupError.value = '';
 };
 
-const loadDefaults = async () => {
-    try {
-        const res = await axios.get('/api/loan-setup/defaults');
-        Object.assign(adminForm.value, res.data);
-    } catch (err) {
-        setupError.value = 'Failed to load defaults.';
-    }
-};
+
 
 const isFormValid = computed(() => {
     return form.value.loan_product_id && form.value.principal_amount > 0 && form.value.term_months > 0;
@@ -649,19 +641,16 @@ const formatNumber = (n) => new Intl.NumberFormat().format(n || 0);
         box-shadow 0.2s;
 }
 
-/* Desktop sticky calculator */
 @media (min-width: 1280px) {
     .xl\:sticky {
         position: sticky;
     }
 }
 
-/* Smooth scrolling */
 html {
     scroll-behavior: smooth;
 }
 
-/* Better scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -676,7 +665,6 @@ html {
     background: transparent;
 }
 
-/* Mobile responsiveness */
 @media (max-width: 640px) {
     .loan-calculator .grid {
         grid-template-columns: 1fr;

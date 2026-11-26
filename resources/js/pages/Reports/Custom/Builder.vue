@@ -11,9 +11,7 @@ const props = defineProps<{
     saved_reports: Array<any>;
 }>();
 
-/* ----------------------------------------
-   STATE
----------------------------------------- */
+
 
 const reportName = ref('');
 const selectedSources = ref<string[]>([]);
@@ -25,9 +23,6 @@ const saveReport = ref(false);
 const results = ref<any[]>([]);
 const loading = ref(false);
 
-/* ----------------------------------------
-   COMPUTED
----------------------------------------- */
 
 const availableFields = computed(() => {
     const fields: string[] = [];
@@ -39,17 +34,6 @@ const availableFields = computed(() => {
     return fields;
 });
 
-/* ----------------------------------------
-   METHODS
----------------------------------------- */
-
-const toggleSource = (key: string) => {
-    if (selectedSources.value.includes(key)) {
-        selectedSources.value = selectedSources.value.filter((s) => s !== key);
-    } else {
-        selectedSources.value.push(key);
-    }
-};
 
 const toggleField = (field: string) => {
     if (selectedFields.value.includes(field)) {
