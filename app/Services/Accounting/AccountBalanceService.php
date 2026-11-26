@@ -234,6 +234,29 @@ class AccountBalanceService
         }
     }
 
+    //Posts the journal entry for a transaction created through credit or debit once
+    public function postLedgerFor(Transaction $transaction, ?int $user =  null): ?int
+    {
+        if($transaction->journal_entry_id){
+            return (int) $transaction->journal_entry_id;
+        }
+
+        $direction = self::DIRECTION[$transaction->transaction_type] ?? null;
+
+        if(!$direction){
+            return null;
+        }
+
+        $account =  Account::findOrFail($transaction->account_id);
+        $entryId = $this->postLedger($transaction,$account,$direction,$userId);
+
+        if($entryId){
+            $transaction->update(['journal_entry_id' => $entryId]);
+        }
+
+        return $entryId;
+    }
+
     private function postLedger(Transaction $tx, Account $account, string $direction, ?int $userId): ?int
     {
         $role = self::LEDGER_ROLE[$account->account_type] ?? null;
