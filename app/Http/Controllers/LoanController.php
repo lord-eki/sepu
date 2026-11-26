@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use App\Services\NotificationService;
 use App\Support\ErrorMessage;
 use Carbon\Carbon;
+use DomainException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -79,6 +80,40 @@ class LoanController extends Controller
             'summary' => $this->getLoansSummary($scopeMemberId),
             'filters' => $request->only(['status', 'search', 'member_id', 'loan_product_id', 'date_from', 'date_to']),
         ]);
+    }
+
+    // Records a staff-entered repayment on a running loan.
+    public function recordRepayment(RecordLoanRepaymentRequest $request, Loan $loan, LoanRepaymentService $repayments)
+    {
+        try {
+            $result = $repayments->record(
+                $loan,
+                (float) $request->validated('amount'),
+                $request->validated('source'),
+                $request->validated('request_key'),
+                Auth::user(),
+                $request->validated('reference'),
+            );
+        } catch (DomainException $e) {
+            return back()->withErrors(['amount' => $e->getMessage()]);
+        }
+
+        if ($result['status'] === 'duplicate') {
+            return back()->with('success', 'This repayment was already recorded.');
+        }
+
+        $message = 'Repayment of KES ' . number_format($result['amount'], 2) . ' recorded.'
+            . ($result['completed'] ? ' The loan is now fully repaid.' : '');
+
+        return back()->with('success', $message);
+    }
+
+    // Shows a loan statement built from the ledger to staff and to the borrower.
+    public function statement(Loan $loan, LoanStatementService $statements)
+    {
+        Gate::authorize('view', $loan);
+
+        return Inertia::render('Shared/Loans/Statement', $statements->build($loan));
     }
 
     /**
@@ -381,7 +416,7 @@ class LoanController extends Controller
     /**
      * Show loan repayments
      */
-    public function repayments( int $id)
+    public function repayments(int $id)
     {
         $loan = Loan::with(['member.user', 'loanProduct'])->findOrFail($id);
 
@@ -546,8 +581,8 @@ class LoanController extends Controller
         }
     }
 
-     // Reject a loan application
-   
+    // Reject a loan application
+
     public function reject(Request $request, int $id, GuaranteeService $guarantees)
     {
         $validator = Validator::make($request->all(), [
@@ -605,7 +640,7 @@ class LoanController extends Controller
 
 
     // Disburse an approved loan
-    public function disburse(Request $request,int $id, LoanService $loans)
+    public function disburse(Request $request, int $id, LoanService $loans)
     {
         $validator = Validator::make($request->all(), [
             'disbursement_method'    => 'required|in:cash,mobile_money,bank_transfer,account',
