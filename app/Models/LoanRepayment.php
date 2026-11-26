@@ -27,7 +27,6 @@ class LoanRepayment extends Model
         'outstanding_amount' => 'decimal:2',
     ];
 
-    // Relationships
     public function loan()
     {
         return $this->belongsTo(Loan::class);
@@ -38,7 +37,6 @@ class LoanRepayment extends Model
         return $this->belongsTo(Transaction::class);
     }
 
-    // Scopes
     public function scopeOverdue($query)
     {
         return $query->where('status', 'overdue');

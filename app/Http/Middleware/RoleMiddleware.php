@@ -4,22 +4,23 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             return $request->expectsJson()
                 ? response()->json(['message' => 'Unauthenticated.'], 401)
                 : redirect()->route('login');
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!$user->is_active) {
-            auth()->logout();
+            Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 

@@ -27,14 +27,12 @@ class ProcessDividendCalculationJob implements ShouldQueue
     public function handle()
     {
         DB::transaction(function () {
-            // Get all active members with shares
             $members = Member::where('membership_status', 'active')
                 ->with(['accounts' => function ($query) {
                     $query->where('account_type', 'shares');
                 }])
                 ->get();
 
-            // Calculate total shares
             $totalShares = $members->sum(function ($member) {
                 return $member->accounts->where('account_type', 'shares')->sum('balance');
             });
@@ -58,7 +56,6 @@ class ProcessDividendCalculationJob implements ShouldQueue
                 }
             }
 
-            // Update dividend status
             $this->dividend->update([
                 'status' => 'calculated',
                 'calculation_date' => now()

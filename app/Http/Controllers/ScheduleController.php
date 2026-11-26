@@ -50,8 +50,7 @@ class ScheduleController extends Controller
         ]);
     }
 
-    //   MONTHLY DEPOSITS
-
+    //monthly deposits
     public function monthlyDeposit(Request $request)
     {
         $month = $request->month ?? Carbon::now()->format('Y-m');
@@ -197,8 +196,7 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    //  LOAN REPAYMENTS
-
+//Loan repayments
     public function loanRepayment(Request $request)
     {
         $month = $request->month ?? Carbon::now()->format('Y-m');
@@ -248,7 +246,7 @@ class ScheduleController extends Controller
                 'expected_amount'     => (float) $r->expected_amount,
                 'paid_amount'         => (float) $r->paid_amount,
                 'outstanding_amount'  => (float) $r->outstanding_amount,
-                'deduct_amount'       => $deductAmount,  // ← what will be posted
+                'deduct_amount'       => $deductAmount,  
                 'override_set'        => $overrideAmount !== null,
                 'outstanding_balance' => (float) $r->loan->outstanding_balance,
                 'status'              => $r->status,
@@ -307,13 +305,11 @@ class ScheduleController extends Controller
                     $amount    = (float) $entry['deduct_amount'];
 
                     if ($amount <= 0) continue;
-
                     $penaltyPaid   = min($amount, (float) $repayment->penalty_amount);
                     $remaining     = $amount - $penaltyPaid;
                     $interestPaid  = min($remaining, (float) $repayment->interest_amount);
                     $remaining    -= $interestPaid;
                     $principalPaid = min($remaining, (float) $repayment->principal_amount);
-
                     $newPaid        = (float) $repayment->paid_amount + $amount;
                     $newOutstanding = max(0, (float) $repayment->outstanding_amount - $amount);
                     $newStatus      = $newOutstanding > 0 ? 'partial' : 'paid';
@@ -383,7 +379,7 @@ class ScheduleController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run schedule: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['schedule' => 'Failed to run schedule: ' . ErrorMessage::from($e)]);
         }
 
         return redirect()->route('schedule.loan-repayment')
@@ -391,7 +387,7 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    //  LOAN DISBURSEMENTS  
+    //  loan disbursements 
 
     public function loanDisbursement(Request $request)
     {
@@ -486,14 +482,12 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    //  DIVIDEND PAYMENTS
+    //  Dividends payments
 
     public function dividendPayment(Request $request)
     {
         $year = (int) ($request->year ?? Carbon::now()->year);
-
         $alreadyRun = ScheduleExecutionLog::alreadyRun('dividend_payments', $year);
-
         $dividend = Dividend::with(['calculatedBy', 'approvedBy'])
             ->where('dividend_year', $year)
             ->whereIn('status', ['approved', 'distributed'])
@@ -676,7 +670,7 @@ class ScheduleController extends Controller
                     $totalAmount += $amount;
                 } catch (\Throwable $e) {
                     $failed++;
-                    $errors[] = ['member_dividend_id' => $entry['member_dividend_id'], 'error' => \App\Support\ErrorMessage::from($e)];
+                    $errors[] = ['member_dividend_id' => $entry['member_dividend_id'], 'error' => ErrorMessage::from($e)];
                 }
             }
 
@@ -704,7 +698,7 @@ class ScheduleController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withErrors(['schedule' => 'Failed to run dividend payments: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['schedule' => 'Failed to run dividend payments: ' . ErrorMessage::from($e)]);
         }
 
         return redirect()->route('schedule.dividend-payment')
@@ -712,7 +706,7 @@ class ScheduleController extends Controller
                 number_format($totalAmount, 2) . '.' . ($failed ? " {$failed} failed." : ''));
     }
 
-    //  EXPORTS
+    //  exports
 
     public function exportLoanDisbursement(Request $request)
     {

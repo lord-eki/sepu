@@ -19,14 +19,12 @@ class OtpVerification extends Model
         'is_used' => 'boolean',
     ];
 
-    // Scope for valid OTPs
     public function scopeValid($query)
     {
         return $query->where('expires_at', '>', now())
                     ->where('is_used', false);
     }
 
-    // Scope for expired OTPs
     public function scopeExpired($query)
     {
         return $query->where('expires_at', '<=', now());

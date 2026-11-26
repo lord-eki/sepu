@@ -6,6 +6,7 @@ use App\Models\Dividend;
 use App\Models\MemberDividend;
 use App\Models\Transaction;
 use App\Models\Account;
+use App\Models\Notification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -40,7 +41,6 @@ class ProcessDividendDistributionJob implements ShouldQueue
                     ->first();
 
                 if ($savingsAccount) {
-                    // Create dividend transaction
                     $transaction = Transaction::create([
                         'transaction_id' => 'TXN-' . time() . '-' . rand(1000, 9999),
                         'account_id' => $savingsAccount->id,
@@ -58,23 +58,20 @@ class ProcessDividendDistributionJob implements ShouldQueue
                         'metadata' => json_encode(['dividend_id' => $this->dividend->id])
                     ]);
 
-                    // Update account balance
                     $savingsAccount->update([
                         'balance' => $savingsAccount->balance + $memberDividend->dividend_amount,
                         'available_balance' => $savingsAccount->available_balance + $memberDividend->dividend_amount,
                         'last_transaction_at' => now()
                     ]);
 
-                    // Update member dividend status
                     $memberDividend->update([
                         'status' => 'paid',
                         'payment_date' => now(),
                         'transaction_id' => $transaction->id
                     ]);
 
-                    // Send notification
                     SendNotificationJob::dispatch(
-                        new \App\Models\Notification([
+                        new Notification([
                             'user_id' => $memberDividend->member->user_id,
                             'title' => 'Dividend Payment',
                             'message' => "Your dividend of KES " . number_format($memberDividend->dividend_amount, 2) . " for year {$this->dividend->dividend_year} has been credited to your account.",
@@ -86,7 +83,6 @@ class ProcessDividendDistributionJob implements ShouldQueue
                 }
             }
 
-            // Update dividend status
             $this->dividend->update([
                 'status' => 'distributed',
                 'distribution_date' => now()

@@ -38,7 +38,6 @@ class PaymentVoucher extends Model
         'supporting_documents' => 'array',
     ];
 
-    // Relationships
     public function budgetItem()
     {
         return $this->belongsTo(BudgetItem::class);
@@ -64,7 +63,6 @@ class PaymentVoucher extends Model
         return $this->belongsTo(User::class, 'paid_by');
     }
 
-    // Scopes
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
@@ -75,7 +73,6 @@ class PaymentVoucher extends Model
         return $query->where('status', 'approved');
     }
 
-    // Add these methods to PaymentVoucher.php
     public function creator()
     {
         return $this->createdBy();
@@ -93,7 +90,7 @@ class PaymentVoucher extends Model
 
     public function payeeMember()
     {
-        return $this->belongsTo(Member::class, 'member_id'); // nullable
+        return $this->belongsTo(Member::class, 'member_id'); 
     }
 
 

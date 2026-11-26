@@ -21,13 +21,11 @@ class MemberNextOfKin extends Model
         'is_primary' => 'boolean',
     ];
 
-    // Relationships
     public function member()
     {
         return $this->belongsTo(Member::class);
     }
 
-    // Scope for primary next of kin
     public function scopePrimary($query)
     {
         return $query->where('is_primary', true);

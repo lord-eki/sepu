@@ -26,7 +26,6 @@ class BudgetItem extends Model
         'remaining_amount' => 'decimal:2',
     ];
 
-    // ── Relationships ────────────────────────────────────────────────────
 
     public function budget()
     {
@@ -46,12 +45,8 @@ class BudgetItem extends Model
         return $this->hasMany(PaymentVoucher::class);
     }
 
-    // ── Accessors ────────────────────────────────────────────────────────
 
-    /**
-     * Human-readable name for the budget line.
-     * Prefers the linked COA code + name; falls back to legacy item_name / category.
-     */
+ 
     public function getDisplayNameAttribute(): string
     {
         if ($this->chartOfAccount) {
@@ -60,9 +55,7 @@ class BudgetItem extends Model
         return $this->item_name ?? $this->category ?? 'Unnamed Item';
     }
 
-    /**
-     * Category label derived from the COA ancestry when linked
-     */
+  
     public function getCategoryLabelAttribute(): string
     {
         if ($this->chartOfAccount?->parentAccount) {
@@ -77,11 +70,7 @@ class BudgetItem extends Model
         return $this->category ?? '';
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────
 
-    /**
-     * Recalculate remaining_amount (call after updating spent_amount).
-     */
     public function recalculateRemaining(): void
     {
         $this->remaining_amount = (float)$this->budgeted_amount - (float)$this->spent_amount;

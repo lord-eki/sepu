@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\GenerateLoanRepaymentsJob;
 use App\Jobs\SendNotificationJob;
-
+use App\Models\Notification;
 
 class ProcessLoanDisbursementJob implements ShouldQueue
 {
@@ -34,7 +34,6 @@ class ProcessLoanDisbursementJob implements ShouldQueue
     public function handle()
     {
         DB::transaction(function () {
-            // Get member's savings account
             $account = Account::where('member_id', $this->loan->member_id)
                 ->where('account_type', 'share_deposits')
                 ->first();
@@ -43,7 +42,6 @@ class ProcessLoanDisbursementJob implements ShouldQueue
                 throw new \Exception('Member savings account not found');
             }
 
-            // Create disbursement transaction
             $transaction = Transaction::create([
                 'transaction_id' => 'TXN-' . time() . '-' . rand(1000, 9999),
                 'account_id' => $account->id,
@@ -61,14 +59,12 @@ class ProcessLoanDisbursementJob implements ShouldQueue
                 'metadata' => json_encode(['loan_id' => $this->loan->id])
             ]);
 
-            // Update account balance
             $account->update([
                 'balance' => $account->balance + $this->loan->approved_amount,
                 'available_balance' => $account->available_balance + $this->loan->approved_amount,
                 'last_transaction_at' => now()
             ]);
 
-            // Update loan status
             $this->loan->update([
                 'status' => 'active',
                 'disbursed_amount' => $this->loan->approved_amount,
@@ -78,7 +74,6 @@ class ProcessLoanDisbursementJob implements ShouldQueue
                 'principal_balance' => $this->loan->approved_amount
             ]);
 
-            // Create payment voucher
             PaymentVoucher::create([
                 'voucher_number' => 'PV-' . time() . '-' . rand(1000, 9999),
                 'voucher_type' => 'loan_disbursement',
@@ -96,12 +91,10 @@ class ProcessLoanDisbursementJob implements ShouldQueue
                 'payment_date' => now()
             ]);
 
-            // Schedule loan repayment generation
             GenerateLoanRepaymentsJob::dispatch($this->loan);
 
-            // Send notification
             SendNotificationJob::dispatch(
-                new \App\Models\Notification([
+                new Notification([
                     'user_id' => $this->loan->member->user_id,
                     'title' => 'Loan Disbursed',
                     'message' => "Your loan of KES " . number_format($this->loan->approved_amount, 2) . " has been disbursed successfully.",
@@ -116,6 +109,6 @@ class ProcessLoanDisbursementJob implements ShouldQueue
     public function failed(\Exception $exception)
     {
         Log::error('Loan disbursement failed: ' . $exception->getMessage());
-        $this->loan->update(['status' => 'approved']); // Revert status
+        $this->loan->update(['status' => 'approved']); 
     }
 }

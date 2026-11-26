@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Loan;
 use App\Models\LoanRepayment;
+use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,7 +28,6 @@ class CheckOverdueLoansJob implements ShouldQueue
             $penaltyRate = $repayment->loan->loanProduct->penalty_rate / 100;
             $penaltyAmount = $repayment->outstanding_amount * $penaltyRate * $daysLate;
 
-            // Update repayment with penalty
             $repayment->update([
                 'status' => 'overdue',
                 'penalty_amount' => $penaltyAmount,
@@ -35,7 +35,6 @@ class CheckOverdueLoansJob implements ShouldQueue
                 'outstanding_amount' => $repayment->expected_amount + $penaltyAmount
             ]);
 
-            // Update loan arrears
             $loan = $repayment->loan;
             $loan->update([
                 'days_in_arrears' => $daysLate,
@@ -43,10 +42,9 @@ class CheckOverdueLoansJob implements ShouldQueue
                 'outstanding_balance' => $loan->outstanding_balance + $penaltyAmount
             ]);
 
-            // Send overdue notification
-            if ($daysLate % 7 == 0) { // Weekly reminders
+            if ($daysLate % 7 == 0) { 
                 SendNotificationJob::dispatch(
-                    new \App\Models\Notification([
+                    new Notification([
                         'user_id' => $loan->member->user_id,
                         'title' => 'Overdue Loan Payment',
                         'message' => "Your loan payment of KES " . number_format($repayment->expected_amount, 2) . " is {$daysLate} days overdue. Please make payment to avoid additional penalties.",

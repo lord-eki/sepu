@@ -21,13 +21,12 @@ class Notification extends Model
         'metadata' => 'array',
     ];
 
-    // Relationships
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Scopes
+    
     public function scopeUnread($query)
     {
         return $query->where('is_read', false);

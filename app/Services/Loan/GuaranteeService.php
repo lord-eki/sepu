@@ -65,7 +65,7 @@ class GuaranteeService
         });
     }
 
-    /** Guarantor declines. The loan keeps waiting; the applicant must add a replacement. */
+    /** Guarantor declines. */
     public function reject(Loan $loan, Member $guarantorMember, ?string $comments = null): LoanGuarantor
     {
         return DB::transaction(function () use ($loan, $guarantorMember, $comments) {

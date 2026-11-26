@@ -7,6 +7,7 @@ use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
 use DomainException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -65,11 +66,9 @@ class LedgerService
         }
 
         return DB::transaction(function () use ($normalized, $debitCents, $creditCents, $description, $reference, $idempotencyKey, $userId, $date) {
-            // Lock every account in a stable order (prevents deadlocks, serialises concurrent postings)
             $ids = collect($normalized)->pluck('account_id')->unique()->sort()->values();
             $accounts = ChartOfAccount::whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
-            // Idempotency check AFTER locking, so concurrent retries cannot both pass it
             if ($idempotencyKey) {
                 $existing = JournalEntry::where('idempotency_key', $idempotencyKey)->first();
                 if ($existing) {
@@ -88,7 +87,7 @@ class LedgerService
                 }
             }
 
-            $actor = $userId ?? auth()->id();
+            $actor = $userId ?? Auth::id();
 
             $entry = JournalEntry::create([
                 'entry_number'    => 'TMP-' . Str::uuid(),
@@ -127,7 +126,7 @@ class LedgerService
     }
 
     /**
-     * Reverse a posted entry by posting its mirror image. The original is marked 'reversed'.
+     * Reverse a posted entry by posting its mirror image. 
      */
     public function reverse(JournalEntry $entry, string $reason, ?int $userId = null, ?string $idempotencyKey = null): JournalEntry
     {

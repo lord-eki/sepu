@@ -5,16 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-/**
- *
- * Stores the monthly deposit amount a member has committed to contribute
- * for a given account type.
- *
- * The ScheduleController::runMonthlyDeposits() method calls
- * MemberDepositCommitment::active()->with('member', 'account')->get()
- * to build its deposit list at run-time, replacing any hard-coded amount.
- *
- */
+
 class MemberDepositCommitment extends Model
 {
     use HasFactory;
@@ -44,31 +35,22 @@ class MemberDepositCommitment extends Model
         'is_active'      => 'boolean',
     ];
 
-    // ── Relationships ────────────────────────────────────────────────────
 
     public function member()
     {
         return $this->belongsTo(Member::class);
     }
 
-    /** The savings account that receives the monthly credit. */
     public function account()
     {
         return $this->belongsTo(Account::class);
     }
 
-    /** Staff member who created / last modified this commitment. */
     public function setBy()
     {
         return $this->belongsTo(User::class, 'set_by');
     }
 
-    // ── Scopes ───────────────────────────────────────────────────────────
-
-    /**
-     * Active commitments within their effective date range.
-     * Primary scope used by the schedule engine.
-     */
     public function scopeActive($query)
     {
         $today = now()->toDateString();
@@ -92,9 +74,7 @@ class MemberDepositCommitment extends Model
         return $query->where('account_type', $type);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────
 
-    /** Returns true if this commitment should be processed right now. */
     public function isCurrentlyActive(): bool
     {
         if (!$this->is_active) {

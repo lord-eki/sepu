@@ -21,7 +21,6 @@ class Budget extends Model
         'approval_date' => 'date',
     ];
 
-    // Relationships
     public function budgetItems()
     {
         return $this->hasMany(BudgetItem::class);
@@ -37,7 +36,6 @@ class Budget extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    // Keep the old method names for backward compatibility if needed
     public function createdBy()
     {
         return $this->creator();
@@ -48,7 +46,6 @@ class Budget extends Model
         return $this->approver();
     }
 
-    // Scope for active budgets
     public function scopeActive($query)
     {
         return $query->where('status', 'active');

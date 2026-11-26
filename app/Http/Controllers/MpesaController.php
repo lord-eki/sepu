@@ -8,13 +8,14 @@ use App\Models\Transaction;
 use App\Models\Member;
 use App\Models\Account;
 use App\Models\MemberDividend;
+use App\Support\ErrorMessage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
 class MpesaController extends Controller
 {
-    private $mpesaService;
+    private MpesaService $mpesaService;
 
     public function __construct(MpesaService $mpesaService)
     {
@@ -52,7 +53,6 @@ class MpesaController extends Controller
                 $description
             );
 
-            // Store pending transaction
             $transaction = Transaction::create([
                 'member_id' => $member->id,
                 'account_id' => $member->accounts()->where('account_type', 'share_deposits')->first()->id ?? null,
@@ -79,12 +79,12 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('M-Pesa STK Push Error: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('M-Pesa STK Push Error: ' . ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to initiate payment',
-                'error' => \App\Support\ErrorMessage::from($e)
+                'error' => ErrorMessage::from($e)
             ], 500);
         }
     }
@@ -113,7 +113,6 @@ class MpesaController extends Controller
             $member = Member::findOrFail($request->member_id);
             $account = Account::findOrFail($request->account_id);
 
-            // Check if member owns the account
             if ($account->member_id !== $member->id) {
                 return response()->json([
                     'success' => false,
@@ -121,7 +120,6 @@ class MpesaController extends Controller
                 ], 403);
             }
 
-            // Check sufficient balance
             if ($account->available_balance < $request->amount) {
                 return response()->json([
                     'success' => false,
@@ -131,7 +129,6 @@ class MpesaController extends Controller
 
             DB::beginTransaction();
 
-            // Create pending withdrawal transaction
             $transaction = Transaction::create([
                 'member_id' => $member->id,
                 'account_id' => $account->id,
@@ -145,7 +142,6 @@ class MpesaController extends Controller
                 'processed_by' => auth()->id()
             ]);
 
-            // Update account balance (reserved)
             $account->update([
                 'available_balance' => $account->available_balance - $request->amount
             ]);
@@ -160,7 +156,6 @@ class MpesaController extends Controller
                 $occasion
             );
 
-            // Update transaction with M-Pesa details
             $transaction->update([
                 'metadata' => json_encode([
                     'conversation_id' => $response['ConversationID'],
@@ -182,12 +177,12 @@ class MpesaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('M-Pesa B2C Error: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('M-Pesa B2C Error: ' . ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to initiate withdrawal',
-                'error' => \App\Support\ErrorMessage::from($e)
+                'error' => ErrorMessage::from($e)
             ], 500);
         }
     }
@@ -245,7 +240,6 @@ class MpesaController extends Controller
                         $occasion
                     );
 
-                    // Update member dividend status
                     $memberDividend->update([
                         'status' => 'processing',
                         'payment_date' => now(),
@@ -269,7 +263,7 @@ class MpesaController extends Controller
                         'member_name' => $member->first_name . ' ' . $member->last_name,
                         'amount' => $memberDividend->amount,
                         'status' => 'failed',
-                        'message' => \App\Support\ErrorMessage::from($e)
+                        'message' => ErrorMessage::from($e)
                     ];
                 }
             }
@@ -285,12 +279,12 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Dividend Distribution Error: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Dividend Distribution Error: ' . ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to distribute dividends',
-                'error' => \App\Support\ErrorMessage::from($e)
+                'error' => ErrorMessage::from($e)
             ], 500);
         }
     }
@@ -311,7 +305,7 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('STK Callback Error: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('STK Callback Error: ' . ErrorMessage::from($e));
             
             return response()->json([
                 'ResultCode' => 1,
@@ -336,7 +330,7 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('B2C Callback Error: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('B2C Callback Error: ' . ErrorMessage::from($e));
             
             return response()->json([
                 'ResultCode' => 1,
@@ -352,7 +346,6 @@ class MpesaController extends Controller
     {
         Log::info('B2C Timeout Callback received', $request->all());
 
-        // Handle timeout - mark transaction as failed
         $conversationId = $request->input('ConversationID');
         
         return response()->json([
@@ -387,12 +380,12 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Transaction Status Check Error: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Transaction Status Check Error: ' .ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to check transaction status',
-                'error' => \App\Support\ErrorMessage::from($e)
+                'error' =>ErrorMessage::from($e)
             ], 500);
         }
     }
@@ -411,12 +404,12 @@ class MpesaController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Account Balance Check Error: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Account Balance Check Error: ' . ErrorMessage::from($e));
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to check account balance',
-                'error' => \App\Support\ErrorMessage::from($e)
+                'error' => ErrorMessage::from($e)
             ], 500);
         }
     }

@@ -21,7 +21,6 @@ class Account extends Model
         'last_transaction_at' => 'datetime',
     ];
 
-    // Relationships
     public function member()
     {
         return $this->belongsTo(Member::class);
@@ -32,7 +31,6 @@ class Account extends Model
         return $this->hasMany(Transaction::class);
     }
 
-    // Scope for active accounts
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

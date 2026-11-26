@@ -17,7 +17,6 @@ class SystemSetting extends Model
         'is_public' => 'boolean',
     ];
 
-    // Accessor to get typed value
     public function getTypedValueAttribute()
     {
         switch ($this->type) {
@@ -32,13 +31,11 @@ class SystemSetting extends Model
         }
     }
 
-    // Scope for public settings
     public function scopePublic($query)
     {
         return $query->where('is_public', true);
     }
 
-    // Scope by group
     public function scopeByGroup($query, $group)
     {
         return $query->where('group', $group);

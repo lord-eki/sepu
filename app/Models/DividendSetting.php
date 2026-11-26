@@ -23,9 +23,7 @@ class DividendSetting extends Model
         return static::pluck('value', 'key')->toArray();
     }
 
-    /**
-     * Upsert a single setting by key.
-     */
+   
     public static function set(string $key, float $value): static
     {
         return static::updateOrCreate(

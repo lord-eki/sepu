@@ -48,7 +48,7 @@ class SendNotificationJob implements ShouldQueue
                     break;
                 
                 default:
-                    $result = true; // System notification
+                    $result = true; 
                     break;
             }
 

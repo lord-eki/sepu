@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Models\Member;
 use Inertia\Inertia;
@@ -22,7 +21,6 @@ class SystemUserController extends Controller
             ->whereIn('role', ['admin', 'loan_officer', 'accountant', 'management'])
             ->orderBy('created_at', 'desc');
 
-        // Search functionality
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -32,12 +30,10 @@ class SystemUserController extends Controller
             });
         }
 
-        // Filter by role
         if ($request->has('role') && $request->input('role') !== 'all') {
             $query->where('role', $request->input('role'));
         }
 
-        // Filter by status
         if ($request->has('status')) {
             $isActive = $request->input('status') === 'active';
             $query->where('is_active', $isActive);
@@ -45,7 +41,6 @@ class SystemUserController extends Controller
 
         $users = $query->paginate(15)->withQueryString();
 
-        // Statistics
         $stats = [
             'total' => User::whereIn('role', ['admin', 'loan_officer', 'accountant', 'management'])->count(),
             'active' => User::whereIn('role', ['admin', 'loan_officer', 'accountant', 'management'])->where('is_active', true)->count(),
@@ -80,7 +75,7 @@ class SystemUserController extends Controller
         $members = Member::with('user')
             ->whereNotNull('user_id')
             ->whereHas('user', function ($q) {
-                $q->where('role', 'member'); // 🔥 ONLY normal members
+                $q->where('role', 'member'); 
             })
             ->get()
             ->map(fn ($m) => [
@@ -166,12 +161,10 @@ class SystemUserController extends Controller
      */
     public function update(Request $request, User $systemUser)
     {
-        //  Prevent user from editing themselves
         if (Auth::id() === $systemUser->id) {
             abort(403, 'You cannot edit your own role.');
         }
 
-        //  Prevent editing members (optional safeguard)
         if ($systemUser->role === 'member') {
             abort(403, 'Unauthorized access.');
         }
@@ -194,21 +187,17 @@ class SystemUserController extends Controller
 
  /**
      * Remove system privileges from the specified user
-     * (Revert to normal member instead of deleting)
      */
     public function destroy(User $systemUser)
     {
-        // Prevent acting on normal members
         if ($systemUser->role === 'member') {
             abort(403, 'Unauthorized access.');
         }
 
-        // Prevent admins from demoting themselves
-        if ($systemUser->id === auth()->id()) {
+        if ($systemUser->id === Auth::id()) {
             return back()->with('error', 'You cannot remove your own system role.');
         }
 
-        // Revert to normal member
         $systemUser->update([
             'role' => 'member'
         ]);
@@ -225,12 +214,10 @@ class SystemUserController extends Controller
      */
     public function toggleStatus(User $systemUser)
     {
-        // Prevent self-deactivation
-        if ($systemUser->id === auth()->id()) {
+        if ($systemUser->id === Auth::id()) {
             return back()->with('error', 'You cannot deactivate your own account.');
         }
 
-        // Prevent toggling normal members
         if ($systemUser->role === 'member') {
             abort(403, 'Unauthorized action.');
         }
@@ -344,7 +331,7 @@ class SystemUserController extends Controller
 
         $users = User::whereIn('id', $validated['user_ids'])
             ->where('role', '!=', 'member')
-            ->where('id', '!=', auth()->id()) // Exclude current user
+            ->where('id', '!=', Auth::id()) 
             ->get();
 
         if ($users->isEmpty()) {
@@ -361,7 +348,6 @@ class SystemUserController extends Controller
                 $message = 'Users deactivated successfully.';
                 break;
             case 'delete':
-                // Only delete users without critical associations
                 $deletableUsers = $users->filter(function($user) {
                     return !$user->loans()->exists() && !$user->transactions()->exists();
                 });

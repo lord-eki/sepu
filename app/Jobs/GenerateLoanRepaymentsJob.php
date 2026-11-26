@@ -25,7 +25,7 @@ class GenerateLoanRepaymentsJob implements ShouldQueue
     public function handle()
     {
         $principalAmount = $this->loan->approved_amount;
-        $interestRate = $this->loan->interest_rate / 100 / 12; // Monthly interest rate
+        $interestRate = $this->loan->interest_rate / 100 / 12; 
         $termMonths = $this->loan->term_months;
         $monthlyPayment = $this->loan->monthly_repayment;
         
@@ -36,7 +36,6 @@ class GenerateLoanRepaymentsJob implements ShouldQueue
             $interestPayment = $remainingPrincipal * $interestRate;
             $principalPayment = $monthlyPayment - $interestPayment;
             
-            // Ensure last payment covers any remaining principal
             if ($i == $termMonths) {
                 $principalPayment = $remainingPrincipal;
                 $monthlyPayment = $principalPayment + $interestPayment;

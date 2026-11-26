@@ -26,7 +26,6 @@ class Member extends Model
         'documents'       => 'array',
     ];
 
-    // ── Relationships ────────────────────────────────────────────────────
 
     public function user()
     {
@@ -68,25 +67,13 @@ class Member extends Model
         return $this->hasMany(MemberNextOfKin::class);
     }
 
-    /**
-     * ALL deposit commitments for this member — all statuses, all dates.
-     * Use this in the management UI to show the full history.
-     */
+    
     public function depositCommitments()
     {
         return $this->hasMany(MemberDepositCommitment::class);
     }
 
-    /**
-     * Only commitments that are currently active AND within their effective
-     * date range.  This is what the schedule engine loads at run-time.
-     *
-     * Usage in ScheduleController:
-     *   $member->load('activeDepositCommitments.account');
-     *   foreach ($member->activeDepositCommitments as $c) {
-     *       // post $c->monthly_amount to $c->account
-     *   }
-     */
+   
     public function activeDepositCommitments()
     {
         $today = now()->toDateString();
@@ -100,14 +87,12 @@ class Member extends Model
                     });
     }
 
-    // ── Accessors ────────────────────────────────────────────────────────
 
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name . ' ' . $this->middle_name . ' ' . $this->last_name);
     }
 
-    // ── Scopes ───────────────────────────────────────────────────────────
 
     public function scopeActive($query)
     {

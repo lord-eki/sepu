@@ -27,7 +27,6 @@ class Transaction extends Model
         'metadata' => 'array',
     ];
 
-    // Relationships
     public function account()
     {
         return $this->belongsTo(Account::class);
@@ -48,7 +47,6 @@ class Transaction extends Model
         return $this->hasOne(LoanRepayment::class);
     }
 
-    // Scope for completed transactions
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');

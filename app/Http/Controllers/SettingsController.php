@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateFinancialSettingsRequest;
+use App\Http\Requests\StoreSettingsRequest;
+use App\Http\Requests\UpdateLoanSettingsRequest;
+use App\Http\Requests\UpdateNotificationSettingRequest;
+use App\Http\Requests\UpdateSecuritySettingRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Storage, Artisan, Hash, Auth, Cache, Log};
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use App\Models\{SystemSetting, User, AuditLog};
 use App\Services\{BackupService, NotificationService};
+use App\Support\ErrorMessage;
 use Carbon\Carbon;
 
 class SettingsController extends Controller
@@ -49,36 +55,13 @@ class SettingsController extends Controller
      * Update general settings
      */
 
-    public function updateGeneral(Request $request)
+    public function updateGeneral(StoreSettingsRequest $request)
     {
     
-        $validated = $request->validate([
-            'sacco_name' => ['nullable', 'string', 'max:255'],
-            'sacco_code' => ['nullable', 'string', 'max:10', 'alpha_num'],
-            'registration_number' => ['nullable', 'string', 'max:50'],
-            'sacco_address' => ['nullable', 'string', 'max:500'],
-            'sacco_phone' => ['nullable', 'string', 'max:20'],
-            'sacco_email' => ['nullable', 'email', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'currency' => ['nullable', 'string', 'size:3'],
-            'timezone' => ['nullable', 'string', 'max:50'],
-            'language' => ['nullable', 'string', 'max:10'],
-            'date_format' => ['nullable', 'string', 'max:20'],
-            'time_format' => ['nullable', 'string', 'max:20'],
-            'logo' => ['nullable', 'image', 'max:2048'],
-            'favicon' => ['nullable', 'image', 'max:512'],
-
-            // booleans (optional)
-            'maintenance_mode' => ['nullable', 'boolean'],
-            'member_registration_open' => ['nullable', 'boolean'],
-            'auto_generate_member_id' => ['nullable', 'boolean'],
-            'require_email_verification' => ['nullable', 'boolean'],
-            'require_phone_verification' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $request) {
 
-            // Handle boolean fields safely (checkbox issue fix)
             $booleanFields = [
                 'maintenance_mode',
                 'member_registration_open',
@@ -88,33 +71,30 @@ class SettingsController extends Controller
             ];
 
             foreach ($booleanFields as $field) {
-                $validated[$field] = $request->boolean($field);
+                $validated[$field] = $validated->boolean($field);
             }
 
             foreach ($validated as $key => $value) {
 
-                // Skip null values (do not overwrite existing settings)
                 if (is_null($value)) {
                     continue;
                 }
 
-                // Handle file uploads
                 if (in_array($key, ['logo', 'favicon'])) {
 
-                    if ($request->hasFile($key)) {
+                    if ($validated->hasFile($key)) {
                         $oldSetting = SystemSetting::where('key', $key)->first();
 
                         if ($oldSetting && $oldSetting->value) {
                             Storage::disk('public')->delete($oldSetting->value);
                         }
 
-                        $path = $request->file($key)->store('settings', 'public');
+                        $path = $validated->file($key)->store('settings', 'public');
                         $this->updateSetting($key, $path, 'general');
                     }
 
                 } else {
 
-                    // Only update if value changed (optimization)
                     $existing = SystemSetting::where('key', $key)->first();
 
                     if (!$existing || $existing->value != $value) {
@@ -148,50 +128,9 @@ class SettingsController extends Controller
     /**
      * Update financial settings
      */
-    public function updateFinancial(Request $request)
+    public function updateFinancial(StoreFinancialSettingsRequest $request)
     {
-        $validated = $request->validate([
-            // Savings settings
-            'min_savings_balance' => ['required', 'numeric', 'min:0'],
-            'max_savings_balance' => ['nullable', 'numeric', 'min:0'],
-            'savings_interest_rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'savings_interest_calculation' => ['required', 'in:daily,monthly,quarterly,annually'],
-            'savings_minimum_deposit' => ['required', 'numeric', 'min:0'],
-            'savings_withdrawal_limit' => ['nullable', 'numeric', 'min:0'],
-            'savings_withdrawal_fee' => ['nullable', 'numeric', 'min:0'],
-            
-            // Shares settings
-            'share_value' => ['required', 'numeric', 'min:0'],
-            'min_shares_required' => ['required', 'integer', 'min:1'],
-            'max_shares_allowed' => ['nullable', 'integer', 'min:1'],
-            'shares_transfer_fee' => ['nullable', 'numeric', 'min:0'],
-            'shares_dividend_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            
-            // Transaction settings
-            'transaction_processing_fee' => ['nullable', 'numeric', 'min:0'],
-            'mobile_money_charge' => ['nullable', 'numeric', 'min:0'],
-            'bank_transfer_charge' => ['nullable', 'numeric', 'min:0'],
-            'cheque_processing_fee' => ['nullable', 'numeric', 'min:0'],
-            'daily_transaction_limit' => ['nullable', 'numeric', 'min:0'],
-            
-            // Loan settings
-            'default_loan_interest_rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'default_loan_processing_fee' => ['nullable', 'numeric', 'min:0'],
-            'default_loan_insurance_rate' => ['nullable', 'numeric', 'min:0'],
-            'default_loan_penalty_rate' => ['nullable', 'numeric', 'min:0'],
-            'loan_grace_period_days' => ['nullable', 'integer', 'min:0'],
-            'max_loan_term_months' => ['nullable', 'integer', 'min:1'],
-            
-            // Dividend settings
-            'dividend_calculation_method' => ['required', 'in:shares_based,savings_based,combined'],
-            'dividend_minimum_shares' => ['nullable', 'integer', 'min:0'],
-            'dividend_processing_fee' => ['nullable', 'numeric', 'min:0'],
-            
-            // Budget settings
-            'budget_variance_threshold' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'budget_approval_required' => ['boolean'],
-            'budget_over_expenditure_allowed' => ['boolean']
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             foreach ($validated as $key => $value) {
@@ -223,31 +162,9 @@ class SettingsController extends Controller
     /**
      * Update loan settings
      */
-    public function updateLoan(Request $request)
+    public function updateLoan(UpdateLoanSettingsRequest $request)
     {
-        $validated = $request->validate([
-            'loan_application_fee' => ['nullable', 'numeric', 'min:0'],
-            'loan_appraisal_fee' => ['nullable', 'numeric', 'min:0'],
-            'loan_processing_time_days' => ['nullable', 'integer', 'min:1'],
-            'loan_disbursement_delay_days' => ['nullable', 'integer', 'min:0'],
-            'max_loan_amount' => ['nullable', 'numeric', 'min:0'],
-            'loan_to_savings_ratio' => ['nullable', 'numeric', 'min:1'],
-            'loan_to_shares_ratio' => ['nullable', 'numeric', 'min:1'],
-            'guarantor_required' => ['boolean'],
-            'min_guarantors_required' => ['nullable', 'integer', 'min:0'],
-            'max_guarantors_allowed' => ['nullable', 'integer', 'min:1'],
-            'guarantor_loan_limit_ratio' => ['nullable', 'numeric', 'min:0'],
-            'auto_calculate_repayment' => ['boolean'],
-            'allow_loan_restructuring' => ['boolean'],
-            'loan_restructuring_fee' => ['nullable', 'numeric', 'min:0'],
-            'early_repayment_penalty' => ['nullable', 'numeric', 'min:0'],
-            'late_payment_grace_days' => ['nullable', 'integer', 'min:0'],
-            'arrears_notification_days' => ['nullable', 'integer', 'min:1'],
-            'loan_writeoff_days' => ['nullable', 'integer', 'min:1'],
-            'compound_interest' => ['boolean'],
-            'interest_calculation_method' => ['required', 'in:reducing_balance,flat_rate,compound'],
-            'repayment_frequency' => ['required', 'in:weekly,bi_weekly,monthly,quarterly']
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             foreach ($validated as $key => $value) {
@@ -279,52 +196,9 @@ class SettingsController extends Controller
     /**
      * Update notification settings
      */
-    public function updateNotification(Request $request)
+    public function updateNotification(UpdateNotificationSettingRequest $request)
     {
-        $validated = $request->validate([
-            // SMS settings
-            'sms_enabled' => ['boolean'],
-            'sms_provider' => ['nullable', 'string', 'in:africastalking,twilio,custom'],
-            'sms_api_key' => ['nullable', 'string'],
-            'sms_api_secret' => ['nullable', 'string'],
-            'sms_sender_id' => ['nullable', 'string', 'max:11'],
-            'sms_balance_threshold' => ['nullable', 'numeric', 'min:0'],
-            
-            // Email settings
-            'email_enabled' => ['boolean'],
-            'email_driver' => ['nullable', 'string', 'in:smtp,mailgun,ses,postmark'],
-            'email_host' => ['nullable', 'string'],
-            'email_port' => ['nullable', 'integer'],
-            'email_username' => ['nullable', 'string'],
-            'email_password' => ['nullable', 'string'],
-            'email_encryption' => ['nullable', 'string', 'in:tls,ssl'],
-            'email_from_address' => ['nullable', 'email'],
-            'email_from_name' => ['nullable', 'string'],
-            
-            // Push notification settings
-            'push_enabled' => ['boolean'],
-            'push_server_key' => ['nullable', 'string'],
-            'push_vapid_public_key' => ['nullable', 'string'],
-            'push_vapid_private_key' => ['nullable', 'string'],
-            
-            // Notification triggers
-            'notify_on_deposit' => ['boolean'],
-            'notify_on_withdrawal' => ['boolean'],
-            'notify_on_loan_approval' => ['boolean'],
-            'notify_on_loan_disbursement' => ['boolean'],
-            'notify_on_loan_repayment' => ['boolean'],
-            'notify_on_dividend_payment' => ['boolean'],
-            'notify_on_account_activation' => ['boolean'],
-            'notify_on_account_suspension' => ['boolean'],
-            'notify_on_password_change' => ['boolean'],
-            'notify_on_loan_arrears' => ['boolean'],
-            'arrears_notification_frequency' => ['nullable', 'in:daily,weekly,monthly'],
-            
-            // Notification timing
-            'notification_batch_size' => ['nullable', 'integer', 'min:1', 'max:1000'],
-            'notification_retry_attempts' => ['nullable', 'integer', 'min:1', 'max:10'],
-            'notification_retry_delay' => ['nullable', 'integer', 'min:1']
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             foreach ($validated as $key => $value) {
@@ -357,50 +231,9 @@ class SettingsController extends Controller
     /**
      * Update security settings
      */
-    public function updateSecurity(Request $request)
+    public function updateSecurity(UpdateSecuritySettingRequest $request)
     {
-        $validated = $request->validate([
-            // Password policy
-            'password_min_length' => ['required', 'integer', 'min:6', 'max:50'],
-            'password_require_uppercase' => ['boolean'],
-            'password_require_lowercase' => ['boolean'],
-            'password_require_numbers' => ['boolean'],
-            'password_require_symbols' => ['boolean'],
-            'password_expiry_days' => ['nullable', 'integer', 'min:1'],
-            'password_history_count' => ['nullable', 'integer', 'min:0'],
-            
-            // Account security
-            'max_login_attempts' => ['required', 'integer', 'min:1', 'max:20'],
-            'lockout_duration_minutes' => ['required', 'integer', 'min:1'],
-            'session_timeout_minutes' => ['required', 'integer', 'min:5'],
-            'require_2fa' => ['boolean'],
-            'force_2fa_for_admin' => ['boolean'],
-            'otp_expiry_minutes' => ['required', 'integer', 'min:1', 'max:60'],
-            
-            // API security
-            'api_rate_limit' => ['required', 'integer', 'min:1'],
-            'api_rate_limit_window' => ['required', 'integer', 'min:1'],
-            'api_token_expiry_days' => ['nullable', 'integer', 'min:1'],
-            'api_require_https' => ['boolean'],
-            
-            // Audit settings
-            'audit_log_retention_days' => ['nullable', 'integer', 'min:1'],
-            'audit_sensitive_actions' => ['boolean'],
-            'audit_failed_logins' => ['boolean'],
-            'audit_data_changes' => ['boolean'],
-            
-            // IP restrictions
-            'ip_whitelist_enabled' => ['boolean'],
-            'ip_whitelist' => ['nullable', 'string'],
-            'ip_blacklist_enabled' => ['boolean'],
-            'ip_blacklist' => ['nullable', 'string'],
-            
-            // Encryption
-            'encrypt_sensitive_data' => ['boolean'],
-            'backup_encryption_enabled' => ['boolean'],
-            'file_upload_scan_enabled' => ['boolean'],
-            'max_file_upload_size' => ['nullable', 'integer', 'min:1']
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             foreach ($validated as $key => $value) {
@@ -455,7 +288,7 @@ class SettingsController extends Controller
             return redirect()->back()->with('success', 'Backup created successfully.');
         } catch (\Exception $e) {
             Log::error('Backup creation failed', [
-                'error' => \App\Support\ErrorMessage::from($e),
+                'error' => ErrorMessage::from($e),
                 'user_id' => Auth::id()
             ]);
 
@@ -486,7 +319,7 @@ class SettingsController extends Controller
             return redirect()->back()->with('success', 'System restored successfully.');
         } catch (\Exception $e) {
             Log::error('Backup restoration failed', [
-                'error' => \App\Support\ErrorMessage::from($e),
+                'error' => ErrorMessage::from($e),
                 'backup_file' => $validated['backup_file'],
                 'user_id' => Auth::id()
             ]);
@@ -816,7 +649,6 @@ class SettingsController extends Controller
      */
     private function getRecentSessions()
     {
-        // This would need to be implemented based on your session tracking mechanism
         return collect([]);
     }
 

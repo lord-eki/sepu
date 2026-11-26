@@ -17,6 +17,7 @@ use App\Models\{
     BudgetItem,
     PaymentVoucher
 };
+use App\Support\ErrorMessage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Response;
 
@@ -40,8 +41,6 @@ class ReportController extends Controller
     {
         $date = $request->input('date', Carbon::now()->format('Y-m-d'));
         $asOf = Carbon::parse($date)->endOfDay();
-
-        // Assets
         $assets = [
             'current_assets' => [
                 'cash_and_equivalents' => $this->getCashAndEquivalents($asOf),
@@ -54,7 +53,6 @@ class ReportController extends Controller
             ]
         ];
 
-        // Liabilities
         $liabilities = [
             'current_liabilities' => [
                 'member_deposits' => $this->getMemberDeposits($asOf),
@@ -66,7 +64,6 @@ class ReportController extends Controller
             ]
         ];
 
-        // Equity
         $equity = [
             'share_capital' => $this->getShareCapital($asOf),
             'retained_earnings' => $this->getRetainedEarnings($asOf),
@@ -99,7 +96,6 @@ class ReportController extends Controller
         $start = Carbon::parse($startDate)->startOfDay();
         $end = Carbon::parse($endDate)->endOfDay();
 
-        // Revenue
         $revenue = [
             'interest_income' => $this->getInterestIncome($start, $end),
             'loan_fees' => $this->getLoanFees($start, $end),
@@ -107,7 +103,6 @@ class ReportController extends Controller
             'other_income' => $this->getOtherIncome($start, $end),
         ];
 
-        // Expenses
         $expenses = [
             'interest_expense' => $this->getInterestExpense($start, $end),
             'staff_costs' => $this->getStaffCosts($start, $end),
@@ -141,7 +136,6 @@ class ReportController extends Controller
         $start = Carbon::parse($startDate)->startOfDay();
         $end = Carbon::parse($endDate)->endOfDay();
     
-        // Operating Activities
         $operatingActivities = [
             'net_income' => $this->getNetIncome($start, $end),
             'loan_disbursements' => $this->getLoanDisbursements($start, $end),
@@ -150,7 +144,6 @@ class ReportController extends Controller
             'member_withdrawals' => $this->getMemberWithdrawalsFlow($start, $end),
         ];
     
-        // Investing Activities
         $investingActivities = [
             'equipment_purchases' => DB::table('payment_vouchers')
                 ->where('voucher_type', 'equipment')
@@ -165,7 +158,6 @@ class ReportController extends Controller
                 ->sum('amount'),
         ];
     
-        // Financing Activities
         $financingActivities = [
             'share_capital' => DB::table('payment_vouchers')
                 ->where('voucher_type', 'share_capital')
@@ -180,7 +172,6 @@ class ReportController extends Controller
                 ->sum('amount'),
         ];
     
-        // Calculate totals
         $netOperatingCash = collect($operatingActivities)->sum();
         $netInvestingCash = collect($investingActivities)->sum();
         $netFinancingCash = collect($financingActivities)->sum();
@@ -206,10 +197,7 @@ class ReportController extends Controller
     {
         $date = $request->input('date', Carbon::now()->format('Y-m-d'));
         $asOf = Carbon::parse($date)->endOfDay();
-
-        // This would typically come from a chart of accounts
         $accounts = $this->getTrialBalanceAccounts($asOf);
-
         $totalDebits = collect($accounts)->sum('debit');
         $totalCredits = collect($accounts)->sum('credit');
 
@@ -493,7 +481,6 @@ class ReportController extends Controller
             ->orderBy('days_in_arrears', 'desc')
             ->get();
 
-        // Use a collection to allow map()
         $arrearsAnalysis = collect([
             '1-30_days' => $loans->whereBetween('days_in_arrears', [1, 30]),
             '31-60_days' => $loans->whereBetween('days_in_arrears', [31, 60]),
@@ -803,11 +790,8 @@ public function statutoryReports(Request $request)
 {
     $year = $request->input('year', Carbon::now()->year);
     $quarter = $request->input('quarter');
-    
-    // Define reporting periods
     $periods = $this->getReportingPeriods($year, $quarter);
     
-    // Generate statutory reports data
     $reports = [
         'membership_report' => $this->generateMembershipReport($periods),
         'financial_performance' => $this->generateFinancialPerformanceReport($periods),
@@ -833,7 +817,6 @@ public function complianceReports(Request $request)
     $start = Carbon::parse($startDate);
     $end = Carbon::parse($endDate);
     
-    // Compliance monitoring data
     $compliance = [
         'kyc_compliance' => $this->checkKYCCompliance($start, $end),
         'aml_monitoring' => $this->checkAMLCompliance($start, $end),
@@ -844,7 +827,6 @@ public function complianceReports(Request $request)
         'regulatory_submissions' => $this->getRegulatorySubmissions($start, $end),
     ];
     
-    // Compliance score calculation
     $complianceScore = $this->calculateComplianceScore($compliance);
     
     return Inertia::render('Reports/Regulatory/Compliance', [
@@ -860,7 +842,6 @@ public function complianceReports(Request $request)
  */
 public function customBuilder(Request $request)
 {
-    // Available data sources for custom reports
     $dataSources = [
         'members' => [
             'name' => 'Members',
@@ -910,7 +891,6 @@ public function customBuilder(Request $request)
         ],
     ];
     
-    // Report templates
     $templates = [
         'member_summary' => [
             'name' => 'Member Summary Report',
@@ -957,37 +937,29 @@ public function generateCustom(Request $request)
     ]);
     
     try {
-        // Build the query based on selected data sources and fields
         $query = $this->buildCustomQuery($validated);
         
-        // Apply filters
         if (!empty($validated['filters'])) {
             $query = $this->applyCustomFilters($query, $validated['filters']);
         }
         
-        // Apply date range
         if (!empty($validated['date_range'])) {
             $query = $this->applyDateRange($query, $validated['date_range']);
         }
         
-        // Apply grouping
         if (!empty($validated['group_by'])) {
             $query = $this->applyGrouping($query, $validated['group_by']);
         }
         
-        // Apply sorting
         if (!empty($validated['sort_by'])) {
             $direction = $validated['sort_direction'] ?? 'asc';
             $query = $query->orderBy($validated['sort_by'], $direction);
         }
         
-        // Execute query
         $results = $query->get();
         
-        // Process results based on format
         $processedResults = $this->processCustomResults($results, $validated);
         
-        // Save report if requested
         if ($validated['save_report'] ?? false) {
             $this->saveCustomReport($validated, $processedResults);
         }
@@ -1002,7 +974,7 @@ public function generateCustom(Request $request)
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'error' => 'Error generating custom report: ' . \App\Support\ErrorMessage::from($e),
+            'error' => 'Error generating custom report: ' . ErrorMessage::from($e),
         ], 500);
     }
 }
@@ -1079,7 +1051,7 @@ private function getAccruedExpenses($asOf)
     return PaymentVoucher::where('status', 'approved')
         ->where('voucher_type', 'expense')
         ->where('approval_date', '<=', $asOf)
-        ->whereNull('payment_date') // not yet paid
+        ->whereNull('payment_date') 
         ->sum('amount');
 }
 
@@ -1159,10 +1131,7 @@ private function getInterestExpense($start, $end)
         ->sum('amount');
 }
 
-/**
- * EXPENSES FROM PAYMENT VOUCHERS
- * Uses approval_date (NOT approved_at)
- */
+
 private function getStaffCosts($start, $end)
 {
     return PaymentVoucher::where('voucher_type', 'staff_cost')
@@ -1215,7 +1184,7 @@ private function getNetIncome($start, $end)
 private function getLoanDisbursements($start, $end)
 {
     return Loan::whereBetween('disbursement_date', [$start, $end])
-        ->sum('disbursed_amount') * -1; // Negative for cash outflow
+        ->sum('disbursed_amount') * -1; 
 }
 
 private function getLoanRepayments($start, $end)
@@ -1235,34 +1204,14 @@ private function getMemberWithdrawalsFlow($start, $end)
 {
     return Transaction::where('transaction_type', 'withdrawal')
         ->whereBetween('created_at', [$start, $end])
-        ->sum('amount') * -1; // Negative for cash outflow
-}
-
-private function getEquipmentPurchases($start, $end)
-{
-    return PaymentVoucher::where('voucher_type', 'equipment')
-        ->whereBetween('approved_at', [$start, $end])
-        ->sum('amount') * -1; // Negative for cash outflow
-}
-
-private function getInvestmentFlow($start, $end)
-{
-    return Transaction::where('transaction_type', 'investment')
-        ->whereBetween('created_at', [$start, $end])
         ->sum('amount') * -1; 
 }
 
-private function getShareCapitalFlow($start, $end)
-{
-    return Transaction::where('transaction_type', 'share_capital')
-        ->whereBetween('created_at', [$start, $end])
-        ->sum('amount');
-}
 
 private function getDividendPayments($start, $end)
 {
     return MemberDividend::whereBetween('paid_at', [$start, $end])
-        ->sum('amount') * -1; // Negative for cash outflow
+        ->sum('amount') * -1; 
 }
 
 /**
@@ -1270,8 +1219,6 @@ private function getDividendPayments($start, $end)
  */
 private function getTrialBalanceAccounts($asOf)
 {
-    // This is a simplified version - in a real implementation,
-    // you would have a proper chart of accounts
     return collect([
         ['account_name' => 'Cash', 'debit' => $this->getCashAndEquivalents($asOf), 'credit' => 0],
         ['account_name' => 'Loans Receivable', 'debit' => $this->getLoansReceivable($asOf), 'credit' => 0],
@@ -1282,7 +1229,7 @@ private function getTrialBalanceAccounts($asOf)
 }
 
 /**
- * Additional Helper Methods
+ *  Helper Methods
  */
 private function calculatePortfolioAtRiskRatio()
 {
@@ -1313,142 +1260,118 @@ private function calculateTransactionGrowthRate($year)
     return $previousYear > 0 ? (($currentYear - $previousYear) / $previousYear) * 100 : 0;
 }
 
-// Additional helper methods for regulatory and custom reports would go here...
 private function getReportingPeriods($year, $quarter)
 {
-    // Implementation for reporting periods
     return [];
 }
 
 private function generateMembershipReport($periods)
 {
-    // Implementation for membership report
     return [];
 }
 
 private function generateFinancialPerformanceReport($periods)
 {
-    // Implementation for financial performance report
     return [];
 }
 
 private function generateLoanPortfolioReport($periods)
 {
-    // Implementation for loan portfolio report
     return [];
 }
 
 private function generateLiquidityReport($periods)
 {
-    // Implementation for liquidity report
     return [];
 }
 
 private function generateCapitalAdequacyReport($periods)
 {
-    // Implementation for capital adequacy report
     return [];
 }
 
 private function generateGovernanceReport($periods)
 {
-    // Implementation for governance report
     return [];
 }
 
 private function checkKYCCompliance($start, $end)
 {
-    // Implementation for KYC compliance check
     return [];
 }
 
 private function checkAMLCompliance($start, $end)
 {
-    // Implementation for AML compliance check
     return [];
 }
 
 private function calculateLiquidityRatios($start, $end)
 {
-    // Implementation for liquidity ratios
     return [];
 }
 
 private function calculateCapitalRatios($start, $end)
 {
-    // Implementation for capital ratios
     return [];
 }
 
 private function checkLendingLimits($start, $end)
 {
-    // Implementation for lending limits check
     return [];
 }
 
 private function checkReserveRequirements($start, $end)
 {
-    // Implementation for reserve requirements check
     return [];
 }
 
 private function getRegulatorySubmissions($start, $end)
 {
-    // Implementation for regulatory submissions
     return [];
 }
 
 private function calculateComplianceScore($compliance)
 {
-    // Implementation for compliance score calculation
     return 0;
 }
 
 private function getSavedCustomReports()
 {
-    // Implementation to get saved custom reports
     return [];
 }
 
 private function buildCustomQuery($validated)
 {
-    // Implementation to build custom query
     return collect();
 }
 
 private function applyCustomFilters($query, $filters)
 {
-    // Implementation to apply custom filters
     return $query;
 }
 
 private function applyDateRange($query, $dateRange)
 {
-    // Implementation to apply date range
     return $query;
 }
 
 private function applyGrouping($query, $groupBy)
 {
-    // Implementation to apply grouping
     return $query;
 }
 
 private function processCustomResults($results, $validated)
 {
-    // Implementation to process custom results
     return $results;
 }
 
 private function saveCustomReport($validated, $results)
 {
-    // Implementation to save custom report
     return true;
 }
 
 private function exportToPDF($reportType, $data)
 {
-    // Implementation for PDF export
     return Response::make('', 200, [
         'Content-Type' => 'application/pdf',
         'Content-Disposition' => 'attachment; filename="report.pdf"'
@@ -1457,7 +1380,6 @@ private function exportToPDF($reportType, $data)
 
 private function exportToCSV($reportType, $data)
 {
-    // Implementation for CSV export
     return Response::make('', 200, [
         'Content-Type' => 'text/csv',
         'Content-Disposition' => 'attachment; filename="report.csv"'
@@ -1466,7 +1388,6 @@ private function exportToCSV($reportType, $data)
 
 private function exportToExcel($reportType, $data)
 {
-    // Implementation for Excel export
     return Response::make('', 200, [
         'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition' => 'attachment; filename="report.xlsx"'

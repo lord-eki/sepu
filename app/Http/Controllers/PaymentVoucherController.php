@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePaymentVoucherRequest;
+use App\Http\Requests\UpdatePaymentVoucherRequest;
 use App\Models\PaymentVoucher;
 use App\Models\BudgetItem;
 use App\Models\Loan;
@@ -112,25 +114,11 @@ class PaymentVoucherController extends Controller
     /**
      * Store a newly created payment voucher.
      */
-    public function store(Request $request)
+    public function store(StorePaymentVoucherRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'voucher_type' => 'required|in:loan_disbursement,operational_expense,dividend_payment,refund,other',
-            'payee_name' => 'required|string|max:255',
-            'payee_phone' => 'nullable|string|max:20',
-            'payee_account' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
-            'purpose' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'budget_item_id' => 'nullable|exists:budget_items,id',
-            'loan_id' => 'nullable|exists:loans,id',
-            'supporting_documents' => 'nullable|array',
-            'supporting_documents.*' => 'file|max:5120|mimes:pdf,doc,docx,jpg,jpeg,png',
-        ]);
+        $data = $request->validated();
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
+       
 
         DB::beginTransaction();
 
@@ -138,8 +126,8 @@ class PaymentVoucherController extends Controller
             $voucherNumber = $this->generateVoucherNumber();
 
             $documents = [];
-            if ($request->hasFile('supporting_documents')) {
-                foreach ($request->file('supporting_documents') as $file) {
+            if ($data->hasFile('supporting_documents')) {
+                foreach ($data->file('supporting_documents') as $file) {
                     $path = $file->store('vouchers/documents', 'public');
                     $documents[] = [
                         'name' => $file->getClientOriginalName(),
@@ -151,30 +139,30 @@ class PaymentVoucherController extends Controller
                 }
             }
 
-            if ($request->budget_item_id) {
-                $budgetItem = BudgetItem::find($request->budget_item_id);
-                if ($budgetItem && $budgetItem->remaining_amount < $request->amount) {
+            if ($data->budget_item_id) {
+                $budgetItem = BudgetItem::find($data->budget_item_id);
+                if ($budgetItem && $budgetItem->remaining_amount < $data->amount) {
                     throw new \DomainException('Insufficient budget allocation. Available: ' . number_format($budgetItem->remaining_amount, 2));
                 }
             }
 
             $voucher = PaymentVoucher::create([
                 'voucher_number' => $voucherNumber,
-                'voucher_type' => $request->voucher_type,
-                'payee_name' => $request->payee_name,
-                'payee_phone' => $request->payee_phone,
-                'payee_account' => $request->payee_account,
-                'amount' => $request->amount,
-                'purpose' => $request->purpose,
-                'description' => $request->description,
-                'budget_item_id' => $request->budget_item_id,
-                'loan_id' => $request->loan_id,
+                'voucher_type' => $data->voucher_type,
+                'payee_name' => $data->payee_name,
+                'payee_phone' => $data->payee_phone,
+                'payee_account' => $data->payee_account,
+                'amount' => $data->amount,
+                'purpose' => $data->purpose,
+                'description' => $data->description,
+                'budget_item_id' => $data->budget_item_id,
+                'loan_id' => $data->loan_id,
                 'status' => 'pending',
                 'created_by' => Auth::id(),
                 'supporting_documents' => $documents,
             ]);
 
-            if ($this->shouldAutoApprove($request->amount, Auth::user()->role)) {
+            if ($this->shouldAutoApprove($data->amount, Auth::user()->role)) {
                 $voucher->update([
                     'status' => 'approved',
                     'approved_by' => Auth::id(),
@@ -259,48 +247,36 @@ class PaymentVoucherController extends Controller
     /**
      * Update the specified payment voucher.
      */
-    public function update(Request $request, PaymentVoucher $voucher)
+    public function update(UpdatePaymentVoucherRequest $request, PaymentVoucher $voucher)
     {
         if (!$this->canEdit($voucher)) {
             return redirect()->back()->withErrors(['error' => 'You cannot edit this voucher.']);
         }
 
-        $validator = Validator::make($request->all(), [
-            'voucher_type' => 'required|in:loan_disbursement,operational_expense,dividend_payment,refund,other',
-            'payee_name' => 'required|string|max:255',
-            'payee_phone' => 'nullable|string|max:20',
-            'payee_account' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
-            'purpose' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'budget_item_id' => 'nullable|exists:budget_items,id',
-            'loan_id' => 'nullable|exists:loans,id',
-        ]);
+        $data = $request->validated();
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
+      
 
         DB::beginTransaction();
 
         try {
-            if ($request->budget_item_id && $request->budget_item_id != $voucher->budget_item_id) {
-                $budgetItem = BudgetItem::find($request->budget_item_id);
-                if ($budgetItem && $budgetItem->remaining_amount < $request->amount) {
+            if ($data->budget_item_id && $data->budget_item_id != $voucher->budget_item_id) {
+                $budgetItem = BudgetItem::find($data->budget_item_id);
+                if ($budgetItem && $budgetItem->remaining_amount < $data->amount) {
                     throw new \DomainException('Insufficient budget allocation. Available: ' . number_format($budgetItem->remaining_amount, 2));
                 }
             }
 
             $voucher->update([
-                'voucher_type' => $request->voucher_type,
-                'payee_name' => $request->payee_name,
-                'payee_phone' => $request->payee_phone,
-                'payee_account' => $request->payee_account,
-                'amount' => $request->amount,
-                'purpose' => $request->purpose,
-                'description' => $request->description,
-                'budget_item_id' => $request->budget_item_id,
-                'loan_id' => $request->loan_id,
+                'voucher_type' => $data->voucher_type,
+                'payee_name' => $data->payee_name,
+                'payee_phone' => $data->payee_phone,
+                'payee_account' => $data->payee_account,
+                'amount' => $data->amount,
+                'purpose' => $data->purpose,
+                'description' => $data->description,
+                'budget_item_id' => $data->budget_item_id,
+                'loan_id' => $data->loan_id,
             ]);
 
             DB::commit();
@@ -341,7 +317,7 @@ class PaymentVoucherController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['error' => ErrorMessage::from($e)]);
         }
     }
 
@@ -1201,8 +1177,7 @@ class PaymentVoucherController extends Controller
 
         $newVoucher->voucher_number = $this->generateVoucherNumber();
         $newVoucher->status = 'pending';
-        $newVoucher->created_by = auth()->id();
-
+        $newVoucher->created_by = Auth::id();
         $newVoucher->approved_by = null;
         $newVoucher->paid_by = null;
         $newVoucher->approval_date = null;

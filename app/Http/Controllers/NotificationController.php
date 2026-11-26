@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SendBulkRequest;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Member;
@@ -16,12 +17,13 @@ use Inertia\Inertia;
 use App\Services\NotificationService;
 use App\Services\SmsService;
 use App\Services\EmailService;
+use App\Support\ErrorMessage;
 
 class NotificationController extends Controller
 {
-    protected $notificationService;
-    protected $smsService;
-    protected $emailService;
+    protected NotificationService $notificationService;
+    protected SmsService $smsService;
+    protected EmailService $emailService;
 
     public function __construct(
         NotificationService $notificationService,
@@ -43,12 +45,9 @@ class NotificationController extends Controller
         $query = Notification::where('user_id', $user->id)
             ->orderBy('created_at', 'desc');
 
-        // Filter by type if provided
         if ($request->has('type') && $request->type !== 'all') {
             $query->where('type', $request->type);
         }
-
-        // Filter by read status if provided
         if ($request->has('status')) {
             if ($request->status === 'unread') {
                 $query->where('is_read', false);
@@ -57,14 +56,12 @@ class NotificationController extends Controller
             }
         }
 
-        // Filter by channel if provided
         if ($request->has('channel') && $request->channel !== 'all') {
             $query->where('channel', $request->channel);
         }
 
         $notifications = $query->paginate(20);
 
-        // Get counts for different categories
         $stats = [
             'total' => Notification::where('user_id', $user->id)->count(),
             'unread' => Notification::where('user_id', $user->id)->where('is_read', false)->count(),
@@ -90,12 +87,10 @@ class NotificationController extends Controller
      */
     public function show(Notification $notification)
     {
-        // Ensure user can only view their own notifications
         if ($notification->user_id !== Auth::id()) {
             abort(403, 'Unauthorized to view this notification');
         }
 
-        // Mark as read if not already read
         if (!$notification->is_read) {
             $notification->update([
                 'is_read' => true,
@@ -113,7 +108,6 @@ class NotificationController extends Controller
      */
     public function markAsRead(Notification $notification)
     {
-        // Ensure user can only mark their own notifications as read
         if ($notification->user_id !== Auth::id()) {
             abort(403, 'Unauthorized to modify this notification');
         }
@@ -154,7 +148,6 @@ class NotificationController extends Controller
      */
     public function destroy(Notification $notification)
     {
-        // Ensure user can only delete their own notifications
         if ($notification->user_id !== Auth::id()) {
             abort(403, 'Unauthorized to delete this notification');
         }
@@ -174,7 +167,6 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         
-        // Get current notification preferences
         $preferences = $user->notification_preferences ?? [
             'email' => [
                 'transaction' => true,
@@ -199,7 +191,6 @@ class NotificationController extends Controller
             ],
         ];
 
-        // Get system notification settings
         $systemSettings = SystemSetting::whereIn('key', [
             'notifications.sms.enabled',
             'notifications.email.enabled',
@@ -248,12 +239,10 @@ class NotificationController extends Controller
      */
     public function createBulk()
     {
-        // Only admin and management can send bulk notifications
         if (!in_array(Auth::user()->role, ['admin', 'management'])) {
             abort(403, 'Unauthorized to send bulk notifications');
         }
 
-        // Get available recipient groups
         $recipientGroups = [
             'all_members' => 'All Members',
             'active_members' => 'Active Members',
@@ -275,36 +264,19 @@ class NotificationController extends Controller
     /**
      * Send bulk notifications
      */
-    public function sendBulk(Request $request)
+    public function sendBulk(SendBulkRequest $request)
     {
-        // Only admin and management can send bulk notifications
         if (!in_array(Auth::user()->role, ['admin', 'management'])) {
             abort(403, 'Unauthorized to send bulk notifications');
         }
 
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'message' => 'required|string|max:1000',
-            'type' => ['required', Rule::in(['transaction', 'loan', 'dividend', 'general', 'system'])],
-            'channels' => 'required|array|min:1',
-            'channels.*' => Rule::in(['sms', 'email', 'system']),
-            'recipient_group' => 'required|string',
-            'custom_recipients' => 'nullable|array',
-            'custom_recipients.*' => 'exists:users,id',
-            'schedule_at' => 'nullable|date|after:now',
-        ]);
+        $validator = $request->validated();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
+      
 
         try {
             DB::beginTransaction();
 
-            // Get recipients based on selection
             $recipients = $this->getRecipients($request->recipient_group, $request->custom_recipients);
 
             if ($recipients->isEmpty()) {
@@ -319,7 +291,6 @@ class NotificationController extends Controller
 
             foreach ($recipients as $recipient) {
                 try {
-                    // Send notification through selected channels
                     foreach ($request->channels as $channel) {
                         $notification = SystemNotification::create([
                             'user_id' => $recipient->id,
@@ -335,7 +306,6 @@ class NotificationController extends Controller
                             ],
                         ]);
 
-                        // Send immediately if not scheduled
                         if (!$request->schedule_at) {
                             $this->sendNotification($notification, $recipient);
                         }
@@ -357,11 +327,11 @@ class NotificationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Bulk notification failed: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Bulk notification failed: ' .ErrorMessage::from($e));
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send bulk notification: ' . \App\Support\ErrorMessage::from($e),
+                'message' => 'Failed to send bulk notification: ' .ErrorMessage::from($e),
             ], 500);
         }
     }
@@ -526,11 +496,11 @@ class NotificationController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Test notification failed: ' . \App\Support\ErrorMessage::from($e));
+            Log::error('Test notification failed: ' . ErrorMessage::from($e));
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send test notification: ' . \App\Support\ErrorMessage::from($e),
+                'message' => 'Failed to send test notification: ' . ErrorMessage::from($e),
             ], 500);
         }
     }

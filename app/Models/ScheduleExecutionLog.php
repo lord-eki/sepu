@@ -31,10 +31,7 @@ class ScheduleExecutionLog extends Model
         return $this->belongsTo(User::class, 'executed_by');
     }
 
-    /**
-     * Check if schedule has already been executed for agiven period of time
-     */
-
+    
     public static function alreadyRun(string $type,int $year, ?int $month = null) : bool
     {
         return static::where('schedule_type', $type)->where('processing_year', $year)

@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\Account;
 use App\Models\Member;
-use App\Models\User;
-use App\Models\LoanRepayment;
 use App\Services\Accounting\AccountBalanceService;
+use App\Support\ErrorMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -92,7 +91,6 @@ class TransactionController extends Controller
             'transactions' => $transactions,
             'statistics' => $statistics,
             'transactionTypes' => $this->getTransactionTypes(),
-            // Pass filters back so they persist on reload
             'filters' => [
                 'search' => $request->query('search', ''),
                 'member_id' => $request->query('member_id', ''),
@@ -183,7 +181,7 @@ class TransactionController extends Controller
             return redirect()->route('transactions.index')->with('success', 'Transaction created successfully');
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->withErrors(['general' => 'Transaction failed: ' . \App\Support\ErrorMessage::from($e)]);
+            return back()->withErrors(['general' => 'Transaction failed: ' . ErrorMessage::from($e)]);
         }
     }
 
@@ -208,7 +206,6 @@ class TransactionController extends Controller
         $transaction = Transaction::with(['account', 'member'])
             ->findOrFail($id);
 
-        // Only allow editing of pending transactions
         if ($transaction->status !== 'pending') {
             return response()->json([
                 'success' => false,
@@ -236,7 +233,6 @@ class TransactionController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
-        // Only allow updating of pending transactions
         if ($transaction->status !== 'pending') {
             return response()->json([
                 'success' => false,
@@ -263,7 +259,6 @@ class TransactionController extends Controller
         try {
             DB::beginTransaction();
 
-            // If amount is being updated, recalculate balance_after
             if ($request->has('amount')) {
                 $account = $transaction->account;
                 $transaction->balance_after = $this->calculateNewBalance(
@@ -295,7 +290,7 @@ class TransactionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction update failed: ' . \App\Support\ErrorMessage::from($e)
+                'message' => 'Transaction update failed: ' . ErrorMessage::from($e)
             ], 400);
         }
     }
@@ -307,7 +302,6 @@ class TransactionController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
-        // Only allow deletion of pending transactions
         if ($transaction->status !== 'pending') {
             return response()->json([
                 'success' => false,
@@ -331,7 +325,7 @@ class TransactionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction deletion failed: ' . \App\Support\ErrorMessage::from($e)
+                'message' => 'Transaction deletion failed: ' . ErrorMessage::from($e)
             ], 400);
         }
     }
@@ -346,7 +340,7 @@ class TransactionController extends Controller
                 ->with('success', 'Transaction approved successfully.');
         } catch (\Exception $e) {
             return back()->withErrors([
-                'general' => 'Transaction approval failed: ' . \App\Support\ErrorMessage::from($e),
+                'general' => 'Transaction approval failed: ' . ErrorMessage::from($e),
             ]);
         }
     }
@@ -362,7 +356,6 @@ class TransactionController extends Controller
 
         try {
             DB::transaction(function () use ($request, $id) {
-                // Lock + re-check inside the transaction so approve and reject cannot both win
                 $transaction = Transaction::whereKey($id)->lockForUpdate()->firstOrFail();
 
                 if ($transaction->status !== 'pending') {
@@ -384,7 +377,7 @@ class TransactionController extends Controller
                 ->with('success', 'Transaction rejected successfully.');
         } catch (\Exception $e) {
             return back()->withErrors([
-                'general' => 'Transaction rejection failed: ' . \App\Support\ErrorMessage::from($e),
+                'general' => 'Transaction rejection failed: ' . ErrorMessage::from($e),
             ]);
         }
     }
@@ -407,7 +400,7 @@ class TransactionController extends Controller
                 ->with('success', 'Transaction reversed successfully.');
         } catch (\Exception $e) {
             return back()->withErrors([
-                'general' => 'Transaction reversal failed: ' . \App\Support\ErrorMessage::from($e),
+                'general' => 'Transaction reversal failed: ' . ErrorMessage::from($e),
             ]);
         }
     }
@@ -426,20 +419,17 @@ class TransactionController extends Controller
             ? Carbon::parse($request->to)->endOfDay()
             : now()->endOfDay();
 
-        // ✅ Opening balance (last completed txn before period)
         $openingBalance = Transaction::where('member_id', $member->id)
             ->where('created_at', '<', $from)
             ->latest()
             ->value('balance_after') ?? 0;
 
-        // ✅ Transactions in period
         $transactions = Transaction::with('account')
             ->where('member_id', $member->id)
             ->whereBetween('created_at', [$from, $to])
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // ✅ Closing balance
         $closingBalance = $transactions->last()->balance_after ?? $openingBalance;
 
         return Inertia::render('Transactions/Statement', [
@@ -503,7 +493,6 @@ class TransactionController extends Controller
             ->where('member_id', $memberId)
             ->orderBy('created_at', 'desc');
 
-        // Apply filters
         if ($request->filled('transaction_type')) {
             $query->where('transaction_type', $request->transaction_type);
         }
@@ -522,7 +511,6 @@ class TransactionController extends Controller
 
         $transactions = $query->paginate(20);
 
-        // Get member's account summary
         $accounts = Account::where('member_id', $memberId)->get();
         $depositAccounts = $accounts->where(
             'account_type',
@@ -559,7 +547,6 @@ class TransactionController extends Controller
             ->where('account_id', $accountId)
             ->orderBy('created_at', 'desc');
 
-        // Apply filters
         if ($request->filled('transaction_type')) {
             $query->where('transaction_type', $request->transaction_type);
         }
@@ -601,7 +588,6 @@ class TransactionController extends Controller
     {
         $query = Transaction::query();
 
-        // Apply date filters
         if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
@@ -652,21 +638,18 @@ class TransactionController extends Controller
     {
         $account = $transaction->account;
 
-        // Update account balance
         $account->update([
             'balance' => $transaction->balance_after,
             'available_balance' => $transaction->balance_after,
             'last_transaction_at' => now(),
         ]);
 
-        // Mark transaction as completed
         $transaction->update([
             'status' => 'completed',
             'processed_at' => now(),
         ]);
 
-        // Create notification 
-        // $this->createTransactionNotification($transaction);
+    
     }
 
     /**
@@ -676,7 +659,6 @@ class TransactionController extends Controller
     {
         $destinationAccount = Account::findOrFail($destinationAccountId);
 
-        // Create destination transaction
         $destinationTransaction = Transaction::create([
             'transaction_id' => $this->generateTransactionId(),
             'account_id' => $destinationAccount->id,
@@ -698,7 +680,6 @@ class TransactionController extends Controller
             ]
         ]);
 
-        // Link transactions
         $sourceTransaction->update([
             'metadata' => array_merge($sourceTransaction->metadata ?? [], [
                 'destination_transaction_id' => $destinationTransaction->id,
@@ -741,7 +722,6 @@ class TransactionController extends Controller
         $originalType = $originalTransaction->transaction_type;
         $amount = $originalTransaction->amount;
 
-        // Reverse the original transaction effect
         switch ($originalType) {
             case 'deposit':
             case 'loan_disbursement':

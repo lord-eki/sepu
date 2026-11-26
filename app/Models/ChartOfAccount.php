@@ -35,7 +35,6 @@ class ChartOfAccount extends Model
         'level'             => 'integer',
     ];
 
-    // ── Relationships ────────────────────────────────────────────────────
 
     public function parentAccount()
     {
@@ -47,10 +46,7 @@ class ChartOfAccount extends Model
         return $this->hasMany(ChartOfAccount::class, 'parent_account_id');
     }
 
-    /**
-     * Recursively loads the full subtree in a single eager load.
-     * Usage: ChartOfAccount::with('allChildren')->whereNull('parent_account_id')->get()
-     */
+  
     public function allChildren()
     {
         return $this->hasMany(ChartOfAccount::class, 'parent_account_id')
@@ -58,11 +54,7 @@ class ChartOfAccount extends Model
                     ->orderBy('account_code');
     }
 
-    /**
-     * Recursive parent chain — lets you build the full path label
-     * without extra queries when eager-loaded.
-     * Usage: $account->load('parentChain')
-     */
+ 
     public function parentChain()
     {
         return $this->belongsTo(ChartOfAccount::class, 'parent_account_id')
@@ -74,13 +66,11 @@ class ChartOfAccount extends Model
         return $this->hasMany(JournalEntryLine::class, 'account_id');
     }
 
-    /** Budget lines that use this COA account */
     public function budgetItems()
     {
         return $this->hasMany(BudgetItem::class, 'chart_of_account_id');
     }
 
-    // ── Scopes ───────────────────────────────────────────────────────────
 
     public function scopeActive($query)
     {
@@ -92,10 +82,6 @@ class ChartOfAccount extends Model
         return $query->where('account_type', $type);
     }
 
-    /**
-     * Postable = leaf accounts (no children, not a header).
-     * These are the only accounts that can be directly debited/credited.
-     */
     public function scopePostable($query)
     {
         return $query->whereNotIn('account_type', ['header'])
@@ -107,7 +93,6 @@ class ChartOfAccount extends Model
         return $query->whereNull('parent_account_id');
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────
 
     public function isPostable(): bool
     {
@@ -123,9 +108,6 @@ class ChartOfAccount extends Model
         return in_array($this->account_type, ['asset', 'expense']) ? 'debit' : 'credit';
     }
 
-    /**
-     * Running balance from posted journal lines for an optional date range.
-     */
     public function getBalance(?string $startDate = null, ?string $endDate = null): float
     {
         $query = $this->journalEntryLines()
@@ -143,10 +125,6 @@ class ChartOfAccount extends Model
             : (float)($credits - $debits);
     }
 
-    /**
-     * Recursively aggregates balance for this account and all its descendants.
-     * Powers the hierarchical totals in Balance Sheet and Income Statement.
-     */
     public function getTotalBalance(?string $startDate = null, ?string $endDate = null): float
     {
         $total = $this->getBalance($startDate, $endDate);
@@ -156,13 +134,7 @@ class ChartOfAccount extends Model
         return $total;
     }
 
-    /**
-     * Full ancestry path string.
-     * e.g. "Assets > Current Assets > Bank Accounts > Bank Operations Account"
-     *
-     * Walks the already-loaded parentAccount chain — no extra queries when
-     * the relation is eager-loaded.
-     */
+  
     public function getFullPathNameAttribute(): string
     {
         $parts  = [$this->account_name];
@@ -174,13 +146,7 @@ class ChartOfAccount extends Model
         return implode(' > ', $parts);
     }
 
-    /**
-     * Indented label for flat <select> / combo-box dropdowns.
-     * Indentation is derived from the stored `level` column — no parent
-     * traversal needed at render time.
-     *
-     * Example (level 4):  "　　　51101 – Salaries & Wages"
-     */
+ 
     public function getDropdownLabelAttribute(): string
     {
         $indent = str_repeat('　', max(0, ($this->level ?? 1) - 1));

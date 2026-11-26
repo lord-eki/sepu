@@ -72,9 +72,7 @@ class LoanMigrationRecord extends Model
         'processed_at' => 'datetime',
     ];
 
-    /**
-     * The migration batch this record belongs to.
-     */
+  
     public function batch(): BelongsTo
     {
         return $this->belongsTo(
@@ -83,9 +81,6 @@ class LoanMigrationRecord extends Model
         );
     }
 
-    /**
-     * The existing SEPUSACCO member.
-     */
     public function member(): BelongsTo
     {
         return $this->belongsTo(
@@ -94,9 +89,7 @@ class LoanMigrationRecord extends Model
         );
     }
 
-    /**
-     * The existing loan product.
-     */
+   
     public function loanProduct(): BelongsTo
     {
         return $this->belongsTo(
@@ -105,10 +98,7 @@ class LoanMigrationRecord extends Model
         );
     }
 
-    /**
-     * The actual loan created after
-     * migration approval and processing.
-     */
+   
     public function loan(): BelongsTo
     {
         return $this->belongsTo(
@@ -117,9 +107,7 @@ class LoanMigrationRecord extends Model
         );
     }
 
-    /**
-     * Determine whether this record passed validation.
-     */
+   
     public function isValid(): bool
     {
         return $this->validation_status?->canBeProcessed() ?? false;
@@ -141,9 +129,7 @@ class LoanMigrationRecord extends Model
             && $this->processing_status === LoanMigrationProcessingStatus::PENDING;
     }
 
-        /**
-         * Add a validation error to the record.
-         */
+      
         public function addValidationError(
                 string $field,
                 string $message
@@ -157,17 +143,12 @@ class LoanMigrationRecord extends Model
                 $this->validation_status =
                     LoanMigrationRecordValidationStatus::INVALID;
             }
-    /**
-     * Clear all validation errors.
-     */
+   
     public function clearValidationErrors(): void
     {
         $this->validation_errors = null;
     }
 
-    /**
-     * Mark the record as valid.
-     */
     public function markAsValid(): void
     {
         $this->validation_status = LoanMigrationRecordValidationStatus::VALID;

@@ -53,49 +53,37 @@ class LoanMigrationBatch extends Model
     'processed_at' => 'datetime',
 ];
 
-    /**
-     * User who created the migration batch.
-     */
+  
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /**
-     * User who submitted the batch.
-     */
+   
     public function submitter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_by');
     }
 
-    /**
-     * Accounts Officer who verified the batch.
-     */
+  
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
     }
 
-    /**
-     * Administrator who approved the batch.
-     */
+   
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    /**
-     * Migration records belonging to this batch.
-     */
+    
     public function records(): HasMany
     {
         return $this->hasMany(LoanMigrationRecord::class, 'batch_id');
     }
 
-    /**
-     * Check whether the batch is still editable.
-     */
+   
     public function isEditable(): bool
     {
         return $this->status?->isEditable() ?? false;
@@ -121,9 +109,7 @@ class LoanMigrationBatch extends Model
     {
         return $this->status?->isProcessed() ?? false;
     }
-    /**
-     * Get the percentage of valid records.
-     */
+    
     public function getValidationPercentageAttribute(): float
     {
         if ($this->total_records === 0) {
@@ -136,9 +122,7 @@ class LoanMigrationBatch extends Model
         );
     }
 
-    /**
-     * Get the percentage of processed records.
-     */
+   
     public function getProcessingPercentageAttribute(): float
     {
         if ($this->total_records === 0) {

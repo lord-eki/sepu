@@ -3,6 +3,7 @@
 namespace App\Http\Traits;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 trait HasRolePermissions
@@ -12,7 +13,7 @@ trait HasRolePermissions
      */
     public function hasAnyRole(array $roles): bool
     {
-        return in_array(auth()->user()?->role, $roles);
+        return in_array(Auth::user()?->role, $roles);
     }
 
     /**
@@ -20,7 +21,7 @@ trait HasRolePermissions
      */
     public function hasRole(string $role): bool
     {
-        return auth()->user()?->role === $role;
+        return Auth::user()?->role === $role;
     }
 
     /**
@@ -160,13 +161,12 @@ trait HasRolePermissions
             return false;
         }
 
-        $member = auth()->user()->member;
+        $member = Auth::user()->member;
         
         if (!$member) {
             return false;
         }
 
-        // Check different resource types
         if (method_exists($resource, 'member_id')) {
             return $resource->member_id === $member->id;
         }
@@ -183,14 +183,12 @@ trait HasRolePermissions
      */
     public function canAccessMemberData($member): bool
     {
-        // Staff can access any member data
         if ($this->isStaff()) {
             return true;
         }
 
-        // Members can only access their own data
         if ($this->isMember()) {
-            return auth()->user()->member?->id === $member->id;
+            return Auth::user()->member?->id === $member->id;
         }
 
         return false;
@@ -201,7 +199,7 @@ trait HasRolePermissions
      */
     public function getRoleLevel(): int
     {
-        return match(auth()->user()?->role) {
+        return match(Auth::user()?->role) {
             'admin' => 5,
             'management' => 4,
             'accountant' => 3,
@@ -224,17 +222,14 @@ trait HasRolePermissions
      */
     public function filterByRole($query, string $memberColumn = 'member_id')
     {
-        // If user is staff, return all records
         if ($this->isStaff()) {
             return $query;
         }
 
-        // If user is member, filter to their own records
-        if ($this->isMember() && auth()->user()->member) {
-            return $query->where($memberColumn, auth()->user()->member->id);
+        if ($this->isMember() && Auth::user()->member) {
+            return $query->where($memberColumn, Auth::user()->member->id);
         }
 
-        // If no member relationship, return empty collection
         return $query->whereRaw('1 = 0');
     }
 
@@ -243,14 +238,12 @@ trait HasRolePermissions
      */
     public function getAccessibleMemberIds(): array
     {
-        // Staff can access all members
         if ($this->isStaff()) {
             return \App\Models\Member::pluck('id')->toArray();
         }
 
-        // Members can only access their own data
-        if ($this->isMember() && auth()->user()->member) {
-            return [auth()->user()->member->id];
+        if ($this->isMember() && Auth::user()->member) {
+            return [Auth::user()->member->id];
         }
 
         return [];
@@ -261,11 +254,11 @@ trait HasRolePermissions
      */
     public function canProcessTransaction(float $amount): bool
     {
-        return match(auth()->user()?->role) {
+        return match(Auth::user()?->role) {
             'admin' => true,
-            'management' => $amount <= 1000000, // 1M limit for management
-            'accountant' => $amount <= 500000, // 500K limit for accountant
-            'loan_officer' => $amount <= 100000, // 100K limit for loan officer
+            'management' => $amount <= 1000000, 
+            'accountant' => $amount <= 500000, 
+            'loan_officer' => $amount <= 100000, 
             default => false
         };
     }
@@ -275,9 +268,9 @@ trait HasRolePermissions
      */
     public function canApproveLoan(float $amount): bool
     {
-        return match(auth()->user()?->role) {
+        return match(Auth::user()?->role) {
             'admin' => true,
-            'management' => $amount <= 2000000, // 2M limit for management
+            'management' => $amount <= 2000000, 
             default => false
         };
     }
@@ -287,11 +280,11 @@ trait HasRolePermissions
      */
     public function getDashboardStatsFilter(): array
     {
-        if ($this->isMember() && auth()->user()->member) {
-            return ['member_id' => auth()->user()->member->id];
+        if ($this->isMember() && Auth::user()->member) {
+            return ['member_id' => Auth::user()->member->id];
         }
 
-        return []; // Staff can see all stats
+        return []; 
     }
 
     /**
@@ -331,7 +324,7 @@ trait HasRolePermissions
      */
     public function getNavigationItems(): array
     {
-        $role = auth()->user()?->role;
+        $role = Auth::user()?->role;
 
         $navigation = [
             'dashboard' => true,

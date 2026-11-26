@@ -39,7 +39,6 @@ class MpesaService
     {
         $cacheKey = 'mpesa_access_token';
         
-        // Check if token exists in cache
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
@@ -55,7 +54,6 @@ class MpesaService
             $token = $response->json()['access_token'];
             $expiresIn = $response->json()['expires_in'];
             
-            // Cache token for slightly less than expiry time
             Cache::put($cacheKey, $token, now()->addSeconds($expiresIn - 60));
             
             return $token;
@@ -73,7 +71,6 @@ class MpesaService
         $timestamp = Carbon::now()->format('YmdHis');
         $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
 
-        // Validate phone number format
         $phoneNumber = $this->formatPhoneNumber($phoneNumber);
 
         $payload = [
@@ -98,7 +95,6 @@ class MpesaService
         if ($response->successful()) {
             $responseData = $response->json();
             
-            // Log the transaction for tracking
             $this->logTransaction([
                 'checkout_request_id' => $responseData['CheckoutRequestID'],
                 'merchant_request_id' => $responseData['MerchantRequestID'],
@@ -146,7 +142,6 @@ class MpesaService
         if ($response->successful()) {
             $responseData = $response->json();
             
-            // Log the transaction
             $this->logTransaction([
                 'conversation_id' => $responseData['ConversationID'],
                 'originator_conversation_id' => $responseData['OriginatorConversationID'],
@@ -228,7 +223,6 @@ class MpesaService
         $checkoutRequestId = $callbackData['Body']['stkCallback']['CheckoutRequestID'];
         
         if ($resultCode == 0) {
-            // Payment successful
             $callbackMetadata = $callbackData['Body']['stkCallback']['CallbackMetadata']['Item'];
             
             $amount = 0;
@@ -253,11 +247,9 @@ class MpesaService
                 }
             }
             
-            // Find member by phone number
             $member = Member::where('phone_number', $phoneNumber)->first();
             
             if ($member) {
-                // Find or create savings account
                 $account = Account::firstOrCreate([
                     'member_id' => $member->id,
                     'account_type' => 'share_deposits'
@@ -268,7 +260,6 @@ class MpesaService
                     'status' => 'active'
                 ]);
                 
-                // Create transaction record
                 $transaction = Transaction::create([
                     'member_id' => $member->id,
                     'account_id' => $account->id,
@@ -281,7 +272,7 @@ class MpesaService
                     'transaction_date' => Carbon::createFromFormat('YmdHis', $transactionDate),
                     'description' => 'M-Pesa Deposit',
                     'status' => 'completed',
-                    'processed_by' => 1, // System user
+                    'processed_by' => 1, 
                     'metadata' => json_encode([
                         'checkout_request_id' => $checkoutRequestId,
                         'phone_number' => $phoneNumber,
@@ -289,21 +280,18 @@ class MpesaService
                     ])
                 ]);
                 
-                // Update account balance
                 $account->update([
                     'balance' => $account->balance + $amount,
                     'available_balance' => $account->available_balance + $amount,
                     'last_transaction_date' => now()
                 ]);
                 
-                // Send notification
                 $this->sendTransactionNotification($member, $transaction);
                 
                 return ['status' => 'success', 'transaction' => $transaction];
             }
         }
         
-        // Payment failed - update transaction status
         $this->updateTransactionStatus($checkoutRequestId, 'failed');
         
         return ['status' => 'failed', 'result_code' => $resultCode];
@@ -318,7 +306,6 @@ class MpesaService
         $conversationId = $callbackData['Result']['ConversationID'];
         
         if ($resultCode == 0) {
-            // Payment successful
             $resultParameters = $callbackData['Result']['ResultParameters']['ResultParameter'];
             
             $transactionId = '';
@@ -343,13 +330,11 @@ class MpesaService
                 }
             }
             
-            // Update transaction status
             $this->updateB2cTransactionStatus($conversationId, 'completed', $transactionId);
             
             return ['status' => 'success'];
         }
         
-        // Payment failed
         $this->updateB2cTransactionStatus($conversationId, 'failed');
         
         return ['status' => 'failed', 'result_code' => $resultCode];
@@ -420,7 +405,6 @@ class MpesaService
      */
     private function updateTransactionStatus($checkoutRequestId, $status)
     {
-        // Update your transaction table based on checkout request ID
         Log::info("Updating transaction status for {$checkoutRequestId} to {$status}");
     }
 
@@ -429,7 +413,6 @@ class MpesaService
      */
     private function updateB2cTransactionStatus($conversationId, $status, $transactionId = null)
     {
-        // Update your transaction table based on conversation ID
         Log::info("Updating B2C transaction status for {$conversationId} to {$status}");
     }
 
@@ -438,7 +421,6 @@ class MpesaService
      */
     private function sendTransactionNotification($member, $transaction)
     {
-        // Send SMS/Email notification
         Log::info("Sending notification to member {$member->id} for transaction {$transaction->id}");
     }
 }

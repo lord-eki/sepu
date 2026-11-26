@@ -30,13 +30,11 @@ class LoanProduct extends Model
         'is_active' => 'boolean',
     ];
 
-    // Relationships
     public function loans()
     {
         return $this->hasMany(Loan::class);
     }
 
-    // Scope for active products
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

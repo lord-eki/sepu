@@ -24,7 +24,6 @@ class Dividend extends Model
         'distribution_date' => 'date',
     ];
 
-    // Relationships
     public function memberDividends()
     {
         return $this->hasMany(MemberDividend::class);

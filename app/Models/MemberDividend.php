@@ -20,7 +20,6 @@ class MemberDividend extends Model
         'payment_date' => 'date',
     ];
 
-    // Relationships
     public function dividend()
     {
         return $this->belongsTo(Dividend::class);
