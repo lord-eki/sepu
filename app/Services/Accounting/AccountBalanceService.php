@@ -235,7 +235,7 @@ class AccountBalanceService
     }
 
     //Posts the journal entry for a transaction created through credit or debit once
-    public function postLedgerFor(Transaction $transaction, ?int $user =  null): ?int
+    public function postLedgerFor(Transaction $transaction, ?int $userId =  null): ?int
     {
         if($transaction->journal_entry_id){
             return (int) $transaction->journal_entry_id;

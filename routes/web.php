@@ -49,7 +49,6 @@ Route::post('/email/verification-notification', [EmailVerificationNotificationCo
 // Loan Calculator 
 Route::get('/loan-calculator', [LoanCalculatorController::class, 'index'])->name('loan-calculator.index');
 Route::post('/loan-calculator/calculate', [LoanCalculatorController::class, 'calculate'])->name('loan-calculator.calculate');
-Route::get('/api/loan-setup/defaults', [LoanSetupController::class, 'getDefaults']);
 Route::get('/api/loan-products/{id}', [LoanCalculatorController::class, 'getLoanProduct'])
     ->name('api.loan-products.public');
 
@@ -224,7 +223,6 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
         Route::delete('/{loan}/guarantors/{guarantor}', [LoanController::class, 'removeGuarantor'])->name('remove-guarantor');
         Route::post('/{loan}/guarantors/{guarantor}/accept', [LoanController::class, 'acceptGuarantee'])->name('accept-guarantee');
         Route::post('/{loan}/guarantors/{guarantor}/reject', [LoanController::class, 'rejectGuarantee'])->name('reject-guarantee');
-        
     });
 
     //  Dividends 
@@ -409,8 +407,9 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     });
 
     Route::prefix('api/loan-setup')->middleware('role:admin,management')->group(function () {
-        Route::post('/defaults', [\App\Http\Controllers\LoanSetupController::class, 'saveDefaults']);
-        Route::post('/product',  [\App\Http\Controllers\LoanSetupController::class, 'saveProduct']);
+        Route::get('/defaults', [LoanSetupController::class, 'getDefaults']);
+        Route::post('/defaults', [LoanSetupController::class, 'saveDefaults']);
+        Route::post('/product',  [LoanSetupController::class, 'saveProduct']);
     });
 
     // ── Schedules 
@@ -571,6 +570,7 @@ Route::prefix('loan-migration')->name('loan-migration.')->middleware(['auth', 'v
     Route::post('/{batch}/submit', [LoanMigrationController::class, 'submit'])->name('submit');
     Route::post('/{batch}/verify-accounts', [LoanMigrationController::class, 'verifyAccounts'])->name('verify-accounts');
     Route::post('/{batch}/approve', [LoanMigrationController::class, 'approve'])->name('approve');
+    Route::post('/{batch}/reject', [LoanMigrationController::class, 'reject'])->name('reject');
     Route::post('/{batch}/process', [LoanMigrationController::class, 'process'])->name('process');
     Route::get('/template/download', [LoanMigrationController::class, 'downloadTemplate'])->name('template.download');
     Route::get('/{batch}/export', [LoanMigrationController::class, 'export'])->name('export');

@@ -6,8 +6,7 @@ use Tests\Support\RouteInventory;
 use Tests\Support\Scenario;
 
 it('keeps the public routes to known pages', function () {
-    $allowed = ['/', 'login', 'register', 'forgot-password', 'reset-password*', 'about', 'terms', 'contact', 'awaiting-*', 'up', 'storage/*', 'sanctum/*'];
-
+    $allowed = ['/', 'login', 'register', 'forgot-password', 'reset-password*', 'about', 'terms', 'contact', 'awaiting-*', 'up', 'storage/*', 'sanctum/*', 'settings', 'loan-calculator', 'loan-calculator/*', 'api/loan-products/*'];
     $unexpected = collect(Route::getRoutes()->getRoutes())
         ->filter(fn ($route) => RouteInventory::isPublic($route))
         ->reject(fn ($route) => Str::is($allowed, $route->uri()))

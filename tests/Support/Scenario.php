@@ -5,6 +5,8 @@ namespace Tests\Support;
 use App\Models\Account;
 use App\Models\ChartOfAccount;
 use App\Models\Loan;
+use App\Models\LoanMigrationBatch;
+use App\Models\LoanMigrationRecord;
 use App\Models\LoanProduct;
 use App\Models\LoanRepayment;
 use App\Models\Member;
@@ -139,16 +141,7 @@ final class Scenario
     {
         $n = ++self::$sequence;
 
-        $product = (new LoanProduct())->forceFill([
-            'name' => "Product {$n}",
-            'code' => "PRD{$n}",
-            'min_amount' => 1000,
-            'max_amount' => 1000000,
-            'interest_rate' => 12,
-            'min_term_months' => 1,
-            'max_term_months' => 60,
-        ]);
-        $product->save();
+        $product = self::loanProduct();
 
         $loan = (new Loan())->forceFill([
             'loan_number' => 'LN' . str_pad((string) $n, 6, '0', STR_PAD_LEFT),
@@ -182,5 +175,70 @@ final class Scenario
         self::account($member, 'loan_outstanding', 1000 * $instalments);
 
         return $loan->refresh();
+    }
+
+    // Creates a loan product usable by loans and migration records.
+    public static function loanProduct(): LoanProduct
+    {
+        $n = ++self::$sequence;
+
+        $product = (new LoanProduct())->forceFill([
+            'name' => "Product {$n}",
+            'code' => "PRD{$n}",
+            'min_amount' => 1000,
+            'max_amount' => 1000000,
+            'interest_rate' => 12,
+            'min_term_months' => 1,
+            'max_term_months' => 60,
+        ]);
+        $product->save();
+
+        return $product;
+    }
+
+    // Creates a draft migration batch whose records each belong to a new active member.
+    public static function migrationBatch(User $creator, int $records = 2): LoanMigrationBatch
+    {
+        $n = ++self::$sequence;
+        $product = self::loanProduct();
+
+        $batch = (new LoanMigrationBatch())->forceFill([
+            'batch_number' => "MIG-TEST-{$n}",
+            'status' => 'draft',
+            'created_by' => $creator->id,
+        ]);
+        $batch->save();
+
+        for ($i = 0; $i < $records; $i++) {
+            $member = self::member();
+
+            (new LoanMigrationRecord())->forceFill([
+                'batch_id' => $batch->id,
+                'member_id' => $member->id,
+                'member_number' => $member->membership_id,
+                'loan_number' => 'MLN' . ++self::$sequence,
+                'loan_product_id' => $product->id,
+                'original_loan_amount' => 10000,
+                'date_disbursed' => '2026-01-01',
+                'interest_rate' => 12,
+                'repayment_period' => 12,
+                'remaining_period' => 6,
+                'outstanding_balance' => 6000,
+                'total_amount_paid' => 4000,
+                'last_repayment_date' => '2026-11-01',
+                'next_due_date' => '2026-12-01',
+                'loan_status' => 'active',
+                'is_top_up' => false,
+            ])->save();
+        }
+
+        $batch->update([
+            'total_records' => $records,
+            'total_original_amount' => 10000 * $records,
+            'total_amount_paid' => 4000 * $records,
+            'total_outstanding_balance' => 6000 * $records,
+        ]);
+
+        return $batch->refresh();
     }
 }

@@ -19,10 +19,10 @@ it('shows a repayment from the ledger to staff', function () {
         ->assertInertia(fn ($page) => $page
             ->has('entries', 1)
             ->where('entries.0.type', 'repayment')
-            ->where('entries.0.principal', 1000.0)
-            ->where('entries.0.interest', 100.0)
-            ->where('summary.principal_repaid', 1000.0)
-            ->where('summary.interest_paid', 100.0));
+            ->where('entries.0.principal', 1000)
+            ->where('entries.0.interest', 100)
+            ->where('summary.principal_repaid', 1000)
+            ->where('summary.interest_paid', 100));
 })->group('loans');
 
 it('lets the borrower open their own statement', function () {

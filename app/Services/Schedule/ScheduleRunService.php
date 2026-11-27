@@ -61,7 +61,7 @@ class ScheduleRunService
     public function repaymentIdsRunForMonth(iterable $repaymentIds, string $month): array
     {
         $keys = collect($repaymentIds)->mapWithKeys(
-            fn ($id) => [self::repaymentKey((int) $id, $month) => (int) $id]
+            fn($id) => [self::repaymentKey((int) $id, $month) => (int) $id]
         );
 
         if ($keys->isEmpty()) {
@@ -70,8 +70,16 @@ class ScheduleRunService
 
         return Transaction::whereIn('idempotency_key', $keys->keys()->all())
             ->pluck('idempotency_key')
-            ->map(fn ($key) => $keys[$key])
+            ->map(fn($key) => $keys[$key])
             ->all();
+    }
+
+    // Counts the scheduled loan deductions already posted for the month, whatever their instalment status is now.
+    public function repaymentRunCount(string $month): int
+    {
+        return Transaction::where('transaction_type', 'loan_repayment')
+            ->where('idempotency_key', 'like', 'sched:repay:%:' . $month)
+            ->count();
     }
 
     // Posts one member's monthly contribution and its journal entry.
@@ -88,7 +96,7 @@ class ScheduleRunService
             $transaction = $this->balances->credit($config->contributionAccount->id, $amount, [
                 'transaction_type' => 'deposit',
                 'description' => 'Schedule: Monthly deposit - ' . $this->monthLabel($month),
-                'payment_method' => config('sepu.schedule_deposit_method', 'bank_transfer'),
+                'payment_method' => config('sepu.schedule_deposit_method') ?: 'bank_transfer',
                 'processed_by' => $by->id,
                 'created_by' => $by->id,
                 'idempotency_key' => $this->freshDepositKey($memberId, $month),
@@ -121,7 +129,7 @@ class ScheduleRunService
             if ($amount <= 0) {
                 throw new DomainException(
                     'Insufficient available deposits (KES ' . number_format((float) $deposits->available_balance, 2) .
-                    '). Amounts locked as guarantees cannot be deducted.'
+                        '). Amounts locked as guarantees cannot be deducted.'
                 );
             }
 

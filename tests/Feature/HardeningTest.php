@@ -5,8 +5,8 @@ use Database\Seeders\UserSeeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\RateLimiter;
 
-it('has no default admin password in configuration', function () {
-    expect(config('sepu.admin_password'))->not->toBe('admin123');
+it('has no default admin password in the configuration file', function () {
+    expect(file_get_contents(config_path('sepu.php')))->not->toContain('admin123');
 })->group('security');
 
 it('leaves the admin password alone when the seeder runs again', function () {

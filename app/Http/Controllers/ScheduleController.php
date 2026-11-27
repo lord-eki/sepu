@@ -138,6 +138,8 @@ class ScheduleController extends Controller
 
         $doneIds = $runner->repaymentIdsRunForMonth($due->pluck('id'), $month);
 
+        $runCount = $runner->repaymentRunCount($month);
+
         $rows = $due
             ->reject(fn ($repayment) => in_array($repayment->id, $doneIds, true))
             ->map(fn ($repayment) => $this->repaymentRow($repayment, $deductions->get($repayment->loan->member_id)))
@@ -145,7 +147,7 @@ class ScheduleController extends Controller
 
         $summary = [
             'total_repayments' => $rows->count(),
-            'already_done' => count($doneIds),
+            'already_done' => $runCount,
             'total_expected' => round($rows->sum('expected_amount'), 2),
             'total_deductable' => round($rows->sum('deduct_amount'), 2),
             'total_outstanding' => round($rows->sum('outstanding_amount'), 2),
@@ -158,7 +160,7 @@ class ScheduleController extends Controller
             'rows' => $rows,
             'summary' => $summary,
             'month' => $month,
-            'alreadyRun' => $rows->isEmpty() && count($doneIds) > 0,
+            'alreadyRun' => $rows->isEmpty() && $runCount > 0,
         ]);
     }
 
