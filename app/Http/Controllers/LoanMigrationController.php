@@ -23,6 +23,14 @@ use App\Http\Requests\LoanMigrationDecisionRequest;
 use App\Http\Requests\RejectLoanMigrationBatchRequest;
 use App\Services\LoanMigration\LoanMigrationProcessor;
 use App\Services\LoanMigration\LoanMigrationWorkflow;
+use App\Http\Requests\ImportLoanMigrationRequest;
+use App\Http\Requests\LoanMigrationRecordFilterRequest;
+use App\Http\Requests\StoreLoanMigrationRecordRequest;
+use App\Http\Requests\UpdateLoanMigrationRecordRequest;
+use App\Services\LoanMigration\LoanMigrationRecordService;
+use App\Services\LoanMigration\LoanMigrationSpreadsheet;
+use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 
 
@@ -476,65 +484,126 @@ class LoanMigrationController extends Controller
         ]);
     }
 
-
-    /**
-     * Store a single migration record
-     */
-    public function storeRecord(Request $request, LoanMigrationBatch $batch): RedirectResponse
+    // Adds a manually entered record to an editable batch.
+    public function storeRecord(StoreLoanMigrationRecordRequest $request, LoanMigrationBatch $batch, LoanMigrationRecordService $records): RedirectResponse
     {
-        $user = Auth::user();
+        Gate::authorize('capture', $batch);
 
-        abort_unless(
-            $user && $this->canCreateBatch($user),
-            403
-        );
+        return $this->runStep(function () use ($request, $batch, $records) {
+            $record = $records->create($batch, $request->validated(), Auth::user());
 
-        abort_unless($batch->isEditable(), 403);
-
-        $validated = $request->validate([
-            'member_id' => ['required', 'exists:members,id'],
-            'loan_product_id' => ['required', 'exists:loan_products,id'],
-
-            'original_amount' => ['required', 'numeric', 'min:0'],
-            'amount_paid' => ['required', 'numeric', 'min:0'],
-            'outstanding_balance' => ['required', 'numeric', 'min:0'],
-
-            'interest_rate' => ['nullable', 'numeric', 'min:0'],
-            'disbursement_date' => ['nullable', 'date'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
-
-        DB::transaction(function () use ($validated, $batch) {
-
-            LoanMigrationRecord::create([
-                'batch_id' => $batch->id,
-
-                'member_id' => $validated['member_id'],
-                'loan_product_id' => $validated['loan_product_id'],
-
-                'original_amount' => $validated['original_amount'],
-                'amount_paid' => $validated['amount_paid'],
-                'outstanding_balance' => $validated['outstanding_balance'],
-
-                'interest_rate' => $validated['interest_rate'] ?? null,
-                'disbursement_date' => $validated['disbursement_date'] ?? null,
-                'notes' => $validated['notes'] ?? null,
-
-                'validation_status' => LoanMigrationRecordValidationStatus::PENDING->value,
-            ]);
-            $batch->increment('total_records');
-            $batch->increment('total_original_amount', $validated['original_amount']);
-            $batch->increment('total_amount_paid', $validated['amount_paid']);
-            $batch->increment('total_outstanding_balance', $validated['outstanding_balance']);
+            return "Record {$record->loan_number} was added.";
         });
+    }
 
-        return redirect()
-            ->route('loan-migration.show', $batch)
-            ->with('success', 'Migration record added successfully.');
+    // Lists a batch's records with their validation and processing results.
+    public function records(LoanMigrationRecordFilterRequest $request, LoanMigrationBatch $batch): Response
+    {
+        Gate::authorize('access', LoanMigrationBatch::class);
+
+        $filters = $request->validated();
+
+        $records = $batch->records()
+            ->with('loanProduct:id,name,code')
+            ->when($filters['validation'] ?? null, fn($query, $status) => $query->where('validation_status', $status))
+            ->when($filters['processing'] ?? null, fn($query, $status) => $query->where('processing_status', $status))
+            ->when($filters['search'] ?? null, fn($query, $term) => $query->where(
+                fn($match) => $match->where('loan_number', 'like', "%{$term}%")->orWhere('member_number', 'like', "%{$term}%")
+            ))
+            ->orderBy('id')
+            ->paginate(25)
+            ->withQueryString();
+
+        return Inertia::render('LoanMigration/Records/Index', [
+            'batch' => $batch,
+            'records' => $records,
+            'filters' => $filters,
+        ]);
+    }
+
+    // Shows the edit form for one record of an editable batch.
+    public function editRecord(LoanMigrationBatch $batch, LoanMigrationRecord $record): Response|RedirectResponse
+    {
+        Gate::authorize('capture', $batch);
+
+        abort_unless((int) $record->batch_id === (int) $batch->id, 404);
+
+        if (! $batch->isEditable()) {
+            return back()->withErrors(['batch' => 'Records can only be changed while the batch is a draft or has failed validation.']);
+        }
+
+        return Inertia::render('LoanMigration/Records/Edit', array_merge($this->recordFormOptions(), [
+            'batch' => $batch,
+            'record' => $record,
+        ]));
+    }
+
+    // Saves changes to a record of an editable batch.
+    public function updateRecord(UpdateLoanMigrationRecordRequest $request, LoanMigrationBatch $batch, LoanMigrationRecord $record, LoanMigrationRecordService $records): RedirectResponse
+    {
+        Gate::authorize('capture', $batch);
+
+        return $this->runStep(function () use ($request, $batch, $record, $records) {
+            $records->update($batch, $record, $request->validated(), Auth::user());
+
+            return 'The record was updated.';
+        });
+    }
+
+    // Removes a record from an editable batch.
+    public function destroyRecord(LoanMigrationBatch $batch, LoanMigrationRecord $record, LoanMigrationRecordService $records): RedirectResponse
+    {
+        Gate::authorize('capture', $batch);
+
+        return $this->runStep(function () use ($batch, $record, $records) {
+            $records->delete($batch, $record, Auth::user());
+
+            return 'The record was removed.';
+        });
+    }
+
+    // Reports the problems in an uploaded spreadsheet without saving anything.
+    public function previewImport(ImportLoanMigrationRequest $request, LoanMigrationBatch $batch, LoanMigrationImportService $imports): JsonResponse
+    {
+        Gate::authorize('capture', $batch);
+
+        return response()->json($imports->preview($request->file('file'), $batch));
+    }
+
+    // Downloads the spreadsheet template for importing legacy loans.
+    public function downloadTemplate(LoanMigrationSpreadsheet $spreadsheet): StreamedResponse
+    {
+        Gate::authorize('access', LoanMigrationBatch::class);
+
+        return $spreadsheet->template();
+    }
+
+    // Downloads a batch's records with their validation and processing results.
+    public function export(LoanMigrationBatch $batch, LoanMigrationSpreadsheet $spreadsheet): StreamedResponse
+    {
+        Gate::authorize('access', LoanMigrationBatch::class);
+
+        return $spreadsheet->export($batch);
+    }
+
+    // Returns the members and loan products offered by the record form.
+    private function recordFormOptions(): array
+    {
+        return [
+            'members' => Member::query()
+                ->orderBy('membership_id')
+                ->get(['id', 'membership_id', 'first_name', 'middle_name', 'last_name'])
+                ->map(fn($member) => [
+                    'id' => $member->id,
+                    'member_number' => $member->membership_id,
+                    'name' => trim("{$member->first_name} {$member->middle_name} {$member->last_name}"),
+                ]),
+            'loanProducts' => LoanProduct::query()->orderBy('name')->get(['id', 'name', 'code', 'interest_rate']),
+        ];
     }
 
     /// Import the migration records from excel file
-    public function import(Request $request, LoanMigrationBatch $batch): RedirectResponse
+    public function import(ImportLoanMigrationRequest $request, LoanMigrationBatch $batch): RedirectResponse
     {
         $user = Auth::user();
         $canCreateBatch = $this->canCreateBatch($user);

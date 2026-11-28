@@ -15,11 +15,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Http\Requests\ImportLoanMigrationRequest;
 
 class LoanMigrationImportService
 {
 
-    public function import(Request $request, LoanMigrationBatch $batch , bool $canCreateBatch): RedirectResponse
+    public function import(ImportLoanMigrationRequest $request, LoanMigrationBatch $batch, bool $canCreateBatch): RedirectResponse
     {
         $user = Auth::user();
 
@@ -30,19 +31,7 @@ class LoanMigrationImportService
 
         abort_unless($batch->isEditable(), 422);
 
-        $validated = $request->validate([
-            'file' => [
-                'required',
-                'file',
-                'mimes:csv,xls,xlsx',
-                'max:10240',
-            ],
-            'remarks' => [
-                'nullable',
-                'string',
-                'max:5000',
-            ],
-        ]);
+        $validated = $request->validated();
 
         $file = $validated['file'];
 
@@ -174,6 +163,47 @@ class LoanMigrationImportService
                 'success',
                 count($records) . ' loan records imported successfully.'
             );
+    }
+
+
+    // Reads an uploaded file and reports each row's problems without saving anything.
+    public function preview(UploadedFile $file, LoanMigrationBatch $batch): array
+    {
+        $rows = $this->normalizeRows($this->readSpreadsheet($file));
+
+        if ($rows === []) {
+            throw ValidationException::withMessages(['file' => ['The uploaded file does not contain any records.']]);
+        }
+
+        $this->validateHeadings($rows);
+
+        $loanNumbers = [];
+        $preview = [];
+
+        foreach ($rows as $row) {
+            if ($this->rowIsEmpty($row)) {
+                continue;
+            }
+
+            $result = $this->validateMigrationRow($row, $batch, $loanNumbers);
+
+            $preview[] = [
+                'row' => $row['_row_number'],
+                'member_number' => trim((string) ($row['member_number'] ?? '')),
+                'loan_number' => trim((string) ($row['loan_number'] ?? '')),
+                'errors' => $result['errors'],
+            ];
+        }
+
+        $invalid = count(array_filter($preview, fn($row) => $row['errors'] !== []));
+
+        return ['total' => count($preview), 'valid' => count($preview) - $invalid, 'invalid' => $invalid, 'rows' => $preview];
+    }
+
+    // Tells whether every cell of a spreadsheet row is blank.
+    private function rowIsEmpty(array $row): bool
+    {
+        return collect($row)->except('_row_number')->filter(fn($value) => $value !== null && $value !== '')->isEmpty();
     }
 
 
