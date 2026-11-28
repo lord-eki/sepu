@@ -21,8 +21,8 @@ class LoanService
         private AccountBalanceService $balances,
         private LedgerService $ledger,
         private LoanEligibilityService $eligibility,
-    ) {
-    }
+        private LoanSettlementService $settlements,
+    ) {}
 
     //  Approval 
 
@@ -51,7 +51,7 @@ class LoanService
             if ($amount < (float) $product->min_amount || $amount > (float) $product->max_amount) {
                 throw new DomainException(
                     'Approved amount must be between KES ' . number_format($product->min_amount, 2) .
-                    ' and KES ' . number_format($product->max_amount, 2) . ' for this product.'
+                        ' and KES ' . number_format($product->max_amount, 2) . ' for this product.'
                 );
             }
 
@@ -126,7 +126,9 @@ class LoanService
             $gross         = round((float) $loan->approved_amount, 2);
             $processingFee = round((float) $loan->processing_fee, 2);
             $insuranceFee  = round((float) $loan->insurance_fee, 2);
-            $net           = round($gross - $processingFee - $insuranceFee, 2);
+            $quote         = $this->settlements->quoteForTopUp($loan);
+            $settlement    = $quote['total'] ?? 0.0;
+            $net           = round($gross - $processingFee - $insuranceFee - $settlement, 2);
 
             if ($net <= 0) {
                 throw new DomainException('Net disbursement cannot be zero or negative.');
@@ -197,6 +199,11 @@ class LoanService
                 ['account' => 'loans_performing', 'type' => 'debit',  'amount' => $gross, 'description' => $desc],
                 ['account' => $payoutRole,        'type' => 'credit', 'amount' => $net,   'description' => $desc],
             ];
+
+            if ($settlement > 0) {
+                $lines[] = ['account' => 'top_up_settlement', 'type' => 'credit', 'amount' => $settlement, 'description' => "Settlement of the loan topped up by {$loan->loan_number}"];
+            }
+
             if ($processingFee > 0) {
                 $lines[] = ['account' => 'processing_fee_income', 'type' => 'credit', 'amount' => $processingFee, 'description' => "Processing fee {$loan->loan_number}"];
             }
@@ -206,6 +213,10 @@ class LoanService
 
             $entry = $this->ledger->post($lines, $desc, $loan, "loan:{$loan->id}:disbursement", $by->id, $now->toDateString());
             $transaction->update(['journal_entry_id' => $entry->id]);
+
+             if ($quote) {
+                $this->settlements->settle($quote['parent'], $loan, $quote, $by);
+            }
 
             LoanRepayment::where('loan_id', $loan->id)->delete();
 
@@ -239,6 +250,7 @@ class LoanService
                 'penalty_balance'      => 0,
                 'outstanding_balance'  => $calc['total_repayable'],
                 'days_in_arrears'      => 0,
+                'top_up_settlement_amount' => $settlement,
             ]);
 
             $member = $loan->member;

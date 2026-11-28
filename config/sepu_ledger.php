@@ -15,6 +15,7 @@ return [
         'withdrawal_fee_income' => '42500',
         'entrance_fee_income'   => '42100',
         'opening_balance'       => '33000',
+        'top_up_settlement'     => '21300',
     ],
 
     'cash_by_method' => [

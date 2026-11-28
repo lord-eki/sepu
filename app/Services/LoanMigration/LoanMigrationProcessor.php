@@ -40,7 +40,7 @@ class LoanMigrationProcessor
 
         foreach ($this->pendingRecords($batch) as $record) {
             try {
-                DB::transaction(fn () => $this->createLoan($record, $batch, $by));
+                DB::transaction(fn() => $this->createLoan($record, $batch, $by));
                 $created++;
             } catch (Throwable $e) {
                 $record->markAsProcessingFailed(ErrorMessage::from($e));
@@ -195,6 +195,7 @@ class LoanMigrationProcessor
     private function closeIfFinished(LoanMigrationBatch $batch, User $by): LoanMigrationBatch
     {
         $batch = LoanMigrationBatch::whereKey($batch->id)->firstOrFail();
+        $this->linkTopUps($batch);
         $processed = $batch->records()->where('processing_status', LoanMigrationProcessingStatus::PROCESSED->value)->count();
 
         $changes = ['processed_records' => $processed];
@@ -209,5 +210,18 @@ class LoanMigrationProcessor
 
         return $batch;
     }
-    
+
+    // Links each migrated top-up to its parent loan once every loan of the batch exists.
+    private function linkTopUps(LoanMigrationBatch $batch): void
+    {
+        $records = $batch->records()->where('is_top_up', true)->whereNotNull('loan_id')->get();
+
+        foreach ($records as $record) {
+            $parentId = Loan::where('loan_number', trim((string) $record->parent_loan_number))->value('id');
+
+            if ($parentId) {
+                Loan::whereKey($record->loan_id)->update(['parent_loan_id' => $parentId, 'application_type' => 'top_up']);
+            }
+        }
+    }
 }

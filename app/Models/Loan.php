@@ -22,6 +22,9 @@ class Loan extends Model
         'total_repayable',
         'processing_fee',
         'insurance_fee',
+        'parent_loan_id',
+        'application_type',
+        'top_up_settlement_amount',
         'purpose',
         'status',
         'application_date',
@@ -60,6 +63,7 @@ class Loan extends Model
         'principal_balance' => 'decimal:2',
         'interest_balance' => 'decimal:2',
         'penalty_balance' => 'decimal:2',
+        'top_up_settlement_amount' => 'decimal:2',
     ];
 
     public const PENDING_GUARANTOR = 'pending_guarantor_approval';
@@ -72,7 +76,7 @@ class Loan extends Model
 
     public const TRANSITIONS = [
         'pending_guarantor_approval' => ['pending', 'rejected'],
-        'pending'                    => ['approved', 'rejected','pending_guarantor_approval'],
+        'pending'                    => ['approved', 'rejected', 'pending_guarantor_approval'],
         'approved'                   => ['active', 'rejected'],
         'active'                     => ['completed', 'defaulted', 'written_off'],
         'defaulted'                  => ['active', 'completed', 'written_off'],
@@ -146,5 +150,17 @@ class Loan extends Model
     public function scopeOverdue($query)
     {
         return $query->where('days_in_arrears', '>', 0);
+    }
+
+    // The loan this top-up was taken against.
+    public function parent()
+    {
+        return $this->belongsTo(Loan::class, 'parent_loan_id');
+    }
+
+    // The top-ups taken against this loan.
+    public function topUps()
+    {
+        return $this->hasMany(Loan::class, 'parent_loan_id');
     }
 }

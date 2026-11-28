@@ -103,12 +103,12 @@ final class Scenario
             '21300' => ['Accounts Payable', 'liability', 'current_liability', 'credit'],
             '21700' => ['Dividends Payable', 'liability', 'current_liability', 'credit'],
             '31000' => ['Share Capital', 'equity', 'member_equity', 'credit'],
+            '33000' => ['Retained Earnings', 'equity', 'member_equity', 'credit'],
             '41100' => ['Interest Income', 'revenue', 'operating_revenue', 'credit'],
             '42100' => ['Entrance Fees', 'revenue', 'operating_revenue', 'credit'],
             '42200' => ['Processing Fees', 'revenue', 'operating_revenue', 'credit'],
             '42400' => ['Penalty Charges', 'revenue', 'operating_revenue', 'credit'],
             '42500' => ['Withdrawal Fees', 'revenue', 'operating_revenue', 'credit'],
-            '33000' => ['Retained Earnings', 'equity', 'member_equity', 'credit'],
         ];
 
         foreach ($rows as $code => [$name, $type, $category, $normal]) {
@@ -138,17 +138,19 @@ final class Scenario
     }
 
     // Creates an active loan with its principal on the member's loan account and the given instalments.
-    public static function loan(Member $member, int $instalments = 2): Loan
+    public static function loan(Member $member, int $instalments = 2, array $productAttributes = []): Loan
     {
         $n = ++self::$sequence;
 
-        $product = self::loanProduct();
+        $product = self::loanProduct($productAttributes);
 
         $loan = (new Loan())->forceFill([
             'loan_number' => 'LN' . str_pad((string) $n, 6, '0', STR_PAD_LEFT),
             'member_id' => $member->id,
             'loan_product_id' => $product->id,
             'applied_amount' => 1000 * $instalments,
+            'approved_amount' => 1000 * $instalments,
+            'disbursed_amount' => 1000 * $instalments,
             'interest_rate' => 12,
             'term_months' => $instalments,
             'purpose' => 'Test loan',
@@ -179,11 +181,11 @@ final class Scenario
     }
 
     // Creates a loan product usable by loans and migration records.
-    public static function loanProduct(): LoanProduct
+    public static function loanProduct(array $attributes = []): LoanProduct
     {
         $n = ++self::$sequence;
 
-        $product = (new LoanProduct())->forceFill([
+        $product = (new LoanProduct())->forceFill(array_merge([
             'name' => "Product {$n}",
             'code' => "PRD{$n}",
             'min_amount' => 1000,
@@ -191,7 +193,7 @@ final class Scenario
             'interest_rate' => 12,
             'min_term_months' => 1,
             'max_term_months' => 60,
-        ]);
+        ], $attributes));
         $product->save();
 
         return $product;
@@ -241,5 +243,38 @@ final class Scenario
         ]);
 
         return $batch->refresh();
+    }
+
+    // Creates an approved top-up loan for the same member and product as the parent, ready to disburse.
+    public static function topUpLoan(Loan $parent, array $attributes = []): Loan
+    {
+        $n = ++self::$sequence;
+
+        $loan = (new Loan())->forceFill(array_merge([
+            'loan_number' => 'LNT' . str_pad((string) $n, 6, '0', STR_PAD_LEFT),
+            'member_id' => $parent->member_id,
+            'loan_product_id' => $parent->loan_product_id,
+            'applied_amount' => 5000,
+            'approved_amount' => 5000,
+            'interest_rate' => 12,
+            'term_months' => 6,
+            'processing_fee' => 50,
+            'insurance_fee' => 0,
+            'purpose' => 'Top-up',
+            'status' => 'approved',
+            'application_date' => now()->toDateString(),
+            'approval_date' => now()->toDateString(),
+            'parent_loan_id' => $parent->id,
+            'application_type' => 'top_up',
+        ], $attributes));
+        $loan->save();
+
+        return $loan->refresh();
+    }
+
+    // Returns a ledger account's running balance by its code.
+    public static function ledgerBalance(string $code): float
+    {
+        return (float) ChartOfAccount::where('account_code', $code)->value('current_balance');
     }
 }
