@@ -108,6 +108,7 @@ final class Scenario
             '42200' => ['Processing Fees', 'revenue', 'operating_revenue', 'credit'],
             '42400' => ['Penalty Charges', 'revenue', 'operating_revenue', 'credit'],
             '42500' => ['Withdrawal Fees', 'revenue', 'operating_revenue', 'credit'],
+            '33000' => ['Retained Earnings', 'equity', 'member_equity', 'credit'],
         ];
 
         foreach ($rows as $code => [$name, $type, $category, $normal]) {

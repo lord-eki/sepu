@@ -44,4 +44,10 @@ class LoanMigrationBatchPolicy
     {
         return ! config('sepu.maker_checker') || ! in_array($user->id, array_filter($others), true);
     }
+
+    // Staff who may create the loans from an approved batch.
+    public function process(User $user, LoanMigrationBatch $batch): bool
+    {
+        return in_array($user->role, ['admin', 'loan_officer'], true);
+    }
 }

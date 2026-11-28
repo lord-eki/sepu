@@ -21,6 +21,7 @@ use DomainException;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\LoanMigrationDecisionRequest;
 use App\Http\Requests\RejectLoanMigrationBatchRequest;
+use App\Services\LoanMigration\LoanMigrationProcessor;
 use App\Services\LoanMigration\LoanMigrationWorkflow;
 
 
@@ -284,89 +285,89 @@ class LoanMigrationController extends Controller
         return Gate::forUser($user)->allows('capture', LoanMigrationBatch::class);
     }
 
-    
- // Re-checks every record in the batch and reports how many are valid.
+
+    // Re-checks every record in the batch and reports how many are valid.
     public function validateBatch(LoanMigrationBatch $batch, LoanMigrationWorkflow $workflow): RedirectResponse
     {
         Gate::authorize('capture', $batch);
- 
+
         return $this->runStep(function () use ($batch, $workflow) {
             $result = $workflow->validate($batch, Auth::user());
- 
+
             return "Validation finished: {$result->valid_records} valid, {$result->invalid_records} invalid.";
         });
     }
- 
+
     // Lists the batch's invalid records with their error messages.
     public function validationErrors(LoanMigrationBatch $batch): Response
     {
         Gate::authorize('access', LoanMigrationBatch::class);
- 
+
         $records = $batch->records()
             ->where('validation_status', LoanMigrationRecordValidationStatus::INVALID->value)
             ->orderBy('id')
             ->paginate(25)
-            ->through(fn ($record) => [
+            ->through(fn($record) => [
                 'id' => $record->id,
                 'loan_number' => $record->loan_number,
                 'member_number' => $record->member_number,
                 'errors' => $record->validation_errors,
             ]);
- 
+
         return Inertia::render('LoanMigration/Records/Validation', [
             'batch' => $batch,
             'records' => $records,
         ]);
     }
- 
+
     // Submits a validated batch for Accounts Officer verification.
     public function submit(LoanMigrationDecisionRequest $request, LoanMigrationBatch $batch, LoanMigrationWorkflow $workflow): RedirectResponse
     {
         Gate::authorize('capture', $batch);
- 
+
         return $this->runStep(function () use ($request, $batch, $workflow) {
             $workflow->submit($batch, Auth::user(), $request->validated('remarks'));
- 
+
             return 'The batch was submitted for Accounts Officer verification.';
         });
     }
- 
+
     // Records the Accounts Officer's verification of the batch totals.
     public function verifyAccounts(LoanMigrationDecisionRequest $request, LoanMigrationBatch $batch, LoanMigrationWorkflow $workflow): RedirectResponse
     {
         Gate::authorize('verify', $batch);
- 
+
         return $this->runStep(function () use ($request, $batch, $workflow) {
             $workflow->verifyAccounts($batch, Auth::user(), $request->validated('remarks'));
- 
+
             return 'The batch accounts were verified.';
         });
     }
- 
+
     // Approves a batch the Accounts Officer has verified.
     public function approve(LoanMigrationDecisionRequest $request, LoanMigrationBatch $batch, LoanMigrationWorkflow $workflow): RedirectResponse
     {
         Gate::authorize('approve', $batch);
- 
+
         return $this->runStep(function () use ($request, $batch, $workflow) {
             $workflow->approve($batch, Auth::user(), $request->validated('remarks'));
- 
+
             return 'The batch was approved.';
         });
     }
- 
+
     // Turns a submitted or verified batch down with a reason.
     public function reject(RejectLoanMigrationBatchRequest $request, LoanMigrationBatch $batch, LoanMigrationWorkflow $workflow): RedirectResponse
     {
         Gate::authorize('reject', $batch);
- 
+
         return $this->runStep(function () use ($request, $batch, $workflow) {
             $workflow->reject($batch, Auth::user(), $request->validated('reason'));
- 
+
             return 'The batch was rejected.';
         });
     }
- 
+
     // Runs a workflow step and returns its success message, or the domain error it raised.
     private function runStep(Closure $step): RedirectResponse
     {
@@ -375,7 +376,7 @@ class LoanMigrationController extends Controller
         } catch (DomainException $e) {
             return back()->withErrors(['batch' => $e->getMessage()]);
         }
- 
+
         return back()->with('success', $message);
     }
 
@@ -539,5 +540,20 @@ class LoanMigrationController extends Controller
         $canCreateBatch = $this->canCreateBatch($user);
 
         return $this->loanMigrationImportService->import($request, $batch, $canCreateBatch);
+    }
+
+    // Creates the loans, schedules and opening ledger entries for an approved batch.
+    public function process(LoanMigrationBatch $batch, LoanMigrationProcessor $processor): RedirectResponse
+    {
+        Gate::authorize('process', $batch);
+
+        return $this->runStep(function () use ($batch, $processor) {
+            $result = $processor->process($batch, Auth::user());
+            $message = "{$result['created']} loan(s) created.";
+
+            return $result['failed'] === []
+                ? $message
+                : $message . ' Failed: ' . implode(', ', $result['failed']) . '. Fix them and process again.';
+        });
     }
 }
